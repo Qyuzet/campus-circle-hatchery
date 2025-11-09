@@ -5,33 +5,38 @@ CampusCircle is an exclusive platform designed for Binus University students to 
 ## Features
 
 ### 🎓 Student-Only Platform
+
 - Exclusive access for Binus University students
 - Login using Student ID (NIM)
 - Verified university community
 
 ### 📚 Study Materials Exchange
+
 - Share and sell course notes
 - Upload assignments and study guides
 - Access materials from various faculties and courses
 - Digital and physical material support
 
 ### 👨‍🏫 Tutoring Services
+
 - Offer tutoring sessions in your expertise areas
 - Find tutors for challenging subjects
 - Schedule and manage tutoring sessions
 - Rate and review tutoring experiences
 
 ### 💬 Direct Communication
+
 - Chat directly with other students
 - Negotiate prices and terms
 - Ask questions about materials
 - Build study groups and connections
 
 ### 🛒 Secure Marketplace
+
 - Safe buying and selling within the university community
 - Rating and review system
 - Secure payment processing
-- Item categorization and search
+- Item categorization and search.
 
 ## Technology Stack
 
@@ -43,23 +48,27 @@ CampusCircle is an exclusive platform designed for Binus University students to 
 ## Getting Started
 
 ### Prerequisites
-- Node.js 18+ 
+
+- Node.js 18+
 - npm or yarn
 
 ### Installation
 
 1. Clone the repository:
+
 ```bash
 git clone <repository-url>
 cd campusCircle
 ```
 
 2. Install dependencies:
+
 ```bash
 npm install
 ```
 
 3. Run the development server:
+
 ```bash
 npm run dev
 ```
@@ -85,6 +94,7 @@ src/
 ## Current Status
 
 ### ✅ Completed
+
 - Landing page with student login
 - Dashboard with marketplace view
 - Basic navigation and layout
@@ -93,6 +103,7 @@ src/
 - Tailwind CSS styling
 
 ### 🚧 In Progress
+
 - Authentication system integration
 - Database setup
 - API endpoints
@@ -100,6 +111,7 @@ src/
 - Payment integration
 
 ### 📋 Planned Features
+
 - Google OAuth integration
 - Real-time messaging
 - File upload system
@@ -111,13 +123,15 @@ src/
 ## Usage
 
 ### For Students Selling Materials:
+
 1. Login with your Student ID
-2. Navigate to "My Items" 
+2. Navigate to "My Items"
 3. Click "Add New Item"
 4. Fill in material details, price, and upload files
 5. Publish to marketplace
 
 ### For Students Buying Materials:
+
 1. Browse the marketplace
 2. Use search and filters to find specific materials
 3. View item details and seller ratings
@@ -125,6 +139,7 @@ src/
 5. Complete purchase
 
 ### For Tutoring:
+
 1. Go to "Tutoring" section
 2. Either offer your tutoring services or find a tutor
 3. Schedule sessions and manage bookings
