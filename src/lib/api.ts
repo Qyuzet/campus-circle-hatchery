@@ -217,3 +217,53 @@ export const statsAPI = {
     return response.json();
   },
 };
+
+// ============================================
+// PAYMENT API
+// ============================================
+export const paymentAPI = {
+  async createPayment(data: {
+    itemId: string;
+    itemType: "marketplace" | "tutoring";
+    amount: number;
+    itemTitle: string;
+  }) {
+    const response = await fetch("/api/payment/create", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || "Failed to create payment");
+    }
+    return await response.json();
+  },
+
+  async getPaymentStatus(orderId: string) {
+    const response = await fetch(`/api/payment/status?orderId=${orderId}`);
+    if (!response.ok) throw new Error("Failed to get payment status");
+    return await response.json();
+  },
+};
+
+// ============================================
+// TRANSACTIONS API
+// ============================================
+export const transactionsAPI = {
+  async getTransactions(filters?: {
+    type?: "purchases" | "sales";
+    status?: string;
+    itemType?: "marketplace" | "tutoring";
+  }) {
+    const params = new URLSearchParams();
+    if (filters?.type) params.append("type", filters.type);
+    if (filters?.status) params.append("status", filters.status);
+    if (filters?.itemType) params.append("itemType", filters.itemType);
+
+    const response = await fetch(`/api/transactions?${params.toString()}`);
+    if (!response.ok) throw new Error("Failed to fetch transactions");
+    const data = await response.json();
+    return data.transactions;
+  },
+};

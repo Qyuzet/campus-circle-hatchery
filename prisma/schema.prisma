@@ -200,23 +200,35 @@ model Notification {
 // ============================================
 model Transaction {
   id              String   @id @default(cuid())
+  orderId         String   @unique // Midtrans order ID
   amount          Int
-  status          String   @default("pending") // pending, completed, failed, refunded
+  status          String   @default("PENDING") // PENDING, COMPLETED, FAILED, CANCELLED, EXPIRED
   paymentMethod   String?
-  paymentProvider String?
-  transactionId   String?  @unique
+  paymentProvider String?  @default("midtrans")
+
+  // Midtrans specific fields
+  snapToken       String?  // Snap payment token
+  snapUrl         String?  // Snap payment URL
+  transactionId   String?  // Midtrans transaction ID
+  fraudStatus     String?  // Fraud detection status
+
+  // Item details
+  itemType        String   // "marketplace" or "tutoring"
+  itemTitle       String
+
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
   // Relations
   buyerId String
-  itemId  String
-  buyer   User            @relation(fields: [buyerId], references: [id], onDelete: Cascade)
-  item    MarketplaceItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  itemId  String?  // Optional for tutoring sessions
+  buyer   User             @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+  item    MarketplaceItem? @relation(fields: [itemId], references: [id], onDelete: Cascade)
 
   @@index([buyerId])
   @@index([itemId])
   @@index([status])
+  @@index([orderId])
   @@index([createdAt])
 }
 

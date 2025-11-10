@@ -43,6 +43,7 @@ import {
   TutoringSession,
   Notification,
 } from "@/types";
+import PaymentModal from "@/components/PaymentModal";
 
 export default function Dashboard() {
   const { data: session, status } = useSession();
@@ -64,6 +65,13 @@ export default function Dashboard() {
   const [messageText, setMessageText] = useState("");
   const [showNotifications, setShowNotifications] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentItem, setPaymentItem] = useState<{
+    id: string;
+    title: string;
+    price: number;
+    type: "marketplace" | "tutoring";
+  } | null>(null);
 
   // Data states
   const [marketplaceItems, setMarketplaceItems] = useState<MarketplaceItem[]>(
@@ -270,31 +278,32 @@ export default function Dashboard() {
   };
 
   const handleBuyItem = async (item: MarketplaceItem) => {
-    try {
-      // Update item status to sold
-      await marketplaceAPI.updateItem(item.id, { status: "sold" });
+    // Open payment modal
+    setPaymentItem({
+      id: item.id,
+      title: item.title,
+      price: item.price,
+      type: "marketplace",
+    });
+    setShowPaymentModal(true);
+  };
 
-      // Reload marketplace items
+  const handlePaymentSuccess = async () => {
+    // Reload data after successful payment
+    try {
       const items = await marketplaceAPI.getItems();
       setMarketplaceItems(items);
 
-      // Reload stats (backend automatically updates stats)
       const stats = await statsAPI.getUserStats();
       setUserStats(stats);
 
-      // Reload notifications (backend creates notification)
       const notifs = await notificationsAPI.getNotifications();
       setNotifications(notifs);
 
       setShowItemDetailModal(false);
-      alert(
-        `Successfully purchased "${
-          item.title
-        }" for Rp ${item.price.toLocaleString()}!`
-      );
+      alert("Payment successful! Your purchase has been confirmed.");
     } catch (error) {
-      console.error("Error buying item:", error);
-      alert("Failed to purchase item. Please try again.");
+      console.error("Error reloading data:", error);
     }
   };
 
@@ -1728,6 +1737,19 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+
+      {/* Payment Modal */}
+      {paymentItem && (
+        <PaymentModal
+          isOpen={showPaymentModal}
+          onClose={() => {
+            setShowPaymentModal(false);
+            setPaymentItem(null);
+          }}
+          item={paymentItem}
+          onSuccess={handlePaymentSuccess}
+        />
+      )}
     </div>
   );
 }
@@ -2037,3 +2059,5 @@ function AddItemForm({
     </form>
   );
 }
+
+// Add PaymentModal at the end of Dashboard component - find the closing div and add before it
