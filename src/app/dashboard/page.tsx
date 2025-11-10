@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import {
   BookOpen,
   Users,
@@ -28,15 +30,13 @@ import {
   Book,
 } from "lucide-react";
 import {
-  marketplaceStorage,
-  messageStorage,
-  tutoringStorage,
-  notificationStorage,
-  statsStorage,
-  userStorage,
-  initializeDefaultData,
-  resetConversationsData,
-} from "@/lib/storage";
+  marketplaceAPI,
+  conversationsAPI,
+  messagesAPI,
+  tutoringAPI,
+  notificationsAPI,
+  statsAPI,
+} from "@/lib/api";
 import {
   MarketplaceItem,
   Conversation,
@@ -45,6 +45,8 @@ import {
 } from "@/types";
 
 export default function Dashboard() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState("discovery");
   const [viewMode, setViewMode] = useState("grid");
   const [searchQuery, setSearchQuery] = useState("");
@@ -61,6 +63,7 @@ export default function Dashboard() {
   >(null);
   const [messageText, setMessageText] = useState("");
   const [showNotifications, setShowNotifications] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Data states
   const [marketplaceItems, setMarketplaceItems] = useState<MarketplaceItem[]>(
@@ -74,11 +77,19 @@ export default function Dashboard() {
   const [userStats, setUserStats] = useState<any>({});
   const [currentUser, setCurrentUser] = useState<any>(null);
 
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/");
+    }
+  }, [status, router]);
+
   // Initialize data on component mount
   useEffect(() => {
-    initializeDefaultData();
-    loadData();
-  }, []);
+    if (status === "authenticated") {
+      loadData();
+    }
+  }, [status]);
 
   // Close notifications dropdown when clicking outside
   useEffect(() => {
@@ -97,127 +108,160 @@ export default function Dashboard() {
     };
   }, [showNotifications]);
 
-  const loadData = () => {
-    // Reset conversations to clean state (remove duplicates)
-    resetConversationsData();
+  const loadData = async () => {
+    try {
+      setIsLoading(true);
 
-    setMarketplaceItems(marketplaceStorage.getItems());
-    setConversations(messageStorage.getConversations());
-    setTutoringSessions(tutoringStorage.getSessions());
-    setNotifications(notificationStorage.getNotifications());
-    setUserStats(statsStorage.getUserStats());
+      // Load all data in parallel
+      const [items, convos, sessions, notifs, stats] = await Promise.all([
+        marketplaceAPI.getItems(),
+        conversationsAPI.getConversations(),
+        tutoringAPI.getSessions({ type: "all" }),
+        notificationsAPI.getNotifications(),
+        statsAPI.getUserStats(),
+      ]);
 
-    // Set current user or create one
-    let user = userStorage.getCurrentUser();
-    if (!user) {
-      user = {
-        id: "current-user",
-        studentId: "2501234567",
-        name: "Current Student",
-        email: "student@binus.ac.id",
-        faculty: "Computer Science",
-        major: "Computer Science",
-        year: 3,
-        rating: 4.9,
-        totalSales: 12,
-        totalPurchases: 8,
-        joinedAt: new Date().toISOString(),
-      };
-      userStorage.setCurrentUser(user);
+      setMarketplaceItems(items);
+      setConversations(convos);
+      setTutoringSessions(sessions);
+      setNotifications(notifs);
+      setUserStats(stats);
+
+      // Set current user from session
+      if (session?.user) {
+        setCurrentUser(session.user);
+      }
+    } catch (error) {
+      console.error("Error loading data:", error);
+      // Optionally show error toast/notification
+    } finally {
+      setIsLoading(false);
     }
-    setCurrentUser(user);
   };
 
   // Handler functions
-  const handleSearch = (query: string) => {
+  const handleSearch = async (query: string) => {
     setSearchQuery(query);
-    const filteredItems = marketplaceStorage.searchItems(
-      query,
-      selectedCategory
-    );
-    setMarketplaceItems(filteredItems);
+    try {
+      const items = await marketplaceAPI.getItems({
+        search: query,
+        category: selectedCategory !== "All" ? selectedCategory : undefined,
+      });
+      setMarketplaceItems(items);
+    } catch (error) {
+      console.error("Error searching items:", error);
+    }
   };
 
-  const handleCategoryFilter = (category: string) => {
+  const handleCategoryFilter = async (category: string) => {
     setSelectedCategory(category);
-    const filteredItems = marketplaceStorage.searchItems(searchQuery, category);
-    setMarketplaceItems(filteredItems);
+    try {
+      const items = await marketplaceAPI.getItems({
+        search: searchQuery,
+        category: category !== "All" ? category : undefined,
+      });
+      setMarketplaceItems(items);
+    } catch (error) {
+      console.error("Error filtering items:", error);
+    }
   };
 
-  const handleAddItem = (itemData: any) => {
-    const newItem = marketplaceStorage.addItem({
-      ...itemData,
-      sellerId: currentUser?.id || "current-user",
-      seller: currentUser?.name || "Current Student",
-      rating: 0,
-      reviews: 0,
-      status: "available" as const,
-    });
-    setMarketplaceItems(marketplaceStorage.getItems());
-    setShowAddItemModal(false);
+  const handleAddItem = async (itemData: any) => {
+    try {
+      await marketplaceAPI.createItem(itemData);
+      // Reload marketplace items
+      const items = await marketplaceAPI.getItems();
+      setMarketplaceItems(items);
+      setShowAddItemModal(false);
 
-    // Update stats
-    statsStorage.incrementStat("itemsSold");
-    setUserStats(statsStorage.getUserStats());
+      // Reload stats
+      const stats = await statsAPI.getUserStats();
+      setUserStats(stats);
+    } catch (error) {
+      console.error("Error adding item:", error);
+      alert("Failed to add item. Please try again.");
+    }
   };
 
-  const handleDeleteItem = (itemId: string) => {
-    marketplaceStorage.deleteItem(itemId);
-    setMarketplaceItems(marketplaceStorage.getItems());
+  const handleDeleteItem = async (itemId: string) => {
+    try {
+      await marketplaceAPI.deleteItem(itemId);
+      // Reload marketplace items
+      const items = await marketplaceAPI.getItems();
+      setMarketplaceItems(items);
+    } catch (error) {
+      console.error("Error deleting item:", error);
+      alert("Failed to delete item. Please try again.");
+    }
   };
 
-  const handleSendMessage = (conversationId: string, content: string) => {
+  const handleSendMessage = async (conversationId: string, content: string) => {
     if (!content.trim()) return;
 
-    messageStorage.addMessage(conversationId, {
-      senderId: currentUser?.id || "current-user",
-      receiverId: "other-user",
-      content: content.trim(),
-      isRead: false,
-    });
+    try {
+      await messagesAPI.sendMessage(conversationId, content.trim());
+      setMessageText("");
 
-    setMessageText("");
-    setConversations(messageStorage.getConversations());
+      // Reload conversations
+      const convos = await conversationsAPI.getConversations();
+      setConversations(convos);
 
-    // Update stats
-    statsStorage.incrementStat("messagesCount");
-    setUserStats(statsStorage.getUserStats());
+      // Reload stats
+      const stats = await statsAPI.getUserStats();
+      setUserStats(stats);
+    } catch (error) {
+      console.error("Error sending message:", error);
+      alert("Failed to send message. Please try again.");
+    }
   };
 
-  const handleCreateConversation = (
+  const handleCreateConversation = async (
     otherUserId: string,
     otherUserName: string
   ) => {
-    const conversation = messageStorage.createConversation(
-      otherUserId,
-      otherUserName
-    );
-    setConversations(messageStorage.getConversations());
-    setSelectedConversation(conversation.id);
-    setShowMessageModal(true);
+    try {
+      const conversation = await conversationsAPI.createConversation(
+        otherUserId
+      );
+      const convos = await conversationsAPI.getConversations();
+      setConversations(convos);
+      setSelectedConversation(conversation.id);
+      setShowMessageModal(true);
+    } catch (error) {
+      console.error("Error creating conversation:", error);
+      alert("Failed to create conversation. Please try again.");
+    }
   };
 
-  const handleAddTutoringSession = (sessionData: any) => {
-    const newSession = tutoringStorage.addSession({
-      ...sessionData,
-      tutorId: currentUser?.id || "current-user",
-      tutorName: currentUser?.name || "Current Student",
-      studentId: "student-id",
-      studentName: "Student Name",
-      status: "pending" as const,
-      scheduledAt: sessionData.scheduledAt,
-    });
-    setTutoringSessions(tutoringStorage.getSessions());
-    setShowTutoringModal(false);
+  const handleAddTutoringSession = async (sessionData: any) => {
+    try {
+      await tutoringAPI.createSession(sessionData);
 
-    // Update stats
-    statsStorage.incrementStat("tutoringSessions");
-    setUserStats(statsStorage.getUserStats());
+      // Reload tutoring sessions
+      const sessions = await tutoringAPI.getSessions({ type: "all" });
+      setTutoringSessions(sessions);
+      setShowTutoringModal(false);
+
+      // Reload stats
+      const stats = await statsAPI.getUserStats();
+      setUserStats(stats);
+    } catch (error) {
+      console.error("Error adding tutoring session:", error);
+      alert("Failed to add tutoring session. Please try again.");
+    }
   };
 
-  const handleDeleteTutoringSession = (sessionId: string) => {
-    tutoringStorage.deleteSession(sessionId);
-    setTutoringSessions(tutoringStorage.getSessions());
+  const handleDeleteTutoringSession = async (sessionId: string) => {
+    try {
+      await tutoringAPI.deleteSession(sessionId);
+
+      // Reload tutoring sessions
+      const sessions = await tutoringAPI.getSessions({ type: "all" });
+      setTutoringSessions(sessions);
+    } catch (error) {
+      console.error("Error deleting tutoring session:", error);
+      alert("Failed to delete tutoring session. Please try again.");
+    }
   };
 
   const handleItemClick = (item: MarketplaceItem) => {
@@ -225,33 +269,33 @@ export default function Dashboard() {
     setShowItemDetailModal(true);
   };
 
-  const handleBuyItem = (item: MarketplaceItem) => {
-    // Update item status to sold
-    marketplaceStorage.updateItem(item.id, { status: "sold" });
-    setMarketplaceItems(marketplaceStorage.getItems());
+  const handleBuyItem = async (item: MarketplaceItem) => {
+    try {
+      // Update item status to sold
+      await marketplaceAPI.updateItem(item.id, { status: "sold" });
 
-    // Update user stats
-    statsStorage.incrementStat("itemsBought");
-    statsStorage.incrementStat("totalSpent", item.price);
-    setUserStats(statsStorage.getUserStats());
+      // Reload marketplace items
+      const items = await marketplaceAPI.getItems();
+      setMarketplaceItems(items);
 
-    // Add notification
-    notificationStorage.addNotification({
-      userId: currentUser?.id || "current-user",
-      type: "purchase",
-      title: "Purchase Successful",
-      content: `You have successfully purchased "${
-        item.title
-      }" for Rp ${item.price.toLocaleString()}`,
-      read: false,
-    });
+      // Reload stats (backend automatically updates stats)
+      const stats = await statsAPI.getUserStats();
+      setUserStats(stats);
 
-    setShowItemDetailModal(false);
-    alert(
-      `Successfully purchased "${
-        item.title
-      }" for Rp ${item.price.toLocaleString()}!`
-    );
+      // Reload notifications (backend creates notification)
+      const notifs = await notificationsAPI.getNotifications();
+      setNotifications(notifs);
+
+      setShowItemDetailModal(false);
+      alert(
+        `Successfully purchased "${
+          item.title
+        }" for Rp ${item.price.toLocaleString()}!`
+      );
+    } catch (error) {
+      console.error("Error buying item:", error);
+      alert("Failed to purchase item. Please try again.");
+    }
   };
 
   // Dynamic stats based on real data
@@ -289,6 +333,23 @@ export default function Dashboard() {
   // Get filtered marketplace items
   const filteredItems =
     searchQuery || selectedCategory ? marketplaceItems : marketplaceItems;
+
+  // Show loading state
+  if (status === "loading" || isLoading) {
+    return (
+      <div className="min-h-screen bg-secondary-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-campus-blue-dark mx-auto mb-4"></div>
+          <p className="text-dark-gray text-lg">Loading CampusCircle...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Redirect if not authenticated (handled by useEffect, but this is a fallback)
+  if (!session) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-secondary-50">
@@ -345,11 +406,23 @@ export default function Dashboard() {
                           Notifications
                         </h3>
                         <button
-                          onClick={() => {
-                            notificationStorage.markAllAsRead();
-                            setNotifications(
-                              notificationStorage.getNotifications()
-                            );
+                          onClick={async () => {
+                            try {
+                              const notifIds = notifications
+                                .filter((n) => !n.read)
+                                .map((n) => n.id);
+                              if (notifIds.length > 0) {
+                                await notificationsAPI.markAsRead(notifIds);
+                                const notifs =
+                                  await notificationsAPI.getNotifications();
+                                setNotifications(notifs);
+                              }
+                            } catch (error) {
+                              console.error(
+                                "Error marking notifications:",
+                                error
+                              );
+                            }
                           }}
                           className="text-sm text-dark-blue hover:text-blue-700"
                         >
@@ -365,11 +438,22 @@ export default function Dashboard() {
                             className={`p-4 border-b border-light-gray hover:bg-gray-50 cursor-pointer ${
                               !notification.read ? "bg-blue-50" : ""
                             }`}
-                            onClick={() => {
-                              notificationStorage.markAsRead(notification.id);
-                              setNotifications(
-                                notificationStorage.getNotifications()
-                              );
+                            onClick={async () => {
+                              try {
+                                if (!notification.read) {
+                                  await notificationsAPI.markAsRead([
+                                    notification.id,
+                                  ]);
+                                  const notifs =
+                                    await notificationsAPI.getNotifications();
+                                  setNotifications(notifs);
+                                }
+                              } catch (error) {
+                                console.error(
+                                  "Error marking notification:",
+                                  error
+                                );
+                              }
                             }}
                           >
                             <div className="flex items-start space-x-3">

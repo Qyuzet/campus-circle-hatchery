@@ -1,0 +1,243 @@
+// CampusCircle Prisma Schema
+// Database: Neon PostgreSQL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// USER MODEL
+// ============================================
+model User {
+  id              String   @id @default(cuid())
+  studentId       String   @unique
+  email           String   @unique
+  name            String
+  faculty         String
+  major           String
+  year            Int
+  bio             String?
+  avatarUrl       String?
+  rating          Float    @default(0)
+  totalSales      Int      @default(0)
+  totalPurchases  Int      @default(0)
+  isVerified      Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  marketplaceItems     MarketplaceItem[]
+  sentMessages         Message[]           @relation("SentMessages")
+  receivedMessages     Message[]           @relation("ReceivedMessages")
+  conversationsAsUser1 Conversation[]      @relation("User1Conversations")
+  conversationsAsUser2 Conversation[]      @relation("User2Conversations")
+  tutoringSessions     TutoringSession[]   @relation("TutorSessions")
+  studentSessions      TutoringSession[]   @relation("StudentSessions")
+  reviews              Review[]            @relation("ReviewAuthor")
+  receivedReviews      Review[]            @relation("ReviewTarget")
+  notifications        Notification[]
+  transactions         Transaction[]
+  userStats            UserStats?
+
+  @@index([studentId])
+  @@index([email])
+}
+
+// ============================================
+// MARKETPLACE MODEL
+// ============================================
+model MarketplaceItem {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  price       Int
+  category    String
+  course      String
+  faculty     String
+  imageUrl    String?
+  fileUrl     String?
+  status      String   @default("available") // available, sold, pending
+  rating      Float    @default(0)
+  reviewCount Int      @default(0)
+  viewCount   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  sellerId String
+  seller   User   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+
+  reviews      Review[]
+  transactions Transaction[]
+
+  @@index([sellerId])
+  @@index([category])
+  @@index([faculty])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// ============================================
+// MESSAGING MODELS
+// ============================================
+model Conversation {
+  id              String   @id @default(cuid())
+  lastMessage     String?
+  lastMessageTime DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  user1Id String
+  user2Id String
+  user1   User   @relation("User1Conversations", fields: [user1Id], references: [id], onDelete: Cascade)
+  user2   User   @relation("User2Conversations", fields: [user2Id], references: [id], onDelete: Cascade)
+
+  messages Message[]
+
+  @@unique([user1Id, user2Id])
+  @@index([user1Id])
+  @@index([user2Id])
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  content   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  // Relations
+  senderId       String
+  receiverId     String
+  conversationId String
+  sender         User         @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver       User         @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([conversationId])
+  @@index([createdAt])
+}
+
+// ============================================
+// TUTORING MODEL
+// ============================================
+model TutoringSession {
+  id          String   @id @default(cuid())
+  subject     String
+  course      String
+  description String
+  price       Int
+  duration    Int // in minutes
+  status      String   @default("pending") // pending, confirmed, completed, cancelled
+  scheduledAt DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  tutorId     String
+  studentId   String
+  tutor       User   @relation("TutorSessions", fields: [tutorId], references: [id], onDelete: Cascade)
+  student     User   @relation("StudentSessions", fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([tutorId])
+  @@index([studentId])
+  @@index([status])
+  @@index([scheduledAt])
+}
+
+// ============================================
+// REVIEW MODEL
+// ============================================
+model Review {
+  id        String   @id @default(cuid())
+  rating    Int // 1-5
+  comment   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  authorId String
+  targetId String // can be user or item
+  itemId   String?
+  author   User            @relation("ReviewAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  target   User            @relation("ReviewTarget", fields: [targetId], references: [id], onDelete: Cascade)
+  item     MarketplaceItem? @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@index([authorId])
+  @@index([targetId])
+  @@index([itemId])
+}
+
+// ============================================
+// NOTIFICATION MODEL
+// ============================================
+model Notification {
+  id        String   @id @default(cuid())
+  type      String // message, sale, purchase, review, session
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  // Relations
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+}
+
+// ============================================
+// TRANSACTION MODEL
+// ============================================
+model Transaction {
+  id              String   @id @default(cuid())
+  amount          Int
+  status          String   @default("pending") // pending, completed, failed, refunded
+  paymentMethod   String?
+  paymentProvider String?
+  transactionId   String?  @unique
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  buyerId String
+  itemId  String
+  buyer   User            @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+  item    MarketplaceItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@index([buyerId])
+  @@index([itemId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// ============================================
+// USER STATS MODEL
+// ============================================
+model UserStats {
+  id               String   @id @default(cuid())
+  itemsSold        Int      @default(0)
+  itemsBought      Int      @default(0)
+  totalEarnings    Int      @default(0)
+  totalSpent       Int      @default(0)
+  messagesCount    Int      @default(0)
+  tutoringSessions Int      @default(0)
+  reviewsGiven     Int      @default(0)
+  reviewsReceived  Int      @default(0)
+  updatedAt        DateTime @updatedAt
+
+  // Relations
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}

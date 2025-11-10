@@ -248,3 +248,5 @@ sessionStorage.json
 
 # Campus Circle specific
 campusCircle_*
+
+/src/generated/prisma

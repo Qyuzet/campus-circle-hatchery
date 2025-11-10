@@ -1,0 +1,153 @@
+// Marketplace API Routes - GET (list) and POST (create)
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+
+// GET /api/marketplace - List all marketplace items with filters
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const category = searchParams.get("category");
+    const faculty = searchParams.get("faculty");
+    const search = searchParams.get("search");
+    const status = searchParams.get("status") || "available";
+    const sellerId = searchParams.get("sellerId");
+
+    const where: any = {
+      status,
+    };
+
+    if (category && category !== "All") {
+      where.category = category;
+    }
+
+    if (faculty) {
+      where.faculty = faculty;
+    }
+
+    if (sellerId) {
+      where.sellerId = sellerId;
+    }
+
+    if (search) {
+      where.OR = [
+        { title: { contains: search, mode: "insensitive" } },
+        { description: { contains: search, mode: "insensitive" } },
+        { course: { contains: search, mode: "insensitive" } },
+      ];
+    }
+
+    const items = await prisma.marketplaceItem.findMany({
+      where,
+      include: {
+        seller: {
+          select: {
+            id: true,
+            name: true,
+            studentId: true,
+            rating: true,
+            totalSales: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    return NextResponse.json(items);
+  } catch (error) {
+    console.error("Error fetching marketplace items:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch marketplace items" },
+      { status: 500 }
+    );
+  }
+}
+
+// POST /api/marketplace - Create new marketplace item
+export async function POST(request: NextRequest) {
+  try {
+    const session = await auth();
+
+    if (!session?.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const {
+      title,
+      description,
+      price,
+      category,
+      course,
+      faculty,
+      imageUrl,
+      fileUrl,
+    } = body;
+
+    // Validation
+    if (!title || !description || !price || !category || !course || !faculty) {
+      return NextResponse.json(
+        { error: "Missing required fields" },
+        { status: 400 }
+      );
+    }
+
+    // Get user from database
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    // Create marketplace item
+    const item = await prisma.marketplaceItem.create({
+      data: {
+        title,
+        description,
+        price: parseInt(price),
+        category,
+        course,
+        faculty,
+        imageUrl,
+        fileUrl,
+        sellerId: user.id,
+        status: "available",
+      },
+      include: {
+        seller: {
+          select: {
+            id: true,
+            name: true,
+            studentId: true,
+            rating: true,
+            totalSales: true,
+          },
+        },
+      },
+    });
+
+    // Update user stats
+    await prisma.userStats.upsert({
+      where: { userId: user.id },
+      update: {
+        itemsSold: { increment: 1 },
+      },
+      create: {
+        userId: user.id,
+        itemsSold: 1,
+      },
+    });
+
+    return NextResponse.json(item, { status: 201 });
+  } catch (error) {
+    console.error("Error creating marketplace item:", error);
+    return NextResponse.json(
+      { error: "Failed to create marketplace item" },
+      { status: 500 }
+    );
+  }
+}
