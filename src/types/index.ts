@@ -95,3 +95,14 @@ export interface Notification {
   actionUrl?: string;
   timestamp: string;
 }
+
+export interface UserStats {
+  itemsSold: number;
+  itemsBought: number;
+  totalEarnings: number;
+  totalSpent: number;
+  rating: number;
+  reviewCount: number;
+  messagesCount: number;
+  [key: string]: number; // Allow dynamic stat names
+}

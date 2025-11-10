@@ -6,6 +6,7 @@ import {
   TutoringSession,
   User,
   Notification,
+  UserStats,
 } from "@/types";
 
 // Storage Keys
@@ -326,9 +327,9 @@ export const notificationStorage = {
 
 // User Stats Management
 export const statsStorage = {
-  getUserStats: () => {
+  getUserStats: (): UserStats => {
     return (
-      storage.get(STORAGE_KEYS.USER_STATS) || {
+      storage.get<UserStats>(STORAGE_KEYS.USER_STATS) || {
         itemsSold: 0,
         itemsBought: 0,
         totalEarnings: 0,
@@ -340,7 +341,7 @@ export const statsStorage = {
     );
   },
 
-  updateStats: (updates: Partial<any>): void => {
+  updateStats: (updates: Partial<UserStats>): void => {
     const currentStats = statsStorage.getUserStats();
     const updatedStats = { ...currentStats, ...updates };
     storage.set(STORAGE_KEYS.USER_STATS, updatedStats);
