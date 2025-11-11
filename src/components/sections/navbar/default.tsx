@@ -1,11 +1,12 @@
 import { type VariantProps } from "class-variance-authority";
 import { Menu } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 import { ReactNode } from "react";
 
 import { siteConfig } from "@/config/site";
 import { cn } from "@/lib/utils";
 
-import LaunchUI from "../../logos/launch-ui";
 import { Button, buttonVariants } from "../../ui/button";
 import {
   Navbar as NavbarComponent,
@@ -41,19 +42,27 @@ interface NavbarProps {
 }
 
 export default function Navbar({
-  logo = <LaunchUI />,
-  name = "Launch UI",
-  homeUrl = siteConfig.url,
+  logo = (
+    <Image
+      src="/campusCircle-logo.png"
+      alt="CampusCircle Logo"
+      width={32}
+      height={32}
+      className="h-8 w-8"
+    />
+  ),
+  name = "CampusCircle",
+  homeUrl = "/",
   mobileLinks = [
-    { text: "Getting Started", href: siteConfig.url },
-    { text: "Components", href: siteConfig.url },
-    { text: "Documentation", href: siteConfig.url },
+    { text: "Marketplace", href: "/dashboard" },
+    { text: "Tutoring", href: "/dashboard" },
+    { text: "My Library", href: "/library" },
   ],
   actions = [
-    { text: "Sign in", href: siteConfig.url, isButton: false },
+    { text: "Sign In", href: "/api/auth/signin", isButton: false },
     {
-      text: "Get Started",
-      href: siteConfig.url,
+      text: "Join Now",
+      href: "/api/auth/signin",
       isButton: true,
       variant: "default",
     },
@@ -64,17 +73,21 @@ export default function Navbar({
 }: NavbarProps) {
   return (
     <header className={cn("sticky top-0 z-50 -mb-4 px-4 pb-4", className)}>
-      <div className="fade-bottom bg-background/15 absolute left-0 h-24 w-full backdrop-blur-lg"></div>
+      <div className="fade-bottom bg-white/70 absolute left-0 h-24 w-full backdrop-blur-lg"></div>
       <div className="max-w-container relative mx-auto">
         <NavbarComponent>
           <NavbarLeft>
-            <a
-              href={homeUrl}
-              className="flex items-center gap-2 text-xl font-bold"
-            >
+            <Link href={homeUrl} className="flex items-center gap-2">
               {logo}
-              {name}
-            </a>
+              <span className="text-xl font-bold">
+                <span className="bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
+                  Campus
+                </span>
+                <span className="bg-gradient-to-r from-teal-500 to-teal-700 bg-clip-text text-transparent">
+                  Circle
+                </span>
+              </span>
+            </Link>
             {showNavigation && (customNavigation || <Navigation />)}
           </NavbarLeft>
           <NavbarRight>
@@ -85,21 +98,21 @@ export default function Navbar({
                   variant={action.variant || "default"}
                   asChild
                 >
-                  <a href={action.href}>
+                  <Link href={action.href}>
                     {action.icon}
                     {action.text}
                     {action.iconRight}
-                  </a>
+                  </Link>
                 </Button>
               ) : (
-                <a
+                <Link
                   key={index}
                   href={action.href}
-                  className="hidden text-sm md:block"
+                  className="hidden text-sm md:block hover:text-blue-600 transition-colors"
                 >
                   {action.text}
-                </a>
-              ),
+                </Link>
+              )
             )}
             <Sheet>
               <SheetTrigger asChild>
@@ -114,20 +127,20 @@ export default function Navbar({
               </SheetTrigger>
               <SheetContent side="right">
                 <nav className="grid gap-6 text-lg font-medium">
-                  <a
+                  <Link
                     href={homeUrl}
                     className="flex items-center gap-2 text-xl font-bold"
                   >
                     <span>{name}</span>
-                  </a>
+                  </Link>
                   {mobileLinks.map((link, index) => (
-                    <a
+                    <Link
                       key={index}
                       href={link.href}
-                      className="text-muted-foreground hover:text-foreground"
+                      className="text-muted-foreground hover:text-foreground transition-colors"
                     >
                       {link.text}
-                    </a>
+                    </Link>
                   ))}
                 </nav>
               </SheetContent>

@@ -17,26 +17,28 @@ interface StatsProps {
 export default function Stats({
   items = [
     {
-      label: "used by",
-      value: Math.round(siteConfig.stats.figma / 100) / 10,
-      suffix: "k",
-      description: "designers on Figma Community",
+      label: "over",
+      value: "500",
+      suffix: "+",
+      description: "active Binus students",
     },
     {
-      label: "over",
-      value: siteConfig.stats.github,
-      description: "clones and forks of the template on Github",
+      label: "more than",
+      value: "1.2",
+      suffix: "k",
+      description: "study materials listed",
     },
     {
       label: "already",
-      value: Math.round(siteConfig.stats.cli / 100) / 10,
-      suffix: "k",
-      description: "installations with shadcn/ui CLI",
+      value: "300",
+      suffix: "+",
+      description: "successful transactions",
     },
     {
-      label: "includes",
-      value: siteConfig.stats.sections,
-      description: "blocks and sections",
+      label: "trusted by",
+      value: "150",
+      suffix: "+",
+      description: "verified tutors",
     },
   ],
   className,
@@ -57,11 +59,11 @@ export default function Stats({
                   </div>
                 )}
                 <div className="flex items-baseline gap-2">
-                  <div className="from-foreground to-foreground dark:to-brand bg-linear-to-r bg-clip-text text-4xl font-medium text-transparent drop-shadow-[2px_1px_24px_var(--brand-foreground)] transition-all duration-300 sm:text-5xl md:text-6xl">
+                  <div className="text-foreground text-4xl font-bold transition-all duration-300 sm:text-5xl md:text-6xl">
                     {item.value}
                   </div>
                   {item.suffix && (
-                    <div className="text-brand text-2xl font-semibold">
+                    <div className="text-foreground text-2xl font-semibold">
                       {item.suffix}
                     </div>
                   )}

@@ -1,9 +1,9 @@
+import Image from "next/image";
 import { ReactNode } from "react";
 
 import { siteConfig } from "@/config/site";
 import { cn } from "@/lib/utils";
 
-import LaunchUI from "../../logos/launch-ui";
 import {
   Footer,
   FooterBottom,
@@ -33,37 +33,46 @@ interface FooterProps {
 }
 
 export default function FooterSection({
-  logo = <LaunchUI />,
-  name = "Launch UI",
+  logo = (
+    <Image
+      src="/campusCircle-logo.png"
+      alt="CampusCircle Logo"
+      width={32}
+      height={32}
+      className="h-8 w-8"
+    />
+  ),
+  name = "CampusCircle",
   columns = [
     {
-      title: "Product",
+      title: "Platform",
       links: [
-        { text: "Changelog", href: siteConfig.url },
-        { text: "Documentation", href: siteConfig.url },
+        { text: "Marketplace", href: "/dashboard" },
+        { text: "Tutoring", href: "/dashboard" },
+        { text: "My Library", href: "/library" },
       ],
     },
     {
-      title: "Company",
+      title: "Resources",
       links: [
-        { text: "About", href: siteConfig.url },
-        { text: "Careers", href: siteConfig.url },
-        { text: "Blog", href: siteConfig.url },
+        { text: "How It Works", href: "/" },
+        { text: "FAQ", href: "/" },
+        { text: "Support", href: siteConfig.links.email },
       ],
     },
     {
-      title: "Contact",
+      title: "Connect",
       links: [
-        { text: "Discord", href: siteConfig.url },
-        { text: "Twitter", href: siteConfig.url },
-        { text: "Github", href: siteConfig.links.github },
+        { text: "Twitter", href: siteConfig.links.twitter },
+        { text: "GitHub", href: siteConfig.links.github },
+        { text: "Email", href: siteConfig.links.email },
       ],
     },
   ],
-  copyright = "© 2025 Mikołaj Dobrucki. All rights reserved",
+  copyright = "© 2025 CampusCircle. Built for Binus University students.",
   policies = [
-    { text: "Privacy Policy", href: siteConfig.url },
-    { text: "Terms of Service", href: siteConfig.url },
+    { text: "Privacy Policy", href: "/privacy" },
+    { text: "Terms of Service", href: "/terms" },
   ],
   showModeToggle = true,
   className,
@@ -76,7 +85,14 @@ export default function FooterSection({
             <FooterColumn className="col-span-2 sm:col-span-3 md:col-span-1">
               <div className="flex items-center gap-2">
                 {logo}
-                <h3 className="text-xl font-bold">{name}</h3>
+                <h3 className="text-xl font-bold">
+                  <span className="bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
+                    Campus
+                  </span>
+                  <span className="bg-gradient-to-r from-teal-500 to-teal-700 bg-clip-text text-transparent">
+                    Circle
+                  </span>
+                </h3>
               </div>
             </FooterColumn>
             {columns.map((column, index) => (

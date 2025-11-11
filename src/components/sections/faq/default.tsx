@@ -24,103 +24,82 @@ interface FAQProps {
 }
 
 export default function FAQ({
-  title = "Questions and Answers",
+  title = "Frequently Asked Questions",
   items = [
     {
-      question:
-        "Why building a great landing page is critical for your business?",
+      question: "Who can use CampusCircle?",
       answer: (
         <>
           <p className="text-muted-foreground mb-4 max-w-[640px] text-balance">
-            In today&apos;s AI-driven world, standing out is harder than ever.
-            While anyone can build a product, a professional landing page makes
-            the difference between success and failure.
+            CampusCircle is exclusively for Binus University students. You need
+            to sign in with your Binus Google account (@binus.ac.id or
+            @binus.edu) to access the platform.
           </p>
           <p className="text-muted-foreground mb-4 max-w-[640px] text-balance">
-            Launch UI helps you ship faster without compromising on quality.
+            This ensures a trusted and safe community for all users.
           </p>
         </>
       ),
     },
     {
-      question: "Why use Launch UI instead of a no-code tool?",
+      question: "How do payments work?",
       answer: (
         <>
           <p className="text-muted-foreground mb-4 max-w-[600px]">
-            No-code tools lock you into their ecosystem with recurring fees and
-            limited control. They often come with performance issues and make it
-            difficult to integrate with your product.
+            We use Midtrans, a secure payment gateway, to process all
+            transactions. You can pay using various methods including credit
+            cards, bank transfers, and e-wallets.
           </p>
           <p className="text-muted-foreground mb-4 max-w-[600px]">
-            You can&apos;t even change your hosting provider and basic things
-            like web analytics come as extra costs and paid add-ons.
+            All payments are encrypted and secure. Sellers receive their funds
+            after successful delivery confirmation.
           </p>
           <p className="text-muted-foreground mb-4 max-w-[600px]">
-            What might seem like a convenient solution today could paint you
-            into a corner tomorrow, limiting your ability to scale and adapt.
-            Launch UI gives you full control of your code while maintaining
-            professional quality.
+            We charge a small platform fee to maintain and improve the service.
+            CampusCircle is completely free to use for all Binus students.
           </p>
         </>
       ),
     },
     {
-      question:
-        "How Launch UI is different from other components libraries and templates?",
+      question: "What can I buy and sell on CampusCircle?",
       answer: (
         <>
           <p className="text-muted-foreground mb-4 max-w-[580px]">
-            Launch UI stands out with premium design quality and delightful
-            touches of custom animations and illustrations.
+            You can trade study materials like notes, textbooks, past exam
+            papers, and course materials. We also support tutoring services
+            where you can offer or find academic help.
           </p>
           <p className="text-muted-foreground mb-4 max-w-[580px]">
-            All components are carefully crafted to help position your product
-            as a professional tool, avoiding the generic template look.
-          </p>
-          <p className="text-muted-foreground mb-4 max-w-[640px] text-balance">
-            Unlike many libraries that rely on outdated CSS practices and old
-            dependencies, Launch UI is built with modern technologies and best
-            practices in mind.
+            All items must be related to academic purposes and comply with
+            university policies. Prohibited items will be removed.
           </p>
         </>
       ),
     },
     {
-      question: 'Why exactly does it mean that "The code is yours"?',
+      question: "Is CampusCircle free to use?",
       answer: (
         <>
           <p className="text-muted-foreground mb-4 max-w-[580px]">
-            The basic version of Launch UI is open-source and free forever,
-            under a do-whatever-you-want license.
+            Yes! CampusCircle is completely free for all Binus University
+            students. There are no subscription fees or hidden charges.
           </p>
           <p className="text-muted-foreground mb-4 max-w-[580px]">
-            The pro version that contains more components and options is a
-            one-time purchase that gives you lifetime access to all current and
-            future content. Use it for unlimited personal and commercial
-            projects - no recurring fees or restrictions.
-          </p>
-          <p className="text-muted-foreground mb-4 max-w-[580px]">
-            For complete details about licensing and usage rights, check out{" "}
-            <Link href="/pricing" className="text-foreground underline">
-              the pricing page
-            </Link>
-            .
+            We only charge a small transaction fee when you make a purchase to
+            cover payment processing costs and platform maintenance.
           </p>
         </>
       ),
     },
     {
-      question: "Are Figma files included?",
+      question: "How do I contact a seller?",
       answer: (
         <p className="text-muted-foreground mb-4 max-w-[580px]">
-          Yes! The complete Launch UI template is available for free on the{" "}
-          <Link
-            href="https://www.figma.com/community/file/1420131743903900629/launch-ui-landing-page-components-ui-kit"
-            className="text-foreground underline"
-          >
-            Figma community
-          </Link>
-          .
+          Once you find an item you&apos;re interested in, you can use our
+          built-in messaging system to chat directly with the seller. Simply
+          click the &quot;Message Seller&quot; button on any listing to start a
+          conversation. .
         </p>
       ),
     },

@@ -19,29 +19,22 @@ interface LogosProps {
 }
 
 export default function Logos({
-  title = "Built with industry-standard tools and best practices",
+  title = "Built with modern technologies for the best experience",
   badge = (
     <Badge variant="outline" className="border-brand/30 text-brand">
-      Last updated: {siteConfig.stats.updated}
+      Powered by Next.js & Vercel
     </Badge>
   ),
   logos = [
-    <Logo key="figma" image={Figma} name="Figma" />,
-    <Logo key="react" image={React} name="React" version="19.2.0" />,
+    <Logo key="react" image={React} name="React" version="18" />,
     <Logo
       key="typescript"
       image={TypeScript}
       name="TypeScript"
-      version="5.9.3"
+      version="5.x"
     />,
-    <Logo
-      key="shadcn"
-      image={ShadcnUi}
-      name="Shadcn/ui"
-      version="3.4.2"
-      badge="New"
-    />,
-    <Logo key="tailwind" image={Tailwind} name="Tailwind" version="4.1.14" />,
+    <Logo key="shadcn" image={ShadcnUi} name="Shadcn/ui" badge="UI" />,
+    <Logo key="tailwind" image={Tailwind} name="Tailwind" version="3.x" />,
   ],
   className,
 }: LogosProps) {

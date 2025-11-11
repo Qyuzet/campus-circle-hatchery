@@ -26,49 +26,48 @@ interface ItemsProps {
 }
 
 export default function Items({
-  title = "Everything you need. Nothing you don't.",
+  title = "Everything you need for campus trading",
   items = [
     {
-      title: "Accessibility first",
-      description: "Fully WCAG 2.0 compliant, made with best a11y practices",
+      title: "Verified Students Only",
+      description:
+        "Exclusive access for Binus University students with verified accounts",
       icon: <Eye className="size-5 stroke-1" />,
     },
     {
-      title: "Responsive design",
-      description: "Looks and works great on any device and screen size",
+      title: "Mobile Friendly",
+      description: "Browse and trade on any device, anytime, anywhere",
       icon: <Smartphone className="size-5 stroke-1" />,
     },
     {
-      title: "Light and dark mode",
+      title: "Secure Payments",
       description:
-        "Seamless switching between color schemes, 6 themes included",
+        "Integrated with Midtrans for safe and reliable transactions",
       icon: <CircleDot className="size-5 stroke-1" />,
     },
     {
-      title: "Easy to customize",
-      description: "Flexible options to match your product or brand",
+      title: "Study Materials",
+      description: "Buy and sell notes, books, and study resources",
       icon: <Box className="size-5 stroke-1" />,
     },
     {
-      title: "Top-level performance",
-      description: "Made for lightning-fast load times and smooth interactions",
+      title: "Fast & Easy",
+      description: "List items in seconds, find what you need instantly",
       icon: <Zap className="size-5 stroke-1" />,
     },
     {
-      title: "Production ready",
-      description: "Thoroughly tested and launch-prepared",
+      title: "Tutoring Services",
+      description: "Connect with tutors or offer your expertise to peers",
       icon: <Rocket className="size-5 stroke-1" />,
     },
     {
-      title: "Made for localisation",
-      description:
-        "Easy to implement support for multiple languages and regions",
+      title: "Campus Community",
+      description: "Built by students, for students at Binus University",
       icon: <Globe className="size-5 stroke-1" />,
     },
     {
-      title: "CMS friendly",
-      description:
-        "Built to work with your any headless content management system",
+      title: "Real-time Messaging",
+      description: "Chat directly with buyers and sellers for quick deals",
       icon: <Edit className="size-5 stroke-1" />,
     },
   ],
