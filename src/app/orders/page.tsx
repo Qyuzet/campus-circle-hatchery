@@ -21,6 +21,7 @@ import {
   User,
   Bell,
   Search,
+  RefreshCw,
 } from "lucide-react";
 import Image from "next/image";
 import { transactionsAPI, statsAPI, notificationsAPI } from "@/lib/api";
@@ -427,6 +428,28 @@ export default function OrdersPage() {
 }
 
 function OrdersTable({ orders, router }: { orders: any[]; router: any }) {
+  const [refreshingId, setRefreshingId] = useState<string | null>(null);
+
+  const handleRefreshStatus = async (orderId: string) => {
+    try {
+      setRefreshingId(orderId);
+      const response = await fetch(`/api/payment/status?orderId=${orderId}`);
+      const result = await response.json();
+
+      if (result.success) {
+        // Reload the page to show updated status
+        window.location.reload();
+      } else {
+        alert("Failed to refresh status. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error refreshing status:", error);
+      alert("Failed to refresh status. Please try again.");
+    } finally {
+      setRefreshingId(null);
+    }
+  };
+
   if (orders.length === 0) {
     return (
       <Card>
@@ -504,6 +527,23 @@ function OrdersTable({ orders, router }: { orders: any[]; router: any }) {
                       >
                         <Eye className="h-4 w-4 mr-1" />
                         View
+                      </Button>
+                    )}
+                    {order.status === "PENDING" && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleRefreshStatus(order.orderId)}
+                        disabled={refreshingId === order.orderId}
+                      >
+                        <RefreshCw
+                          className={`h-4 w-4 mr-1 ${
+                            refreshingId === order.orderId ? "animate-spin" : ""
+                          }`}
+                        />
+                        {refreshingId === order.orderId
+                          ? "Checking..."
+                          : "Refresh"}
                       </Button>
                     )}
                   </TableCell>

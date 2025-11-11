@@ -119,8 +119,8 @@ export async function POST(request: NextRequest) {
         data: {
           userId: transaction.buyerId,
           type: "purchase",
-          title: "Payment Successful!",
-          message: `Your payment for "${transaction.itemTitle}" has been confirmed`,
+          title: "🎉 Payment Successful!",
+          message: `Your purchase of "${transaction.itemTitle}" has been confirmed. Access it from your Library.`,
         },
       });
     }
