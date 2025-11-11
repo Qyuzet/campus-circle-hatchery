@@ -893,115 +893,124 @@ export default function Dashboard() {
                       <Card
                         key={item.id}
                         onClick={() => handleItemClick(item)}
-                        className="cursor-pointer hover:shadow-lg transition-all group"
+                        className="cursor-pointer hover:shadow-lg transition-all group overflow-hidden"
                       >
-                        <CardHeader className="p-0">
-                          <div className="aspect-w-16 aspect-h-9 bg-secondary-200 rounded-t-lg overflow-hidden">
-                            {item.imageUrl ? (
-                              <img
-                                src={item.imageUrl}
-                                alt={item.title}
-                                className="w-full h-48 object-cover rounded-t-lg group-hover:scale-105 transition-transform duration-300"
-                              />
-                            ) : (
-                              <div
-                                className={`w-full h-48 rounded-t-lg flex items-center justify-center ${
-                                  item.category === "Notes"
-                                    ? "bg-gradient-to-br from-blue-100 to-blue-200"
-                                    : item.category === "Tutorial"
-                                    ? "bg-gradient-to-br from-green-100 to-green-200"
-                                    : item.category === "Tutoring"
-                                    ? "bg-gradient-to-br from-purple-100 to-purple-200"
-                                    : item.category === "Assignment"
-                                    ? "bg-gradient-to-br from-orange-100 to-orange-200"
-                                    : item.category === "Book"
-                                    ? "bg-gradient-to-br from-red-100 to-red-200"
-                                    : "bg-gradient-to-br from-gray-100 to-gray-200"
-                                }`}
-                              >
-                                <div className="text-center">
-                                  {item.category === "Notes" && (
-                                    <FileText className="h-12 w-12 text-blue-600 mx-auto mb-1" />
-                                  )}
-                                  {item.category === "Tutorial" && (
-                                    <Video className="h-12 w-12 text-green-600 mx-auto mb-1" />
-                                  )}
-                                  {item.category === "Tutoring" && (
-                                    <GraduationCap className="h-12 w-12 text-purple-600 mx-auto mb-1" />
-                                  )}
-                                  {item.category === "Assignment" && (
-                                    <FileText className="h-12 w-12 text-orange-600 mx-auto mb-1" />
-                                  )}
-                                  {item.category === "Book" && (
-                                    <Book className="h-12 w-12 text-red-600 mx-auto mb-1" />
-                                  )}
-                                  {![
-                                    "Notes",
-                                    "Tutorial",
-                                    "Tutoring",
-                                    "Assignment",
-                                    "Book",
-                                  ].includes(item.category) && (
-                                    <BookOpen className="h-12 w-12 text-gray-600 mx-auto mb-1" />
-                                  )}
-                                  <p className="text-xs font-medium text-gray-600">
-                                    {item.category}
-                                  </p>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </CardHeader>
-                        <CardContent className="space-y-3">
-                          <div className="flex justify-between items-start">
-                            <Badge variant="secondary">{item.category}</Badge>
-                            <button
-                              onClick={(e) => e.stopPropagation()}
-                              className="text-muted-foreground hover:text-red-500 transition-colors"
+                        {/* Image Section */}
+                        <div className="relative aspect-video bg-secondary-200 overflow-hidden">
+                          {item.imageUrl ? (
+                            <img
+                              src={item.imageUrl}
+                              alt={item.title}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                          ) : (
+                            <div
+                              className={`w-full h-full flex items-center justify-center ${
+                                item.category === "Notes"
+                                  ? "bg-gradient-to-br from-blue-100 to-blue-200"
+                                  : item.category === "Tutorial"
+                                  ? "bg-gradient-to-br from-green-100 to-green-200"
+                                  : item.category === "Tutoring"
+                                  ? "bg-gradient-to-br from-purple-100 to-purple-200"
+                                  : item.category === "Assignment"
+                                  ? "bg-gradient-to-br from-orange-100 to-orange-200"
+                                  : item.category === "Book"
+                                  ? "bg-gradient-to-br from-red-100 to-red-200"
+                                  : "bg-gradient-to-br from-gray-100 to-gray-200"
+                              }`}
                             >
-                              <Heart className="h-4 w-4" />
-                            </button>
-                          </div>
-                          <div>
-                            <CardTitle className="text-lg line-clamp-2 mb-1">
-                              {item.title}
-                            </CardTitle>
-                            <CardDescription className="line-clamp-2">
-                              {item.description}
-                            </CardDescription>
-                          </div>
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <BookOpen className="h-3 w-3" />
-                            <span>{item.course}</span>
-                            {item.fileName && (
-                              <>
-                                <span>•</span>
-                                <FileText className="h-3 w-3" />
-                                <span>File included</span>
-                              </>
-                            )}
-                          </div>
-                          <div className="flex items-center justify-between pt-2">
-                            <div>
-                              <p className="text-2xl font-bold text-primary">
-                                Rp {item.price.toLocaleString()}
-                              </p>
-                              <div className="flex items-center text-xs text-muted-foreground">
-                                <Star className="h-3 w-3 text-yellow-400 mr-1 fill-yellow-400" />
-                                {item.rating} ({item.reviewCount || 0})
+                              <div className="text-center">
+                                {item.category === "Notes" && (
+                                  <FileText className="h-16 w-16 text-blue-600 mx-auto" />
+                                )}
+                                {item.category === "Tutorial" && (
+                                  <Video className="h-16 w-16 text-green-600 mx-auto" />
+                                )}
+                                {item.category === "Tutoring" && (
+                                  <GraduationCap className="h-16 w-16 text-purple-600 mx-auto" />
+                                )}
+                                {item.category === "Assignment" && (
+                                  <FileText className="h-16 w-16 text-orange-600 mx-auto" />
+                                )}
+                                {item.category === "Book" && (
+                                  <Book className="h-16 w-16 text-red-600 mx-auto" />
+                                )}
+                                {![
+                                  "Notes",
+                                  "Tutorial",
+                                  "Tutoring",
+                                  "Assignment",
+                                  "Book",
+                                ].includes(item.category) && (
+                                  <BookOpen className="h-16 w-16 text-gray-600 mx-auto" />
+                                )}
+                                <p className="text-sm font-semibold text-gray-700 mt-2">
+                                  {item.category}
+                                </p>
                               </div>
                             </div>
-                            <div className="text-right text-xs text-muted-foreground">
-                              <p>
-                                by{" "}
+                          )}
+                          {/* Favorite Button */}
+                          <button
+                            onClick={(e) => e.stopPropagation()}
+                            className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm p-2 rounded-full text-gray-600 hover:text-red-500 hover:bg-white transition-all shadow-sm"
+                          >
+                            <Heart className="h-4 w-4" />
+                          </button>
+                        </div>
+
+                        {/* Content Section */}
+                        <CardContent className="p-4 space-y-3">
+                          {/* Category Badge */}
+                          <Badge variant="secondary" className="text-xs">
+                            {item.category}
+                          </Badge>
+
+                          {/* Title */}
+                          <h3 className="font-bold text-lg line-clamp-1 text-gray-900">
+                            {item.title}
+                          </h3>
+
+                          {/* Description */}
+                          <p className="text-sm text-gray-600 line-clamp-2 min-h-[40px]">
+                            {item.description}
+                          </p>
+
+                          {/* Course Info */}
+                          <div className="flex items-center gap-2 text-xs text-gray-500">
+                            <BookOpen className="h-3.5 w-3.5" />
+                            <span className="font-medium">{item.course}</span>
+                          </div>
+
+                          {/* Price and Rating */}
+                          <div className="flex items-end justify-between pt-2 border-t">
+                            <div>
+                              <p className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                                Rp {item.price.toLocaleString()}
+                              </p>
+                              <div className="flex items-center gap-1 mt-1">
+                                <Star className="h-3.5 w-3.5 text-yellow-400 fill-yellow-400" />
+                                <span className="text-xs font-medium text-gray-700">
+                                  {item.rating}
+                                </span>
+                                <span className="text-xs text-gray-500">
+                                  ({item.reviewCount || 0})
+                                </span>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-xs text-gray-500">by</p>
+                              <p className="text-xs font-medium text-gray-700">
                                 {typeof item.seller === "string"
-                                  ? item.seller
+                                  ? `Student ${item.seller.slice(-9)}`
                                   : item.seller?.name || "Unknown"}
                               </p>
                             </div>
                           </div>
                         </CardContent>
-                        <CardFooter className="flex gap-2 pt-0">
+
+                        {/* Action Buttons */}
+                        <CardFooter className="flex gap-2 p-4 pt-0">
                           {item.sellerId === currentUser?.id ? (
                             <Button
                               variant="destructive"
@@ -1949,148 +1958,188 @@ export default function Dashboard() {
 
       {/* Item Detail Modal */}
       {showItemDetailModal && selectedItem && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-4 sm:p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold text-dark-gray">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl w-full max-w-lg max-h-[85vh] overflow-hidden shadow-2xl">
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 py-3 border-b">
+              <h2 className="text-lg font-bold text-gray-900 line-clamp-1">
                 {selectedItem.title}
               </h2>
               <button
                 onClick={() => setShowItemDetailModal(false)}
-                className="text-medium-gray hover:text-dark-gray"
+                className="text-gray-400 hover:text-gray-600 transition-colors p-1 hover:bg-gray-100 rounded-full flex-shrink-0"
               >
-                <X className="h-6 w-6" />
+                <X className="h-5 w-5" />
               </button>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-6">
-              {/* Item Image */}
-              <div className="aspect-w-16 aspect-h-9 bg-secondary-200 rounded-lg overflow-hidden">
-                {selectedItem.imageUrl ? (
-                  <img
-                    src={selectedItem.imageUrl}
-                    alt={selectedItem.title}
-                    className="w-full h-64 object-cover rounded-lg"
-                  />
-                ) : (
-                  <div
-                    className={`w-full h-64 rounded-lg flex items-center justify-center ${
-                      selectedItem.category === "Notes"
-                        ? "bg-gradient-to-br from-blue-100 to-blue-200"
-                        : selectedItem.category === "Tutorial"
-                        ? "bg-gradient-to-br from-green-100 to-green-200"
-                        : selectedItem.category === "Tutoring"
-                        ? "bg-gradient-to-br from-purple-100 to-purple-200"
-                        : selectedItem.category === "Assignment"
-                        ? "bg-gradient-to-br from-orange-100 to-orange-200"
-                        : selectedItem.category === "Book"
-                        ? "bg-gradient-to-br from-red-100 to-red-200"
-                        : "bg-gradient-to-br from-gray-100 to-gray-200"
-                    }`}
-                  >
-                    <div className="text-center">
-                      {selectedItem.category === "Notes" && (
-                        <FileText className="h-16 w-16 text-blue-600 mx-auto mb-2" />
-                      )}
-                      {selectedItem.category === "Tutorial" && (
-                        <Video className="h-16 w-16 text-green-600 mx-auto mb-2" />
-                      )}
-                      {selectedItem.category === "Tutoring" && (
-                        <GraduationCap className="h-16 w-16 text-purple-600 mx-auto mb-2" />
-                      )}
-                      {selectedItem.category === "Assignment" && (
-                        <FileText className="h-16 w-16 text-orange-600 mx-auto mb-2" />
-                      )}
-                      {selectedItem.category === "Book" && (
-                        <Book className="h-16 w-16 text-red-600 mx-auto mb-2" />
-                      )}
-                      {![
-                        "Notes",
-                        "Tutorial",
-                        "Tutoring",
-                        "Assignment",
-                        "Book",
-                      ].includes(selectedItem.category) && (
-                        <BookOpen className="h-16 w-16 text-gray-600 mx-auto mb-2" />
-                      )}
-                      <p className="text-sm font-medium text-gray-600">
-                        {selectedItem.category}
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Item Details */}
-              <div className="space-y-4">
-                <div>
-                  <span className="inline-block bg-primary-100 text-dark-blue text-sm px-3 py-1 rounded-full mb-2">
-                    {selectedItem.category}
-                  </span>
-                  <h3 className="text-xl font-semibold text-dark-gray mb-2">
-                    {selectedItem.title}
-                  </h3>
-                  <p className="text-medium-gray mb-4">
-                    {selectedItem.description}
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center text-sm text-medium-gray">
-                    <BookOpen className="h-4 w-4 mr-2" />
-                    Course: {selectedItem.course}
-                  </div>
-                  <div className="flex items-center text-sm text-medium-gray">
-                    <User className="h-4 w-4 mr-2" />
-                    Seller:{" "}
-                    {typeof selectedItem.seller === "string"
-                      ? selectedItem.seller
-                      : selectedItem.seller?.name || "Unknown"}
-                  </div>
-                  <div className="flex items-center text-sm text-medium-gray">
-                    <Star className="h-4 w-4 mr-2 text-yellow-400" />
-                    {selectedItem.rating} ({selectedItem.reviews} reviews)
-                  </div>
-                  {selectedItem.condition && (
-                    <div className="flex items-center text-sm text-medium-gray">
-                      <Eye className="h-4 w-4 mr-2" />
-                      Condition: {selectedItem.condition}
+            {/* Content */}
+            <div className="overflow-y-auto max-h-[calc(85vh-60px)]">
+              <div className="p-4 space-y-4">
+                {/* Image Section */}
+                <div className="relative w-full h-48 rounded-lg overflow-hidden">
+                  {selectedItem.imageUrl ? (
+                    <img
+                      src={selectedItem.imageUrl}
+                      alt={selectedItem.title}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div
+                      className={`w-full h-full flex items-center justify-center ${
+                        selectedItem.category === "Notes"
+                          ? "bg-gradient-to-br from-blue-100 to-blue-200"
+                          : selectedItem.category === "Tutorial"
+                          ? "bg-gradient-to-br from-green-100 to-green-200"
+                          : selectedItem.category === "Tutoring"
+                          ? "bg-gradient-to-br from-purple-100 to-purple-200"
+                          : selectedItem.category === "Assignment"
+                          ? "bg-gradient-to-br from-orange-100 to-orange-200"
+                          : selectedItem.category === "Book"
+                          ? "bg-gradient-to-br from-red-100 to-red-200"
+                          : "bg-gradient-to-br from-gray-100 to-gray-200"
+                      }`}
+                    >
+                      <div className="text-center">
+                        {selectedItem.category === "Notes" && (
+                          <FileText className="h-16 w-16 text-blue-600 mx-auto mb-2" />
+                        )}
+                        {selectedItem.category === "Tutorial" && (
+                          <Video className="h-16 w-16 text-green-600 mx-auto mb-2" />
+                        )}
+                        {selectedItem.category === "Tutoring" && (
+                          <GraduationCap className="h-16 w-16 text-purple-600 mx-auto mb-2" />
+                        )}
+                        {selectedItem.category === "Assignment" && (
+                          <FileText className="h-16 w-16 text-orange-600 mx-auto mb-2" />
+                        )}
+                        {selectedItem.category === "Book" && (
+                          <Book className="h-16 w-16 text-red-600 mx-auto mb-2" />
+                        )}
+                        {![
+                          "Notes",
+                          "Tutorial",
+                          "Tutoring",
+                          "Assignment",
+                          "Book",
+                        ].includes(selectedItem.category) && (
+                          <BookOpen className="h-16 w-16 text-gray-600 mx-auto mb-2" />
+                        )}
+                        <p className="text-sm font-semibold text-gray-700">
+                          {selectedItem.category}
+                        </p>
+                      </div>
                     </div>
                   )}
                 </div>
 
-                <div className="border-t pt-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-3xl font-bold text-dark-blue">
-                      Rp {selectedItem.price.toLocaleString()}
-                    </span>
-                    <span
-                      className={`px-3 py-1 rounded-full text-sm font-medium ${
+                {/* Details Section */}
+                <div className="space-y-3">
+                  {/* Category Badge */}
+                  <Badge variant="secondary" className="text-xs">
+                    {selectedItem.category}
+                  </Badge>
+
+                  {/* Title & Description */}
+                  <div>
+                    <h3 className="text-base font-bold text-gray-900 mb-1">
+                      {selectedItem.title}
+                    </h3>
+                    <p className="text-sm text-gray-600 line-clamp-2">
+                      {selectedItem.description}
+                    </p>
+                  </div>
+
+                  {/* Info Grid */}
+                  <div className="grid grid-cols-2 gap-3 p-3 bg-gray-50 rounded-lg text-xs">
+                    <div className="flex items-center gap-2 text-sm">
+                      <BookOpen className="h-4 w-4 text-gray-500" />
+                      <div>
+                        <p className="text-xs text-gray-500">Course</p>
+                        <p className="font-medium text-gray-900">
+                          {selectedItem.course}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <User className="h-4 w-4 text-gray-500" />
+                      <div>
+                        <p className="text-xs text-gray-500">Seller</p>
+                        <p className="font-medium text-gray-900">
+                          {typeof selectedItem.seller === "string"
+                            ? `Student ${selectedItem.seller.slice(-9)}`
+                            : selectedItem.seller?.name || "Unknown"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
+                      <div>
+                        <p className="text-xs text-gray-500">Rating</p>
+                        <p className="font-medium text-gray-900">
+                          {selectedItem.rating} ({selectedItem.reviews || 0}{" "}
+                          reviews)
+                        </p>
+                      </div>
+                    </div>
+                    {selectedItem.condition && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <Eye className="h-4 w-4 text-gray-500" />
+                        <div>
+                          <p className="text-xs text-gray-500">Condition</p>
+                          <p className="font-medium text-gray-900">
+                            {selectedItem.condition}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Price & Status */}
+                  <div className="flex items-center justify-between p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg">
+                    <div>
+                      <p className="text-xs text-gray-600 mb-0.5">Price</p>
+                      <p className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                        Rp {selectedItem.price.toLocaleString()}
+                      </p>
+                    </div>
+                    <Badge
+                      variant={
                         selectedItem.status === "available"
-                          ? "bg-green-100 text-green-800"
+                          ? "default"
+                          : "secondary"
+                      }
+                      className={`text-xs px-3 py-1 ${
+                        selectedItem.status === "available"
+                          ? "bg-green-100 text-green-700 hover:bg-green-100"
                           : selectedItem.status === "sold"
-                          ? "bg-red-100 text-red-800"
-                          : "bg-yellow-100 text-yellow-800"
+                          ? "bg-red-100 text-red-700"
+                          : "bg-yellow-100 text-yellow-700"
                       }`}
                     >
                       {selectedItem.status}
-                    </span>
+                    </Badge>
                   </div>
 
-                  <div className="flex gap-3">
+                  {/* Action Buttons */}
+                  <div className="flex gap-2">
                     {selectedItem.sellerId === currentUser?.id ? (
-                      <button
+                      <Button
+                        variant="destructive"
+                        className="flex-1"
                         onClick={() => {
                           handleDeleteItem(selectedItem.id);
                           setShowItemDetailModal(false);
                         }}
-                        className="flex-1 bg-red-600 text-white px-4 py-3 rounded-lg hover:bg-red-700 transition-colors font-medium"
                       >
+                        <Trash2 className="h-4 w-4 mr-2" />
                         Delete Item
-                      </button>
+                      </Button>
                     ) : selectedItem.status === "available" ? (
                       <>
-                        <button
+                        <Button
+                          variant="outline"
+                          className="flex-1"
                           onClick={() => {
                             handleCreateConversation(
                               selectedItem.sellerId,
@@ -2100,16 +2149,17 @@ export default function Dashboard() {
                             );
                             setShowItemDetailModal(false);
                           }}
-                          className="flex-1 bg-campus-green text-white px-4 py-3 rounded-lg hover:bg-success-700 transition-colors font-medium"
                         >
+                          <MessageCircle className="h-4 w-4 mr-2" />
                           Message Seller
-                        </button>
-                        <button
+                        </Button>
+                        <Button
+                          className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
                           onClick={() => handleBuyItem(selectedItem)}
-                          className="flex-1 bg-dark-blue text-white px-4 py-3 rounded-lg hover:bg-primary-800 transition-colors font-medium"
                         >
+                          <ShoppingCart className="h-4 w-4 mr-2" />
                           Buy Now
-                        </button>
+                        </Button>
                       </>
                     ) : (
                       <div className="flex-1 bg-gray-100 text-gray-500 px-4 py-3 rounded-lg text-center font-medium">
