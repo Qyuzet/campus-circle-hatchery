@@ -24,7 +24,15 @@ export interface MarketplaceItem {
   course: string;
   faculty: string;
   sellerId: string;
-  seller: string;
+  seller:
+    | string
+    | {
+        id: string;
+        name: string;
+        studentId: string;
+        rating: number;
+        totalSales: number;
+      };
   imageUrl?: string;
   images?: string[];
   tags?: string[];
@@ -90,10 +98,9 @@ export interface Notification {
   userId: string;
   type: "message" | "purchase" | "sale" | "review" | "tutoring" | "system";
   title: string;
-  content: string;
-  read: boolean;
-  actionUrl?: string;
-  timestamp: string;
+  message: string;
+  isRead: boolean;
+  createdAt: string;
 }
 
 export interface UserStats {

@@ -81,13 +81,16 @@ export async function POST(request: NextRequest) {
       price,
       category,
       course,
-      faculty,
+      condition,
       imageUrl,
       fileUrl,
+      fileName,
+      fileSize,
+      fileType,
     } = body;
 
     // Validation
-    if (!title || !description || !price || !category || !course || !faculty) {
+    if (!title || !description || !price || !category || !course) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
@@ -111,9 +114,13 @@ export async function POST(request: NextRequest) {
         price: parseInt(price),
         category,
         course,
-        faculty,
-        imageUrl,
-        fileUrl,
+        faculty: user.faculty || "Unknown", // Use user's faculty
+        condition: condition || "Good",
+        imageUrl: imageUrl || null,
+        fileUrl: fileUrl || null,
+        fileName: fileName || null,
+        fileSize: fileSize ? parseInt(fileSize) : null,
+        fileType: fileType || null,
         sellerId: user.id,
         status: "available",
       },
@@ -130,15 +137,20 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Update user stats
+    // Create user stats if they don't exist (don't increment itemsSold yet - only when item is actually sold)
     await prisma.userStats.upsert({
       where: { userId: user.id },
-      update: {
-        itemsSold: { increment: 1 },
-      },
+      update: {},
       create: {
         userId: user.id,
-        itemsSold: 1,
+        itemsSold: 0,
+        itemsBought: 0,
+        totalEarnings: 0,
+        totalSpent: 0,
+        messagesCount: 0,
+        tutoringSessions: 0,
+        reviewsGiven: 0,
+        reviewsReceived: 0,
       },
     });
 

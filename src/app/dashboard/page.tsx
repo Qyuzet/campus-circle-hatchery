@@ -3,6 +3,18 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   BookOpen,
   Users,
@@ -28,6 +40,9 @@ import {
   GraduationCap,
   Video,
   Book,
+  TrendingUp,
+  Package,
+  Library,
 } from "lucide-react";
 import {
   marketplaceAPI,
@@ -36,6 +51,8 @@ import {
   tutoringAPI,
   notificationsAPI,
   statsAPI,
+  transactionsAPI,
+  fileAPI,
 } from "@/lib/api";
 import {
   MarketplaceItem,
@@ -84,6 +101,9 @@ export default function Dashboard() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [userStats, setUserStats] = useState<any>({});
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [messages, setMessages] = useState<any[]>([]);
+  const [salesTransactions, setSalesTransactions] = useState<any[]>([]);
+  const [allTransactions, setAllTransactions] = useState<any[]>([]);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -116,24 +136,50 @@ export default function Dashboard() {
     };
   }, [showNotifications]);
 
+  // Load messages when conversation is selected
+  useEffect(() => {
+    if (selectedConversation) {
+      loadMessages(selectedConversation);
+    }
+  }, [selectedConversation]);
+
   const loadData = async () => {
     try {
       setIsLoading(true);
 
       // Load all data in parallel
-      const [items, convos, sessions, notifs, stats] = await Promise.all([
-        marketplaceAPI.getItems(),
-        conversationsAPI.getConversations(),
-        tutoringAPI.getSessions({ type: "all" }),
-        notificationsAPI.getNotifications(),
-        statsAPI.getUserStats(),
-      ]);
+      const [items, convos, sessions, notifs, stats, sales, purchases] =
+        await Promise.all([
+          marketplaceAPI.getItems(),
+          conversationsAPI.getConversations(),
+          tutoringAPI.getSessions({ type: "all" }),
+          notificationsAPI.getNotifications(),
+          statsAPI.getUserStats(),
+          transactionsAPI.getTransactions({
+            type: "sales",
+            status: "COMPLETED",
+          }),
+          transactionsAPI.getTransactions({
+            type: "purchases",
+          }),
+        ]);
 
       setMarketplaceItems(items);
       setConversations(convos);
       setTutoringSessions(sessions);
       setNotifications(notifs);
       setUserStats(stats);
+      setSalesTransactions(sales);
+
+      // Combine sales and purchases with type field
+      const allTrans = [
+        ...sales.map((t: any) => ({ ...t, type: "sale" })),
+        ...purchases.map((t: any) => ({ ...t, type: "purchase" })),
+      ].sort(
+        (a: any, b: any) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+      setAllTransactions(allTrans);
 
       // Set current user from session
       if (session?.user) {
@@ -203,6 +249,15 @@ export default function Dashboard() {
     }
   };
 
+  const loadMessages = async (conversationId: string) => {
+    try {
+      const msgs = await messagesAPI.getMessages(conversationId);
+      setMessages(msgs);
+    } catch (error) {
+      console.error("Error loading messages:", error);
+    }
+  };
+
   const handleSendMessage = async (conversationId: string, content: string) => {
     if (!content.trim()) return;
 
@@ -213,6 +268,9 @@ export default function Dashboard() {
       // Reload conversations
       const convos = await conversationsAPI.getConversations();
       setConversations(convos);
+
+      // Reload messages
+      await loadMessages(conversationId);
 
       // Reload stats
       const stats = await statsAPI.getUserStats();
@@ -401,7 +459,7 @@ export default function Dashboard() {
                   onClick={() => setShowNotifications(!showNotifications)}
                 >
                   <Bell className="h-5 w-5 sm:h-6 sm:w-6" />
-                  {notifications.filter((n) => !n.read).length > 0 && (
+                  {notifications.filter((n) => !n.isRead).length > 0 && (
                     <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-500"></span>
                   )}
                 </button>
@@ -418,7 +476,7 @@ export default function Dashboard() {
                           onClick={async () => {
                             try {
                               const notifIds = notifications
-                                .filter((n) => !n.read)
+                                .filter((n) => !n.isRead)
                                 .map((n) => n.id);
                               if (notifIds.length > 0) {
                                 await notificationsAPI.markAsRead(notifIds);
@@ -445,11 +503,11 @@ export default function Dashboard() {
                           <div
                             key={notification.id}
                             className={`p-4 border-b border-light-gray hover:bg-gray-50 cursor-pointer ${
-                              !notification.read ? "bg-blue-50" : ""
+                              !notification.isRead ? "bg-blue-50" : ""
                             }`}
                             onClick={async () => {
                               try {
-                                if (!notification.read) {
+                                if (!notification.isRead) {
                                   await notificationsAPI.markAsRead([
                                     notification.id,
                                   ]);
@@ -505,15 +563,15 @@ export default function Dashboard() {
                                   {notification.title}
                                 </p>
                                 <p className="text-sm text-medium-gray mt-1">
-                                  {notification.content}
+                                  {notification.message}
                                 </p>
                                 <p className="text-xs text-medium-gray mt-2">
                                   {new Date(
-                                    notification.timestamp
+                                    notification.createdAt
                                   ).toLocaleString()}
                                 </p>
                               </div>
-                              {!notification.read && (
+                              {!notification.isRead && (
                                 <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                               )}
                             </div>
@@ -532,89 +590,90 @@ export default function Dashboard() {
                 )}
               </div>
 
-              <div className="flex items-center space-x-2">
-                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-dark-blue rounded-full flex items-center justify-center">
-                  <User className="h-3 w-3 sm:h-5 sm:w-5 text-white" />
-                </div>
+              <button
+                onClick={() => router.push("/account")}
+                className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
+              >
+                {session?.user?.image ? (
+                  <Image
+                    src={session.user.image}
+                    alt={session.user.name || "User"}
+                    width={32}
+                    height={32}
+                    className="w-6 h-6 sm:w-8 sm:h-8 rounded-full"
+                  />
+                ) : (
+                  <div className="w-6 h-6 sm:w-8 sm:h-8 bg-dark-blue rounded-full flex items-center justify-center">
+                    <User className="h-3 w-3 sm:h-5 sm:w-5 text-white" />
+                  </div>
+                )}
                 <span className="text-xs sm:text-sm font-medium text-dark-gray hidden sm:block">
-                  Student ID: 2501234567
+                  {session?.user?.name || session?.user?.email || "User"}
                 </span>
-              </div>
+              </button>
             </div>
           </div>
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-        <div className="flex flex-col lg:flex-row gap-4 lg:gap-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
+        <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
           {/* Mobile Navigation */}
           <div className="lg:hidden">
-            {/* Mobile Search */}
-            <div className="bg-white rounded-lg shadow p-4 mb-4">
-              <div className="relative">
-                <Search className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-medium-gray" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => handleSearch(e.target.value)}
-                  placeholder="Search materials, courses..."
-                  className="w-full pl-10 pr-4 py-2 border border-light-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-dark-blue focus:border-dark-blue transition-colors"
-                />
-              </div>
-            </div>
-
             {/* Mobile Tab Navigation */}
-            <div className="bg-white rounded-lg shadow p-4 mb-4">
-              <div className="flex overflow-x-auto space-x-2 pb-2">
+            <div className="bg-white rounded-lg shadow p-2 mb-4">
+              <div className="flex justify-around items-center">
                 <button
                   onClick={() => setActiveTab("discovery")}
-                  className={`flex-shrink-0 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                  className={`flex flex-col items-center p-2 transition-colors ${
                     activeTab === "discovery"
-                      ? "bg-primary-100 text-dark-blue"
-                      : "text-medium-gray hover:bg-secondary-100"
+                      ? "text-dark-blue"
+                      : "text-medium-gray hover:text-dark-blue"
                   }`}
+                  title="Marketplace"
                 >
-                  Discovery
+                  <ShoppingCart className="h-5 w-5" />
                 </button>
                 <button
-                  onClick={() => setActiveTab("my-items")}
-                  className={`flex-shrink-0 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                    activeTab === "my-items"
-                      ? "bg-primary-100 text-dark-blue"
-                      : "text-medium-gray hover:bg-secondary-100"
-                  }`}
+                  onClick={() => router.push("/orders")}
+                  className="flex flex-col items-center p-2 text-medium-gray hover:text-dark-blue transition-colors"
+                  title="Orders"
                 >
-                  My Items
+                  <Package className="h-5 w-5" />
+                </button>
+                <button
+                  onClick={() => router.push("/library")}
+                  className="flex flex-col items-center p-2 text-medium-gray hover:text-dark-blue transition-colors"
+                  title="Library"
+                >
+                  <Library className="h-5 w-5" />
                 </button>
                 <button
                   onClick={() => setActiveTab("messages")}
-                  className={`flex-shrink-0 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                  className={`flex flex-col items-center p-2 transition-colors relative ${
                     activeTab === "messages"
-                      ? "bg-primary-100 text-dark-blue"
-                      : "text-medium-gray hover:bg-secondary-100"
+                      ? "text-dark-blue"
+                      : "text-medium-gray hover:text-dark-blue"
                   }`}
+                  title="Messages"
                 >
-                  Messages
-                </button>
-                <button
-                  onClick={() => setActiveTab("academic-support")}
-                  className={`flex-shrink-0 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                    activeTab === "academic-support"
-                      ? "bg-primary-100 text-dark-blue"
-                      : "text-medium-gray hover:bg-secondary-100"
-                  }`}
-                >
-                  Support
+                  <MessageCircle className="h-5 w-5" />
+                  {userStats && userStats.messagesCount > 0 && (
+                    <span className="absolute top-1 right-1 bg-green-status text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                      {userStats.messagesCount}
+                    </span>
+                  )}
                 </button>
                 <button
                   onClick={() => setActiveTab("insights")}
-                  className={`flex-shrink-0 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                  className={`flex flex-col items-center p-2 transition-colors ${
                     activeTab === "insights"
-                      ? "bg-primary-100 text-dark-blue"
-                      : "text-medium-gray hover:bg-secondary-100"
+                      ? "text-dark-blue"
+                      : "text-medium-gray hover:text-dark-blue"
                   }`}
+                  title="Analytics"
                 >
-                  Insights
+                  <TrendingUp className="h-5 w-5" />
                 </button>
               </div>
             </div>
@@ -623,7 +682,7 @@ export default function Dashboard() {
           {/* Desktop Sidebar */}
           <div className="hidden lg:block lg:w-64 flex-shrink-0">
             <div className="bg-white rounded-lg shadow p-6">
-              <nav className="space-y-2">
+              <nav className="space-y-1">
                 <button
                   onClick={() => setActiveTab("discovery")}
                   className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
@@ -633,19 +692,23 @@ export default function Dashboard() {
                   }`}
                 >
                   <ShoppingCart className="mr-3 h-5 w-5" />
-                  Discovery
+                  Marketplace
                 </button>
 
                 <button
-                  onClick={() => setActiveTab("my-items")}
-                  className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                    activeTab === "my-items"
-                      ? "bg-primary-100 text-dark-blue"
-                      : "text-medium-gray hover:bg-secondary-100"
-                  }`}
+                  onClick={() => router.push("/orders")}
+                  className="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors text-medium-gray hover:bg-secondary-100"
                 >
-                  <BookOpen className="mr-3 h-5 w-5" />
-                  My Items
+                  <Package className="mr-3 h-5 w-5" />
+                  Orders
+                </button>
+
+                <button
+                  onClick={() => router.push("/library")}
+                  className="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors text-medium-gray hover:bg-secondary-100"
+                >
+                  <Library className="mr-3 h-5 w-5" />
+                  Library
                 </button>
 
                 <button
@@ -658,21 +721,12 @@ export default function Dashboard() {
                 >
                   <MessageCircle className="mr-3 h-5 w-5" />
                   Messages
-                  <span className="ml-auto bg-green-status bg-opacity-10 text-green-status text-xs rounded-full px-2 py-1">
-                    3
-                  </span>
-                </button>
-
-                <button
-                  onClick={() => setActiveTab("academic-support")}
-                  className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                    activeTab === "academic-support"
-                      ? "bg-primary-100 text-dark-blue"
-                      : "text-medium-gray hover:bg-secondary-100"
-                  }`}
-                >
-                  <GraduationCap className="mr-3 h-5 w-5" />
-                  Academic Support
+                  {conversations.filter((c) => c.unreadCount > 0).length >
+                    0 && (
+                    <span className="ml-auto bg-green-status bg-opacity-10 text-green-status text-xs rounded-full px-2 py-1">
+                      {conversations.filter((c) => c.unreadCount > 0).length}
+                    </span>
+                  )}
                 </button>
 
                 <button
@@ -683,41 +737,19 @@ export default function Dashboard() {
                       : "text-medium-gray hover:bg-secondary-100"
                   }`}
                 >
-                  <Star className="mr-3 h-5 w-5" />
-                  Insights
+                  <TrendingUp className="mr-3 h-5 w-5" />
+                  Analytics
                 </button>
               </nav>
 
-              <div className="mt-8">
+              <div className="mt-6 pt-6 border-t border-gray-200">
                 <button
                   onClick={() => setShowAddItemModal(true)}
-                  className="w-full bg-dark-blue text-white px-4 py-2 rounded-md hover:bg-primary-800 transition-colors flex items-center justify-center"
+                  className="w-full bg-dark-blue text-white px-4 py-2.5 rounded-md hover:bg-primary-800 transition-colors flex items-center justify-center font-medium"
                 >
                   <Plus className="mr-2 h-4 w-4" />
-                  Add New Item
+                  Add Item
                 </button>
-              </div>
-            </div>
-
-            {/* Stats */}
-            <div className="mt-6 bg-white rounded-lg shadow p-6 border border-light-gray">
-              <h3 className="text-lg font-medium text-dark-gray mb-4">
-                Your Stats
-              </h3>
-              <div className="space-y-4">
-                {stats.map((stat, index) => (
-                  <div key={index} className="flex items-center">
-                    <div className={`p-2 rounded-lg ${stat.color}`}>
-                      <stat.icon className="h-4 w-4 text-white" />
-                    </div>
-                    <div className="ml-3">
-                      <p className="text-sm font-medium text-dark-gray">
-                        {stat.value}
-                      </p>
-                      <p className="text-xs text-medium-gray">{stat.label}</p>
-                    </div>
-                  </div>
-                ))}
               </div>
             </div>
           </div>
@@ -725,196 +757,448 @@ export default function Dashboard() {
           {/* Main Content */}
           <div className="flex-1">
             {activeTab === "discovery" && (
-              <div>
-                <div className="flex justify-between items-center mb-6">
-                  <h1 className="text-2xl font-bold text-dark-gray">
-                    Discovery
-                  </h1>
-                  <div className="flex items-center space-x-4">
-                    <div className="relative">
+              <div className="space-y-6">
+                {/* Header with Search and Filters */}
+                <Card>
+                  <CardHeader>
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                      <div>
+                        <CardTitle className="text-2xl">
+                          Discover Study Materials
+                        </CardTitle>
+                        <CardDescription>
+                          Browse and purchase study materials from fellow
+                          students
+                        </CardDescription>
+                      </div>
+                      <Button
+                        onClick={() => setShowAddItemModal(true)}
+                        className="md:w-auto"
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add New Item
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-col md:flex-row gap-4">
+                      {/* Search */}
+                      <div className="flex-1 relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          placeholder="Search by title, course, or description..."
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          className="pl-10"
+                        />
+                      </div>
+
+                      {/* Category Filter */}
                       <select
                         value={selectedCategory}
                         onChange={(e) => handleCategoryFilter(e.target.value)}
-                        className="flex items-center px-3 py-2 border border-light-gray rounded-md text-sm text-medium-gray hover:text-dark-gray transition-colors bg-white"
+                        className="px-3 py-2 border border-input rounded-md text-sm bg-background hover:bg-accent transition-colors"
                       >
                         <option value="">All Categories</option>
-                        <option value="Notes">Notes</option>
-                        <option value="Tutorial">Tutorial</option>
-                        <option value="Tutoring">Tutoring</option>
-                        <option value="Assignment">Assignment</option>
-                        <option value="Book">Book</option>
-                        <option value="Other">Other</option>
+                        <option value="Notes">📝 Notes</option>
+                        <option value="Tutorial">🎥 Tutorial</option>
+                        <option value="Tutoring">👨‍🏫 Tutoring</option>
+                        <option value="Assignment">📄 Assignment</option>
+                        <option value="Book">📚 Book</option>
+                        <option value="Other">📦 Other</option>
                       </select>
-                    </div>
-                    <div className="flex border border-light-gray rounded-md">
-                      <button
-                        onClick={() => setViewMode("grid")}
-                        className={`p-2 transition-colors ${
-                          viewMode === "grid"
-                            ? "bg-primary-50 text-dark-blue"
-                            : "text-medium-gray"
-                        }`}
-                      >
-                        <Grid className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => setViewMode("list")}
-                        className={`p-2 transition-colors ${
-                          viewMode === "list"
-                            ? "bg-primary-50 text-dark-blue"
-                            : "text-medium-gray"
-                        }`}
-                      >
-                        <List className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
 
+                      {/* View Mode Toggle */}
+                      <div className="flex border border-input rounded-md">
+                        <Button
+                          variant={viewMode === "grid" ? "secondary" : "ghost"}
+                          size="sm"
+                          onClick={() => setViewMode("grid")}
+                          className="rounded-r-none"
+                        >
+                          <Grid className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant={viewMode === "list" ? "secondary" : "ghost"}
+                          size="sm"
+                          onClick={() => setViewMode("list")}
+                          className="rounded-l-none"
+                        >
+                          <List className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Active Filters */}
+                    {(selectedCategory || searchQuery) && (
+                      <div className="flex items-center gap-2 mt-4">
+                        <span className="text-sm text-muted-foreground">
+                          Active filters:
+                        </span>
+                        {selectedCategory && (
+                          <Badge variant="secondary" className="gap-1">
+                            {selectedCategory}
+                            <button
+                              onClick={() => handleCategoryFilter("")}
+                              className="ml-1 hover:text-destructive"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </Badge>
+                        )}
+                        {searchQuery && (
+                          <Badge variant="secondary" className="gap-1">
+                            Search: "{searchQuery}"
+                            <button
+                              onClick={() => setSearchQuery("")}
+                              className="ml-1 hover:text-destructive"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </Badge>
+                        )}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Marketplace Items */}
                 <div
-                  className={`grid gap-6 ${
+                  className={`grid gap-4 ${
                     viewMode === "grid"
                       ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
                       : "grid-cols-1"
                   }`}
                 >
-                  {marketplaceItems.map((item) => (
-                    <div
-                      key={item.id}
-                      onClick={() => handleItemClick(item)}
-                      className="bg-white rounded-lg shadow hover:shadow-lg transition-all border border-light-gray cursor-pointer transform hover:scale-105"
-                    >
-                      <div className="aspect-w-16 aspect-h-9 bg-secondary-200 rounded-t-lg overflow-hidden">
-                        {item.imageUrl ? (
-                          <img
-                            src={item.imageUrl}
-                            alt={item.title}
-                            className="w-full h-48 object-cover rounded-t-lg"
-                          />
-                        ) : (
-                          <div
-                            className={`w-full h-48 rounded-t-lg flex items-center justify-center ${
-                              item.category === "Notes"
-                                ? "bg-gradient-to-br from-blue-100 to-blue-200"
-                                : item.category === "Tutorial"
-                                ? "bg-gradient-to-br from-green-100 to-green-200"
-                                : item.category === "Tutoring"
-                                ? "bg-gradient-to-br from-purple-100 to-purple-200"
-                                : item.category === "Assignment"
-                                ? "bg-gradient-to-br from-orange-100 to-orange-200"
-                                : item.category === "Book"
-                                ? "bg-gradient-to-br from-red-100 to-red-200"
-                                : "bg-gradient-to-br from-gray-100 to-gray-200"
-                            }`}
-                          >
-                            <div className="text-center">
-                              {item.category === "Notes" && (
-                                <FileText className="h-12 w-12 text-blue-600 mx-auto mb-1" />
-                              )}
-                              {item.category === "Tutorial" && (
-                                <Video className="h-12 w-12 text-green-600 mx-auto mb-1" />
-                              )}
-                              {item.category === "Tutoring" && (
-                                <GraduationCap className="h-12 w-12 text-purple-600 mx-auto mb-1" />
-                              )}
-                              {item.category === "Assignment" && (
-                                <FileText className="h-12 w-12 text-orange-600 mx-auto mb-1" />
-                              )}
-                              {item.category === "Book" && (
-                                <Book className="h-12 w-12 text-red-600 mx-auto mb-1" />
-                              )}
-                              {![
-                                "Notes",
-                                "Tutorial",
-                                "Tutoring",
-                                "Assignment",
-                                "Book",
-                              ].includes(item.category) && (
-                                <BookOpen className="h-12 w-12 text-gray-600 mx-auto mb-1" />
-                              )}
-                              <p className="text-xs font-medium text-gray-600">
-                                {item.category}
+                  {marketplaceItems.length === 0 ? (
+                    <Card className="col-span-full">
+                      <CardContent className="flex flex-col items-center justify-center py-12">
+                        <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
+                        <h3 className="text-lg font-semibold mb-2">
+                          No items found
+                        </h3>
+                        <p className="text-muted-foreground text-center mb-4">
+                          {searchQuery || selectedCategory
+                            ? "Try adjusting your filters"
+                            : "Be the first to add a study material!"}
+                        </p>
+                        <Button onClick={() => setShowAddItemModal(true)}>
+                          <Plus className="h-4 w-4 mr-2" />
+                          Add Item
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    marketplaceItems.map((item) => (
+                      <Card
+                        key={item.id}
+                        onClick={() => handleItemClick(item)}
+                        className="cursor-pointer hover:shadow-lg transition-all group"
+                      >
+                        <CardHeader className="p-0">
+                          <div className="aspect-w-16 aspect-h-9 bg-secondary-200 rounded-t-lg overflow-hidden">
+                            {item.imageUrl ? (
+                              <img
+                                src={item.imageUrl}
+                                alt={item.title}
+                                className="w-full h-48 object-cover rounded-t-lg group-hover:scale-105 transition-transform duration-300"
+                              />
+                            ) : (
+                              <div
+                                className={`w-full h-48 rounded-t-lg flex items-center justify-center ${
+                                  item.category === "Notes"
+                                    ? "bg-gradient-to-br from-blue-100 to-blue-200"
+                                    : item.category === "Tutorial"
+                                    ? "bg-gradient-to-br from-green-100 to-green-200"
+                                    : item.category === "Tutoring"
+                                    ? "bg-gradient-to-br from-purple-100 to-purple-200"
+                                    : item.category === "Assignment"
+                                    ? "bg-gradient-to-br from-orange-100 to-orange-200"
+                                    : item.category === "Book"
+                                    ? "bg-gradient-to-br from-red-100 to-red-200"
+                                    : "bg-gradient-to-br from-gray-100 to-gray-200"
+                                }`}
+                              >
+                                <div className="text-center">
+                                  {item.category === "Notes" && (
+                                    <FileText className="h-12 w-12 text-blue-600 mx-auto mb-1" />
+                                  )}
+                                  {item.category === "Tutorial" && (
+                                    <Video className="h-12 w-12 text-green-600 mx-auto mb-1" />
+                                  )}
+                                  {item.category === "Tutoring" && (
+                                    <GraduationCap className="h-12 w-12 text-purple-600 mx-auto mb-1" />
+                                  )}
+                                  {item.category === "Assignment" && (
+                                    <FileText className="h-12 w-12 text-orange-600 mx-auto mb-1" />
+                                  )}
+                                  {item.category === "Book" && (
+                                    <Book className="h-12 w-12 text-red-600 mx-auto mb-1" />
+                                  )}
+                                  {![
+                                    "Notes",
+                                    "Tutorial",
+                                    "Tutoring",
+                                    "Assignment",
+                                    "Book",
+                                  ].includes(item.category) && (
+                                    <BookOpen className="h-12 w-12 text-gray-600 mx-auto mb-1" />
+                                  )}
+                                  <p className="text-xs font-medium text-gray-600">
+                                    {item.category}
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          <div className="flex justify-between items-start">
+                            <Badge variant="secondary">{item.category}</Badge>
+                            <button
+                              onClick={(e) => e.stopPropagation()}
+                              className="text-muted-foreground hover:text-red-500 transition-colors"
+                            >
+                              <Heart className="h-4 w-4" />
+                            </button>
+                          </div>
+                          <div>
+                            <CardTitle className="text-lg line-clamp-2 mb-1">
+                              {item.title}
+                            </CardTitle>
+                            <CardDescription className="line-clamp-2">
+                              {item.description}
+                            </CardDescription>
+                          </div>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <BookOpen className="h-3 w-3" />
+                            <span>{item.course}</span>
+                            {item.fileName && (
+                              <>
+                                <span>•</span>
+                                <FileText className="h-3 w-3" />
+                                <span>File included</span>
+                              </>
+                            )}
+                          </div>
+                          <div className="flex items-center justify-between pt-2">
+                            <div>
+                              <p className="text-2xl font-bold text-primary">
+                                Rp {item.price.toLocaleString()}
+                              </p>
+                              <div className="flex items-center text-xs text-muted-foreground">
+                                <Star className="h-3 w-3 text-yellow-400 mr-1 fill-yellow-400" />
+                                {item.rating} ({item.reviewCount || 0})
+                              </div>
+                            </div>
+                            <div className="text-right text-xs text-muted-foreground">
+                              <p>
+                                by{" "}
+                                {typeof item.seller === "string"
+                                  ? item.seller
+                                  : item.seller?.name || "Unknown"}
                               </p>
                             </div>
                           </div>
-                        )}
-                      </div>
-                      <div className="p-4">
-                        <div className="flex justify-between items-start mb-2">
-                          <span className="inline-block bg-primary-100 text-dark-blue text-xs px-2 py-1 rounded-full">
-                            {item.category}
-                          </span>
-                          <button className="text-medium-gray hover:text-green-status transition-colors">
-                            <Heart className="h-4 w-4" />
-                          </button>
-                        </div>
-                        <h3 className="font-semibold text-dark-gray mb-1">
-                          {item.title}
-                        </h3>
-                        <p className="text-sm text-medium-gray mb-2 line-clamp-2">
-                          {item.description}
-                        </p>
-                        <p className="text-xs text-medium-gray mb-3">
-                          Course: {item.course}
-                        </p>
+                        </CardContent>
+                        <CardFooter className="flex gap-2 pt-0">
+                          {item.sellerId === currentUser?.id ? (
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              className="w-full"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteItem(item.id);
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4 mr-1" />
+                              Delete
+                            </Button>
+                          ) : (
+                            <>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="flex-1"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleCreateConversation(
+                                    item.sellerId,
+                                    typeof item.seller === "string"
+                                      ? item.seller
+                                      : item.seller?.name || "Unknown"
+                                  );
+                                }}
+                              >
+                                <MessageCircle className="h-4 w-4 mr-1" />
+                                Message
+                              </Button>
+                              <Button
+                                size="sm"
+                                className="flex-1"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleBuyItem(item);
+                                }}
+                              >
+                                <ShoppingCart className="h-4 w-4 mr-1" />
+                                Buy
+                              </Button>
+                            </>
+                          )}
+                        </CardFooter>
+                      </Card>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
 
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-lg font-bold text-dark-blue">
-                              Rp {item.price.toLocaleString()}
-                            </p>
-                            <div className="flex items-center text-sm text-medium-gray">
-                              <Star className="h-3 w-3 text-yellow-400 mr-1" />
-                              {item.rating} ({item.reviews})
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-sm text-medium-gray">
-                              by {item.seller}
-                            </p>
-                            <div className="flex gap-2 mt-1">
-                              {item.sellerId === currentUser?.id ? (
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDeleteItem(item.id);
-                                  }}
-                                  className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 transition-colors"
-                                >
-                                  Delete
-                                </button>
-                              ) : (
-                                <>
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleCreateConversation(
-                                        item.sellerId,
-                                        item.seller
-                                      );
-                                    }}
-                                    className="bg-campus-green text-white px-3 py-1 rounded text-sm hover:bg-success-700 transition-colors"
-                                  >
-                                    Message
-                                  </button>
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleBuyItem(item);
-                                    }}
-                                    className="bg-dark-blue text-white px-3 py-1 rounded text-sm hover:bg-primary-800 transition-colors"
-                                  >
-                                    Buy Now
-                                  </button>
-                                </>
-                              )}
-                            </div>
-                          </div>
-                        </div>
+            {activeTab === "sales" && (
+              <div>
+                <h1 className="text-2xl font-bold text-dark-gray mb-6">
+                  Sales Dashboard
+                </h1>
+
+                {/* Sales Stats */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                  <div className="bg-white rounded-lg shadow p-6 border border-light-gray">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-medium-gray mb-1">
+                          Total Sales
+                        </p>
+                        <p className="text-2xl font-bold text-dark-gray">
+                          {salesTransactions.length}
+                        </p>
+                      </div>
+                      <div className="bg-green-100 p-3 rounded-full">
+                        <ShoppingCart className="h-6 w-6 text-green-600" />
                       </div>
                     </div>
-                  ))}
+                  </div>
+
+                  <div className="bg-white rounded-lg shadow p-6 border border-light-gray">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-medium-gray mb-1">
+                          Total Revenue
+                        </p>
+                        <p className="text-2xl font-bold text-dark-gray">
+                          Rp{" "}
+                          {salesTransactions
+                            .reduce((sum, t) => sum + t.amount, 0)
+                            .toLocaleString()}
+                        </p>
+                      </div>
+                      <div className="bg-blue-100 p-3 rounded-full">
+                        <DollarSign className="h-6 w-6 text-blue-600" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-lg shadow p-6 border border-light-gray">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-medium-gray mb-1">
+                          Average Sale
+                        </p>
+                        <p className="text-2xl font-bold text-dark-gray">
+                          Rp{" "}
+                          {salesTransactions.length > 0
+                            ? Math.round(
+                                salesTransactions.reduce(
+                                  (sum, t) => sum + t.amount,
+                                  0
+                                ) / salesTransactions.length
+                              ).toLocaleString()
+                            : "0"}
+                        </p>
+                      </div>
+                      <div className="bg-purple-100 p-3 rounded-full">
+                        <TrendingUp className="h-6 w-6 text-purple-600" />
+                      </div>
+                    </div>
+                  </div>
                 </div>
+
+                {/* Sales Transactions Table */}
+                {salesTransactions.length > 0 ? (
+                  <div className="bg-white rounded-lg shadow border border-light-gray overflow-hidden">
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead className="bg-gray-50 border-b border-light-gray">
+                          <tr>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-medium-gray uppercase tracking-wider">
+                              Order ID
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-medium-gray uppercase tracking-wider">
+                              Item
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-medium-gray uppercase tracking-wider">
+                              Buyer
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-medium-gray uppercase tracking-wider">
+                              Amount
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-medium-gray uppercase tracking-wider">
+                              Payment Method
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-medium-gray uppercase tracking-wider">
+                              Date
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-light-gray">
+                          {salesTransactions.map((transaction) => (
+                            <tr
+                              key={transaction.id}
+                              className="hover:bg-gray-50"
+                            >
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-dark-gray">
+                                {transaction.orderId.substring(0, 12)}...
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-gray">
+                                {transaction.itemTitle}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-gray">
+                                {transaction.buyer?.name || "Unknown"}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">
+                                Rp {transaction.amount.toLocaleString()}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-gray">
+                                {transaction.paymentMethod || "N/A"}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-medium-gray">
+                                {new Date(
+                                  transaction.createdAt
+                                ).toLocaleDateString()}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-white rounded-lg shadow p-8 text-center border border-light-gray">
+                    <TrendingUp className="h-12 w-12 text-medium-gray mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-dark-gray mb-2">
+                      No sales yet
+                    </h3>
+                    <p className="text-medium-gray mb-4">
+                      Start selling your study materials to see your sales here!
+                    </p>
+                    <button
+                      onClick={() => setShowAddItemModal(true)}
+                      className="bg-dark-blue text-white px-4 py-2 rounded-md hover:bg-primary-800 transition-colors"
+                    >
+                      Add Your First Item
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 
@@ -1128,39 +1412,49 @@ export default function Dashboard() {
                         {/* Messages Area */}
                         <div className="flex-1 p-4 overflow-y-auto bg-gray-50">
                           <div className="space-y-4">
-                            {/* Sample messages */}
-                            <div className="flex justify-start">
-                              <div className="bg-white rounded-lg rounded-bl-none p-3 max-w-xs shadow-sm">
-                                <p className="text-sm text-dark-gray">
-                                  Hi! Is the Data Structures notes still
-                                  available?
+                            {messages.length > 0 ? (
+                              messages.map((message) => (
+                                <div
+                                  key={message.id}
+                                  className={`flex ${
+                                    message.senderId === currentUser?.id
+                                      ? "justify-end"
+                                      : "justify-start"
+                                  }`}
+                                >
+                                  <div
+                                    className={`rounded-lg p-3 max-w-xs shadow-sm ${
+                                      message.senderId === currentUser?.id
+                                        ? "bg-dark-blue text-white rounded-br-none"
+                                        : "bg-white text-dark-gray rounded-bl-none"
+                                    }`}
+                                  >
+                                    <p className="text-sm">{message.content}</p>
+                                    <span
+                                      className={`text-xs mt-1 block ${
+                                        message.senderId === currentUser?.id
+                                          ? "text-blue-200"
+                                          : "text-medium-gray"
+                                      }`}
+                                    >
+                                      {new Date(
+                                        message.createdAt
+                                      ).toLocaleTimeString([], {
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                      })}
+                                    </span>
+                                  </div>
+                                </div>
+                              ))
+                            ) : (
+                              <div className="text-center py-8">
+                                <MessageCircle className="h-12 w-12 text-medium-gray mx-auto mb-4" />
+                                <p className="text-medium-gray text-sm">
+                                  No messages yet. Start the conversation!
                                 </p>
-                                <span className="text-xs text-medium-gray mt-1 block">
-                                  10:30 AM
-                                </span>
                               </div>
-                            </div>
-                            <div className="flex justify-end">
-                              <div className="bg-dark-blue text-white rounded-lg rounded-br-none p-3 max-w-xs">
-                                <p className="text-sm">
-                                  Yes, it's still available! Would you like to
-                                  purchase it?
-                                </p>
-                                <span className="text-xs text-blue-200 mt-1 block">
-                                  10:32 AM
-                                </span>
-                              </div>
-                            </div>
-                            <div className="flex justify-start">
-                              <div className="bg-white rounded-lg rounded-bl-none p-3 max-w-xs shadow-sm">
-                                <p className="text-sm text-dark-gray">
-                                  Perfect! How can I pay?
-                                </p>
-                                <span className="text-xs text-medium-gray mt-1 block">
-                                  10:35 AM
-                                </span>
-                              </div>
-                            </div>
+                            )}
                           </div>
                         </div>
 
@@ -1175,16 +1469,20 @@ export default function Dashboard() {
                               className="flex-1 p-3 border border-light-gray rounded-full focus:outline-none focus:ring-2 focus:ring-dark-blue focus:border-dark-blue"
                               onKeyDown={(e) => {
                                 if (e.key === "Enter" && messageText.trim()) {
-                                  // Handle send message
-                                  setMessageText("");
+                                  handleSendMessage(
+                                    selectedConversation,
+                                    messageText
+                                  );
                                 }
                               }}
                             />
                             <button
                               onClick={() => {
                                 if (messageText.trim()) {
-                                  // Handle send message
-                                  setMessageText("");
+                                  handleSendMessage(
+                                    selectedConversation,
+                                    messageText
+                                  );
                                 }
                               }}
                               className="bg-dark-blue text-white p-3 rounded-full hover:bg-primary-800 transition-colors"
@@ -1329,147 +1627,232 @@ export default function Dashboard() {
             )}
 
             {activeTab === "insights" && (
-              <div>
-                <h1 className="text-2xl font-bold text-dark-gray mb-6">
-                  Insights & Opportunities
-                </h1>
+              <div className="space-y-4">
+                {/* Overview Stats */}
+                <div className="flex overflow-x-auto gap-3 pb-2 -mx-3 px-3 md:mx-0 md:px-0 md:grid md:grid-cols-2 lg:grid-cols-4 md:overflow-visible">
+                  <Card className="flex-shrink-0 w-[calc(100vw-120px)] min-w-[200px] max-w-[280px] md:w-auto md:max-w-none">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">
+                        Total Revenue
+                      </CardTitle>
+                      <DollarSign className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">
+                        Rp{" "}
+                        {allTransactions
+                          .filter(
+                            (t) => t.type === "sale" && t.status === "COMPLETED"
+                          )
+                          .reduce((sum, t) => sum + t.amount, 0)
+                          .toLocaleString()}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        From{" "}
+                        {
+                          allTransactions.filter(
+                            (t) => t.type === "sale" && t.status === "COMPLETED"
+                          ).length
+                        }{" "}
+                        sales
+                      </p>
+                    </CardContent>
+                  </Card>
 
-                <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2">
-                  {/* Offer Academic Support */}
-                  <div className="bg-white rounded-lg shadow p-6 border border-light-gray">
-                    <div className="flex items-center mb-4">
-                      <div className="p-3 rounded-lg bg-purple-100">
-                        <GraduationCap className="h-6 w-6 text-purple-600" />
+                  <Card className="flex-shrink-0 w-[calc(100vw-120px)] min-w-[200px] max-w-[280px] md:w-auto md:max-w-none">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">
+                        Total Spent
+                      </CardTitle>
+                      <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">
+                        Rp{" "}
+                        {allTransactions
+                          .filter(
+                            (t) =>
+                              t.type === "purchase" && t.status === "COMPLETED"
+                          )
+                          .reduce((sum, t) => sum + t.amount, 0)
+                          .toLocaleString()}
                       </div>
-                      <div className="ml-4">
-                        <h3 className="text-lg font-semibold text-dark-gray">
-                          Offer Academic Support
-                        </h3>
-                        <p className="text-sm text-medium-gray">
-                          Share your expertise and help fellow students
-                        </p>
-                      </div>
-                    </div>
-                    <p className="text-medium-gray mb-4">
-                      Create tutoring sessions, study groups, or one-on-one
-                      mentoring opportunities. Set your own rates and schedule.
-                    </p>
-                    <button
-                      onClick={() => setShowTutoringModal(true)}
-                      className="w-full bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition-colors"
-                    >
-                      Create Support Session
-                    </button>
-                  </div>
+                      <p className="text-xs text-muted-foreground">
+                        From{" "}
+                        {
+                          allTransactions.filter(
+                            (t) =>
+                              t.type === "purchase" && t.status === "COMPLETED"
+                          ).length
+                        }{" "}
+                        purchases
+                      </p>
+                    </CardContent>
+                  </Card>
 
-                  {/* Sell Study Materials */}
-                  <div className="bg-white rounded-lg shadow p-6 border border-light-gray">
-                    <div className="flex items-center mb-4">
-                      <div className="p-3 rounded-lg bg-blue-100">
-                        <FileText className="h-6 w-6 text-blue-600" />
+                  <Card className="flex-shrink-0 w-[calc(100vw-120px)] min-w-[200px] max-w-[280px] md:w-auto md:max-w-none">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">
+                        Active Listings
+                      </CardTitle>
+                      <BookOpen className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">
+                        {
+                          marketplaceItems.filter(
+                            (item) =>
+                              item.sellerId === currentUser?.id &&
+                              item.status === "available"
+                          ).length
+                        }
                       </div>
-                      <div className="ml-4">
-                        <h3 className="text-lg font-semibold text-dark-gray">
-                          Share Study Materials
-                        </h3>
-                        <p className="text-sm text-medium-gray">
-                          Monetize your notes and resources
-                        </p>
-                      </div>
-                    </div>
-                    <p className="text-medium-gray mb-4">
-                      Upload your notes, assignments, tutorials, and study
-                      guides. Help other students while earning some income.
-                    </p>
-                    <button
-                      onClick={() => setShowAddItemModal(true)}
-                      className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
-                    >
-                      Upload Materials
-                    </button>
-                  </div>
+                      <p className="text-xs text-muted-foreground">
+                        Out of{" "}
+                        {
+                          marketplaceItems.filter(
+                            (item) => item.sellerId === currentUser?.id
+                          ).length
+                        }{" "}
+                        total items
+                      </p>
+                    </CardContent>
+                  </Card>
 
-                  {/* Performance Analytics */}
-                  <div className="bg-white rounded-lg shadow p-6 border border-light-gray">
-                    <div className="flex items-center mb-4">
-                      <div className="p-3 rounded-lg bg-green-100">
-                        <Star className="h-6 w-6 text-green-600" />
-                      </div>
-                      <div className="ml-4">
-                        <h3 className="text-lg font-semibold text-dark-gray">
-                          Your Performance
-                        </h3>
-                        <p className="text-sm text-medium-gray">
-                          Track your academic contributions
-                        </p>
-                      </div>
-                    </div>
-                    <div className="space-y-3">
-                      <div className="flex justify-between">
-                        <span className="text-medium-gray">Materials Sold</span>
-                        <span className="font-semibold text-dark-gray">
-                          {stats[0].value}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-medium-gray">
-                          Support Sessions
-                        </span>
-                        <span className="font-semibold text-dark-gray">
-                          {tutoringSessions.length}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-medium-gray">Student Rating</span>
-                        <span className="font-semibold text-dark-gray">
-                          {stats[3].value} ⭐
-                        </span>
-                      </div>
-                    </div>
-                  </div>
+                  <Card className="flex-shrink-0 w-[calc(100vw-120px)] min-w-[200px] max-w-[280px] md:w-auto md:max-w-none">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">
+                        Avg. Rating
+                      </CardTitle>
+                      <Star className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{stats[3].value}</div>
+                      <p className="text-xs text-muted-foreground">
+                        From all your items
+                      </p>
+                    </CardContent>
+                  </Card>
+                </div>
 
-                  {/* Earning Potential */}
-                  <div className="bg-white rounded-lg shadow p-6 border border-light-gray">
-                    <div className="flex items-center mb-4">
-                      <div className="p-3 rounded-lg bg-yellow-100">
-                        <DollarSign className="h-6 w-6 text-yellow-600" />
+                {/* Recent Activity & Top Items - Side by Side */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {/* Recent Activity */}
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-base">
+                        Recent Activity
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        {allTransactions.slice(0, 3).length === 0 ? (
+                          <div className="text-center py-6 text-sm text-muted-foreground">
+                            No recent activity
+                          </div>
+                        ) : (
+                          allTransactions.slice(0, 3).map((transaction) => (
+                            <div
+                              key={transaction.id}
+                              className="flex items-center justify-between pb-3 border-b border-border last:border-0 last:pb-0"
+                            >
+                              <div className="flex items-center gap-2">
+                                <div
+                                  className={`p-1.5 rounded ${
+                                    transaction.type === "sale"
+                                      ? "bg-green-100"
+                                      : "bg-blue-100"
+                                  }`}
+                                >
+                                  {transaction.type === "sale" ? (
+                                    <TrendingUp className="h-3.5 w-3.5 text-green-600" />
+                                  ) : (
+                                    <ShoppingCart className="h-3.5 w-3.5 text-blue-600" />
+                                  )}
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium line-clamp-1">
+                                    {transaction.itemTitle}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {new Date(
+                                      transaction.createdAt
+                                    ).toLocaleDateString("en-US", {
+                                      month: "short",
+                                      day: "numeric",
+                                    })}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <p
+                                  className={`text-sm font-semibold ${
+                                    transaction.type === "sale"
+                                      ? "text-green-600"
+                                      : "text-blue-600"
+                                  }`}
+                                >
+                                  {transaction.type === "sale" ? "+" : "-"}
+                                  {(transaction.amount / 1000).toFixed(0)}k
+                                </p>
+                              </div>
+                            </div>
+                          ))
+                        )}
                       </div>
-                      <div className="ml-4">
-                        <h3 className="text-lg font-semibold text-dark-gray">
-                          Earning Opportunities
-                        </h3>
-                        <p className="text-sm text-medium-gray">
-                          Maximize your academic income
-                        </p>
+                    </CardContent>
+                  </Card>
+
+                  {/* Top Performing Items */}
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-base">Top Items</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        {marketplaceItems
+                          .filter((item) => item.sellerId === currentUser?.id)
+                          .sort(
+                            (a, b) => (b.viewCount || 0) - (a.viewCount || 0)
+                          )
+                          .slice(0, 3).length === 0 ? (
+                          <div className="text-center py-6 text-sm text-muted-foreground">
+                            No items yet
+                          </div>
+                        ) : (
+                          marketplaceItems
+                            .filter((item) => item.sellerId === currentUser?.id)
+                            .sort(
+                              (a, b) => (b.viewCount || 0) - (a.viewCount || 0)
+                            )
+                            .slice(0, 3)
+                            .map((item) => (
+                              <div
+                                key={item.id}
+                                className="flex items-center justify-between pb-3 border-b border-border last:border-0 last:pb-0"
+                              >
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium line-clamp-1">
+                                    {item.title}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {item.category}
+                                  </p>
+                                </div>
+                                <div className="text-right ml-2">
+                                  <p className="text-sm font-semibold">
+                                    {item.viewCount || 0}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    views
+                                  </p>
+                                </div>
+                              </div>
+                            ))
+                        )}
                       </div>
-                    </div>
-                    <div className="space-y-3">
-                      <div className="p-3 bg-gray-50 rounded-lg">
-                        <p className="text-sm font-medium text-dark-gray">
-                          💡 Tip: High-demand subjects
-                        </p>
-                        <p className="text-xs text-medium-gray">
-                          Java, Data Structures, Calculus
-                        </p>
-                      </div>
-                      <div className="p-3 bg-gray-50 rounded-lg">
-                        <p className="text-sm font-medium text-dark-gray">
-                          📈 Best times to tutor
-                        </p>
-                        <p className="text-xs text-medium-gray">
-                          Before exams and assignment deadlines
-                        </p>
-                      </div>
-                      <div className="p-3 bg-gray-50 rounded-lg">
-                        <p className="text-sm font-medium text-dark-gray">
-                          💰 Average rates
-                        </p>
-                        <p className="text-xs text-medium-gray">
-                          Rp 75,000 - 150,000 per hour
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+                    </CardContent>
+                  </Card>
                 </div>
               </div>
             )}
@@ -1659,7 +2042,10 @@ export default function Dashboard() {
                   </div>
                   <div className="flex items-center text-sm text-medium-gray">
                     <User className="h-4 w-4 mr-2" />
-                    Seller: {selectedItem.seller}
+                    Seller:{" "}
+                    {typeof selectedItem.seller === "string"
+                      ? selectedItem.seller
+                      : selectedItem.seller?.name || "Unknown"}
                   </div>
                   <div className="flex items-center text-sm text-medium-gray">
                     <Star className="h-4 w-4 mr-2 text-yellow-400" />
@@ -1708,7 +2094,9 @@ export default function Dashboard() {
                           onClick={() => {
                             handleCreateConversation(
                               selectedItem.sellerId,
-                              selectedItem.seller
+                              typeof selectedItem.seller === "string"
+                                ? selectedItem.seller
+                                : selectedItem.seller?.name || "Unknown"
                             );
                             setShowItemDetailModal(false);
                           }}
@@ -1920,8 +2308,17 @@ function AddItemForm({
     course: "",
     condition: "Good",
   });
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setUploadedFile(e.target.files[0]);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (
       !formData.title ||
@@ -1933,10 +2330,40 @@ function AddItemForm({
       return;
     }
 
-    onSubmit({
-      ...formData,
-      price: parseInt(formData.price),
-    });
+    try {
+      setUploading(true);
+      let fileData = {};
+
+      // Upload file if selected
+      if (uploadedFile) {
+        setUploadProgress(30);
+        const uploadResult = await fileAPI.uploadFile(uploadedFile);
+        setUploadProgress(70);
+        fileData = {
+          fileUrl: uploadResult.url,
+          fileName: uploadResult.fileName,
+          fileSize: uploadResult.fileSize,
+          fileType: uploadResult.fileType,
+        };
+      }
+
+      setUploadProgress(90);
+
+      // Submit form with file data
+      await onSubmit({
+        ...formData,
+        price: parseInt(formData.price),
+        ...fileData,
+      });
+
+      setUploadProgress(100);
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      alert("Failed to add item. Please try again.");
+    } finally {
+      setUploading(false);
+      setUploadProgress(0);
+    }
   };
 
   return (
@@ -2041,12 +2468,70 @@ function AddItemForm({
         </div>
       </div>
 
+      {/* File Upload */}
+      <div>
+        <label className="block text-sm font-medium text-dark-gray mb-1">
+          Upload File (PDF, DOC, PPT, etc.)
+        </label>
+        <div className="mt-1">
+          <input
+            type="file"
+            onChange={handleFileChange}
+            accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.zip,.rar,image/*,video/*"
+            className="w-full p-2 border border-light-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-dark-blue focus:border-dark-blue text-sm"
+          />
+          {uploadedFile && (
+            <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-lg flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <FileText className="h-4 w-4 text-green-600" />
+                <span className="text-sm text-green-700">
+                  {uploadedFile.name}
+                </span>
+                <span className="text-xs text-green-600">
+                  ({(uploadedFile.size / 1024 / 1024).toFixed(2)} MB)
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setUploadedFile(null)}
+                className="text-red-600 hover:text-red-800"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          )}
+        </div>
+        <p className="text-xs text-medium-gray mt-1">
+          Max file size: 50MB. Supported formats: PDF, Word, PowerPoint, Excel,
+          Images, Videos
+        </p>
+      </div>
+
+      {/* Upload Progress */}
+      {uploading && (
+        <div className="space-y-2">
+          <div className="flex justify-between text-sm">
+            <span className="text-medium-gray">Uploading...</span>
+            <span className="text-dark-blue font-medium">
+              {uploadProgress}%
+            </span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-2">
+            <div
+              className="bg-dark-blue h-2 rounded-full transition-all duration-300"
+              style={{ width: `${uploadProgress}%` }}
+            ></div>
+          </div>
+        </div>
+      )}
+
       <div className="flex gap-2 pt-4">
         <button
           type="submit"
-          className="flex-1 bg-dark-blue text-white px-4 py-2 rounded-lg hover:bg-primary-800 transition-colors"
+          disabled={uploading}
+          className="flex-1 bg-dark-blue text-white px-4 py-2 rounded-lg hover:bg-primary-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Add Item
+          {uploading ? "Uploading..." : "Add Item"}
         </button>
         <button
           type="button"
