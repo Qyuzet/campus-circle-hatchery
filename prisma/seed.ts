@@ -227,6 +227,7 @@ async function main() {
     data: {
       conversationId: conversation.id,
       senderId: buyer.id,
+      receiverId: seller.id,
       content: "Hi! Is the calculator still available?",
     },
   });
@@ -235,6 +236,7 @@ async function main() {
     data: {
       conversationId: conversation.id,
       senderId: seller.id,
+      receiverId: buyer.id,
       content: "Yes, it's still available! Would you like to buy it?",
     },
   });

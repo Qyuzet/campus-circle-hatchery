@@ -38,9 +38,16 @@ export interface MarketplaceItem {
   tags?: string[];
   condition?: "New" | "Like New" | "Good" | "Fair";
   isDigital?: boolean;
+  fileUrl?: string;
+  fileName?: string;
+  fileSize?: number;
+  fileType?: string;
   rating: number;
   reviews: number;
+  reviewCount: number;
   views?: number;
+  viewCount: number;
+  downloadCount: number;
   favorites?: number;
   status: "available" | "sold" | "pending";
   createdAt: string;

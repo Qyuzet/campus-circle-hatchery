@@ -297,7 +297,7 @@ export const notificationStorage = {
     const newNotification: Notification = {
       ...notification,
       id: Date.now().toString(),
-      timestamp: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
     };
     notifications.unshift(newNotification); // Add to beginning
     storage.set(STORAGE_KEYS.NOTIFICATIONS, notifications);
@@ -308,20 +308,20 @@ export const notificationStorage = {
     const notifications = notificationStorage.getNotifications();
     const index = notifications.findIndex((notif) => notif.id === id);
     if (index !== -1) {
-      notifications[index].read = true;
+      notifications[index].isRead = true;
       storage.set(STORAGE_KEYS.NOTIFICATIONS, notifications);
     }
   },
 
   markAllAsRead: (): void => {
     const notifications = notificationStorage.getNotifications();
-    notifications.forEach((notif) => (notif.read = true));
+    notifications.forEach((notif) => (notif.isRead = true));
     storage.set(STORAGE_KEYS.NOTIFICATIONS, notifications);
   },
 
   getUnreadCount: (): number => {
     const notifications = notificationStorage.getNotifications();
-    return notifications.filter((notif) => !notif.read).length;
+    return notifications.filter((notif) => !notif.isRead).length;
   },
 };
 
@@ -406,6 +406,9 @@ export const initializeDefaultData = (): void => {
         sellerId: "user1",
         rating: 4.8,
         reviews: 12,
+        reviewCount: 12,
+        viewCount: 150,
+        downloadCount: 45,
         imageUrl:
           "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=300&fit=crop",
         status: "available",
@@ -424,6 +427,9 @@ export const initializeDefaultData = (): void => {
         sellerId: "user2",
         rating: 4.9,
         reviews: 8,
+        reviewCount: 8,
+        viewCount: 120,
+        downloadCount: 30,
         imageUrl:
           "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=400&h=300&fit=crop",
         status: "available",
@@ -442,6 +448,9 @@ export const initializeDefaultData = (): void => {
         sellerId: "user3",
         rating: 5.0,
         reviews: 15,
+        reviewCount: 15,
+        viewCount: 200,
+        downloadCount: 60,
         imageUrl:
           "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=400&h=300&fit=crop",
         status: "available",
@@ -520,47 +529,47 @@ export const initializeDefaultData = (): void => {
         userId: "current-user",
         type: "message",
         title: "New Message",
-        content: "John Doe sent you a message about Data Structures notes",
-        read: false,
-        timestamp: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+        message: "John Doe sent you a message about Data Structures notes",
+        isRead: false,
+        createdAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
       },
       {
         id: "notif2",
         userId: "current-user",
         type: "tutoring",
         title: "Tutoring Session Confirmed",
-        content:
+        message:
           "Your Java Programming session with Mike Johnson has been confirmed",
-        read: false,
-        timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+        isRead: false,
+        createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
       },
       {
         id: "notif3",
         userId: "current-user",
         type: "system",
         title: "Welcome to CampusCircle!",
-        content:
+        message:
           "Start exploring study materials and connect with fellow students",
-        read: true,
-        timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+        isRead: true,
+        createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
       },
       {
         id: "notif4",
         userId: "current-user",
         type: "purchase",
         title: "Payment Received",
-        content: "You received Rp 50,000 for your Calculus notes",
-        read: false,
-        timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
+        message: "You received Rp 50,000 for your Calculus notes",
+        isRead: false,
+        createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
       },
       {
         id: "notif5",
         userId: "current-user",
         type: "system",
         title: "New Feature: Academic Support",
-        content: "Check out the new Insights tab to offer tutoring services",
-        read: false,
-        timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
+        message: "Check out the new Insights tab to offer tutoring services",
+        isRead: false,
+        createdAt: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
       },
     ];
     storage.set(STORAGE_KEYS.NOTIFICATIONS, sampleNotifications);
