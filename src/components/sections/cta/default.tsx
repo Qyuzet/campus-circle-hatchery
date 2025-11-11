@@ -4,6 +4,7 @@ import { ReactNode } from "react";
 import { siteConfig } from "@/config/site";
 import { cn } from "@/lib/utils";
 
+import SignInButton from "@/components/SignInButton";
 import { Button, buttonVariants } from "../../ui/button";
 import Glow from "../../ui/glow";
 import { Section } from "../../ui/section";
@@ -24,13 +25,7 @@ interface CTAProps {
 
 export default function CTA({
   title = "Ready to join the community?",
-  buttons = [
-    {
-      href: siteConfig.getStartedUrl,
-      text: "Start Trading Now",
-      variant: "default",
-    },
-  ],
+  buttons = false,
   className,
 }: CTAProps) {
   return (
@@ -39,24 +34,9 @@ export default function CTA({
         <h2 className="max-w-[640px] text-3xl leading-tight font-semibold sm:text-5xl sm:leading-tight">
           {title}
         </h2>
-        {buttons !== false && buttons.length > 0 && (
-          <div className="flex justify-center gap-4">
-            {buttons.map((button, index) => (
-              <Button
-                key={index}
-                variant={button.variant || "default"}
-                size="lg"
-                asChild
-              >
-                <a href={button.href}>
-                  {button.icon}
-                  {button.text}
-                  {button.iconRight}
-                </a>
-              </Button>
-            ))}
-          </div>
-        )}
+        <div className="flex justify-center gap-4">
+          <SignInButton text="Start Trading Now" variant="default" />
+        </div>
       </div>
       <div className="absolute top-0 left-0 h-full w-full translate-y-[1rem] opacity-80 transition-all duration-500 ease-in-out group-hover:translate-y-[-2rem] group-hover:opacity-100">
         <Glow variant="bottom" />

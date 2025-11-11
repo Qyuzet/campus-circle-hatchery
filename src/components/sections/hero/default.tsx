@@ -5,6 +5,7 @@ import { ReactNode } from "react";
 import { siteConfig } from "@/config/site";
 import { cn } from "@/lib/utils";
 
+import SignInButton from "@/components/SignInButton";
 import Github from "@/components/logos/github";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -54,13 +55,7 @@ export default function Hero({
       </a>
     </Badge>
   ),
-  buttons = [
-    {
-      href: siteConfig.getStartedUrl,
-      text: "Start Exploring",
-      variant: "default",
-    },
-  ],
+  buttons = false,
   className,
 }: HeroProps) {
   return (
@@ -79,24 +74,9 @@ export default function Hero({
           <p className="text-md animate-appear relative z-10 max-w-[740px] font-normal text-muted-foreground text-balance opacity-0 delay-100 sm:text-xl">
             {description}
           </p>
-          {buttons !== false && buttons.length > 0 && (
-            <div className="animate-appear relative z-10 flex justify-center gap-4 opacity-0 delay-300">
-              {buttons.map((button, index) => (
-                <Button
-                  key={index}
-                  variant={button.variant || "default"}
-                  size="lg"
-                  asChild
-                >
-                  <a href={button.href}>
-                    {button.icon}
-                    {button.text}
-                    {button.iconRight}
-                  </a>
-                </Button>
-              ))}
-            </div>
-          )}
+          <div className="animate-appear relative z-10 flex justify-center gap-4 opacity-0 delay-300">
+            <SignInButton text="Start Exploring" variant="default" />
+          </div>
           {mockup !== false && (
             <div className="relative w-full pt-12">
               <MockupFrame

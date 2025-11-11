@@ -7,6 +7,7 @@ import { ReactNode } from "react";
 import { siteConfig } from "@/config/site";
 import { cn } from "@/lib/utils";
 
+import SignInButton from "@/components/SignInButton";
 import { Button, buttonVariants } from "../../ui/button";
 import {
   Navbar as NavbarComponent,
@@ -90,29 +91,7 @@ export default function Navbar({
             {showNavigation && (customNavigation || <Navigation />)}
           </NavbarLeft>
           <NavbarRight>
-            {actions.map((action, index) =>
-              action.isButton ? (
-                <Button
-                  key={index}
-                  variant={action.variant || "default"}
-                  asChild
-                >
-                  <Link href={action.href}>
-                    {action.icon}
-                    {action.text}
-                    {action.iconRight}
-                  </Link>
-                </Button>
-              ) : (
-                <Link
-                  key={index}
-                  href={action.href}
-                  className="hidden text-sm md:block hover:text-blue-600 transition-colors"
-                >
-                  {action.text}
-                </Link>
-              )
-            )}
+            <SignInButton text="Join Now" variant="default" />
             <Sheet>
               <SheetTrigger asChild>
                 <Button
