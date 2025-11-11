@@ -88,6 +88,8 @@ async function main() {
         "Classic algorithms textbook in excellent condition. Perfect for Data Structures course.",
       price: 150000,
       category: "Books",
+      course: "Data Structures",
+      faculty: "Computer Science",
       condition: "Used - Like New",
       imageUrl:
         "https://images.unsplash.com/photo-1532012197267-da84d127e765?w=400",
@@ -100,6 +102,8 @@ async function main() {
         "Advanced scientific calculator, barely used. Great for engineering students.",
       price: 250000,
       category: "Electronics",
+      course: "Engineering Mathematics",
+      faculty: "Engineering",
       condition: "Used - Like New",
       imageUrl:
         "https://images.unsplash.com/photo-1611532736597-de2d4265fba3?w=400",
@@ -112,6 +116,8 @@ async function main() {
         "Comprehensive handwritten notes from Prof. Anderson's class. Includes all topics and examples.",
       price: 50000,
       category: "Notes",
+      course: "Data Structures & Algorithms",
+      faculty: "Computer Science",
       condition: "Used - Good",
       imageUrl:
         "https://images.unsplash.com/photo-1455390582262-044cdead277a?w=400",
@@ -124,6 +130,8 @@ async function main() {
         "Ergonomic laptop stand, adjustable height. Perfect for online classes.",
       price: 120000,
       category: "Accessories",
+      course: "General",
+      faculty: "General",
       condition: "Used - Like New",
       imageUrl:
         "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=400",
@@ -135,6 +143,8 @@ async function main() {
       description: "Learn Python the Hard Way - Complete guide for beginners",
       price: 80000,
       category: "Books",
+      course: "Programming Fundamentals",
+      faculty: "Computer Science",
       condition: "Used - Good",
       imageUrl:
         "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=400",
