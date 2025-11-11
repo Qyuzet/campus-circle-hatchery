@@ -59,10 +59,10 @@ export default function Navbar({
     { text: "My Library", href: "/library" },
   ],
   actions = [
-    { text: "Sign In", href: "/api/auth/signin", isButton: false },
+    { text: "Sign In", href: "/dashboard", isButton: false },
     {
       text: "Join Now",
-      href: "/api/auth/signin",
+      href: "/dashboard",
       isButton: true,
       variant: "default",
     },

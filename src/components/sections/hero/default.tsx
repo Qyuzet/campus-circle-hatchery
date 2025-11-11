@@ -60,12 +60,6 @@ export default function Hero({
       text: "Start Exploring",
       variant: "default",
     },
-    {
-      href: siteConfig.links.github,
-      text: "View on GitHub",
-      variant: "glow",
-      icon: <Github className="mr-2 size-4" />,
-    },
   ],
   className,
 }: HeroProps) {
