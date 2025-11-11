@@ -76,6 +76,8 @@ export default function Dashboard() {
   const [selectedItem, setSelectedItem] = useState<MarketplaceItem | null>(
     null
   );
+  const [messageContextItem, setMessageContextItem] =
+    useState<MarketplaceItem | null>(null);
   const [selectedConversation, setSelectedConversation] = useState<
     string | null
   >(null);
@@ -264,6 +266,8 @@ export default function Dashboard() {
     try {
       await messagesAPI.sendMessage(conversationId, content.trim());
       setMessageText("");
+      setShowMessageModal(false);
+      setMessageContextItem(null);
 
       // Reload conversations
       const convos = await conversationsAPI.getConversations();
@@ -424,7 +428,10 @@ export default function Dashboard() {
       <header className="bg-white shadow-sm border-b border-light-gray">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
-            <div className="flex items-center">
+            <button
+              onClick={() => router.push("/")}
+              className="flex items-center hover:opacity-80 transition-opacity"
+            >
               <img
                 src="/campusCircle-logo.png"
                 alt="CampusCircle Logo"
@@ -438,7 +445,7 @@ export default function Dashboard() {
                   Circle
                 </span>
               </span>
-            </div>
+            </button>
 
             <div className="flex items-center space-x-2 sm:space-x-4">
               {/* Search - Hidden on mobile, shown on larger screens */}
@@ -1032,6 +1039,7 @@ export default function Dashboard() {
                                 className="flex-1"
                                 onClick={(e) => {
                                   e.stopPropagation();
+                                  setMessageContextItem(item);
                                   handleCreateConversation(
                                     item.sellerId,
                                     typeof item.seller === "string"
@@ -1893,41 +1901,155 @@ export default function Dashboard() {
 
       {/* Message Modal */}
       {showMessageModal && selectedConversation && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-dark-gray">Send Message</h2>
-              <button
-                onClick={() => setShowMessageModal(false)}
-                className="text-medium-gray hover:text-dark-gray"
-              >
-                <X className="h-6 w-6" />
-              </button>
-            </div>
-            <div className="space-y-4">
-              <textarea
-                value={messageText}
-                onChange={(e) => setMessageText(e.target.value)}
-                placeholder="Type your message..."
-                className="w-full p-3 border border-light-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-dark-blue focus:border-dark-blue"
-                rows={4}
-              />
-              <div className="flex gap-2">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl w-full max-w-lg shadow-2xl overflow-hidden">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-5 py-4">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-3">
+                  <div className="bg-white/20 backdrop-blur-sm p-2 rounded-full">
+                    <MessageCircle className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-bold text-white">
+                      Message Seller
+                    </h2>
+                    <p className="text-xs text-white/80">
+                      Start a conversation about this item
+                    </p>
+                  </div>
+                </div>
                 <button
+                  onClick={() => {
+                    setShowMessageModal(false);
+                    setMessageContextItem(null);
+                  }}
+                  className="text-white/80 hover:text-white transition-colors p-1 hover:bg-white/10 rounded-full"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Item Context Card */}
+            {messageContextItem && (
+              <div className="mx-5 mt-4 p-3 bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg border border-blue-100">
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden bg-gray-100">
+                    {messageContextItem.imageUrl ? (
+                      <img
+                        src={messageContextItem.imageUrl}
+                        alt={messageContextItem.title}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-100 to-purple-100">
+                        <BookOpen className="h-8 w-8 text-blue-600" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium text-blue-600 mb-0.5">
+                      Asking about:
+                    </p>
+                    <h3 className="font-bold text-sm text-gray-900 line-clamp-1">
+                      {messageContextItem.title}
+                    </h3>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Badge variant="secondary" className="text-xs">
+                        {messageContextItem.category}
+                      </Badge>
+                      <span className="text-sm font-bold text-blue-600">
+                        Rp {messageContextItem.price.toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Message Input */}
+            <div className="p-5 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Your Message
+                </label>
+                <div className="relative">
+                  <textarea
+                    value={messageText}
+                    onChange={(e) => setMessageText(e.target.value)}
+                    placeholder="Hi! I'm interested in this item. Is it still available?"
+                    className="w-full p-3 pr-10 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all resize-none"
+                    rows={4}
+                  />
+                  <div className="absolute bottom-3 right-3 text-xs text-gray-400">
+                    {messageText.length}/500
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500 mt-1.5 flex items-center gap-1">
+                  <span className="inline-block w-1 h-1 bg-green-500 rounded-full"></span>
+                  Seller will be notified instantly
+                </p>
+              </div>
+
+              {/* Quick Message Templates */}
+              {!messageText && (
+                <div className="space-y-2">
+                  <p className="text-xs font-medium text-gray-600">
+                    Quick messages:
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() =>
+                        setMessageText("Hi! Is this item still available?")
+                      }
+                      className="text-xs px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full transition-colors"
+                    >
+                      Is it available?
+                    </button>
+                    <button
+                      onClick={() =>
+                        setMessageText(
+                          "Can you provide more details about the condition?"
+                        )
+                      }
+                      className="text-xs px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full transition-colors"
+                    >
+                      More details?
+                    </button>
+                    <button
+                      onClick={() => setMessageText("Is the price negotiable?")}
+                      className="text-xs px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full transition-colors"
+                    >
+                      Negotiable?
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-2">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => {
+                    setShowMessageModal(false);
+                    setMessageContextItem(null);
+                    setMessageText("");
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
                   onClick={() =>
                     handleSendMessage(selectedConversation, messageText)
                   }
-                  className="flex-1 bg-dark-blue text-white px-4 py-2 rounded-lg hover:bg-primary-800 transition-colors flex items-center justify-center"
+                  disabled={!messageText.trim()}
                 >
                   <Send className="h-4 w-4 mr-2" />
                   Send Message
-                </button>
-                <button
-                  onClick={() => setShowMessageModal(false)}
-                  className="px-4 py-2 border border-light-gray text-medium-gray rounded-lg hover:bg-secondary-50 transition-colors"
-                >
-                  Cancel
-                </button>
+                </Button>
               </div>
             </div>
           </div>
@@ -2142,6 +2264,7 @@ export default function Dashboard() {
                           variant="outline"
                           className="flex-1"
                           onClick={() => {
+                            setMessageContextItem(selectedItem);
                             handleCreateConversation(
                               selectedItem.sellerId,
                               typeof selectedItem.seller === "string"
