@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { XCircle, ArrowRight, RefreshCw, Home } from "lucide-react";
 import { paymentAPI } from "@/lib/api";
 
-export default function PaymentErrorPage() {
+function PaymentErrorContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const orderId = searchParams.get("order_id");
@@ -60,7 +60,9 @@ export default function PaymentErrorPage() {
         {loading ? (
           <div className="text-center py-8">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto"></div>
-            <p className="text-medium-gray mt-4">Loading transaction details...</p>
+            <p className="text-medium-gray mt-4">
+              Loading transaction details...
+            </p>
           </div>
         ) : transaction ? (
           <div className="bg-gray-50 rounded-lg p-6 mb-6">
@@ -151,3 +153,16 @@ export default function PaymentErrorPage() {
   );
 }
 
+export default function PaymentErrorPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 flex items-center justify-center p-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
+        </div>
+      }
+    >
+      <PaymentErrorContent />
+    </Suspense>
+  );
+}

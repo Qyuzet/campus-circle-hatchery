@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Clock, ArrowRight, RefreshCw, AlertCircle } from "lucide-react";
 import { paymentAPI } from "@/lib/api";
 
-export default function PaymentPendingPage() {
+function PaymentPendingContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const orderId = searchParams.get("order_id");
@@ -30,11 +30,14 @@ export default function PaymentPendingPage() {
       const result = await paymentAPI.getPaymentStatus(orderId!);
       if (result.success) {
         setTransaction(result.transaction);
-        
+
         // If status changed to completed, redirect to success page
         if (result.transaction.status === "COMPLETED") {
           router.push(`/payment/success?order_id=${orderId}`);
-        } else if (result.transaction.status === "FAILED" || result.transaction.status === "CANCELLED") {
+        } else if (
+          result.transaction.status === "FAILED" ||
+          result.transaction.status === "CANCELLED"
+        ) {
           router.push(`/payment/error?order_id=${orderId}`);
         }
       }
@@ -47,17 +50,20 @@ export default function PaymentPendingPage() {
 
   const checkPaymentStatus = async () => {
     if (!orderId || checking) return;
-    
+
     setChecking(true);
     try {
       const result = await paymentAPI.getPaymentStatus(orderId);
       if (result.success) {
         setTransaction(result.transaction);
-        
+
         // Redirect based on status
         if (result.transaction.status === "COMPLETED") {
           router.push(`/payment/success?order_id=${orderId}`);
-        } else if (result.transaction.status === "FAILED" || result.transaction.status === "CANCELLED") {
+        } else if (
+          result.transaction.status === "FAILED" ||
+          result.transaction.status === "CANCELLED"
+        ) {
           router.push(`/payment/error?order_id=${orderId}`);
         }
       }
@@ -97,7 +103,9 @@ export default function PaymentPendingPage() {
         {loading ? (
           <div className="text-center py-8">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-600 mx-auto"></div>
-            <p className="text-medium-gray mt-4">Loading transaction details...</p>
+            <p className="text-medium-gray mt-4">
+              Loading transaction details...
+            </p>
           </div>
         ) : transaction ? (
           <div className="bg-gray-50 rounded-lg p-6 mb-6">
@@ -128,7 +136,9 @@ export default function PaymentPendingPage() {
               </div>
               {transaction.paymentMethod && (
                 <div className="flex justify-between">
-                  <span className="text-sm text-medium-gray">Payment Method</span>
+                  <span className="text-sm text-medium-gray">
+                    Payment Method
+                  </span>
                   <span className="text-sm font-medium text-dark-gray capitalize">
                     {transaction.paymentMethod.replace("_", " ")}
                   </span>
@@ -143,11 +153,15 @@ export default function PaymentPendingPage() {
           <div className="flex items-start space-x-3">
             <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
             <div>
-              <h3 className="font-semibold text-dark-gray mb-2">What's happening?</h3>
+              <h3 className="font-semibold text-dark-gray mb-2">
+                What's happening?
+              </h3>
               <ul className="text-sm text-medium-gray space-y-2">
                 <li className="flex items-start">
                   <span className="text-blue-600 mr-2">•</span>
-                  <span>Your payment is being verified by the payment provider</span>
+                  <span>
+                    Your payment is being verified by the payment provider
+                  </span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-blue-600 mr-2">•</span>
@@ -155,7 +169,9 @@ export default function PaymentPendingPage() {
                 </li>
                 <li className="flex items-start">
                   <span className="text-blue-600 mr-2">•</span>
-                  <span>You'll receive a notification once payment is confirmed</span>
+                  <span>
+                    You'll receive a notification once payment is confirmed
+                  </span>
                 </li>
               </ul>
             </div>
@@ -169,8 +185,9 @@ export default function PaymentPendingPage() {
               Complete Your Payment
             </h3>
             <p className="text-sm text-medium-gray mb-3">
-              Please complete the bank transfer using the details provided by Midtrans.
-              Your payment will be confirmed automatically once received.
+              Please complete the bank transfer using the details provided by
+              Midtrans. Your payment will be confirmed automatically once
+              received.
             </p>
             <p className="text-xs text-medium-gray">
               Check your email for complete payment instructions.
@@ -185,7 +202,9 @@ export default function PaymentPendingPage() {
             disabled={checking}
             className="w-full bg-dark-blue text-white py-3 px-4 rounded-lg hover:bg-opacity-90 transition-colors font-medium flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <RefreshCw className={`mr-2 h-5 w-5 ${checking ? 'animate-spin' : ''}`} />
+            <RefreshCw
+              className={`mr-2 h-5 w-5 ${checking ? "animate-spin" : ""}`}
+            />
             {checking ? "Checking..." : "Check Status Now"}
           </button>
           <button
@@ -205,10 +224,24 @@ export default function PaymentPendingPage() {
 
         {/* Footer Note */}
         <p className="text-xs text-center text-medium-gray mt-6">
-          You can safely close this page. We'll notify you when payment is confirmed.
+          You can safely close this page. We'll notify you when payment is
+          confirmed.
         </p>
       </div>
     </div>
   );
 }
 
+export default function PaymentPendingPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-orange-50 flex items-center justify-center p-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-600"></div>
+        </div>
+      }
+    >
+      <PaymentPendingContent />
+    </Suspense>
+  );
+}
