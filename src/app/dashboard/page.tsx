@@ -1638,17 +1638,17 @@ export default function Dashboard() {
             {activeTab === "insights" && (
               <div className="space-y-4">
                 {/* Overview Stats */}
-                <div className="flex overflow-x-auto gap-3 pb-2 -mx-3 px-3 md:mx-0 md:px-0 md:grid md:grid-cols-2 lg:grid-cols-4 md:overflow-visible">
-                  <Card className="flex-shrink-0 w-[calc(100vw-120px)] min-w-[200px] max-w-[280px] md:w-auto md:max-w-none">
+                <div className="grid grid-cols-3 gap-3">
+                  <Card className="col-span-1">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">
+                      <CardTitle className="text-xs font-medium">
                         Total Revenue
                       </CardTitle>
                       <DollarSign className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold">
-                        Rp{" "}
+                      <div className="text-xl font-bold">
+                        Rp
                         {allTransactions
                           .filter(
                             (t) => t.type === "sale" && t.status === "COMPLETED"
@@ -1668,16 +1668,16 @@ export default function Dashboard() {
                     </CardContent>
                   </Card>
 
-                  <Card className="flex-shrink-0 w-[calc(100vw-120px)] min-w-[200px] max-w-[280px] md:w-auto md:max-w-none">
+                  <Card className="col-span-1">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">
+                      <CardTitle className="text-xs font-medium">
                         Total Spent
                       </CardTitle>
                       <ShoppingCart className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold">
-                        Rp{" "}
+                      <div className="text-xl font-bold">
+                        Rp
                         {allTransactions
                           .filter(
                             (t) =>
@@ -1699,15 +1699,15 @@ export default function Dashboard() {
                     </CardContent>
                   </Card>
 
-                  <Card className="flex-shrink-0 w-[calc(100vw-120px)] min-w-[200px] max-w-[280px] md:w-auto md:max-w-none">
+                  <Card className="col-span-1">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">
+                      <CardTitle className="text-xs font-medium">
                         Active Listings
                       </CardTitle>
                       <BookOpen className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold">
+                      <div className="text-xl font-bold">
                         {
                           marketplaceItems.filter(
                             (item) =>
@@ -1717,32 +1717,33 @@ export default function Dashboard() {
                         }
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        Out of{" "}
+                        Of{" "}
                         {
                           marketplaceItems.filter(
                             (item) => item.sellerId === currentUser?.id
                           ).length
                         }{" "}
-                        total items
-                      </p>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="flex-shrink-0 w-[calc(100vw-120px)] min-w-[200px] max-w-[280px] md:w-auto md:max-w-none">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">
-                        Avg. Rating
-                      </CardTitle>
-                      <Star className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold">{stats[3].value}</div>
-                      <p className="text-xs text-muted-foreground">
-                        From all your items
+                        total
                       </p>
                     </CardContent>
                   </Card>
                 </div>
+
+                {/* Second Row - Avg Rating (Full Width) */}
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-xs font-medium">
+                      Average Rating
+                    </CardTitle>
+                    <Star className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-xl font-bold">{stats[3].value}</div>
+                    <p className="text-xs text-muted-foreground">
+                      From all your items
+                    </p>
+                  </CardContent>
+                </Card>
 
                 {/* Recent Activity & Top Items - Side by Side */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
