@@ -1,14 +1,9 @@
+import Image from "next/image";
 import { ReactNode } from "react";
 
 import { siteConfig } from "@/config/site";
 
-import Figma from "../../logos/figma";
-import React from "../../logos/react";
-import ShadcnUi from "../../logos/shadcn-ui";
-import Tailwind from "../../logos/tailwind";
-import TypeScript from "../../logos/typescript";
 import { Badge } from "../../ui/badge";
-import Logo from "../../ui/logo";
 import { Section } from "../../ui/section";
 
 interface LogosProps {
@@ -19,22 +14,40 @@ interface LogosProps {
 }
 
 export default function Logos({
-  title = "Built with modern technologies for the best experience",
+  title = "Trusted Infrastructure & Community",
   badge = (
-    <Badge variant="outline" className="border-brand/30 text-brand">
-      Powered by Next.js & Vercel
+    <Badge variant="outline" className="border-blue-600/30 text-blue-600">
+      Powered by
     </Badge>
   ),
   logos = [
-    <Logo key="react" image={React} name="React" version="18" />,
-    <Logo
-      key="typescript"
-      image={TypeScript}
-      name="TypeScript"
-      version="5.x"
-    />,
-    <Logo key="shadcn" image={ShadcnUi} name="Shadcn/ui" badge="UI" />,
-    <Logo key="tailwind" image={Tailwind} name="Tailwind" version="3.x" />,
+    <div key="gcp" className="flex flex-col items-center gap-2">
+      <Image
+        src="/google-cloud.png"
+        alt="Google Cloud"
+        width={120}
+        height={40}
+        className="h-10 w-auto object-contain"
+      />
+    </div>,
+    <div key="aws" className="flex flex-col items-center gap-2">
+      <Image
+        src="/aws.png"
+        alt="AWS"
+        width={120}
+        height={40}
+        className="h-10 w-auto object-contain"
+      />
+    </div>,
+    <div key="gdg" className="flex flex-col items-center gap-2">
+      <Image
+        src="/google-dev-binter.png"
+        alt="Google Developer Group"
+        width={252}
+        height={84}
+        className="h-[5.6rem] w-auto object-contain"
+      />
+    </div>,
   ],
   className,
 }: LogosProps) {
