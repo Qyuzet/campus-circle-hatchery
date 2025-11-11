@@ -59,7 +59,6 @@ export default function Navbar({
     { text: "My Library", href: "/library" },
   ],
   actions = [
-    { text: "Sign In", href: "/dashboard", isButton: false },
     {
       text: "Join Now",
       href: "/dashboard",
