@@ -54,11 +54,7 @@ export default function Navbar({
   ),
   name = "CampusCircle",
   homeUrl = "/",
-  mobileLinks = [
-    { text: "Marketplace", href: "/dashboard" },
-    { text: "Tutoring", href: "/dashboard" },
-    { text: "My Library", href: "/library" },
-  ],
+  mobileLinks = [],
   actions = [
     {
       text: "Join Now",
@@ -111,15 +107,13 @@ export default function Navbar({
                   >
                     <span>{name}</span>
                   </Link>
-                  {mobileLinks.map((link, index) => (
-                    <Link
-                      key={index}
-                      href={link.href}
-                      className="text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      {link.text}
-                    </Link>
-                  ))}
+                  <div className="mt-4">
+                    <SignInButton
+                      text="Join Now"
+                      variant="default"
+                      className="w-full"
+                    />
+                  </div>
                 </nav>
               </SheetContent>
             </Sheet>

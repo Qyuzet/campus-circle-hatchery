@@ -47,7 +47,7 @@ export default function Hero({
   badge = (
     <Badge variant="outline" className="animate-appear">
       <span className="text-muted-foreground">
-        🎓 Exclusive for Binus Students
+        Exclusive for Binus Students
       </span>
       <a href={siteConfig.getStartedUrl} className="flex items-center gap-1">
         Join Now
