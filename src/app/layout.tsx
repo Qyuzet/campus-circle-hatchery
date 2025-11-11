@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+// import { Inter } from "next/font/google";
 import "./globals.css";
 import SessionProvider from "@/components/SessionProvider";
 
-const inter = Inter({ subsets: ["latin"] });
+// const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "CampusCircle - Binus University Student Marketplace",
@@ -31,7 +31,7 @@ export default function RootLayout({
           data-client-key={midtransClientKey}
         ></script>
       </head>
-      <body className={inter.className}>
+      <body>
         <SessionProvider>{children}</SessionProvider>
       </body>
     </html>
