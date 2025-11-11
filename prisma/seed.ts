@@ -53,8 +53,10 @@ async function main() {
       itemsBought: 0,
       totalEarnings: 0,
       totalSpent: 0,
-      averageRating: 0,
-      totalReviews: 0,
+      messagesCount: 0,
+      tutoringSessions: 0,
+      reviewsGiven: 0,
+      reviewsReceived: 0,
     },
   });
 
@@ -67,8 +69,10 @@ async function main() {
       itemsBought: 0,
       totalEarnings: 0,
       totalSpent: 0,
-      averageRating: 0,
-      totalReviews: 0,
+      messagesCount: 0,
+      tutoringSessions: 0,
+      reviewsGiven: 0,
+      reviewsReceived: 0,
     },
   });
 
