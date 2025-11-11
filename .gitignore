@@ -253,3 +253,6 @@ campusCircle_*
 
 # Example UI folder
 example-ui/
+
+# User uploaded files
+public/uploads/
