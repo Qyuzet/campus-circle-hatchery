@@ -250,3 +250,6 @@ sessionStorage.json
 campusCircle_*
 
 /src/generated/prisma
+
+# Example UI folder
+example-ui/

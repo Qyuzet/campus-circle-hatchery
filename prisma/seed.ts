@@ -216,11 +216,10 @@ async function main() {
 
   const conversation = await prisma.conversation.create({
     data: {
-      participants: {
-        connect: [{ id: seller.id }, { id: buyer.id }],
-      },
+      user1Id: seller.id,
+      user2Id: buyer.id,
       lastMessage: "Hi! Is the calculator still available?",
-      lastMessageAt: new Date(),
+      lastMessageTime: new Date(),
     },
   });
 
