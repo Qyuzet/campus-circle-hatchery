@@ -30,15 +30,6 @@ export default function Logos({
         className="h-10 w-auto object-contain"
       />
     </div>,
-    <div key="aws" className="flex flex-col items-center gap-2">
-      <Image
-        src="/aws.png"
-        alt="AWS"
-        width={120}
-        height={40}
-        className="h-10 w-auto object-contain"
-      />
-    </div>,
     <div key="gdg" className="flex flex-col items-center gap-2">
       <Image
         src="/google-dev-binter.png"
@@ -46,6 +37,15 @@ export default function Logos({
         width={252}
         height={84}
         className="h-[5.6rem] w-auto object-contain"
+      />
+    </div>,
+    <div key="aws" className="flex flex-col items-center gap-2">
+      <Image
+        src="/aws.png"
+        alt="AWS"
+        width={120}
+        height={40}
+        className="h-10 w-auto object-contain"
       />
     </div>,
   ],
