@@ -39,16 +39,22 @@ export const marketplaceAPI = {
     price: number;
     category: string;
     course: string;
-    faculty: string;
+    condition?: string;
     imageUrl?: string;
     fileUrl?: string;
+    fileName?: string;
+    fileSize?: number;
+    fileType?: string;
   }) {
     const response = await fetch("/api/marketplace", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
-    if (!response.ok) throw new Error("Failed to create marketplace item");
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || "Failed to create marketplace item");
+    }
     return response.json();
   },
 

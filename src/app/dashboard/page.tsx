@@ -82,6 +82,7 @@ export default function Dashboard() {
     string | null
   >(null);
   const [messageText, setMessageText] = useState("");
+  const [isSendingMessage, setIsSendingMessage] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -138,10 +139,17 @@ export default function Dashboard() {
     };
   }, [showNotifications]);
 
-  // Load messages when conversation is selected
+  // Load messages when conversation is selected and poll for updates
   useEffect(() => {
     if (selectedConversation) {
       loadMessages(selectedConversation);
+
+      // Poll for new messages every 3 seconds
+      const pollInterval = setInterval(() => {
+        loadMessages(selectedConversation);
+      }, 3000);
+
+      return () => clearInterval(pollInterval);
     }
   }, [selectedConversation]);
 
@@ -261,27 +269,26 @@ export default function Dashboard() {
   };
 
   const handleSendMessage = async (conversationId: string, content: string) => {
-    if (!content.trim()) return;
+    if (!content.trim() || isSendingMessage) return;
 
     try {
+      setIsSendingMessage(true);
+
+      // Send message
       await messagesAPI.sendMessage(conversationId, content.trim());
+
+      // Clear input and close modal immediately for better UX
       setMessageText("");
       setShowMessageModal(false);
       setMessageContextItem(null);
 
-      // Reload conversations
-      const convos = await conversationsAPI.getConversations();
-      setConversations(convos);
-
-      // Reload messages
+      // Reload only messages (optimistic update)
       await loadMessages(conversationId);
-
-      // Reload stats
-      const stats = await statsAPI.getUserStats();
-      setUserStats(stats);
     } catch (error) {
       console.error("Error sending message:", error);
       alert("Failed to send message. Please try again.");
+    } finally {
+      setIsSendingMessage(false);
     }
   };
 
@@ -1485,7 +1492,12 @@ export default function Dashboard() {
                               placeholder="Type a message..."
                               className="flex-1 p-3 border border-light-gray rounded-full focus:outline-none focus:ring-2 focus:ring-dark-blue focus:border-dark-blue"
                               onKeyDown={(e) => {
-                                if (e.key === "Enter" && messageText.trim()) {
+                                if (
+                                  e.key === "Enter" &&
+                                  messageText.trim() &&
+                                  !isSendingMessage
+                                ) {
+                                  e.preventDefault();
                                   handleSendMessage(
                                     selectedConversation,
                                     messageText
@@ -1495,16 +1507,21 @@ export default function Dashboard() {
                             />
                             <button
                               onClick={() => {
-                                if (messageText.trim()) {
+                                if (messageText.trim() && !isSendingMessage) {
                                   handleSendMessage(
                                     selectedConversation,
                                     messageText
                                   );
                                 }
                               }}
-                              className="bg-dark-blue text-white p-3 rounded-full hover:bg-primary-800 transition-colors"
+                              disabled={isSendingMessage}
+                              className="bg-dark-blue text-white p-3 rounded-full hover:bg-primary-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                              <Send className="h-5 w-5" />
+                              {isSendingMessage ? (
+                                <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                              ) : (
+                                <Send className="h-5 w-5" />
+                              )}
                             </button>
                           </div>
                         </div>
@@ -2045,10 +2062,19 @@ export default function Dashboard() {
                   onClick={() =>
                     handleSendMessage(selectedConversation, messageText)
                   }
-                  disabled={!messageText.trim()}
+                  disabled={!messageText.trim() || isSendingMessage}
                 >
-                  <Send className="h-4 w-4 mr-2" />
-                  Send Message
+                  {isSendingMessage ? (
+                    <>
+                      <div className="h-4 w-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="h-4 w-4 mr-2" />
+                      Send Message
+                    </>
+                  )}
                 </Button>
               </div>
             </div>
