@@ -167,36 +167,39 @@ async function main() {
   const sessions = [
     {
       subject: "Data Structures & Algorithms",
+      course: "Data Structures & Algorithms",
       description:
         "Expert tutoring in DSA. Covers arrays, linked lists, trees, graphs, sorting, and searching algorithms.",
       price: 100000,
       duration: 120,
-      availability: "Weekdays 6-8 PM",
-      location: "Online (Zoom)",
-      status: "available",
+      status: "pending",
+      scheduledAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
       tutorId: seller.id,
+      studentId: buyer.id,
     },
     {
       subject: "Database Systems",
+      course: "Database Management Systems",
       description:
         "SQL, NoSQL, database design, normalization, and query optimization.",
       price: 120000,
       duration: 90,
-      availability: "Weekends",
-      location: "Campus Library or Online",
-      status: "available",
+      status: "pending",
+      scheduledAt: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000), // 10 days from now
       tutorId: seller.id,
+      studentId: buyer.id,
     },
     {
       subject: "Web Development (React & Next.js)",
+      course: "Web Programming",
       description:
         "Modern web development with React, Next.js, and TypeScript. Build real-world projects.",
       price: 150000,
       duration: 120,
-      availability: "Flexible",
-      location: "Online",
-      status: "available",
+      status: "pending",
+      scheduledAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days from now
       tutorId: seller.id,
+      studentId: buyer.id,
     },
   ];
 
