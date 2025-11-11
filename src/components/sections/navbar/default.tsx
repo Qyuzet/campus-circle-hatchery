@@ -67,7 +67,7 @@ export default function Navbar({
       variant: "default",
     },
   ],
-  showNavigation = true,
+  showNavigation = false,
   customNavigation,
   className,
 }: NavbarProps) {
