@@ -27,6 +27,7 @@ model User {
   totalSales      Int      @default(0)
   totalPurchases  Int      @default(0)
   isVerified      Boolean  @default(false)
+  role            String   @default("user") // "user" | "admin"
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
@@ -43,6 +44,7 @@ model User {
   notifications        Notification[]
   transactions         Transaction[]
   userStats            UserStats?
+  withdrawals          Withdrawal[]
   createdGroups        Group[]             @relation("CreatedGroups")
   groupMemberships     GroupMember[]       @relation("GroupMemberships")
   sentGroupMessages    GroupMessage[]      @relation("SentGroupMessages")
@@ -301,8 +303,20 @@ model UserStats {
   id               String   @id @default(cuid())
   itemsSold        Int      @default(0)
   itemsBought      Int      @default(0)
-  totalEarnings    Int      @default(0)
+  totalEarnings    Int      @default(0) // Total earned from all sales
   totalSpent       Int      @default(0)
+
+  // Withdrawal tracking
+  availableBalance Int      @default(0) // Money available to withdraw
+  pendingBalance   Int      @default(0) // Money in holding period
+  withdrawnBalance Int      @default(0) // Total already withdrawn
+
+  // Saved payment method (optional)
+  savedPaymentMethod String? // e.g., "GOPAY", "BANK"
+  savedAccountNumber String? // GoPay number or Bank account number
+  savedAccountName   String? // Account holder name
+  savedBankName      String? // Bank name (only for BANK method)
+
   messagesCount    Int      @default(0)
   tutoringSessions Int      @default(0)
   reviewsGiven     Int      @default(0)
@@ -314,4 +328,41 @@ model UserStats {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+// ============================================
+// WITHDRAWAL MODEL
+// ============================================
+model Withdrawal {
+  id              String   @id @default(cuid())
+  amount          Int      // Amount to withdraw
+  status          String   @default("PENDING") // PENDING, APPROVED, PROCESSING, COMPLETED, REJECTED, FAILED
+
+  // Payment method details
+  paymentMethod   String   @default("GOPAY") // "GOPAY", "BANK", etc.
+  accountNumber   String   // GoPay number or Bank account number
+  accountName     String   // Account holder name
+  bankName        String?  // Bank name (only for BANK method)
+
+  // Processing details
+  processedBy     String?  // Admin user ID who processed
+  processedAt     DateTime?
+  rejectionReason String?
+
+  // Midtrans Iris details (for future automation)
+  irisReferenceNo String?  // Iris disbursement reference
+  irisStatus      String?  // Iris transaction status
+
+  // Metadata
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
 }

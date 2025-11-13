@@ -81,22 +81,56 @@ export async function POST(request: NextRequest) {
         // Update seller stats
         const item = transaction.item;
         if (item) {
-          await prisma.userStats.update({
+          // Calculate platform fee (5% commission)
+          const platformFee = Math.floor(transaction.amount * 0.05);
+          const sellerEarnings = transaction.amount - platformFee;
+
+          await prisma.userStats.upsert({
             where: { userId: item.sellerId },
-            data: {
+            update: {
               itemsSold: { increment: 1 },
-              totalEarnings: { increment: transaction.amount },
+              totalEarnings: { increment: sellerEarnings },
+              // Add to pending balance (3-day holding period)
+              pendingBalance: { increment: sellerEarnings },
+            },
+            create: {
+              userId: item.sellerId,
+              itemsSold: 1,
+              totalEarnings: sellerEarnings,
+              pendingBalance: sellerEarnings,
+              availableBalance: 0,
+              withdrawnBalance: 0,
+              itemsBought: 0,
+              totalSpent: 0,
+              messagesCount: 0,
+              tutoringSessions: 0,
+              reviewsGiven: 0,
+              reviewsReceived: 0,
             },
           });
         }
       }
 
       // Update buyer stats
-      await prisma.userStats.update({
+      await prisma.userStats.upsert({
         where: { userId: transaction.buyerId },
-        data: {
+        update: {
           itemsBought: { increment: 1 },
           totalSpent: { increment: transaction.amount },
+        },
+        create: {
+          userId: transaction.buyerId,
+          itemsBought: 1,
+          totalSpent: transaction.amount,
+          itemsSold: 0,
+          totalEarnings: 0,
+          availableBalance: 0,
+          pendingBalance: 0,
+          withdrawnBalance: 0,
+          messagesCount: 0,
+          tutoringSessions: 0,
+          reviewsGiven: 0,
+          reviewsReceived: 0,
         },
       });
 

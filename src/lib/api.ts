@@ -275,6 +275,67 @@ export const transactionsAPI = {
 };
 
 // ============================================
+// WITHDRAWALS API
+// ============================================
+export const withdrawalsAPI = {
+  async getWithdrawals(filters?: { status?: string }) {
+    const params = new URLSearchParams();
+    if (filters?.status) params.append("status", filters.status);
+
+    const response = await fetch(`/api/withdrawals?${params.toString()}`);
+    if (!response.ok) throw new Error("Failed to fetch withdrawals");
+    const data = await response.json();
+    return data.withdrawals;
+  },
+
+  async createWithdrawal(data: {
+    amount: number;
+    bankName: string;
+    accountNumber: string;
+    accountName: string;
+    notes?: string;
+  }) {
+    const response = await fetch("/api/withdrawals", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || "Failed to create withdrawal");
+    }
+    return response.json();
+  },
+
+  async updateWithdrawalStatus(
+    id: string,
+    data: {
+      status: string;
+      rejectionReason?: string;
+      irisReferenceNo?: string;
+    }
+  ) {
+    const response = await fetch(`/api/withdrawals/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error("Failed to update withdrawal");
+    return response.json();
+  },
+
+  async getAdminWithdrawals(filters?: { status?: string; limit?: number }) {
+    const params = new URLSearchParams();
+    if (filters?.status) params.append("status", filters.status);
+    if (filters?.limit) params.append("limit", filters.limit.toString());
+
+    const response = await fetch(`/api/admin/withdrawals?${params.toString()}`);
+    if (!response.ok) throw new Error("Failed to fetch admin withdrawals");
+    return response.json();
+  },
+};
+
+// ============================================
 // FILE UPLOAD/DOWNLOAD API
 // ============================================
 export const fileAPI = {

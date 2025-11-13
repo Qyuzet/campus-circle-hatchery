@@ -51,6 +51,9 @@ import {
   TrendingUp,
   Package,
   Library,
+  RefreshCw,
+  Wallet,
+  CreditCard,
 } from "lucide-react";
 import {
   marketplaceAPI,
@@ -61,6 +64,7 @@ import {
   statsAPI,
   transactionsAPI,
   fileAPI,
+  withdrawalsAPI,
 } from "@/lib/api";
 import {
   MarketplaceItem,
@@ -69,6 +73,7 @@ import {
   Notification,
 } from "@/types";
 import PaymentModal from "@/components/PaymentModal";
+import { WithdrawalForm } from "@/components/WithdrawalForm";
 
 export default function Dashboard() {
   const { data: session, status } = useSession();
@@ -116,6 +121,7 @@ export default function Dashboard() {
   const [messages, setMessages] = useState<any[]>([]);
   const [salesTransactions, setSalesTransactions] = useState<any[]>([]);
   const [allTransactions, setAllTransactions] = useState<any[]>([]);
+  const [withdrawals, setWithdrawals] = useState<any[]>([]);
 
   // Group messaging states
   const [groups, setGroups] = useState<any[]>([]);
@@ -138,6 +144,8 @@ export default function Dashboard() {
     messages: false,
     tutoring: false,
     orders: false,
+    insights: false,
+    wallet: false,
   });
 
   // Track which tabs have been loaded
@@ -146,6 +154,8 @@ export default function Dashboard() {
     messages: false,
     tutoring: false,
     orders: false,
+    insights: false,
+    wallet: false,
   });
 
   // Redirect to login if not authenticated
@@ -371,16 +381,18 @@ export default function Dashboard() {
           break;
 
         case "orders":
+        case "insights":
           const [sales, purchases] = await Promise.all([
             transactionsAPI.getTransactions({
               type: "sales",
-              status: "COMPLETED",
             }),
             transactionsAPI.getTransactions({
               type: "purchases",
             }),
           ]);
-          setSalesTransactions(sales);
+          setSalesTransactions(
+            sales.filter((t: any) => t.status === "COMPLETED")
+          );
 
           // Combine sales and purchases with type field
           const allTrans = [
@@ -391,6 +403,38 @@ export default function Dashboard() {
               new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
           );
           setAllTransactions(allTrans);
+
+          // Also load marketplace items for insights
+          if (tab === "insights") {
+            const marketplaceData = await marketplaceAPI.getItems();
+            setMarketplaceItems(marketplaceData);
+          }
+          break;
+
+        case "wallet":
+          const [withdrawalData, statsData] = await Promise.all([
+            withdrawalsAPI.getWithdrawals({}),
+            statsAPI.getUserStats(),
+          ]);
+          setWithdrawals(withdrawalData);
+          setUserStats(statsData);
+
+          // Auto-sync balances if totalEarnings is 0 but user has transactions
+          if (statsData && statsData.totalEarnings === 0) {
+            try {
+              const response = await fetch("/api/admin/backfill-balances", {
+                method: "POST",
+              });
+              const data = await response.json();
+              if (data.success) {
+                // Reload stats after backfill
+                const updatedStats = await statsAPI.getUserStats();
+                setUserStats(updatedStats);
+              }
+            } catch (error) {
+              console.error("Auto-sync failed:", error);
+            }
+          }
           break;
       }
 
@@ -926,6 +970,17 @@ export default function Dashboard() {
                   )}
                 </button>
                 <button
+                  onClick={() => setActiveTab("wallet")}
+                  className={`flex flex-col items-center p-2 transition-colors ${
+                    activeTab === "wallet"
+                      ? "text-dark-blue"
+                      : "text-medium-gray hover:text-dark-blue"
+                  }`}
+                  title="Wallet"
+                >
+                  <Wallet className="h-5 w-5" />
+                </button>
+                <button
                   onClick={() => setActiveTab("insights")}
                   className={`flex flex-col items-center p-2 transition-colors ${
                     activeTab === "insights"
@@ -988,6 +1043,18 @@ export default function Dashboard() {
                       {conversations.filter((c) => c.unreadCount > 0).length}
                     </span>
                   )}
+                </button>
+
+                <button
+                  onClick={() => setActiveTab("wallet")}
+                  className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                    activeTab === "wallet"
+                      ? "bg-primary-100 text-dark-blue"
+                      : "text-medium-gray hover:bg-secondary-100"
+                  }`}
+                >
+                  <Wallet className="mr-3 h-5 w-5" />
+                  Wallet
                 </button>
 
                 <button
@@ -2399,235 +2466,463 @@ export default function Dashboard() {
               </div>
             )}
 
-            {activeTab === "insights" && (
-              <div className="space-y-4">
-                {/* Overview Stats */}
-                <div className="grid grid-cols-3 gap-3">
-                  <Card className="col-span-1">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-xs font-medium">
-                        Total Revenue
-                      </CardTitle>
-                      <DollarSign className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-xl font-bold">
-                        Rp
-                        {allTransactions
-                          .filter(
-                            (t) => t.type === "sale" && t.status === "COMPLETED"
-                          )
-                          .reduce((sum, t) => sum + t.amount, 0)
-                          .toLocaleString()}
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        From{" "}
-                        {
-                          allTransactions.filter(
-                            (t) => t.type === "sale" && t.status === "COMPLETED"
-                          ).length
-                        }{" "}
-                        sales
-                      </p>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="col-span-1">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-xs font-medium">
-                        Total Spent
-                      </CardTitle>
-                      <ShoppingCart className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-xl font-bold">
-                        Rp
-                        {allTransactions
-                          .filter(
-                            (t) =>
-                              t.type === "purchase" && t.status === "COMPLETED"
-                          )
-                          .reduce((sum, t) => sum + t.amount, 0)
-                          .toLocaleString()}
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        From{" "}
-                        {
-                          allTransactions.filter(
-                            (t) =>
-                              t.type === "purchase" && t.status === "COMPLETED"
-                          ).length
-                        }{" "}
-                        purchases
-                      </p>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="col-span-1">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-xs font-medium">
-                        Active Listings
-                      </CardTitle>
-                      <BookOpen className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-xl font-bold">
-                        {
-                          marketplaceItems.filter(
-                            (item) =>
-                              item.sellerId === currentUser?.id &&
-                              item.status === "available"
-                          ).length
-                        }
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        Of{" "}
-                        {
-                          marketplaceItems.filter(
-                            (item) => item.sellerId === currentUser?.id
-                          ).length
-                        }{" "}
-                        total
-                      </p>
-                    </CardContent>
-                  </Card>
+            {activeTab === "wallet" && (
+              <div className="space-y-3">
+                {/* Header */}
+                <div>
+                  <h1 className="text-xl font-semibold text-dark-gray">
+                    Wallet & Withdrawals
+                  </h1>
+                  <p className="text-xs text-medium-gray mt-0.5">
+                    Platform fee: 5% • Holding: 3 days • Min withdrawal: Rp
+                    50,000
+                  </p>
                 </div>
 
-                {/* Second Row - Avg Rating (Full Width) */}
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-xs font-medium">
-                      Average Rating
-                    </CardTitle>
-                    <Star className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-xl font-bold">{stats[3].value}</div>
-                    <p className="text-xs text-muted-foreground">
-                      From all your items
-                    </p>
-                  </CardContent>
-                </Card>
-
-                {/* Recent Activity & Top Items - Side by Side */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  {/* Recent Activity */}
-                  <Card>
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-base">
-                        Recent Activity
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-3">
-                        {allTransactions.slice(0, 3).length === 0 ? (
-                          <div className="text-center py-6 text-sm text-muted-foreground">
-                            No recent activity
+                {loadingStates.wallet ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="text-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-dark-blue mx-auto mb-2"></div>
+                      <p className="text-xs text-medium-gray">Loading...</p>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    {/* Balance Cards - Compact */}
+                    <div className="grid grid-cols-4 gap-2">
+                      <Card className="border border-gray-300">
+                        <CardHeader className="p-3 pb-2">
+                          <CardTitle className="text-xs font-medium text-medium-gray">
+                            Total Earnings
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-3 pt-0">
+                          <div className="text-lg font-semibold text-dark-gray">
+                            Rp{" "}
+                            {(userStats?.totalEarnings || 0).toLocaleString()}
                           </div>
-                        ) : (
-                          allTransactions.slice(0, 3).map((transaction) => (
-                            <div
-                              key={transaction.id}
-                              className="flex items-center justify-between pb-3 border-b border-border last:border-0 last:pb-0"
-                            >
-                              <div className="flex items-center gap-2">
-                                <div
-                                  className={`p-1.5 rounded ${
-                                    transaction.type === "sale"
-                                      ? "bg-green-100"
-                                      : "bg-blue-100"
-                                  }`}
-                                >
-                                  {transaction.type === "sale" ? (
-                                    <TrendingUp className="h-3.5 w-3.5 text-green-600" />
-                                  ) : (
-                                    <ShoppingCart className="h-3.5 w-3.5 text-blue-600" />
-                                  )}
-                                </div>
-                                <div>
-                                  <p className="text-sm font-medium line-clamp-1">
-                                    {transaction.itemTitle}
-                                  </p>
-                                  <p className="text-xs text-muted-foreground">
-                                    {new Date(
-                                      transaction.createdAt
-                                    ).toLocaleDateString("en-US", {
-                                      month: "short",
-                                      day: "numeric",
-                                    })}
-                                  </p>
-                                </div>
-                              </div>
-                              <div className="text-right">
-                                <p
-                                  className={`text-sm font-semibold ${
-                                    transaction.type === "sale"
-                                      ? "text-green-600"
-                                      : "text-blue-600"
-                                  }`}
-                                >
-                                  {transaction.type === "sale" ? "+" : "-"}
-                                  {(transaction.amount / 1000).toFixed(0)}k
-                                </p>
-                              </div>
-                            </div>
-                          ))
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
+                          <p className="text-[10px] text-medium-gray mt-0.5">
+                            After platform fee
+                          </p>
+                        </CardContent>
+                      </Card>
 
-                  {/* Top Performing Items */}
-                  <Card>
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-base">Top Items</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-3">
-                        {marketplaceItems
-                          .filter((item) => item.sellerId === currentUser?.id)
-                          .sort(
-                            (a, b) => (b.viewCount || 0) - (a.viewCount || 0)
-                          )
-                          .slice(0, 3).length === 0 ? (
-                          <div className="text-center py-6 text-sm text-muted-foreground">
-                            No items yet
+                      <Card className="border border-gray-300">
+                        <CardHeader className="p-3 pb-2">
+                          <CardTitle className="text-xs font-medium text-medium-gray">
+                            Available
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-3 pt-0">
+                          <div className="text-lg font-semibold text-dark-gray">
+                            Rp{" "}
+                            {(
+                              userStats?.availableBalance || 0
+                            ).toLocaleString()}
                           </div>
-                        ) : (
-                          marketplaceItems
-                            .filter((item) => item.sellerId === currentUser?.id)
-                            .sort(
-                              (a, b) => (b.viewCount || 0) - (a.viewCount || 0)
-                            )
-                            .slice(0, 3)
-                            .map((item) => (
+                          <p className="text-[10px] text-medium-gray mt-0.5">
+                            Ready to withdraw
+                          </p>
+                        </CardContent>
+                      </Card>
+
+                      <Card className="border border-gray-300">
+                        <CardHeader className="p-3 pb-2">
+                          <CardTitle className="text-xs font-medium text-medium-gray">
+                            Pending
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-3 pt-0">
+                          <div className="text-lg font-semibold text-dark-gray">
+                            Rp{" "}
+                            {(userStats?.pendingBalance || 0).toLocaleString()}
+                          </div>
+                          <p className="text-[10px] text-medium-gray mt-0.5">
+                            3-day hold
+                          </p>
+                        </CardContent>
+                      </Card>
+
+                      <Card className="border border-gray-300">
+                        <CardHeader className="p-3 pb-2">
+                          <CardTitle className="text-xs font-medium text-medium-gray">
+                            Withdrawn
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-3 pt-0">
+                          <div className="text-lg font-semibold text-dark-gray">
+                            Rp{" "}
+                            {(
+                              userStats?.withdrawnBalance || 0
+                            ).toLocaleString()}
+                          </div>
+                          <p className="text-[10px] text-medium-gray mt-0.5">
+                            All-time
+                          </p>
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    {/* Withdrawal Form and History */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                      {/* Withdrawal Form */}
+                      <WithdrawalForm
+                        availableBalance={userStats?.availableBalance || 0}
+                        userStats={userStats}
+                        onSuccess={() => loadTabData("wallet")}
+                      />
+
+                      {/* Withdrawal History */}
+                      <Card className="p-4 border border-gray-300">
+                        <h3 className="text-sm font-semibold text-dark-gray mb-3">
+                          Withdrawal History
+                        </h3>
+
+                        <div className="space-y-2">
+                          {withdrawals.length > 0 ? (
+                            withdrawals.map((withdrawal: any) => (
                               <div
-                                key={item.id}
-                                className="flex items-center justify-between pb-3 border-b border-border last:border-0 last:pb-0"
+                                key={withdrawal.id}
+                                className="border border-gray-200 rounded p-2"
                               >
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-sm font-medium line-clamp-1">
-                                    {item.title}
-                                  </p>
-                                  <p className="text-xs text-muted-foreground">
-                                    {item.category}
-                                  </p>
-                                </div>
-                                <div className="text-right ml-2">
-                                  <p className="text-sm font-semibold">
-                                    {item.viewCount || 0}
-                                  </p>
-                                  <p className="text-xs text-muted-foreground">
-                                    views
-                                  </p>
+                                <div className="flex items-start justify-between">
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2">
+                                      <p className="text-sm font-semibold text-dark-gray">
+                                        Rp {withdrawal.amount.toLocaleString()}
+                                      </p>
+                                      <Badge
+                                        className={`text-[10px] px-1.5 py-0 ${
+                                          withdrawal.status === "COMPLETED"
+                                            ? "bg-green-100 text-green-800"
+                                            : withdrawal.status === "PENDING"
+                                            ? "bg-yellow-100 text-yellow-800"
+                                            : withdrawal.status === "REJECTED"
+                                            ? "bg-red-100 text-red-800"
+                                            : "bg-blue-100 text-blue-800"
+                                        }`}
+                                      >
+                                        {withdrawal.status}
+                                      </Badge>
+                                    </div>
+                                    <p className="text-xs text-medium-gray mt-0.5">
+                                      {withdrawal.bankName} •{" "}
+                                      {withdrawal.accountNumber}
+                                    </p>
+                                    <p className="text-[10px] text-medium-gray mt-0.5">
+                                      {new Date(
+                                        withdrawal.createdAt
+                                      ).toLocaleDateString("id-ID", {
+                                        year: "numeric",
+                                        month: "short",
+                                        day: "numeric",
+                                      })}
+                                    </p>
+                                    {withdrawal.rejectionReason && (
+                                      <p className="text-[10px] text-red-600 mt-1">
+                                        Reason: {withdrawal.rejectionReason}
+                                      </p>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
                             ))
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
+                          ) : (
+                            <div className="text-center py-6">
+                              <p className="text-medium-gray text-xs">
+                                No withdrawal history yet
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </Card>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
+            {activeTab === "insights" && (
+              <div className="space-y-4">
+                {/* Header with Refresh Button */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h1 className="text-2xl font-bold text-dark-gray">
+                      Analytics Dashboard
+                    </h1>
+                    <p className="text-sm text-medium-gray mt-1">
+                      Real-time insights from your transactions
+                    </p>
+                  </div>
+                  <Button
+                    onClick={() => {
+                      setLoadedTabs((prev) => ({ ...prev, insights: false }));
+                      loadTabData("insights");
+                    }}
+                    variant="outline"
+                    size="sm"
+                    disabled={loadingStates.insights}
+                  >
+                    <RefreshCw
+                      className={`h-4 w-4 mr-2 ${
+                        loadingStates.insights ? "animate-spin" : ""
+                      }`}
+                    />
+                    Refresh
+                  </Button>
                 </div>
+
+                {loadingStates.insights ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="text-center">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-dark-blue mx-auto mb-4"></div>
+                      <p className="text-medium-gray">Loading analytics...</p>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    {/* Overview Stats */}
+                    <div className="grid grid-cols-3 gap-3">
+                      <Card className="col-span-1">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                          <CardTitle className="text-xs font-medium">
+                            Total Revenue (Gross)
+                          </CardTitle>
+                          <DollarSign className="h-4 w-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                          <div className="text-xl font-bold">
+                            Rp
+                            {allTransactions
+                              .filter(
+                                (t) =>
+                                  t.type === "sale" && t.status === "COMPLETED"
+                              )
+                              .reduce((sum, t) => sum + t.amount, 0)
+                              .toLocaleString()}
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            From{" "}
+                            {
+                              allTransactions.filter(
+                                (t) =>
+                                  t.type === "sale" && t.status === "COMPLETED"
+                              ).length
+                            }{" "}
+                            sales • Net: Rp{" "}
+                            {(userStats?.totalEarnings || 0).toLocaleString()}
+                          </p>
+                        </CardContent>
+                      </Card>
+
+                      <Card className="col-span-1">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                          <CardTitle className="text-xs font-medium">
+                            Total Spent
+                          </CardTitle>
+                          <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                          <div className="text-xl font-bold">
+                            Rp
+                            {allTransactions
+                              .filter(
+                                (t) =>
+                                  t.type === "purchase" &&
+                                  t.status === "COMPLETED"
+                              )
+                              .reduce((sum, t) => sum + t.amount, 0)
+                              .toLocaleString()}
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            From{" "}
+                            {
+                              allTransactions.filter(
+                                (t) =>
+                                  t.type === "purchase" &&
+                                  t.status === "COMPLETED"
+                              ).length
+                            }{" "}
+                            purchases
+                          </p>
+                        </CardContent>
+                      </Card>
+
+                      <Card className="col-span-1">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                          <CardTitle className="text-xs font-medium">
+                            Active Listings
+                          </CardTitle>
+                          <BookOpen className="h-4 w-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                          <div className="text-xl font-bold">
+                            {
+                              marketplaceItems.filter(
+                                (item) =>
+                                  item.sellerId === currentUser?.id &&
+                                  item.status === "available"
+                              ).length
+                            }
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            Of{" "}
+                            {
+                              marketplaceItems.filter(
+                                (item) => item.sellerId === currentUser?.id
+                              ).length
+                            }{" "}
+                            total
+                          </p>
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    {/* Second Row - Avg Rating (Full Width) */}
+                    <Card>
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-xs font-medium">
+                          Average Rating
+                        </CardTitle>
+                        <Star className="h-4 w-4 text-muted-foreground" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-xl font-bold">
+                          {stats[3].value}
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          From all your items
+                        </p>
+                      </CardContent>
+                    </Card>
+
+                    {/* Recent Activity & Top Items - Side by Side */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                      {/* Recent Activity */}
+                      <Card>
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-base">
+                            Recent Activity
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-3">
+                            {allTransactions.slice(0, 3).length === 0 ? (
+                              <div className="text-center py-6 text-sm text-muted-foreground">
+                                No recent activity
+                              </div>
+                            ) : (
+                              allTransactions.slice(0, 3).map((transaction) => (
+                                <div
+                                  key={transaction.id}
+                                  className="flex items-center justify-between pb-3 border-b border-border last:border-0 last:pb-0"
+                                >
+                                  <div className="flex items-center gap-2">
+                                    <div
+                                      className={`p-1.5 rounded ${
+                                        transaction.type === "sale"
+                                          ? "bg-green-100"
+                                          : "bg-blue-100"
+                                      }`}
+                                    >
+                                      {transaction.type === "sale" ? (
+                                        <TrendingUp className="h-3.5 w-3.5 text-green-600" />
+                                      ) : (
+                                        <ShoppingCart className="h-3.5 w-3.5 text-blue-600" />
+                                      )}
+                                    </div>
+                                    <div>
+                                      <p className="text-sm font-medium line-clamp-1">
+                                        {transaction.itemTitle}
+                                      </p>
+                                      <p className="text-xs text-muted-foreground">
+                                        {new Date(
+                                          transaction.createdAt
+                                        ).toLocaleDateString("en-US", {
+                                          month: "short",
+                                          day: "numeric",
+                                        })}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <div className="text-right">
+                                    <p
+                                      className={`text-sm font-semibold ${
+                                        transaction.type === "sale"
+                                          ? "text-green-600"
+                                          : "text-blue-600"
+                                      }`}
+                                    >
+                                      {transaction.type === "sale" ? "+" : "-"}
+                                      {(transaction.amount / 1000).toFixed(0)}k
+                                    </p>
+                                  </div>
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Top Performing Items */}
+                      <Card>
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-base">Top Items</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-3">
+                            {marketplaceItems
+                              .filter(
+                                (item) => item.sellerId === currentUser?.id
+                              )
+                              .sort(
+                                (a, b) =>
+                                  (b.viewCount || 0) - (a.viewCount || 0)
+                              )
+                              .slice(0, 3).length === 0 ? (
+                              <div className="text-center py-6 text-sm text-muted-foreground">
+                                No items yet
+                              </div>
+                            ) : (
+                              marketplaceItems
+                                .filter(
+                                  (item) => item.sellerId === currentUser?.id
+                                )
+                                .sort(
+                                  (a, b) =>
+                                    (b.viewCount || 0) - (a.viewCount || 0)
+                                )
+                                .slice(0, 3)
+                                .map((item) => (
+                                  <div
+                                    key={item.id}
+                                    className="flex items-center justify-between pb-3 border-b border-border last:border-0 last:pb-0"
+                                  >
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-sm font-medium line-clamp-1">
+                                        {item.title}
+                                      </p>
+                                      <p className="text-xs text-muted-foreground">
+                                        {item.category}
+                                      </p>
+                                    </div>
+                                    <div className="text-right ml-2">
+                                      <p className="text-sm font-semibold">
+                                        {item.viewCount || 0}
+                                      </p>
+                                      <p className="text-xs text-muted-foreground">
+                                        views
+                                      </p>
+                                    </div>
+                                  </div>
+                                ))
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </>
+                )}
               </div>
             )}
           </div>
