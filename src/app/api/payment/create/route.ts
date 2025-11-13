@@ -30,10 +30,7 @@ export async function POST(request: NextRequest) {
 
     // Validate item type
     if (!["marketplace", "tutoring"].includes(itemType)) {
-      return NextResponse.json(
-        { error: "Invalid item type" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid item type" }, { status: 400 });
     }
 
     // Verify item exists and get details
@@ -144,6 +141,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Calculate expiry time (15 minutes from now)
+    const expiresAt = new Date();
+    expiresAt.setMinutes(expiresAt.getMinutes() + 15);
+
     // Save transaction to database
     const transaction = await prisma.transaction.create({
       data: {
@@ -157,6 +158,7 @@ export async function POST(request: NextRequest) {
         itemTitle,
         buyerId: session.user.id,
         itemId: itemType === "marketplace" ? itemId : null,
+        expiresAt, // Set payment expiry time
       },
     });
 
@@ -182,4 +184,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

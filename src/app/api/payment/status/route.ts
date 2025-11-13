@@ -63,6 +63,47 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
+    const currentStatus = transaction.status;
+
+    // Check if payment has expired (only for PENDING status)
+    if (
+      currentStatus === "PENDING" &&
+      transaction.expiresAt &&
+      new Date() > transaction.expiresAt
+    ) {
+      // Payment expired, update status to EXPIRED
+      const updatedTransaction = await prisma.transaction.update({
+        where: { orderId },
+        data: {
+          status: "EXPIRED",
+          updatedAt: new Date(),
+        },
+        include: {
+          item: true,
+          buyer: true,
+        },
+      });
+
+      console.log("Payment expired:", {
+        orderId,
+        expiresAt: transaction.expiresAt,
+        now: new Date(),
+      });
+
+      return NextResponse.json({
+        success: true,
+        transaction: {
+          id: updatedTransaction.id,
+          orderId: updatedTransaction.orderId,
+          amount: updatedTransaction.amount,
+          status: "EXPIRED",
+          itemTitle: updatedTransaction.itemTitle,
+          createdAt: updatedTransaction.createdAt,
+          expiresAt: updatedTransaction.expiresAt,
+        },
+      });
+    }
+
     // Get latest status from Midtrans
     const midtransStatus = await getTransactionStatus(orderId);
 

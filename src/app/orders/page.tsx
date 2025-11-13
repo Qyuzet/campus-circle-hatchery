@@ -106,6 +106,15 @@ export default function OrdersPage() {
                 setTimeout(() => {
                   router.push("/library");
                 }, 2000);
+              } else if (result.transaction.status === "EXPIRED") {
+                toast.error("Payment expired ⏰", {
+                  description: "Payment time limit exceeded. Please try again.",
+                  duration: 3000,
+                });
+                // Reload to show updated status
+                setTimeout(() => {
+                  loadPurchases();
+                }, 1500);
               }
             }
           } catch (error) {
@@ -152,7 +161,10 @@ export default function OrdersPage() {
   const completedOrders = purchases.filter((p) => p.status === "COMPLETED");
   const pendingOrders = purchases.filter((p) => p.status === "PENDING");
   const failedOrders = purchases.filter(
-    (p) => p.status === "FAILED" || p.status === "CANCELLED"
+    (p) =>
+      p.status === "FAILED" ||
+      p.status === "CANCELLED" ||
+      p.status === "EXPIRED"
   );
 
   const unreadCount = notifications.filter((n) => !n.read).length;
@@ -508,8 +520,17 @@ function OrdersTable({ orders, router }: { orders: any[]; router: any }) {
             id: orderId,
             description: "Please complete your payment",
           });
+        } else if (newStatus === "EXPIRED") {
+          toast.error("Payment expired ⏰", {
+            id: orderId,
+            description: "Payment time limit exceeded. Please try again.",
+          });
+          // Reload page to show updated status
+          setTimeout(() => window.location.reload(), 1500);
         } else {
           toast.error(`Payment ${newStatus.toLowerCase()}`, { id: orderId });
+          // Reload page to show updated status
+          setTimeout(() => window.location.reload(), 1500);
         }
       } else {
         toast.error("Failed to check status", {
@@ -584,17 +605,25 @@ function OrdersTable({ orders, router }: { orders: any[]; router: any }) {
                     Rp {order.amount.toLocaleString()}
                   </TableCell>
                   <TableCell>
-                    <Badge
-                      variant={
-                        order.status === "COMPLETED"
-                          ? "default"
-                          : order.status === "PENDING"
-                          ? "secondary"
-                          : "destructive"
-                      }
-                    >
-                      {order.status}
-                    </Badge>
+                    <div className="space-y-1">
+                      <Badge
+                        variant={
+                          order.status === "COMPLETED"
+                            ? "default"
+                            : order.status === "PENDING"
+                            ? "secondary"
+                            : "destructive"
+                        }
+                      >
+                        {order.status}
+                      </Badge>
+                      {order.status === "PENDING" && order.expiresAt && (
+                        <div className="text-xs text-muted-foreground">
+                          Expires:{" "}
+                          {new Date(order.expiresAt).toLocaleTimeString()}
+                        </div>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell>
                     {order.status === "COMPLETED" && (

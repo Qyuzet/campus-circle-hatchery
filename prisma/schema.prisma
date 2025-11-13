@@ -223,6 +223,7 @@ model Transaction {
 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+  expiresAt       DateTime? // Payment expiry time (default 15 minutes from creation)
 
   // Relations
   buyerId String
