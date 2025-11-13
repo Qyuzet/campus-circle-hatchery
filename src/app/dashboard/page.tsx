@@ -132,6 +132,22 @@ export default function Dashboard() {
   const [showMemberListSidebar, setShowMemberListSidebar] = useState(false);
   const [groupMembers, setGroupMembers] = useState<any[]>([]);
 
+  // Loading states per tab
+  const [loadingStates, setLoadingStates] = useState({
+    discovery: false,
+    messages: false,
+    tutoring: false,
+    orders: false,
+  });
+
+  // Track which tabs have been loaded
+  const [loadedTabs, setLoadedTabs] = useState({
+    discovery: false,
+    messages: false,
+    tutoring: false,
+    orders: false,
+  });
+
   // Redirect to login if not authenticated
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -139,12 +155,22 @@ export default function Dashboard() {
     }
   }, [status, router]);
 
-  // Initialize data on component mount
+  // Initialize essential data on component mount (notifications and stats only)
   useEffect(() => {
     if (status === "authenticated") {
-      loadData();
+      loadEssentialData();
     }
   }, [status]);
+
+  // Load data when tab changes (lazy loading)
+  useEffect(() => {
+    if (
+      status === "authenticated" &&
+      !loadedTabs[activeTab as keyof typeof loadedTabs]
+    ) {
+      loadTabData(activeTab);
+    }
+  }, [activeTab, status]);
 
   // Close notifications dropdown when clicking outside
   useEffect(() => {
@@ -296,63 +322,85 @@ export default function Dashboard() {
     }
   }, [messages, groupMessages]);
 
-  const loadData = async () => {
+  // Load only essential data on mount (notifications, stats, current user)
+  const loadEssentialData = async () => {
     try {
-      setIsLoading(true);
-
-      // Load all data in parallel
-      const [
-        items,
-        convos,
-        sessions,
-        notifs,
-        stats,
-        sales,
-        purchases,
-        groupsData,
-      ] = await Promise.all([
-        marketplaceAPI.getItems(),
-        conversationsAPI.getConversations(),
-        tutoringAPI.getSessions({ type: "all" }),
+      const [notifs, stats] = await Promise.all([
         notificationsAPI.getNotifications(),
         statsAPI.getUserStats(),
-        transactionsAPI.getTransactions({
-          type: "sales",
-          status: "COMPLETED",
-        }),
-        transactionsAPI.getTransactions({
-          type: "purchases",
-        }),
-        groupsAPI.getGroups(),
       ]);
 
-      setMarketplaceItems(items);
-      setConversations(convos);
-      setTutoringSessions(sessions);
       setNotifications(notifs);
       setUserStats(stats);
-      setSalesTransactions(sales);
-      setGroups(groupsData);
-
-      // Combine sales and purchases with type field
-      const allTrans = [
-        ...sales.map((t: any) => ({ ...t, type: "sale" })),
-        ...purchases.map((t: any) => ({ ...t, type: "purchase" })),
-      ].sort(
-        (a: any, b: any) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      );
-      setAllTransactions(allTrans);
 
       // Set current user from session
       if (session?.user) {
         setCurrentUser(session.user);
       }
     } catch (error) {
-      console.error("Error loading data:", error);
-      // Optionally show error toast/notification
+      console.error("Error loading essential data:", error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Load data for specific tab (lazy loading)
+  const loadTabData = async (tab: string) => {
+    // Mark tab as loading
+    setLoadingStates((prev) => ({ ...prev, [tab]: true }));
+
+    try {
+      switch (tab) {
+        case "discovery":
+          const items = await marketplaceAPI.getItems();
+          setMarketplaceItems(items);
+          break;
+
+        case "messages":
+          const [convos, groupsData] = await Promise.all([
+            conversationsAPI.getConversations(),
+            groupsAPI.getGroups(),
+          ]);
+          setConversations(convos);
+          setGroups(groupsData);
+          break;
+
+        case "tutoring":
+          const sessions = await tutoringAPI.getSessions({ type: "all" });
+          setTutoringSessions(sessions);
+          break;
+
+        case "orders":
+          const [sales, purchases] = await Promise.all([
+            transactionsAPI.getTransactions({
+              type: "sales",
+              status: "COMPLETED",
+            }),
+            transactionsAPI.getTransactions({
+              type: "purchases",
+            }),
+          ]);
+          setSalesTransactions(sales);
+
+          // Combine sales and purchases with type field
+          const allTrans = [
+            ...sales.map((t: any) => ({ ...t, type: "sale" })),
+            ...purchases.map((t: any) => ({ ...t, type: "purchase" })),
+          ].sort(
+            (a: any, b: any) =>
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
+          setAllTransactions(allTrans);
+          break;
+      }
+
+      // Mark tab as loaded
+      setLoadedTabs((prev) => ({ ...prev, [tab]: true }));
+    } catch (error) {
+      console.error(`Error loading ${tab} data:`, error);
+      toast.error(`Failed to load ${tab} data`);
+    } finally {
+      setLoadingStates((prev) => ({ ...prev, [tab]: false }));
     }
   };
 
@@ -610,13 +658,13 @@ export default function Dashboard() {
   const filteredItems =
     searchQuery || selectedCategory ? marketplaceItems : marketplaceItems;
 
-  // Show loading state
-  if (status === "loading" || isLoading) {
+  // Show loading state only for initial auth check
+  if (status === "loading") {
     return (
       <div className="min-h-screen bg-secondary-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-campus-blue-dark mx-auto mb-4"></div>
-          <p className="text-dark-gray text-lg">Loading CampusCircle...</p>
+          <p className="text-dark-gray text-lg">Authenticating...</p>
         </div>
       </div>
     );
@@ -971,310 +1019,347 @@ export default function Dashboard() {
           <div className="flex-1">
             {activeTab === "discovery" && (
               <div className="space-y-6">
-                {/* Header with Search and Filters */}
-                <Card>
-                  <CardHeader>
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                      <div>
-                        <CardTitle className="text-2xl">
-                          Discover Study Materials
-                        </CardTitle>
-                        <CardDescription>
-                          Browse and purchase study materials from fellow
-                          students
-                        </CardDescription>
-                      </div>
-                      <Button
-                        onClick={() => setShowAddItemModal(true)}
-                        className="md:w-auto"
-                      >
-                        <Plus className="h-4 w-4 mr-2" />
-                        Add New Item
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex flex-col md:flex-row gap-4">
-                      {/* Search */}
-                      <div className="flex-1 relative">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          placeholder="Search by title, course, or description..."
-                          value={searchQuery}
-                          onChange={(e) => setSearchQuery(e.target.value)}
-                          className="pl-10"
-                        />
-                      </div>
-
-                      {/* Category Filter */}
-                      <select
-                        value={selectedCategory}
-                        onChange={(e) => handleCategoryFilter(e.target.value)}
-                        className="px-3 py-2 border border-input rounded-md text-sm bg-background hover:bg-accent transition-colors"
-                      >
-                        <option value="">All Categories</option>
-                        <option value="Notes">📝 Notes</option>
-                        <option value="Tutorial">🎥 Tutorial</option>
-                        <option value="Tutoring">👨‍🏫 Tutoring</option>
-                        <option value="Assignment">📄 Assignment</option>
-                        <option value="Book">📚 Book</option>
-                        <option value="Other">📦 Other</option>
-                      </select>
-
-                      {/* View Mode Toggle */}
-                      <div className="flex border border-input rounded-md">
-                        <Button
-                          variant={viewMode === "grid" ? "secondary" : "ghost"}
-                          size="sm"
-                          onClick={() => setViewMode("grid")}
-                          className="rounded-r-none"
-                        >
-                          <Grid className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant={viewMode === "list" ? "secondary" : "ghost"}
-                          size="sm"
-                          onClick={() => setViewMode("list")}
-                          className="rounded-l-none"
-                        >
-                          <List className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-
-                    {/* Active Filters */}
-                    {(selectedCategory || searchQuery) && (
-                      <div className="flex items-center gap-2 mt-4">
-                        <span className="text-sm text-muted-foreground">
-                          Active filters:
-                        </span>
-                        {selectedCategory && (
-                          <Badge variant="secondary" className="gap-1">
-                            {selectedCategory}
-                            <button
-                              onClick={() => handleCategoryFilter("")}
-                              className="ml-1 hover:text-destructive"
-                            >
-                              <X className="h-3 w-3" />
-                            </button>
-                          </Badge>
-                        )}
-                        {searchQuery && (
-                          <Badge variant="secondary" className="gap-1">
-                            Search: "{searchQuery}"
-                            <button
-                              onClick={() => setSearchQuery("")}
-                              className="ml-1 hover:text-destructive"
-                            >
-                              <X className="h-3 w-3" />
-                            </button>
-                          </Badge>
-                        )}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-
-                {/* Marketplace Items */}
-                <div
-                  className={`grid gap-4 ${
-                    viewMode === "grid"
-                      ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
-                      : "grid-cols-1"
-                  }`}
-                >
-                  {marketplaceItems.length === 0 ? (
-                    <Card className="col-span-full">
-                      <CardContent className="flex flex-col items-center justify-center py-12">
-                        <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
-                        <h3 className="text-lg font-semibold mb-2">
-                          No items found
-                        </h3>
-                        <p className="text-muted-foreground text-center mb-4">
-                          {searchQuery || selectedCategory
-                            ? "Try adjusting your filters"
-                            : "Be the first to add a study material!"}
-                        </p>
-                        <Button onClick={() => setShowAddItemModal(true)}>
-                          <Plus className="h-4 w-4 mr-2" />
-                          Add Item
-                        </Button>
-                      </CardContent>
+                {/* Show skeleton loader while loading */}
+                {loadingStates.discovery && (
+                  <div className="space-y-6 animate-pulse">
+                    <Card>
+                      <CardHeader>
+                        <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
+                        <div className="h-10 bg-gray-200 rounded"></div>
+                      </CardHeader>
                     </Card>
-                  ) : (
-                    marketplaceItems.map((item) => (
-                      <Card
-                        key={item.id}
-                        onClick={() => handleItemClick(item)}
-                        className="cursor-pointer hover:shadow-lg transition-all group overflow-hidden"
-                      >
-                        {/* Image Section */}
-                        <div className="relative aspect-video bg-secondary-200 overflow-hidden">
-                          {item.imageUrl ? (
-                            <img
-                              src={item.imageUrl}
-                              alt={item.title}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            />
-                          ) : (
-                            <div
-                              className={`w-full h-full flex items-center justify-center ${
-                                item.category === "Notes"
-                                  ? "bg-gradient-to-br from-blue-100 to-blue-200"
-                                  : item.category === "Tutorial"
-                                  ? "bg-gradient-to-br from-green-100 to-green-200"
-                                  : item.category === "Tutoring"
-                                  ? "bg-gradient-to-br from-purple-100 to-purple-200"
-                                  : item.category === "Assignment"
-                                  ? "bg-gradient-to-br from-orange-100 to-orange-200"
-                                  : item.category === "Book"
-                                  ? "bg-gradient-to-br from-red-100 to-red-200"
-                                  : "bg-gradient-to-br from-gray-100 to-gray-200"
-                              }`}
-                            >
-                              <div className="text-center">
-                                {item.category === "Notes" && (
-                                  <FileText className="h-16 w-16 text-blue-600 mx-auto" />
-                                )}
-                                {item.category === "Tutorial" && (
-                                  <Video className="h-16 w-16 text-green-600 mx-auto" />
-                                )}
-                                {item.category === "Tutoring" && (
-                                  <GraduationCap className="h-16 w-16 text-purple-600 mx-auto" />
-                                )}
-                                {item.category === "Assignment" && (
-                                  <FileText className="h-16 w-16 text-orange-600 mx-auto" />
-                                )}
-                                {item.category === "Book" && (
-                                  <Book className="h-16 w-16 text-red-600 mx-auto" />
-                                )}
-                                {![
-                                  "Notes",
-                                  "Tutorial",
-                                  "Tutoring",
-                                  "Assignment",
-                                  "Book",
-                                ].includes(item.category) && (
-                                  <BookOpen className="h-16 w-16 text-gray-600 mx-auto" />
-                                )}
-                                <p className="text-sm font-semibold text-gray-700 mt-2">
-                                  {item.category}
-                                </p>
-                              </div>
-                            </div>
-                          )}
-                          {/* Favorite Button */}
-                          <button
-                            onClick={(e) => e.stopPropagation()}
-                            className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm p-2 rounded-full text-gray-600 hover:text-red-500 hover:bg-white transition-all shadow-sm"
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {[1, 2, 3, 4, 5, 6].map((i) => (
+                        <Card key={i}>
+                          <div className="h-48 bg-gray-200 rounded-t-lg"></div>
+                          <CardContent className="p-4 space-y-3">
+                            <div className="h-6 bg-gray-200 rounded w-3/4"></div>
+                            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                            <div className="h-4 bg-gray-200 rounded w-full"></div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Show content when loaded */}
+                {!loadingStates.discovery && (
+                  <>
+                    {/* Header with Search and Filters */}
+                    <Card>
+                      <CardHeader>
+                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                          <div>
+                            <CardTitle className="text-2xl">
+                              Discover Study Materials
+                            </CardTitle>
+                            <CardDescription>
+                              Browse and purchase study materials from fellow
+                              students
+                            </CardDescription>
+                          </div>
+                          <Button
+                            onClick={() => setShowAddItemModal(true)}
+                            className="md:w-auto"
                           >
-                            <Heart className="h-4 w-4" />
-                          </button>
+                            <Plus className="h-4 w-4 mr-2" />
+                            Add New Item
+                          </Button>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex flex-col md:flex-row gap-4">
+                          {/* Search */}
+                          <div className="flex-1 relative">
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input
+                              placeholder="Search by title, course, or description..."
+                              value={searchQuery}
+                              onChange={(e) => setSearchQuery(e.target.value)}
+                              className="pl-10"
+                            />
+                          </div>
+
+                          {/* Category Filter */}
+                          <select
+                            value={selectedCategory}
+                            onChange={(e) =>
+                              handleCategoryFilter(e.target.value)
+                            }
+                            className="px-3 py-2 border border-input rounded-md text-sm bg-background hover:bg-accent transition-colors"
+                          >
+                            <option value="">All Categories</option>
+                            <option value="Notes">📝 Notes</option>
+                            <option value="Tutorial">🎥 Tutorial</option>
+                            <option value="Tutoring">👨‍🏫 Tutoring</option>
+                            <option value="Assignment">📄 Assignment</option>
+                            <option value="Book">📚 Book</option>
+                            <option value="Other">📦 Other</option>
+                          </select>
+
+                          {/* View Mode Toggle */}
+                          <div className="flex border border-input rounded-md">
+                            <Button
+                              variant={
+                                viewMode === "grid" ? "secondary" : "ghost"
+                              }
+                              size="sm"
+                              onClick={() => setViewMode("grid")}
+                              className="rounded-r-none"
+                            >
+                              <Grid className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant={
+                                viewMode === "list" ? "secondary" : "ghost"
+                              }
+                              size="sm"
+                              onClick={() => setViewMode("list")}
+                              className="rounded-l-none"
+                            >
+                              <List className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
 
-                        {/* Content Section */}
-                        <CardContent className="p-4 space-y-3">
-                          {/* Category Badge */}
-                          <Badge variant="secondary" className="text-xs">
-                            {item.category}
-                          </Badge>
-
-                          {/* Title */}
-                          <h3 className="font-bold text-lg line-clamp-1 text-gray-900">
-                            {item.title}
-                          </h3>
-
-                          {/* Description */}
-                          <p className="text-sm text-gray-600 line-clamp-2 min-h-[40px]">
-                            {item.description}
-                          </p>
-
-                          {/* Course Info */}
-                          <div className="flex items-center gap-2 text-xs text-gray-500">
-                            <BookOpen className="h-3.5 w-3.5" />
-                            <span className="font-medium">{item.course}</span>
+                        {/* Active Filters */}
+                        {(selectedCategory || searchQuery) && (
+                          <div className="flex items-center gap-2 mt-4">
+                            <span className="text-sm text-muted-foreground">
+                              Active filters:
+                            </span>
+                            {selectedCategory && (
+                              <Badge variant="secondary" className="gap-1">
+                                {selectedCategory}
+                                <button
+                                  onClick={() => handleCategoryFilter("")}
+                                  className="ml-1 hover:text-destructive"
+                                >
+                                  <X className="h-3 w-3" />
+                                </button>
+                              </Badge>
+                            )}
+                            {searchQuery && (
+                              <Badge variant="secondary" className="gap-1">
+                                Search: "{searchQuery}"
+                                <button
+                                  onClick={() => setSearchQuery("")}
+                                  className="ml-1 hover:text-destructive"
+                                >
+                                  <X className="h-3 w-3" />
+                                </button>
+                              </Badge>
+                            )}
                           </div>
+                        )}
+                      </CardContent>
+                    </Card>
 
-                          {/* Price and Rating */}
-                          <div className="flex items-end justify-between pt-2 border-t">
-                            <div>
-                              <p className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                                Rp {item.price.toLocaleString()}
+                    {/* Marketplace Items */}
+                    <div
+                      className={`grid gap-4 ${
+                        viewMode === "grid"
+                          ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+                          : "grid-cols-1"
+                      }`}
+                    >
+                      {marketplaceItems.length === 0 ? (
+                        <Card className="col-span-full">
+                          <CardContent className="flex flex-col items-center justify-center py-12">
+                            <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
+                            <h3 className="text-lg font-semibold mb-2">
+                              No items found
+                            </h3>
+                            <p className="text-muted-foreground text-center mb-4">
+                              {searchQuery || selectedCategory
+                                ? "Try adjusting your filters"
+                                : "Be the first to add a study material!"}
+                            </p>
+                            <Button onClick={() => setShowAddItemModal(true)}>
+                              <Plus className="h-4 w-4 mr-2" />
+                              Add Item
+                            </Button>
+                          </CardContent>
+                        </Card>
+                      ) : (
+                        marketplaceItems.map((item) => (
+                          <Card
+                            key={item.id}
+                            onClick={() => handleItemClick(item)}
+                            className="cursor-pointer hover:shadow-lg transition-all group overflow-hidden"
+                          >
+                            {/* Image Section */}
+                            <div className="relative aspect-video bg-secondary-200 overflow-hidden">
+                              {item.imageUrl ? (
+                                <img
+                                  src={item.imageUrl}
+                                  alt={item.title}
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                />
+                              ) : (
+                                <div
+                                  className={`w-full h-full flex items-center justify-center ${
+                                    item.category === "Notes"
+                                      ? "bg-gradient-to-br from-blue-100 to-blue-200"
+                                      : item.category === "Tutorial"
+                                      ? "bg-gradient-to-br from-green-100 to-green-200"
+                                      : item.category === "Tutoring"
+                                      ? "bg-gradient-to-br from-purple-100 to-purple-200"
+                                      : item.category === "Assignment"
+                                      ? "bg-gradient-to-br from-orange-100 to-orange-200"
+                                      : item.category === "Book"
+                                      ? "bg-gradient-to-br from-red-100 to-red-200"
+                                      : "bg-gradient-to-br from-gray-100 to-gray-200"
+                                  }`}
+                                >
+                                  <div className="text-center">
+                                    {item.category === "Notes" && (
+                                      <FileText className="h-16 w-16 text-blue-600 mx-auto" />
+                                    )}
+                                    {item.category === "Tutorial" && (
+                                      <Video className="h-16 w-16 text-green-600 mx-auto" />
+                                    )}
+                                    {item.category === "Tutoring" && (
+                                      <GraduationCap className="h-16 w-16 text-purple-600 mx-auto" />
+                                    )}
+                                    {item.category === "Assignment" && (
+                                      <FileText className="h-16 w-16 text-orange-600 mx-auto" />
+                                    )}
+                                    {item.category === "Book" && (
+                                      <Book className="h-16 w-16 text-red-600 mx-auto" />
+                                    )}
+                                    {![
+                                      "Notes",
+                                      "Tutorial",
+                                      "Tutoring",
+                                      "Assignment",
+                                      "Book",
+                                    ].includes(item.category) && (
+                                      <BookOpen className="h-16 w-16 text-gray-600 mx-auto" />
+                                    )}
+                                    <p className="text-sm font-semibold text-gray-700 mt-2">
+                                      {item.category}
+                                    </p>
+                                  </div>
+                                </div>
+                              )}
+                              {/* Favorite Button */}
+                              <button
+                                onClick={(e) => e.stopPropagation()}
+                                className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm p-2 rounded-full text-gray-600 hover:text-red-500 hover:bg-white transition-all shadow-sm"
+                              >
+                                <Heart className="h-4 w-4" />
+                              </button>
+                            </div>
+
+                            {/* Content Section */}
+                            <CardContent className="p-4 space-y-3">
+                              {/* Category Badge */}
+                              <Badge variant="secondary" className="text-xs">
+                                {item.category}
+                              </Badge>
+
+                              {/* Title */}
+                              <h3 className="font-bold text-lg line-clamp-1 text-gray-900">
+                                {item.title}
+                              </h3>
+
+                              {/* Description */}
+                              <p className="text-sm text-gray-600 line-clamp-2 min-h-[40px]">
+                                {item.description}
                               </p>
-                              <div className="flex items-center gap-1 mt-1">
-                                <Star className="h-3.5 w-3.5 text-yellow-400 fill-yellow-400" />
-                                <span className="text-xs font-medium text-gray-700">
-                                  {item.rating}
-                                </span>
-                                <span className="text-xs text-gray-500">
-                                  ({item.reviewCount || 0})
+
+                              {/* Course Info */}
+                              <div className="flex items-center gap-2 text-xs text-gray-500">
+                                <BookOpen className="h-3.5 w-3.5" />
+                                <span className="font-medium">
+                                  {item.course}
                                 </span>
                               </div>
-                            </div>
-                            <div className="text-right">
-                              <p className="text-xs text-gray-500">by</p>
-                              <p className="text-xs font-medium text-gray-700">
-                                {typeof item.seller === "string"
-                                  ? `Student ${item.seller.slice(-9)}`
-                                  : item.seller?.name || "Unknown"}
-                              </p>
-                            </div>
-                          </div>
-                        </CardContent>
 
-                        {/* Action Buttons */}
-                        <CardFooter className="flex gap-2 p-4 pt-0">
-                          {item.sellerId === currentUser?.id ? (
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              className="w-full"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteItem(item.id);
-                              }}
-                            >
-                              <Trash2 className="h-4 w-4 mr-1" />
-                              Delete
-                            </Button>
-                          ) : (
-                            <>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="flex-1"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setMessageContextItem(item);
-                                  handleCreateConversation(
-                                    item.sellerId,
-                                    typeof item.seller === "string"
-                                      ? item.seller
-                                      : item.seller?.name || "Unknown"
-                                  );
-                                }}
-                              >
-                                <MessageCircle className="h-4 w-4 mr-1" />
-                                Message
-                              </Button>
-                              <Button
-                                size="sm"
-                                className="flex-1"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleBuyItem(item);
-                                }}
-                              >
-                                <ShoppingCart className="h-4 w-4 mr-1" />
-                                Buy
-                              </Button>
-                            </>
-                          )}
-                        </CardFooter>
-                      </Card>
-                    ))
-                  )}
-                </div>
+                              {/* Price and Rating */}
+                              <div className="flex items-end justify-between pt-2 border-t">
+                                <div>
+                                  <p className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                                    Rp {item.price.toLocaleString()}
+                                  </p>
+                                  <div className="flex items-center gap-1 mt-1">
+                                    <Star className="h-3.5 w-3.5 text-yellow-400 fill-yellow-400" />
+                                    <span className="text-xs font-medium text-gray-700">
+                                      {item.rating}
+                                    </span>
+                                    <span className="text-xs text-gray-500">
+                                      ({item.reviewCount || 0})
+                                    </span>
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  <p className="text-xs text-gray-500">by</p>
+                                  <p className="text-xs font-medium text-gray-700">
+                                    {typeof item.seller === "string"
+                                      ? `Student ${item.seller.slice(-9)}`
+                                      : item.seller?.name || "Unknown"}
+                                  </p>
+                                </div>
+                              </div>
+                            </CardContent>
+
+                            {/* Action Buttons */}
+                            <CardFooter className="flex gap-2 p-4 pt-0">
+                              {item.sellerId === currentUser?.id ? (
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  className="w-full"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteItem(item.id);
+                                  }}
+                                >
+                                  <Trash2 className="h-4 w-4 mr-1" />
+                                  Delete
+                                </Button>
+                              ) : (
+                                <>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="flex-1"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setMessageContextItem(item);
+                                      handleCreateConversation(
+                                        item.sellerId,
+                                        typeof item.seller === "string"
+                                          ? item.seller
+                                          : item.seller?.name || "Unknown"
+                                      );
+                                    }}
+                                  >
+                                    <MessageCircle className="h-4 w-4 mr-1" />
+                                    Message
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    className="flex-1"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleBuyItem(item);
+                                    }}
+                                  >
+                                    <ShoppingCart className="h-4 w-4 mr-1" />
+                                    Buy
+                                  </Button>
+                                </>
+                              )}
+                            </CardFooter>
+                          </Card>
+                        ))
+                      )}
+                    </div>
+                  </>
+                )}
               </div>
             )}
 
@@ -1517,437 +1602,474 @@ export default function Dashboard() {
 
             {activeTab === "messages" && (
               <div className="h-full flex flex-col">
-                {/* WhatsApp-style Messages Interface */}
-                <div className="bg-white rounded-lg shadow border border-light-gray h-[500px] sm:h-[600px] flex flex-col sm:flex-row">
-                  {/* Conversations/Groups List */}
-                  <div
-                    className={`${
-                      selectedConversation || selectedGroup
-                        ? "hidden sm:flex"
-                        : "flex"
-                    } w-full sm:w-1/3 border-r border-light-gray flex-col`}
-                  >
-                    {/* Header with Toggle */}
-                    <div className="p-4 border-b border-light-gray bg-gray-50">
-                      <div className="flex items-center justify-between mb-3">
-                        <h2 className="text-lg font-semibold text-dark-gray">
-                          Messages
-                        </h2>
-                        {messageViewMode === "groups" && (
-                          <button
-                            onClick={() => setShowCreateGroupModal(true)}
-                            className="p-2 hover:bg-gray-200 rounded-full transition-colors"
-                            title="Create Group"
-                          >
-                            <Plus className="h-5 w-5 text-dark-blue" />
-                          </button>
-                        )}
-                      </div>
-                      {/* Toggle between Conversations and Groups */}
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => {
-                            setMessageViewMode("conversations");
-                            setSelectedGroup(null);
-                          }}
-                          className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                            messageViewMode === "conversations"
-                              ? "bg-dark-blue text-white"
-                              : "bg-gray-200 text-medium-gray hover:bg-gray-300"
-                          }`}
-                        >
-                          <Users className="h-4 w-4 inline mr-1" />
-                          Chats
-                        </button>
-                        <button
-                          onClick={() => {
-                            setMessageViewMode("groups");
-                            setSelectedConversation(null);
-                          }}
-                          className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                            messageViewMode === "groups"
-                              ? "bg-dark-blue text-white"
-                              : "bg-gray-200 text-medium-gray hover:bg-gray-300"
-                          }`}
-                        >
-                          <Users className="h-4 w-4 inline mr-1" />
-                          Groups
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Conversations or Groups List */}
-                    <div className="flex-1 overflow-y-auto">
-                      {messageViewMode === "conversations" ? (
-                        // Conversations List
-                        conversations.length > 0 ? (
-                          conversations.map((conversation) => (
-                            <div
-                              key={conversation.id}
-                              onClick={() => {
-                                setSelectedConversation(conversation.id);
-                                setSelectedGroup(null);
-                              }}
-                              className={`p-3 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors ${
-                                selectedConversation === conversation.id
-                                  ? "bg-blue-50 border-l-4 border-l-dark-blue"
-                                  : ""
-                              }`}
-                            >
-                              <div className="flex items-center space-x-3">
-                                <div className="w-12 h-12 bg-gradient-to-br from-dark-blue to-campus-green rounded-full flex items-center justify-center flex-shrink-0">
-                                  <span className="text-white font-semibold text-sm">
-                                    {conversation.otherUserName
-                                      .charAt(0)
-                                      .toUpperCase()}
-                                  </span>
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center justify-between">
-                                    <h3 className="font-medium text-dark-gray truncate">
-                                      {conversation.otherUserName}
-                                    </h3>
-                                    <span className="text-xs text-medium-gray">
-                                      {new Date(
-                                        conversation.lastMessageTime
-                                      ).toLocaleTimeString([], {
-                                        hour: "2-digit",
-                                        minute: "2-digit",
-                                      })}
-                                    </span>
-                                  </div>
-                                  <div className="flex items-center justify-between">
-                                    <p className="text-sm text-medium-gray truncate">
-                                      {conversation.lastMessage ||
-                                        "No messages yet"}
-                                    </p>
-                                    {conversation.unreadCount > 0 && (
-                                      <span className="bg-campus-green text-white text-xs px-2 py-1 rounded-full min-w-[20px] text-center">
-                                        {conversation.unreadCount}
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          ))
-                        ) : (
-                          <div className="p-8 text-center">
-                            <MessageCircle className="h-12 w-12 text-medium-gray mx-auto mb-4" />
-                            <p className="text-medium-gray text-sm">
-                              No conversations yet
-                            </p>
+                {/* Show skeleton loader while loading */}
+                {loadingStates.messages ? (
+                  <div className="bg-white rounded-lg shadow border border-light-gray h-[500px] sm:h-[600px] flex animate-pulse">
+                    <div className="w-1/3 border-r border-light-gray p-4 space-y-4">
+                      <div className="h-8 bg-gray-200 rounded w-1/2"></div>
+                      {[1, 2, 3, 4, 5].map((i) => (
+                        <div key={i} className="flex items-center gap-3 p-3">
+                          <div className="w-12 h-12 bg-gray-200 rounded-full"></div>
+                          <div className="flex-1 space-y-2">
+                            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                            <div className="h-3 bg-gray-200 rounded w-1/2"></div>
                           </div>
-                        )
-                      ) : // Groups List
-                      groups.length > 0 ? (
-                        groups.map((group) => (
-                          <div
-                            key={group.id}
-                            onClick={() => {
-                              setSelectedGroup(group.id);
-                              setSelectedConversation(null);
-                            }}
-                            className={`p-3 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors ${
-                              selectedGroup === group.id
-                                ? "bg-blue-50 border-l-4 border-l-dark-blue"
-                                : ""
-                            }`}
-                          >
-                            <div className="flex items-center space-x-3">
-                              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center flex-shrink-0">
-                                <Users className="h-6 w-6 text-white" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center justify-between">
-                                  <h3 className="font-medium text-dark-gray truncate">
-                                    {group.name}
-                                  </h3>
-                                  <span className="text-xs text-medium-gray">
-                                    {group.lastMessage
-                                      ? new Date(
-                                          group.lastMessage.createdAt
-                                        ).toLocaleTimeString([], {
-                                          hour: "2-digit",
-                                          minute: "2-digit",
-                                        })
-                                      : ""}
-                                  </span>
-                                </div>
-                                <div className="flex items-center justify-between">
-                                  <p className="text-sm text-medium-gray truncate">
-                                    {group.lastMessage
-                                      ? `${group.lastMessage.sender.name}: ${group.lastMessage.content}`
-                                      : `${group.memberCount} members`}
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        ))
-                      ) : (
-                        <div className="p-8 text-center">
-                          <Users className="h-12 w-12 text-medium-gray mx-auto mb-4" />
-                          <p className="text-medium-gray text-sm mb-4">
-                            No groups yet
-                          </p>
-                          <button
-                            onClick={() => setShowCreateGroupModal(true)}
-                            className="px-4 py-2 bg-dark-blue text-white rounded-md hover:bg-opacity-90 transition-colors"
-                          >
-                            Create Group
-                          </button>
                         </div>
-                      )}
+                      ))}
+                    </div>
+                    <div className="flex-1 p-4 flex flex-col justify-center items-center">
+                      <div className="h-12 w-12 bg-gray-200 rounded-full mb-4"></div>
+                      <div className="h-4 bg-gray-200 rounded w-1/3"></div>
                     </div>
                   </div>
-
-                  {/* Chat Area */}
-                  <div
-                    className={`${
-                      selectedConversation || selectedGroup
-                        ? "flex"
-                        : "hidden sm:flex"
-                    } flex-1 flex-col`}
-                  >
-                    {selectedConversation || selectedGroup ? (
-                      <>
-                        {/* Chat Header */}
-                        <div className="p-3 sm:p-4 border-b border-light-gray bg-gray-50 flex items-center space-x-3">
-                          {/* Back button for mobile */}
-                          <button
-                            onClick={() => {
-                              setSelectedConversation(null);
-                              setSelectedGroup(null);
-                            }}
-                            className="sm:hidden p-1 text-medium-gray hover:text-dark-gray"
-                          >
-                            <X className="h-5 w-5" />
-                          </button>
-                          {selectedConversation ? (
-                            <>
-                              <div className="w-10 h-10 bg-gradient-to-br from-dark-blue to-campus-green rounded-full flex items-center justify-center">
-                                <span className="text-white font-semibold text-sm">
-                                  {conversations
-                                    .find((c) => c.id === selectedConversation)
-                                    ?.otherUserName.charAt(0)
-                                    .toUpperCase()}
-                                </span>
-                              </div>
-                              <div>
-                                <h3 className="font-medium text-dark-gray">
-                                  {
-                                    conversations.find(
-                                      (c) => c.id === selectedConversation
-                                    )?.otherUserName
-                                  }
-                                </h3>
-                                <p className="text-xs text-medium-gray">
-                                  Online
-                                </p>
-                              </div>
-                            </>
-                          ) : (
-                            <>
-                              <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
-                                <Users className="h-6 w-6 text-white" />
-                              </div>
-                              <div className="flex-1">
-                                <h3 className="font-medium text-dark-gray">
-                                  {
-                                    groups.find((g) => g.id === selectedGroup)
-                                      ?.name
-                                  }
-                                </h3>
-                                <p className="text-xs text-medium-gray">
-                                  {
-                                    groups.find((g) => g.id === selectedGroup)
-                                      ?.memberCount
-                                  }{" "}
-                                  members
-                                </p>
-                              </div>
-                              {/* Group Actions */}
-                              <div className="flex gap-2">
-                                <button
-                                  onClick={async () => {
-                                    if (selectedGroup) {
-                                      await loadGroupMembers(selectedGroup);
-                                      setShowMemberListSidebar(true);
-                                    }
-                                  }}
-                                  className="p-2 text-medium-gray hover:text-dark-gray hover:bg-gray-100 rounded-lg transition-colors"
-                                  title="View members"
-                                >
-                                  <Users className="h-5 w-5" />
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    setShowAddMembersModal(true);
-                                    setSelectedMembers([]);
-                                    setUserSearchQuery("");
-                                  }}
-                                  className="p-2 text-medium-gray hover:text-dark-gray hover:bg-gray-100 rounded-lg transition-colors"
-                                  title="Add members"
-                                >
-                                  <svg
-                                    className="h-5 w-5"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
-                                    />
-                                  </svg>
-                                </button>
-                              </div>
-                            </>
-                          )}
+                ) : (
+                  <>
+                    {/* WhatsApp-style Messages Interface */}
+                    <div className="bg-white rounded-lg shadow border border-light-gray h-[500px] sm:h-[600px] flex flex-col sm:flex-row">
+                      {/* Conversations/Groups List */}
+                      <div
+                        className={`${
+                          selectedConversation || selectedGroup
+                            ? "hidden sm:flex"
+                            : "flex"
+                        } w-full sm:w-1/3 border-r border-light-gray flex-col`}
+                      >
+                        {/* Header with Toggle */}
+                        <div className="p-4 border-b border-light-gray bg-gray-50">
+                          <div className="flex items-center justify-between mb-3">
+                            <h2 className="text-lg font-semibold text-dark-gray">
+                              Messages
+                            </h2>
+                            {messageViewMode === "groups" && (
+                              <button
+                                onClick={() => setShowCreateGroupModal(true)}
+                                className="p-2 hover:bg-gray-200 rounded-full transition-colors"
+                                title="Create Group"
+                              >
+                                <Plus className="h-5 w-5 text-dark-blue" />
+                              </button>
+                            )}
+                          </div>
+                          {/* Toggle between Conversations and Groups */}
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => {
+                                setMessageViewMode("conversations");
+                                setSelectedGroup(null);
+                              }}
+                              className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                                messageViewMode === "conversations"
+                                  ? "bg-dark-blue text-white"
+                                  : "bg-gray-200 text-medium-gray hover:bg-gray-300"
+                              }`}
+                            >
+                              <Users className="h-4 w-4 inline mr-1" />
+                              Chats
+                            </button>
+                            <button
+                              onClick={() => {
+                                setMessageViewMode("groups");
+                                setSelectedConversation(null);
+                              }}
+                              className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                                messageViewMode === "groups"
+                                  ? "bg-dark-blue text-white"
+                                  : "bg-gray-200 text-medium-gray hover:bg-gray-300"
+                              }`}
+                            >
+                              <Users className="h-4 w-4 inline mr-1" />
+                              Groups
+                            </button>
+                          </div>
                         </div>
 
-                        {/* Messages Area */}
-                        <div className="flex-1 p-4 overflow-y-auto bg-gray-50">
-                          <div className="space-y-4">
-                            {(selectedConversation ? messages : groupMessages)
-                              .length > 0 ? (
-                              (selectedConversation
-                                ? messages
-                                : groupMessages
-                              ).map((message) => (
+                        {/* Conversations or Groups List */}
+                        <div className="flex-1 overflow-y-auto">
+                          {messageViewMode === "conversations" ? (
+                            // Conversations List
+                            conversations.length > 0 ? (
+                              conversations.map((conversation) => (
                                 <div
-                                  key={message.id}
-                                  className={`flex ${
-                                    message.senderId === currentUser?.id
-                                      ? "justify-end"
-                                      : "justify-start"
+                                  key={conversation.id}
+                                  onClick={() => {
+                                    setSelectedConversation(conversation.id);
+                                    setSelectedGroup(null);
+                                  }}
+                                  className={`p-3 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors ${
+                                    selectedConversation === conversation.id
+                                      ? "bg-blue-50 border-l-4 border-l-dark-blue"
+                                      : ""
                                   }`}
                                 >
-                                  <div className="flex flex-col items-start max-w-xs">
-                                    {/* Show sender name for group messages */}
-                                    {selectedGroup &&
-                                      message.senderId !== currentUser?.id && (
-                                        <span className="text-xs text-medium-gray mb-1 ml-2">
-                                          {message.sender?.name}
-                                        </span>
-                                      )}
-                                    <div
-                                      className={`rounded-lg p-3 shadow-sm ${
-                                        message.senderId === currentUser?.id
-                                          ? "bg-dark-blue text-white rounded-br-none self-end"
-                                          : "bg-white text-dark-gray rounded-bl-none"
-                                      }`}
-                                    >
-                                      <p className="text-sm">
-                                        {message.content}
-                                      </p>
-                                      <span
-                                        className={`text-xs mt-1 block ${
-                                          message.senderId === currentUser?.id
-                                            ? "text-blue-200"
-                                            : "text-medium-gray"
-                                        }`}
-                                      >
-                                        {new Date(
-                                          message.createdAt
-                                        ).toLocaleTimeString([], {
-                                          hour: "2-digit",
-                                          minute: "2-digit",
-                                        })}
+                                  <div className="flex items-center space-x-3">
+                                    <div className="w-12 h-12 bg-gradient-to-br from-dark-blue to-campus-green rounded-full flex items-center justify-center flex-shrink-0">
+                                      <span className="text-white font-semibold text-sm">
+                                        {conversation.otherUserName
+                                          .charAt(0)
+                                          .toUpperCase()}
                                       </span>
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-center justify-between">
+                                        <h3 className="font-medium text-dark-gray truncate">
+                                          {conversation.otherUserName}
+                                        </h3>
+                                        <span className="text-xs text-medium-gray">
+                                          {new Date(
+                                            conversation.lastMessageTime
+                                          ).toLocaleTimeString([], {
+                                            hour: "2-digit",
+                                            minute: "2-digit",
+                                          })}
+                                        </span>
+                                      </div>
+                                      <div className="flex items-center justify-between">
+                                        <p className="text-sm text-medium-gray truncate">
+                                          {conversation.lastMessage ||
+                                            "No messages yet"}
+                                        </p>
+                                        {conversation.unreadCount > 0 && (
+                                          <span className="bg-campus-green text-white text-xs px-2 py-1 rounded-full min-w-[20px] text-center">
+                                            {conversation.unreadCount}
+                                          </span>
+                                        )}
+                                      </div>
                                     </div>
                                   </div>
                                 </div>
                               ))
                             ) : (
-                              <div className="text-center py-8">
+                              <div className="p-8 text-center">
                                 <MessageCircle className="h-12 w-12 text-medium-gray mx-auto mb-4" />
                                 <p className="text-medium-gray text-sm">
-                                  No messages yet. Start the conversation!
+                                  No conversations yet
                                 </p>
                               </div>
-                            )}
-                            {/* Invisible div for auto-scroll */}
-                            <div ref={messagesEndRef} />
-                          </div>
-                        </div>
-
-                        {/* Message Input */}
-                        <div className="p-4 border-t border-light-gray bg-white">
-                          <div className="flex items-center space-x-3">
-                            <input
-                              type="text"
-                              value={messageText}
-                              onChange={(e) => setMessageText(e.target.value)}
-                              placeholder="Type a message..."
-                              className="flex-1 p-3 border border-light-gray rounded-full focus:outline-none focus:ring-2 focus:ring-dark-blue focus:border-dark-blue"
-                              onKeyDown={(e) => {
-                                if (
-                                  e.key === "Enter" &&
-                                  messageText.trim() &&
-                                  !isSendingMessage
-                                ) {
-                                  e.preventDefault();
-                                  if (selectedConversation) {
-                                    handleSendMessage(
-                                      selectedConversation,
-                                      messageText
-                                    );
-                                  } else if (selectedGroup) {
-                                    handleSendGroupMessage(
-                                      selectedGroup,
-                                      messageText
-                                    );
-                                  }
-                                }
-                              }}
-                            />
-                            <button
-                              onClick={() => {
-                                if (messageText.trim() && !isSendingMessage) {
-                                  if (selectedConversation) {
-                                    handleSendMessage(
-                                      selectedConversation,
-                                      messageText
-                                    );
-                                  } else if (selectedGroup) {
-                                    handleSendGroupMessage(
-                                      selectedGroup,
-                                      messageText
-                                    );
-                                  }
-                                }
-                              }}
-                              disabled={isSendingMessage}
-                              className="bg-dark-blue text-white p-3 rounded-full hover:bg-primary-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              {isSendingMessage ? (
-                                <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                              ) : (
-                                <Send className="h-5 w-5" />
-                              )}
-                            </button>
-                          </div>
-                        </div>
-                      </>
-                    ) : (
-                      <div className="flex-1 flex items-center justify-center bg-gray-50">
-                        <div className="text-center">
-                          <MessageCircle className="h-16 w-16 text-medium-gray mx-auto mb-4" />
-                          <h3 className="text-lg font-medium text-dark-gray mb-2">
-                            Select a conversation
-                          </h3>
-                          <p className="text-medium-gray">
-                            Choose a chat to start messaging
-                          </p>
+                            )
+                          ) : // Groups List
+                          groups.length > 0 ? (
+                            groups.map((group) => (
+                              <div
+                                key={group.id}
+                                onClick={() => {
+                                  setSelectedGroup(group.id);
+                                  setSelectedConversation(null);
+                                }}
+                                className={`p-3 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors ${
+                                  selectedGroup === group.id
+                                    ? "bg-blue-50 border-l-4 border-l-dark-blue"
+                                    : ""
+                                }`}
+                              >
+                                <div className="flex items-center space-x-3">
+                                  <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <Users className="h-6 w-6 text-white" />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center justify-between">
+                                      <h3 className="font-medium text-dark-gray truncate">
+                                        {group.name}
+                                      </h3>
+                                      <span className="text-xs text-medium-gray">
+                                        {group.lastMessage
+                                          ? new Date(
+                                              group.lastMessage.createdAt
+                                            ).toLocaleTimeString([], {
+                                              hour: "2-digit",
+                                              minute: "2-digit",
+                                            })
+                                          : ""}
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                      <p className="text-sm text-medium-gray truncate">
+                                        {group.lastMessage
+                                          ? `${group.lastMessage.sender.name}: ${group.lastMessage.content}`
+                                          : `${group.memberCount} members`}
+                                      </p>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="p-8 text-center">
+                              <Users className="h-12 w-12 text-medium-gray mx-auto mb-4" />
+                              <p className="text-medium-gray text-sm mb-4">
+                                No groups yet
+                              </p>
+                              <button
+                                onClick={() => setShowCreateGroupModal(true)}
+                                className="px-4 py-2 bg-dark-blue text-white rounded-md hover:bg-opacity-90 transition-colors"
+                              >
+                                Create Group
+                              </button>
+                            </div>
+                          )}
                         </div>
                       </div>
-                    )}
-                  </div>
-                </div>
+
+                      {/* Chat Area */}
+                      <div
+                        className={`${
+                          selectedConversation || selectedGroup
+                            ? "flex"
+                            : "hidden sm:flex"
+                        } flex-1 flex-col`}
+                      >
+                        {selectedConversation || selectedGroup ? (
+                          <>
+                            {/* Chat Header */}
+                            <div className="p-3 sm:p-4 border-b border-light-gray bg-gray-50 flex items-center space-x-3">
+                              {/* Back button for mobile */}
+                              <button
+                                onClick={() => {
+                                  setSelectedConversation(null);
+                                  setSelectedGroup(null);
+                                }}
+                                className="sm:hidden p-1 text-medium-gray hover:text-dark-gray"
+                              >
+                                <X className="h-5 w-5" />
+                              </button>
+                              {selectedConversation ? (
+                                <>
+                                  <div className="w-10 h-10 bg-gradient-to-br from-dark-blue to-campus-green rounded-full flex items-center justify-center">
+                                    <span className="text-white font-semibold text-sm">
+                                      {conversations
+                                        .find(
+                                          (c) => c.id === selectedConversation
+                                        )
+                                        ?.otherUserName.charAt(0)
+                                        .toUpperCase()}
+                                    </span>
+                                  </div>
+                                  <div>
+                                    <h3 className="font-medium text-dark-gray">
+                                      {
+                                        conversations.find(
+                                          (c) => c.id === selectedConversation
+                                        )?.otherUserName
+                                      }
+                                    </h3>
+                                    <p className="text-xs text-medium-gray">
+                                      Online
+                                    </p>
+                                  </div>
+                                </>
+                              ) : (
+                                <>
+                                  <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                                    <Users className="h-6 w-6 text-white" />
+                                  </div>
+                                  <div className="flex-1">
+                                    <h3 className="font-medium text-dark-gray">
+                                      {
+                                        groups.find(
+                                          (g) => g.id === selectedGroup
+                                        )?.name
+                                      }
+                                    </h3>
+                                    <p className="text-xs text-medium-gray">
+                                      {
+                                        groups.find(
+                                          (g) => g.id === selectedGroup
+                                        )?.memberCount
+                                      }{" "}
+                                      members
+                                    </p>
+                                  </div>
+                                  {/* Group Actions */}
+                                  <div className="flex gap-2">
+                                    <button
+                                      onClick={async () => {
+                                        if (selectedGroup) {
+                                          await loadGroupMembers(selectedGroup);
+                                          setShowMemberListSidebar(true);
+                                        }
+                                      }}
+                                      className="p-2 text-medium-gray hover:text-dark-gray hover:bg-gray-100 rounded-lg transition-colors"
+                                      title="View members"
+                                    >
+                                      <Users className="h-5 w-5" />
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        setShowAddMembersModal(true);
+                                        setSelectedMembers([]);
+                                        setUserSearchQuery("");
+                                      }}
+                                      className="p-2 text-medium-gray hover:text-dark-gray hover:bg-gray-100 rounded-lg transition-colors"
+                                      title="Add members"
+                                    >
+                                      <svg
+                                        className="h-5 w-5"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          strokeWidth={2}
+                                          d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
+                                        />
+                                      </svg>
+                                    </button>
+                                  </div>
+                                </>
+                              )}
+                            </div>
+
+                            {/* Messages Area */}
+                            <div className="flex-1 p-4 overflow-y-auto bg-gray-50">
+                              <div className="space-y-4">
+                                {(selectedConversation
+                                  ? messages
+                                  : groupMessages
+                                ).length > 0 ? (
+                                  (selectedConversation
+                                    ? messages
+                                    : groupMessages
+                                  ).map((message) => (
+                                    <div
+                                      key={message.id}
+                                      className={`flex ${
+                                        message.senderId === currentUser?.id
+                                          ? "justify-end"
+                                          : "justify-start"
+                                      }`}
+                                    >
+                                      <div className="flex flex-col items-start max-w-xs">
+                                        {/* Show sender name for group messages */}
+                                        {selectedGroup &&
+                                          message.senderId !==
+                                            currentUser?.id && (
+                                            <span className="text-xs text-medium-gray mb-1 ml-2">
+                                              {message.sender?.name}
+                                            </span>
+                                          )}
+                                        <div
+                                          className={`rounded-lg p-3 shadow-sm ${
+                                            message.senderId === currentUser?.id
+                                              ? "bg-dark-blue text-white rounded-br-none self-end"
+                                              : "bg-white text-dark-gray rounded-bl-none"
+                                          }`}
+                                        >
+                                          <p className="text-sm">
+                                            {message.content}
+                                          </p>
+                                          <span
+                                            className={`text-xs mt-1 block ${
+                                              message.senderId ===
+                                              currentUser?.id
+                                                ? "text-blue-200"
+                                                : "text-medium-gray"
+                                            }`}
+                                          >
+                                            {new Date(
+                                              message.createdAt
+                                            ).toLocaleTimeString([], {
+                                              hour: "2-digit",
+                                              minute: "2-digit",
+                                            })}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))
+                                ) : (
+                                  <div className="text-center py-8">
+                                    <MessageCircle className="h-12 w-12 text-medium-gray mx-auto mb-4" />
+                                    <p className="text-medium-gray text-sm">
+                                      No messages yet. Start the conversation!
+                                    </p>
+                                  </div>
+                                )}
+                                {/* Invisible div for auto-scroll */}
+                                <div ref={messagesEndRef} />
+                              </div>
+                            </div>
+
+                            {/* Message Input */}
+                            <div className="p-4 border-t border-light-gray bg-white">
+                              <div className="flex items-center space-x-3">
+                                <input
+                                  type="text"
+                                  value={messageText}
+                                  onChange={(e) =>
+                                    setMessageText(e.target.value)
+                                  }
+                                  placeholder="Type a message..."
+                                  className="flex-1 p-3 border border-light-gray rounded-full focus:outline-none focus:ring-2 focus:ring-dark-blue focus:border-dark-blue"
+                                  onKeyDown={(e) => {
+                                    if (
+                                      e.key === "Enter" &&
+                                      messageText.trim() &&
+                                      !isSendingMessage
+                                    ) {
+                                      e.preventDefault();
+                                      if (selectedConversation) {
+                                        handleSendMessage(
+                                          selectedConversation,
+                                          messageText
+                                        );
+                                      } else if (selectedGroup) {
+                                        handleSendGroupMessage(
+                                          selectedGroup,
+                                          messageText
+                                        );
+                                      }
+                                    }
+                                  }}
+                                />
+                                <button
+                                  onClick={() => {
+                                    if (
+                                      messageText.trim() &&
+                                      !isSendingMessage
+                                    ) {
+                                      if (selectedConversation) {
+                                        handleSendMessage(
+                                          selectedConversation,
+                                          messageText
+                                        );
+                                      } else if (selectedGroup) {
+                                        handleSendGroupMessage(
+                                          selectedGroup,
+                                          messageText
+                                        );
+                                      }
+                                    }
+                                  }}
+                                  disabled={isSendingMessage}
+                                  className="bg-dark-blue text-white p-3 rounded-full hover:bg-primary-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                  {isSendingMessage ? (
+                                    <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                  ) : (
+                                    <Send className="h-5 w-5" />
+                                  )}
+                                </button>
+                              </div>
+                            </div>
+                          </>
+                        ) : (
+                          <div className="flex-1 flex items-center justify-center bg-gray-50">
+                            <div className="text-center">
+                              <MessageCircle className="h-16 w-16 text-medium-gray mx-auto mb-4" />
+                              <h3 className="text-lg font-medium text-dark-gray mb-2">
+                                Select a conversation
+                              </h3>
+                              <p className="text-medium-gray">
+                                Choose a chat to start messaging
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             )}
 
