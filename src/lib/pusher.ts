@@ -29,6 +29,11 @@ export const getConversationChannel = (conversationId: string) => {
   return `conversation-${conversationId}`;
 };
 
+// Helper function to get group channel name
+export const getGroupChannel = (groupId: string) => {
+  return `group-${groupId}`;
+};
+
 // Helper function to trigger new message event
 export const triggerNewMessage = async (
   conversationId: string,
@@ -47,6 +52,21 @@ export const triggerNewMessage = async (
   }
 };
 
+// Helper function to trigger group message event
+export const triggerGroupMessage = async (groupId: string, message: any) => {
+  try {
+    await pusherServer.trigger(
+      getGroupChannel(groupId),
+      "new-group-message",
+      message
+    );
+    return { success: true };
+  } catch (error) {
+    console.error("Pusher typing trigger error:", error);
+    return { success: false, error };
+  }
+};
+
 // Helper function to trigger typing indicator
 export const triggerTypingIndicator = async (
   conversationId: string,
@@ -61,7 +81,7 @@ export const triggerTypingIndicator = async (
     );
     return { success: true };
   } catch (error) {
-    console.error("Pusher typing trigger error:", error);
+    console.error("Pusher trigger error:", error);
     return { success: false, error };
   }
 };

@@ -43,6 +43,9 @@ model User {
   notifications        Notification[]
   transactions         Transaction[]
   userStats            UserStats?
+  createdGroups        Group[]             @relation("CreatedGroups")
+  groupMemberships     GroupMember[]       @relation("GroupMemberships")
+  sentGroupMessages    GroupMessage[]      @relation("SentGroupMessages")
 
   @@index([studentId])
   @@index([email])
@@ -127,6 +130,59 @@ model Message {
   @@index([senderId])
   @@index([receiverId])
   @@index([conversationId])
+  @@index([createdAt])
+}
+
+// ============================================
+// GROUP MESSAGING MODELS
+// ============================================
+model Group {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  avatarUrl   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  creatorId String
+  creator   User          @relation("CreatedGroups", fields: [creatorId], references: [id], onDelete: Cascade)
+  members   GroupMember[]
+  messages  GroupMessage[]
+
+  @@index([creatorId])
+  @@index([createdAt])
+}
+
+model GroupMember {
+  id        String   @id @default(cuid())
+  role      String   @default("member") // "admin" or "member"
+  joinedAt  DateTime @default(now())
+
+  // Relations
+  groupId String
+  userId  String
+  group   Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user    User   @relation("GroupMemberships", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, userId])
+  @@index([groupId])
+  @@index([userId])
+}
+
+model GroupMessage {
+  id        String   @id @default(cuid())
+  content   String
+  createdAt DateTime @default(now())
+
+  // Relations
+  groupId  String
+  senderId String
+  group    Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  sender   User   @relation("SentGroupMessages", fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([groupId])
+  @@index([senderId])
   @@index([createdAt])
 }
 

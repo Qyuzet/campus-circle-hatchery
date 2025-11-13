@@ -3,8 +3,13 @@
 import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { pusherClient, getConversationChannel } from "@/lib/pusher";
+import {
+  pusherClient,
+  getConversationChannel,
+  getGroupChannel,
+} from "@/lib/pusher";
 import { playNotificationSound } from "@/lib/notification-sound";
+import { groupsAPI, usersAPI } from "@/lib/api";
 import Image from "next/image";
 import { toast, Toaster } from "sonner";
 import {
@@ -112,6 +117,21 @@ export default function Dashboard() {
   const [salesTransactions, setSalesTransactions] = useState<any[]>([]);
   const [allTransactions, setAllTransactions] = useState<any[]>([]);
 
+  // Group messaging states
+  const [groups, setGroups] = useState<any[]>([]);
+  const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
+  const [groupMessages, setGroupMessages] = useState<any[]>([]);
+  const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
+  const [messageViewMode, setMessageViewMode] = useState<
+    "conversations" | "groups"
+  >("conversations");
+  const [availableUsers, setAvailableUsers] = useState<any[]>([]);
+  const [selectedMembers, setSelectedMembers] = useState<any[]>([]);
+  const [userSearchQuery, setUserSearchQuery] = useState("");
+  const [showAddMembersModal, setShowAddMembersModal] = useState(false);
+  const [showMemberListSidebar, setShowMemberListSidebar] = useState(false);
+  const [groupMembers, setGroupMembers] = useState<any[]>([]);
+
   // Redirect to login if not authenticated
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -209,33 +229,102 @@ export default function Dashboard() {
     }
   }, [selectedConversation, currentUser]);
 
+  // Load group messages when group is selected and subscribe to real-time updates
+  useEffect(() => {
+    if (selectedGroup) {
+      console.log("📱 Loading messages for group:", selectedGroup);
+      loadGroupMessages(selectedGroup);
+
+      // Subscribe to Pusher channel for real-time group messages
+      const channelName = getGroupChannel(selectedGroup);
+      console.log("🔌 Subscribing to Pusher group channel:", channelName);
+      const channel = pusherClient.subscribe(channelName);
+
+      // Listen for new group messages
+      channel.bind("new-group-message", (newMessage: any) => {
+        console.log("✅ Real-time group message received:", newMessage);
+        setGroupMessages((prevMessages) => {
+          // Avoid duplicates
+          if (prevMessages.some((msg) => msg.id === newMessage.id)) {
+            console.log(
+              "⚠️ Duplicate group message detected, skipping:",
+              newMessage.id
+            );
+            return prevMessages;
+          }
+          console.log("➕ Adding new group message to chat:", newMessage.id);
+          return [...prevMessages, newMessage];
+        });
+
+        // Update group list with latest message
+        setGroups((prevGroups) =>
+          prevGroups.map((group) =>
+            group.id === selectedGroup
+              ? {
+                  ...group,
+                  lastMessage: {
+                    content: newMessage.content,
+                    sender: newMessage.sender,
+                    createdAt: newMessage.createdAt,
+                  },
+                }
+              : group
+          )
+        );
+
+        // Play notification sound and show toast for incoming messages
+        if (newMessage.senderId !== currentUser?.id) {
+          playNotificationSound();
+          toast.success("New group message received!", {
+            duration: 2000,
+          });
+        }
+      });
+
+      // Cleanup: Unsubscribe when group changes or component unmounts
+      return () => {
+        channel.unbind_all();
+        pusherClient.unsubscribe(getGroupChannel(selectedGroup));
+      };
+    }
+  }, [selectedGroup, currentUser]);
+
   // Auto-scroll to bottom when messages change
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
-  }, [messages]);
+  }, [messages, groupMessages]);
 
   const loadData = async () => {
     try {
       setIsLoading(true);
 
       // Load all data in parallel
-      const [items, convos, sessions, notifs, stats, sales, purchases] =
-        await Promise.all([
-          marketplaceAPI.getItems(),
-          conversationsAPI.getConversations(),
-          tutoringAPI.getSessions({ type: "all" }),
-          notificationsAPI.getNotifications(),
-          statsAPI.getUserStats(),
-          transactionsAPI.getTransactions({
-            type: "sales",
-            status: "COMPLETED",
-          }),
-          transactionsAPI.getTransactions({
-            type: "purchases",
-          }),
-        ]);
+      const [
+        items,
+        convos,
+        sessions,
+        notifs,
+        stats,
+        sales,
+        purchases,
+        groupsData,
+      ] = await Promise.all([
+        marketplaceAPI.getItems(),
+        conversationsAPI.getConversations(),
+        tutoringAPI.getSessions({ type: "all" }),
+        notificationsAPI.getNotifications(),
+        statsAPI.getUserStats(),
+        transactionsAPI.getTransactions({
+          type: "sales",
+          status: "COMPLETED",
+        }),
+        transactionsAPI.getTransactions({
+          type: "purchases",
+        }),
+        groupsAPI.getGroups(),
+      ]);
 
       setMarketplaceItems(items);
       setConversations(convos);
@@ -243,6 +332,7 @@ export default function Dashboard() {
       setNotifications(notifs);
       setUserStats(stats);
       setSalesTransactions(sales);
+      setGroups(groupsData);
 
       // Combine sales and purchases with type field
       const allTrans = [
@@ -328,6 +418,49 @@ export default function Dashboard() {
       setMessages(msgs);
     } catch (error) {
       console.error("Error loading messages:", error);
+    }
+  };
+
+  const loadGroups = async () => {
+    try {
+      const groupsData = await groupsAPI.getGroups();
+      setGroups(groupsData);
+    } catch (error) {
+      console.error("Error loading groups:", error);
+    }
+  };
+
+  const loadGroupMessages = async (groupId: string) => {
+    try {
+      const msgs = await groupsAPI.getMessages(groupId);
+      setGroupMessages(msgs);
+    } catch (error) {
+      console.error("Error loading group messages:", error);
+    }
+  };
+
+  const loadGroupMembers = async (groupId: string) => {
+    try {
+      const group = await groupsAPI.getGroup(groupId);
+      setGroupMembers(group.members || []);
+    } catch (error) {
+      console.error("Error loading group members:", error);
+    }
+  };
+
+  const handleSendGroupMessage = async (groupId: string, content: string) => {
+    if (!content.trim() || isSendingMessage) return;
+
+    try {
+      setIsSendingMessage(true);
+      await groupsAPI.sendMessage(groupId, content.trim());
+      setMessageText("");
+      await loadGroupMessages(groupId);
+    } catch (error) {
+      console.error("Error sending group message:", error);
+      toast.error("Failed to send message");
+    } finally {
+      setIsSendingMessage(false);
     }
   };
 
@@ -1386,66 +1519,167 @@ export default function Dashboard() {
               <div className="h-full flex flex-col">
                 {/* WhatsApp-style Messages Interface */}
                 <div className="bg-white rounded-lg shadow border border-light-gray h-[500px] sm:h-[600px] flex flex-col sm:flex-row">
-                  {/* Conversations List */}
+                  {/* Conversations/Groups List */}
                   <div
                     className={`${
-                      selectedConversation ? "hidden sm:flex" : "flex"
+                      selectedConversation || selectedGroup
+                        ? "hidden sm:flex"
+                        : "flex"
                     } w-full sm:w-1/3 border-r border-light-gray flex-col`}
                   >
-                    {/* Header */}
+                    {/* Header with Toggle */}
                     <div className="p-4 border-b border-light-gray bg-gray-50">
-                      <h2 className="text-lg font-semibold text-dark-gray">
-                        Chats
-                      </h2>
+                      <div className="flex items-center justify-between mb-3">
+                        <h2 className="text-lg font-semibold text-dark-gray">
+                          Messages
+                        </h2>
+                        {messageViewMode === "groups" && (
+                          <button
+                            onClick={() => setShowCreateGroupModal(true)}
+                            className="p-2 hover:bg-gray-200 rounded-full transition-colors"
+                            title="Create Group"
+                          >
+                            <Plus className="h-5 w-5 text-dark-blue" />
+                          </button>
+                        )}
+                      </div>
+                      {/* Toggle between Conversations and Groups */}
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => {
+                            setMessageViewMode("conversations");
+                            setSelectedGroup(null);
+                          }}
+                          className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                            messageViewMode === "conversations"
+                              ? "bg-dark-blue text-white"
+                              : "bg-gray-200 text-medium-gray hover:bg-gray-300"
+                          }`}
+                        >
+                          <Users className="h-4 w-4 inline mr-1" />
+                          Chats
+                        </button>
+                        <button
+                          onClick={() => {
+                            setMessageViewMode("groups");
+                            setSelectedConversation(null);
+                          }}
+                          className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                            messageViewMode === "groups"
+                              ? "bg-dark-blue text-white"
+                              : "bg-gray-200 text-medium-gray hover:bg-gray-300"
+                          }`}
+                        >
+                          <Users className="h-4 w-4 inline mr-1" />
+                          Groups
+                        </button>
+                      </div>
                     </div>
 
-                    {/* Conversations */}
+                    {/* Conversations or Groups List */}
                     <div className="flex-1 overflow-y-auto">
-                      {conversations.length > 0 ? (
-                        conversations.map((conversation) => (
+                      {messageViewMode === "conversations" ? (
+                        // Conversations List
+                        conversations.length > 0 ? (
+                          conversations.map((conversation) => (
+                            <div
+                              key={conversation.id}
+                              onClick={() => {
+                                setSelectedConversation(conversation.id);
+                                setSelectedGroup(null);
+                              }}
+                              className={`p-3 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors ${
+                                selectedConversation === conversation.id
+                                  ? "bg-blue-50 border-l-4 border-l-dark-blue"
+                                  : ""
+                              }`}
+                            >
+                              <div className="flex items-center space-x-3">
+                                <div className="w-12 h-12 bg-gradient-to-br from-dark-blue to-campus-green rounded-full flex items-center justify-center flex-shrink-0">
+                                  <span className="text-white font-semibold text-sm">
+                                    {conversation.otherUserName
+                                      .charAt(0)
+                                      .toUpperCase()}
+                                  </span>
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center justify-between">
+                                    <h3 className="font-medium text-dark-gray truncate">
+                                      {conversation.otherUserName}
+                                    </h3>
+                                    <span className="text-xs text-medium-gray">
+                                      {new Date(
+                                        conversation.lastMessageTime
+                                      ).toLocaleTimeString([], {
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                      })}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center justify-between">
+                                    <p className="text-sm text-medium-gray truncate">
+                                      {conversation.lastMessage ||
+                                        "No messages yet"}
+                                    </p>
+                                    {conversation.unreadCount > 0 && (
+                                      <span className="bg-campus-green text-white text-xs px-2 py-1 rounded-full min-w-[20px] text-center">
+                                        {conversation.unreadCount}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="p-8 text-center">
+                            <MessageCircle className="h-12 w-12 text-medium-gray mx-auto mb-4" />
+                            <p className="text-medium-gray text-sm">
+                              No conversations yet
+                            </p>
+                          </div>
+                        )
+                      ) : // Groups List
+                      groups.length > 0 ? (
+                        groups.map((group) => (
                           <div
-                            key={conversation.id}
-                            onClick={() =>
-                              setSelectedConversation(conversation.id)
-                            }
+                            key={group.id}
+                            onClick={() => {
+                              setSelectedGroup(group.id);
+                              setSelectedConversation(null);
+                            }}
                             className={`p-3 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors ${
-                              selectedConversation === conversation.id
+                              selectedGroup === group.id
                                 ? "bg-blue-50 border-l-4 border-l-dark-blue"
                                 : ""
                             }`}
                           >
                             <div className="flex items-center space-x-3">
-                              <div className="w-12 h-12 bg-gradient-to-br from-dark-blue to-campus-green rounded-full flex items-center justify-center flex-shrink-0">
-                                <span className="text-white font-semibold text-sm">
-                                  {conversation.otherUserName
-                                    .charAt(0)
-                                    .toUpperCase()}
-                                </span>
+                              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center flex-shrink-0">
+                                <Users className="h-6 w-6 text-white" />
                               </div>
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center justify-between">
                                   <h3 className="font-medium text-dark-gray truncate">
-                                    {conversation.otherUserName}
+                                    {group.name}
                                   </h3>
                                   <span className="text-xs text-medium-gray">
-                                    {new Date(
-                                      conversation.lastMessageTime
-                                    ).toLocaleTimeString([], {
-                                      hour: "2-digit",
-                                      minute: "2-digit",
-                                    })}
+                                    {group.lastMessage
+                                      ? new Date(
+                                          group.lastMessage.createdAt
+                                        ).toLocaleTimeString([], {
+                                          hour: "2-digit",
+                                          minute: "2-digit",
+                                        })
+                                      : ""}
                                   </span>
                                 </div>
                                 <div className="flex items-center justify-between">
                                   <p className="text-sm text-medium-gray truncate">
-                                    {conversation.lastMessage ||
-                                      "No messages yet"}
+                                    {group.lastMessage
+                                      ? `${group.lastMessage.sender.name}: ${group.lastMessage.content}`
+                                      : `${group.memberCount} members`}
                                   </p>
-                                  {conversation.unreadCount > 0 && (
-                                    <span className="bg-campus-green text-white text-xs px-2 py-1 rounded-full min-w-[20px] text-center">
-                                      {conversation.unreadCount}
-                                    </span>
-                                  )}
                                 </div>
                               </div>
                             </div>
@@ -1453,10 +1687,16 @@ export default function Dashboard() {
                         ))
                       ) : (
                         <div className="p-8 text-center">
-                          <MessageCircle className="h-12 w-12 text-medium-gray mx-auto mb-4" />
-                          <p className="text-medium-gray text-sm">
-                            No conversations yet
+                          <Users className="h-12 w-12 text-medium-gray mx-auto mb-4" />
+                          <p className="text-medium-gray text-sm mb-4">
+                            No groups yet
                           </p>
+                          <button
+                            onClick={() => setShowCreateGroupModal(true)}
+                            className="px-4 py-2 bg-dark-blue text-white rounded-md hover:bg-opacity-90 transition-colors"
+                          >
+                            Create Group
+                          </button>
                         </div>
                       )}
                     </div>
@@ -1465,45 +1705,119 @@ export default function Dashboard() {
                   {/* Chat Area */}
                   <div
                     className={`${
-                      selectedConversation ? "flex" : "hidden sm:flex"
+                      selectedConversation || selectedGroup
+                        ? "flex"
+                        : "hidden sm:flex"
                     } flex-1 flex-col`}
                   >
-                    {selectedConversation ? (
+                    {selectedConversation || selectedGroup ? (
                       <>
                         {/* Chat Header */}
                         <div className="p-3 sm:p-4 border-b border-light-gray bg-gray-50 flex items-center space-x-3">
                           {/* Back button for mobile */}
                           <button
-                            onClick={() => setSelectedConversation(null)}
+                            onClick={() => {
+                              setSelectedConversation(null);
+                              setSelectedGroup(null);
+                            }}
                             className="sm:hidden p-1 text-medium-gray hover:text-dark-gray"
                           >
                             <X className="h-5 w-5" />
                           </button>
-                          <div className="w-10 h-10 bg-gradient-to-br from-dark-blue to-campus-green rounded-full flex items-center justify-center">
-                            <span className="text-white font-semibold text-sm">
-                              {conversations
-                                .find((c) => c.id === selectedConversation)
-                                ?.otherUserName.charAt(0)
-                                .toUpperCase()}
-                            </span>
-                          </div>
-                          <div>
-                            <h3 className="font-medium text-dark-gray">
-                              {
-                                conversations.find(
-                                  (c) => c.id === selectedConversation
-                                )?.otherUserName
-                              }
-                            </h3>
-                            <p className="text-xs text-medium-gray">Online</p>
-                          </div>
+                          {selectedConversation ? (
+                            <>
+                              <div className="w-10 h-10 bg-gradient-to-br from-dark-blue to-campus-green rounded-full flex items-center justify-center">
+                                <span className="text-white font-semibold text-sm">
+                                  {conversations
+                                    .find((c) => c.id === selectedConversation)
+                                    ?.otherUserName.charAt(0)
+                                    .toUpperCase()}
+                                </span>
+                              </div>
+                              <div>
+                                <h3 className="font-medium text-dark-gray">
+                                  {
+                                    conversations.find(
+                                      (c) => c.id === selectedConversation
+                                    )?.otherUserName
+                                  }
+                                </h3>
+                                <p className="text-xs text-medium-gray">
+                                  Online
+                                </p>
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                                <Users className="h-6 w-6 text-white" />
+                              </div>
+                              <div className="flex-1">
+                                <h3 className="font-medium text-dark-gray">
+                                  {
+                                    groups.find((g) => g.id === selectedGroup)
+                                      ?.name
+                                  }
+                                </h3>
+                                <p className="text-xs text-medium-gray">
+                                  {
+                                    groups.find((g) => g.id === selectedGroup)
+                                      ?.memberCount
+                                  }{" "}
+                                  members
+                                </p>
+                              </div>
+                              {/* Group Actions */}
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={async () => {
+                                    if (selectedGroup) {
+                                      await loadGroupMembers(selectedGroup);
+                                      setShowMemberListSidebar(true);
+                                    }
+                                  }}
+                                  className="p-2 text-medium-gray hover:text-dark-gray hover:bg-gray-100 rounded-lg transition-colors"
+                                  title="View members"
+                                >
+                                  <Users className="h-5 w-5" />
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setShowAddMembersModal(true);
+                                    setSelectedMembers([]);
+                                    setUserSearchQuery("");
+                                  }}
+                                  className="p-2 text-medium-gray hover:text-dark-gray hover:bg-gray-100 rounded-lg transition-colors"
+                                  title="Add members"
+                                >
+                                  <svg
+                                    className="h-5 w-5"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
+                                    />
+                                  </svg>
+                                </button>
+                              </div>
+                            </>
+                          )}
                         </div>
 
                         {/* Messages Area */}
                         <div className="flex-1 p-4 overflow-y-auto bg-gray-50">
                           <div className="space-y-4">
-                            {messages.length > 0 ? (
-                              messages.map((message) => (
+                            {(selectedConversation ? messages : groupMessages)
+                              .length > 0 ? (
+                              (selectedConversation
+                                ? messages
+                                : groupMessages
+                              ).map((message) => (
                                 <div
                                   key={message.id}
                                   className={`flex ${
@@ -1512,28 +1826,39 @@ export default function Dashboard() {
                                       : "justify-start"
                                   }`}
                                 >
-                                  <div
-                                    className={`rounded-lg p-3 max-w-xs shadow-sm ${
-                                      message.senderId === currentUser?.id
-                                        ? "bg-dark-blue text-white rounded-br-none"
-                                        : "bg-white text-dark-gray rounded-bl-none"
-                                    }`}
-                                  >
-                                    <p className="text-sm">{message.content}</p>
-                                    <span
-                                      className={`text-xs mt-1 block ${
+                                  <div className="flex flex-col items-start max-w-xs">
+                                    {/* Show sender name for group messages */}
+                                    {selectedGroup &&
+                                      message.senderId !== currentUser?.id && (
+                                        <span className="text-xs text-medium-gray mb-1 ml-2">
+                                          {message.sender?.name}
+                                        </span>
+                                      )}
+                                    <div
+                                      className={`rounded-lg p-3 shadow-sm ${
                                         message.senderId === currentUser?.id
-                                          ? "text-blue-200"
-                                          : "text-medium-gray"
+                                          ? "bg-dark-blue text-white rounded-br-none self-end"
+                                          : "bg-white text-dark-gray rounded-bl-none"
                                       }`}
                                     >
-                                      {new Date(
-                                        message.createdAt
-                                      ).toLocaleTimeString([], {
-                                        hour: "2-digit",
-                                        minute: "2-digit",
-                                      })}
-                                    </span>
+                                      <p className="text-sm">
+                                        {message.content}
+                                      </p>
+                                      <span
+                                        className={`text-xs mt-1 block ${
+                                          message.senderId === currentUser?.id
+                                            ? "text-blue-200"
+                                            : "text-medium-gray"
+                                        }`}
+                                      >
+                                        {new Date(
+                                          message.createdAt
+                                        ).toLocaleTimeString([], {
+                                          hour: "2-digit",
+                                          minute: "2-digit",
+                                        })}
+                                      </span>
+                                    </div>
                                   </div>
                                 </div>
                               ))
@@ -1566,20 +1891,34 @@ export default function Dashboard() {
                                   !isSendingMessage
                                 ) {
                                   e.preventDefault();
-                                  handleSendMessage(
-                                    selectedConversation,
-                                    messageText
-                                  );
+                                  if (selectedConversation) {
+                                    handleSendMessage(
+                                      selectedConversation,
+                                      messageText
+                                    );
+                                  } else if (selectedGroup) {
+                                    handleSendGroupMessage(
+                                      selectedGroup,
+                                      messageText
+                                    );
+                                  }
                                 }
                               }}
                             />
                             <button
                               onClick={() => {
                                 if (messageText.trim() && !isSendingMessage) {
-                                  handleSendMessage(
-                                    selectedConversation,
-                                    messageText
-                                  );
+                                  if (selectedConversation) {
+                                    handleSendMessage(
+                                      selectedConversation,
+                                      messageText
+                                    );
+                                  } else if (selectedGroup) {
+                                    handleSendGroupMessage(
+                                      selectedGroup,
+                                      messageText
+                                    );
+                                  }
                                 }
                               }}
                               disabled={isSendingMessage}
@@ -2405,6 +2744,437 @@ export default function Dashboard() {
           item={paymentItem}
           onSuccess={handlePaymentSuccess}
         />
+      )}
+
+      {/* Create Group Modal */}
+      {showCreateGroupModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+            <h2 className="text-xl font-semibold text-dark-gray mb-4">
+              Create New Group
+            </h2>
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.currentTarget);
+                const name = formData.get("name") as string;
+                const description = formData.get("description") as string;
+
+                try {
+                  await groupsAPI.createGroup({
+                    name,
+                    description,
+                    memberIds: selectedMembers.map((m) => m.id),
+                  });
+                  toast.success("Group created successfully!");
+                  setShowCreateGroupModal(false);
+                  setSelectedMembers([]);
+                  setUserSearchQuery("");
+                  await loadGroups();
+                } catch (error) {
+                  console.error("Error creating group:", error);
+                  toast.error("Failed to create group");
+                }
+              }}
+            >
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-dark-gray mb-1">
+                    Group Name *
+                  </label>
+                  <input
+                    type="text"
+                    name="name"
+                    required
+                    className="w-full p-3 border border-light-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-dark-blue"
+                    placeholder="Enter group name"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-dark-gray mb-1">
+                    Description (Optional)
+                  </label>
+                  <textarea
+                    name="description"
+                    rows={3}
+                    className="w-full p-3 border border-light-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-dark-blue"
+                    placeholder="Enter group description"
+                  />
+                </div>
+
+                {/* Member Selection */}
+                <div>
+                  <label className="block text-sm font-medium text-dark-gray mb-1">
+                    Add Members (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={userSearchQuery}
+                    onChange={async (e) => {
+                      const query = e.target.value;
+                      setUserSearchQuery(query);
+                      if (query.trim()) {
+                        try {
+                          const users = await usersAPI.getUsers(query);
+                          setAvailableUsers(users);
+                        } catch (error) {
+                          console.error("Error searching users:", error);
+                        }
+                      } else {
+                        setAvailableUsers([]);
+                      }
+                    }}
+                    className="w-full p-3 border border-light-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-dark-blue"
+                    placeholder="Search users by name or email..."
+                  />
+
+                  {/* Search Results */}
+                  {userSearchQuery && availableUsers.length > 0 && (
+                    <div className="mt-2 border border-light-gray rounded-lg max-h-48 overflow-y-auto">
+                      {availableUsers
+                        .filter(
+                          (user) =>
+                            !selectedMembers.find((m) => m.id === user.id)
+                        )
+                        .map((user) => (
+                          <div
+                            key={user.id}
+                            onClick={() => {
+                              setSelectedMembers([...selectedMembers, user]);
+                              setUserSearchQuery("");
+                              setAvailableUsers([]);
+                            }}
+                            className="p-3 hover:bg-gray-50 cursor-pointer border-b border-light-gray last:border-b-0 flex items-center gap-3"
+                          >
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-dark-blue to-medium-blue flex items-center justify-center text-white font-semibold">
+                              {user.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="flex-1">
+                              <div className="font-medium text-dark-gray">
+                                {user.name}
+                              </div>
+                              <div className="text-sm text-medium-gray">
+                                {user.email}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  )}
+
+                  {/* Selected Members */}
+                  {selectedMembers.length > 0 && (
+                    <div className="mt-3 space-y-2">
+                      <div className="text-sm font-medium text-dark-gray">
+                        Selected Members ({selectedMembers.length})
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedMembers.map((member) => (
+                          <div
+                            key={member.id}
+                            className="flex items-center gap-2 bg-light-blue px-3 py-1 rounded-full"
+                          >
+                            <span className="text-sm text-dark-gray">
+                              {member.name}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setSelectedMembers(
+                                  selectedMembers.filter(
+                                    (m) => m.id !== member.id
+                                  )
+                                )
+                              }
+                              className="text-medium-gray hover:text-dark-gray"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="flex gap-3 mt-6">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowCreateGroupModal(false);
+                    setSelectedMembers([]);
+                    setUserSearchQuery("");
+                  }}
+                  className="flex-1 px-4 py-2 border border-light-gray text-medium-gray rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 px-4 py-2 bg-dark-blue text-white rounded-lg hover:bg-opacity-90 transition-colors"
+                >
+                  Create Group
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Add Members Modal */}
+      {showAddMembersModal && selectedGroup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+            <h2 className="text-xl font-semibold text-dark-gray mb-4">
+              Add Members to {groups.find((g) => g.id === selectedGroup)?.name}
+            </h2>
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+
+                if (selectedMembers.length === 0) {
+                  toast.error("Please select at least one member");
+                  return;
+                }
+
+                try {
+                  await groupsAPI.addMembers(
+                    selectedGroup,
+                    selectedMembers.map((m) => m.id)
+                  );
+                  toast.success("Members added successfully!");
+                  setShowAddMembersModal(false);
+                  setSelectedMembers([]);
+                  setUserSearchQuery("");
+                  await loadGroups();
+                } catch (error) {
+                  console.error("Error adding members:", error);
+                  toast.error("Failed to add members");
+                }
+              }}
+            >
+              <div className="space-y-4">
+                {/* Member Selection */}
+                <div>
+                  <label className="block text-sm font-medium text-dark-gray mb-1">
+                    Search Users
+                  </label>
+                  <input
+                    type="text"
+                    value={userSearchQuery}
+                    onChange={async (e) => {
+                      const query = e.target.value;
+                      setUserSearchQuery(query);
+                      if (query.trim()) {
+                        try {
+                          const users = await usersAPI.getUsers(query);
+                          setAvailableUsers(users);
+                        } catch (error) {
+                          console.error("Error searching users:", error);
+                        }
+                      } else {
+                        setAvailableUsers([]);
+                      }
+                    }}
+                    className="w-full p-3 border border-light-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-dark-blue"
+                    placeholder="Search users by name or email..."
+                  />
+
+                  {/* Search Results */}
+                  {userSearchQuery && availableUsers.length > 0 && (
+                    <div className="mt-2 border border-light-gray rounded-lg max-h-48 overflow-y-auto">
+                      {availableUsers
+                        .filter(
+                          (user) =>
+                            !selectedMembers.find((m) => m.id === user.id)
+                        )
+                        .map((user) => (
+                          <div
+                            key={user.id}
+                            onClick={() => {
+                              setSelectedMembers([...selectedMembers, user]);
+                              setUserSearchQuery("");
+                              setAvailableUsers([]);
+                            }}
+                            className="p-3 hover:bg-gray-50 cursor-pointer border-b border-light-gray last:border-b-0 flex items-center gap-3"
+                          >
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-dark-blue to-medium-blue flex items-center justify-center text-white font-semibold">
+                              {user.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="flex-1">
+                              <div className="font-medium text-dark-gray">
+                                {user.name}
+                              </div>
+                              <div className="text-sm text-medium-gray">
+                                {user.email}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  )}
+
+                  {/* Selected Members */}
+                  {selectedMembers.length > 0 && (
+                    <div className="mt-3 space-y-2">
+                      <div className="text-sm font-medium text-dark-gray">
+                        Selected Members ({selectedMembers.length})
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedMembers.map((member) => (
+                          <div
+                            key={member.id}
+                            className="flex items-center gap-2 bg-light-blue px-3 py-1 rounded-full"
+                          >
+                            <span className="text-sm text-dark-gray">
+                              {member.name}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setSelectedMembers(
+                                  selectedMembers.filter(
+                                    (m) => m.id !== member.id
+                                  )
+                                )
+                              }
+                              className="text-medium-gray hover:text-dark-gray"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="flex gap-3 mt-6">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAddMembersModal(false);
+                    setSelectedMembers([]);
+                    setUserSearchQuery("");
+                  }}
+                  className="flex-1 px-4 py-2 border border-light-gray text-medium-gray rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 px-4 py-2 bg-dark-blue text-white rounded-lg hover:bg-opacity-90 transition-colors"
+                >
+                  Add Members
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Member List Sidebar */}
+      {showMemberListSidebar && selectedGroup && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-end"
+          onClick={() => setShowMemberListSidebar(false)}
+        >
+          <div
+            className="bg-white w-full max-w-md h-full overflow-y-auto shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="sticky top-0 bg-white border-b border-light-gray p-4 flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-dark-gray">
+                Group Members
+              </h2>
+              <button
+                onClick={() => setShowMemberListSidebar(false)}
+                className="p-2 text-medium-gray hover:text-dark-gray hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="p-4 space-y-3">
+              {groupMembers.length > 0 ? (
+                groupMembers.map((member) => (
+                  <div
+                    key={member.id}
+                    className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
+                  >
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-dark-blue to-medium-blue flex items-center justify-center text-white font-semibold">
+                      {member.user?.name?.charAt(0).toUpperCase() || "?"}
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-medium text-dark-gray">
+                        {member.user?.name || "Unknown User"}
+                      </div>
+                      <div className="text-sm text-medium-gray">
+                        {member.user?.email || ""}
+                      </div>
+                      <div className="text-xs text-medium-gray mt-1">
+                        {member.role === "admin" ? (
+                          <span className="bg-dark-blue text-white px-2 py-0.5 rounded-full">
+                            Admin
+                          </span>
+                        ) : (
+                          <span className="bg-gray-300 text-dark-gray px-2 py-0.5 rounded-full">
+                            Member
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    {member.role !== "admin" &&
+                      member.userId !== currentUser?.id && (
+                        <button
+                          onClick={async () => {
+                            if (
+                              confirm(
+                                `Remove ${member.user?.name} from the group?`
+                              )
+                            ) {
+                              try {
+                                await groupsAPI.removeMember(
+                                  selectedGroup,
+                                  member.userId
+                                );
+                                toast.success("Member removed successfully!");
+                                await loadGroupMembers(selectedGroup);
+                                await loadGroups();
+                              } catch (error) {
+                                console.error("Error removing member:", error);
+                                toast.error("Failed to remove member");
+                              }
+                            }
+                          }}
+                          className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Remove member"
+                        >
+                          <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
+                        </button>
+                      )}
+                  </div>
+                ))
+              ) : (
+                <div className="text-center text-medium-gray py-8">
+                  No members found
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
