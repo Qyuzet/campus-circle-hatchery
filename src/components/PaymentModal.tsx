@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { paymentAPI } from "@/lib/api";
 
 interface PaymentModalProps {
@@ -21,6 +22,7 @@ export default function PaymentModal({
   item,
   onSuccess,
 }: PaymentModalProps) {
+  const router = useRouter();
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState("");
 
@@ -49,11 +51,18 @@ export default function PaymentModal({
               console.log("Payment success:", result);
               onSuccess?.();
               onClose();
+              // Redirect to Orders page which will auto-sync and redirect to Library
+              setTimeout(() => {
+                router.push("/orders");
+              }, 1000);
             },
             onPending: function (result: any) {
               console.log("Payment pending:", result);
-              alert("Payment is pending. Please complete your payment.");
               onClose();
+              // Redirect to Orders page to track payment status
+              setTimeout(() => {
+                router.push("/orders");
+              }, 500);
             },
             onError: function (result: any) {
               console.log("Payment error:", result);
@@ -63,6 +72,11 @@ export default function PaymentModal({
             onClose: function () {
               console.log("Payment popup closed");
               setIsProcessing(false);
+              // When popup closes (user might have completed QRIS payment)
+              // Redirect to Orders page to check status
+              setTimeout(() => {
+                router.push("/orders");
+              }, 500);
             },
           });
         } else {
@@ -157,4 +171,3 @@ export default function PaymentModal({
     </div>
   );
 }
-

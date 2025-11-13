@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { toast, Toaster } from "sonner";
 import {
   Card,
   CardContent,
@@ -370,7 +371,9 @@ export default function Dashboard() {
       setNotifications(notifs);
 
       setShowItemDetailModal(false);
-      alert("Payment successful! Your purchase has been confirmed.");
+      toast.success("Payment successful! 🎉", {
+        description: "Your purchase has been confirmed. Check Orders page.",
+      });
     } catch (error) {
       console.error("Error reloading data:", error);
     }
@@ -431,6 +434,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-secondary-50">
+      <Toaster position="top-center" richColors />
       {/* Header */}
       <header className="bg-white shadow-sm border-b border-light-gray">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

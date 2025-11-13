@@ -66,10 +66,21 @@ export async function GET(request: NextRequest) {
     // Get latest status from Midtrans
     const midtransStatus = await getTransactionStatus(orderId);
 
+    console.log("Midtrans status check:", {
+      orderId,
+      success: midtransStatus.success,
+      data: midtransStatus.data,
+    });
+
     if (midtransStatus.success && midtransStatus.data) {
       // Update local transaction if status changed
       const midtransTransactionStatus = midtransStatus.data.transaction_status;
       const currentStatus = transaction.status;
+
+      console.log("Status comparison:", {
+        midtransStatus: midtransTransactionStatus,
+        currentStatus,
+      });
 
       // Map Midtrans status
       const statusMap: Record<string, string> = {
@@ -84,6 +95,11 @@ export async function GET(request: NextRequest) {
 
       const newStatus = statusMap[midtransTransactionStatus] || "PENDING";
 
+      console.log("Mapped status:", {
+        newStatus,
+        willUpdate: newStatus !== currentStatus,
+      });
+
       if (newStatus !== currentStatus) {
         await prisma.transaction.update({
           where: { orderId },
@@ -94,6 +110,8 @@ export async function GET(request: NextRequest) {
             fraudStatus: midtransStatus.data.fraud_status,
           },
         });
+
+        console.log("Transaction updated to:", newStatus);
       }
 
       return NextResponse.json({
@@ -119,4 +137,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-

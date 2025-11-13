@@ -51,6 +51,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { toast, Toaster } from "sonner";
 
 export default function LibraryPage() {
   const { data: session, status } = useSession();
@@ -131,6 +132,7 @@ export default function LibraryPage() {
 
   return (
     <div className="min-h-screen bg-secondary-50">
+      <Toaster position="top-center" richColors />
       {/* Header */}
       <header className="bg-white shadow-sm border-b border-light-gray sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
@@ -521,30 +523,32 @@ function LibraryItemCard({ item }: { item: any }) {
 
   const handleDownload = async () => {
     if (!item.item?.fileUrl) {
-      alert("No file available for this item");
+      toast.error("No file available", {
+        description: "This item doesn't have a file attached",
+      });
       return;
     }
 
     try {
       setDownloading(true);
+      toast.loading("Downloading file...", { id: item.itemId });
       await fileAPI.downloadFile(
         item.itemId,
         item.item.fileUrl,
         item.item.fileName || item.itemTitle
       );
+      toast.success("Download started!", {
+        id: item.itemId,
+        description: "Check your downloads folder",
+      });
     } catch (error) {
       console.error("Download error:", error);
-      alert("Failed to download file. Please try again.");
+      toast.error("Download failed", {
+        id: item.itemId,
+        description: "Please try again or contact support",
+      });
     } finally {
       setDownloading(false);
-    }
-  };
-
-  const handleView = () => {
-    if (item.item?.fileUrl) {
-      window.open(item.item.fileUrl, "_blank");
-    } else {
-      alert("No file available for this item");
     }
   };
 
@@ -584,20 +588,10 @@ function LibraryItemCard({ item }: { item: any }) {
           )}
         </div>
       </CardContent>
-      <CardFooter className="flex gap-2">
+      <CardFooter>
         <Button
           size="sm"
-          className="flex-1"
-          onClick={handleView}
-          disabled={!item.item?.fileUrl}
-        >
-          <Eye className="h-4 w-4 mr-1" />
-          View
-        </Button>
-        <Button
-          size="sm"
-          variant="outline"
-          className="flex-1"
+          className="w-full"
           onClick={handleDownload}
           disabled={downloading || !item.item?.fileUrl}
         >
@@ -614,30 +608,32 @@ function LibraryItemRow({ item }: { item: any }) {
 
   const handleDownload = async () => {
     if (!item.item?.fileUrl) {
-      alert("No file available for this item");
+      toast.error("No file available", {
+        description: "This item doesn't have a file attached",
+      });
       return;
     }
 
     try {
       setDownloading(true);
+      toast.loading("Downloading file...", { id: item.itemId });
       await fileAPI.downloadFile(
         item.itemId,
         item.item.fileUrl,
         item.item.fileName || item.itemTitle
       );
+      toast.success("Download started!", {
+        id: item.itemId,
+        description: "Check your downloads folder",
+      });
     } catch (error) {
       console.error("Download error:", error);
-      alert("Failed to download file. Please try again.");
+      toast.error("Download failed", {
+        id: item.itemId,
+        description: "Please try again or contact support",
+      });
     } finally {
       setDownloading(false);
-    }
-  };
-
-  const handleView = () => {
-    if (item.item?.fileUrl) {
-      window.open(item.item.fileUrl, "_blank");
-    } else {
-      alert("No file available for this item");
     }
   };
 
@@ -667,19 +663,9 @@ function LibraryItemRow({ item }: { item: any }) {
           <div className="flex items-center gap-2 flex-shrink-0">
             <Button
               size="sm"
-              onClick={handleView}
-              disabled={!item.item?.fileUrl}
-              className="flex-1 sm:flex-none"
-            >
-              <Eye className="h-4 w-4 sm:mr-1" />
-              <span className="hidden sm:inline">View</span>
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
               onClick={handleDownload}
               disabled={downloading || !item.item?.fileUrl}
-              className="flex-1 sm:flex-none"
+              className="w-full sm:w-auto"
             >
               <Download className="h-4 w-4 sm:mr-1" />
               <span className="hidden sm:inline">

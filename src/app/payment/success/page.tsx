@@ -11,12 +11,25 @@ function PaymentSuccessContent() {
   const orderId = searchParams.get("order_id");
   const [transaction, setTransaction] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [countdown, setCountdown] = useState(5);
 
   useEffect(() => {
     if (orderId) {
       loadTransactionDetails();
     }
   }, [orderId]);
+
+  // Countdown timer
+  useEffect(() => {
+    if (countdown > 0) {
+      const timer = setTimeout(() => {
+        setCountdown(countdown - 1);
+      }, 1000);
+      return () => clearTimeout(timer);
+    } else {
+      router.push("/library");
+    }
+  }, [countdown, router]);
 
   const loadTransactionDetails = async () => {
     try {
@@ -110,21 +123,37 @@ function PaymentSuccessContent() {
           </div>
         )}
 
+        {/* Auto-redirect notice */}
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-semibold text-dark-gray mb-1">
+                Redirecting to Library...
+              </h3>
+              <p className="text-sm text-medium-gray">
+                You'll be redirected in {countdown} second
+                {countdown !== 1 ? "s" : ""}
+              </p>
+            </div>
+            <div className="text-3xl font-bold text-green-600">{countdown}</div>
+          </div>
+        </div>
+
         {/* What's Next */}
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
           <h3 className="font-semibold text-dark-gray mb-2">What's Next?</h3>
           <ul className="text-sm text-medium-gray space-y-2">
             <li className="flex items-start">
               <span className="text-blue-600 mr-2">•</span>
-              <span>You'll receive a notification with purchase details</span>
+              <span>Access your purchased materials in Library</span>
             </li>
             <li className="flex items-start">
               <span className="text-blue-600 mr-2">•</span>
-              <span>The seller will be notified about your purchase</span>
+              <span>Download files anytime from your Library</span>
             </li>
             <li className="flex items-start">
               <span className="text-blue-600 mr-2">•</span>
-              <span>Check your dashboard for transaction history</span>
+              <span>Check Orders page for transaction history</span>
             </li>
           </ul>
         </div>
@@ -132,17 +161,17 @@ function PaymentSuccessContent() {
         {/* Action Buttons */}
         <div className="space-y-3">
           <button
-            onClick={() => router.push("/dashboard")}
+            onClick={() => router.push("/library")}
             className="w-full bg-dark-blue text-white py-3 px-4 rounded-lg hover:bg-opacity-90 transition-colors font-medium flex items-center justify-center"
           >
-            Go to Dashboard
+            Go to Library Now
             <ArrowRight className="ml-2 h-5 w-5" />
           </button>
           <button
-            onClick={() => router.push("/dashboard?tab=marketplace")}
+            onClick={() => router.push("/orders")}
             className="w-full border border-gray-300 text-dark-gray py-3 px-4 rounded-lg hover:bg-gray-50 transition-colors font-medium"
           >
-            Browse More Items
+            View Orders
           </button>
         </div>
 

@@ -43,6 +43,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { toast, Toaster } from "sonner";
 
 export default function OrdersPage() {
   const { data: session, status } = useSession();
@@ -53,6 +54,7 @@ export default function OrdersPage() {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [showNotifications, setShowNotifications] = useState(false);
+  const [isAutoRefreshing, setIsAutoRefreshing] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -61,15 +63,56 @@ export default function OrdersPage() {
       loadPurchases();
       loadStats();
       loadNotifications();
+
+      // Auto-refresh every 5 seconds to check for payment updates
+      const interval = setInterval(async () => {
+        setIsAutoRefreshing(true);
+        await loadPurchases(true); // Pass true to check pending orders with Midtrans
+        setTimeout(() => setIsAutoRefreshing(false), 500);
+      }, 5000);
+
+      return () => clearInterval(interval);
     }
   }, [status, router]);
 
-  const loadPurchases = async () => {
+  const loadPurchases = async (checkPendingStatus = false) => {
     try {
       const transactions = await transactionsAPI.getTransactions({
         type: "purchases",
       });
       setPurchases(transactions);
+
+      // Auto-check pending orders with Midtrans
+      if (checkPendingStatus) {
+        const pendingOrders = transactions.filter(
+          (t: any) => t.status === "PENDING"
+        );
+
+        for (const order of pendingOrders) {
+          try {
+            const response = await fetch(
+              `/api/payment/status?orderId=${order.orderId}`
+            );
+            const result = await response.json();
+
+            if (result.success && result.transaction.status !== order.status) {
+              // Status changed! Show notification and reload
+              if (result.transaction.status === "COMPLETED") {
+                toast.success("Payment confirmed! 🎉", {
+                  description: `Redirecting to Library...`,
+                  duration: 2000,
+                });
+                // Redirect to Library after 2 seconds
+                setTimeout(() => {
+                  router.push("/library");
+                }, 2000);
+              }
+            }
+          } catch (error) {
+            console.error(`Error checking status for ${order.orderId}:`, error);
+          }
+        }
+      }
     } catch (error) {
       console.error("Error loading purchases:", error);
     } finally {
@@ -116,6 +159,7 @@ export default function OrdersPage() {
 
   return (
     <div className="min-h-screen bg-secondary-50">
+      <Toaster position="top-center" richColors />
       {/* Header */}
       <header className="bg-white shadow-sm border-b border-light-gray sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
@@ -139,6 +183,14 @@ export default function OrdersPage() {
             </div>
 
             <div className="flex items-center space-x-2 sm:space-x-4">
+              {/* Auto-refresh indicator */}
+              {isAutoRefreshing && (
+                <div className="flex items-center text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
+                  <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
+                  <span className="hidden sm:inline">Syncing...</span>
+                </div>
+              )}
+
               {/* Search - Hidden on mobile, shown on larger screens */}
               <div className="relative hidden md:block">
                 <Search className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-medium-gray" />
@@ -433,18 +485,44 @@ function OrdersTable({ orders, router }: { orders: any[]; router: any }) {
   const handleRefreshStatus = async (orderId: string) => {
     try {
       setRefreshingId(orderId);
+      toast.loading("Checking payment status...", { id: orderId });
+
       const response = await fetch(`/api/payment/status?orderId=${orderId}`);
       const result = await response.json();
 
       if (result.success) {
-        // Reload the page to show updated status
-        window.location.reload();
+        const newStatus = result.transaction.status;
+
+        if (newStatus === "COMPLETED") {
+          toast.success("Payment confirmed! 🎉", {
+            id: orderId,
+            description: "Redirecting to Library...",
+            duration: 2000,
+          });
+          // Redirect to Library after 2 seconds
+          setTimeout(() => {
+            router.push("/library");
+          }, 2000);
+        } else if (newStatus === "PENDING") {
+          toast.info("Payment still pending", {
+            id: orderId,
+            description: "Please complete your payment",
+          });
+        } else {
+          toast.error(`Payment ${newStatus.toLowerCase()}`, { id: orderId });
+        }
       } else {
-        alert("Failed to refresh status. Please try again.");
+        toast.error("Failed to check status", {
+          id: orderId,
+          description: "Please try again",
+        });
       }
     } catch (error) {
       console.error("Error refreshing status:", error);
-      alert("Failed to refresh status. Please try again.");
+      toast.error("Connection error", {
+        id: orderId,
+        description: "Please check your internet connection",
+      });
     } finally {
       setRefreshingId(null);
     }

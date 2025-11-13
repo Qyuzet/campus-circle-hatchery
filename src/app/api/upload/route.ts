@@ -70,11 +70,14 @@ export async function POST(request: NextRequest) {
     // Determine resource type based on file type
     const resourceType = file.type.startsWith("image/") ? "image" : "raw";
 
-    // Upload to Cloudinary
+    // Upload to Cloudinary with flags to allow inline viewing
     const uploadResult = await cloudinary.uploader.upload(dataURI, {
       resource_type: resourceType,
       folder: "campus-circle",
       public_id: `${Date.now()}-${file.name.split(".")[0]}`,
+      // This allows the file to be viewed inline in browser instead of forcing download
+      type: "upload",
+      access_mode: "public",
     });
 
     return NextResponse.json({
