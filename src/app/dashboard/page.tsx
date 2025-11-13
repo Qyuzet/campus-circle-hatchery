@@ -1187,10 +1187,18 @@ export default function Dashboard() {
                           <Card
                             key={item.id}
                             onClick={() => handleItemClick(item)}
-                            className="cursor-pointer hover:shadow-lg transition-all group overflow-hidden"
+                            className={`cursor-pointer hover:shadow-lg transition-all group overflow-hidden ${
+                              viewMode === "list" ? "flex flex-row" : ""
+                            }`}
                           >
                             {/* Image Section */}
-                            <div className="relative aspect-video bg-secondary-200 overflow-hidden">
+                            <div
+                              className={`relative bg-secondary-200 overflow-hidden ${
+                                viewMode === "list"
+                                  ? "w-20 h-20 flex-shrink-0"
+                                  : "aspect-video"
+                              }`}
+                            >
                               {item.imageUrl ? (
                                 <img
                                   src={item.imageUrl}
@@ -1215,19 +1223,49 @@ export default function Dashboard() {
                                 >
                                   <div className="text-center">
                                     {item.category === "Notes" && (
-                                      <FileText className="h-16 w-16 text-blue-600 mx-auto" />
+                                      <FileText
+                                        className={`${
+                                          viewMode === "list"
+                                            ? "h-8 w-8"
+                                            : "h-16 w-16"
+                                        } text-blue-600 mx-auto`}
+                                      />
                                     )}
                                     {item.category === "Tutorial" && (
-                                      <Video className="h-16 w-16 text-green-600 mx-auto" />
+                                      <Video
+                                        className={`${
+                                          viewMode === "list"
+                                            ? "h-8 w-8"
+                                            : "h-16 w-16"
+                                        } text-green-600 mx-auto`}
+                                      />
                                     )}
                                     {item.category === "Tutoring" && (
-                                      <GraduationCap className="h-16 w-16 text-purple-600 mx-auto" />
+                                      <GraduationCap
+                                        className={`${
+                                          viewMode === "list"
+                                            ? "h-8 w-8"
+                                            : "h-16 w-16"
+                                        } text-purple-600 mx-auto`}
+                                      />
                                     )}
                                     {item.category === "Assignment" && (
-                                      <FileText className="h-16 w-16 text-orange-600 mx-auto" />
+                                      <FileText
+                                        className={`${
+                                          viewMode === "list"
+                                            ? "h-8 w-8"
+                                            : "h-16 w-16"
+                                        } text-orange-600 mx-auto`}
+                                      />
                                     )}
                                     {item.category === "Book" && (
-                                      <Book className="h-16 w-16 text-red-600 mx-auto" />
+                                      <Book
+                                        className={`${
+                                          viewMode === "list"
+                                            ? "h-8 w-8"
+                                            : "h-16 w-16"
+                                        } text-red-600 mx-auto`}
+                                      />
                                     )}
                                     {![
                                       "Notes",
@@ -1236,124 +1274,296 @@ export default function Dashboard() {
                                       "Assignment",
                                       "Book",
                                     ].includes(item.category) && (
-                                      <BookOpen className="h-16 w-16 text-gray-600 mx-auto" />
+                                      <BookOpen
+                                        className={`${
+                                          viewMode === "list"
+                                            ? "h-8 w-8"
+                                            : "h-16 w-16"
+                                        } text-gray-600 mx-auto`}
+                                      />
                                     )}
-                                    <p className="text-sm font-semibold text-gray-700 mt-2">
-                                      {item.category}
-                                    </p>
+                                    {viewMode === "grid" && (
+                                      <p className="text-sm font-semibold text-gray-700 mt-2">
+                                        {item.category}
+                                      </p>
+                                    )}
                                   </div>
                                 </div>
                               )}
                               {/* Favorite Button */}
-                              <button
-                                onClick={(e) => e.stopPropagation()}
-                                className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm p-2 rounded-full text-gray-600 hover:text-red-500 hover:bg-white transition-all shadow-sm"
-                              >
-                                <Heart className="h-4 w-4" />
-                              </button>
+                              {viewMode === "grid" && (
+                                <button
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm p-2 rounded-full text-gray-600 hover:text-red-500 hover:bg-white transition-all shadow-sm"
+                                >
+                                  <Heart className="h-4 w-4" />
+                                </button>
+                              )}
                             </div>
 
                             {/* Content Section */}
-                            <CardContent className="p-4 space-y-3">
-                              {/* Category Badge */}
-                              <Badge variant="secondary" className="text-xs">
-                                {item.category}
-                              </Badge>
+                            <div
+                              className={`flex ${
+                                viewMode === "list"
+                                  ? "flex-row flex-1"
+                                  : "flex-col"
+                              }`}
+                            >
+                              <CardContent
+                                className={`${
+                                  viewMode === "list"
+                                    ? "p-2 flex-1 flex flex-col justify-between"
+                                    : "p-4 space-y-3"
+                                }`}
+                              >
+                                <div
+                                  className={
+                                    viewMode === "list"
+                                      ? "space-y-0.5"
+                                      : "space-y-3"
+                                  }
+                                >
+                                  {/* Category Badge and Title */}
+                                  <div className="flex items-start justify-between gap-2">
+                                    <div className="flex-1 min-w-0">
+                                      <div
+                                        className={`flex items-center gap-2 ${
+                                          viewMode === "list"
+                                            ? "mb-0.5"
+                                            : "mb-1"
+                                        }`}
+                                      >
+                                        <Badge
+                                          variant="secondary"
+                                          className={
+                                            viewMode === "list"
+                                              ? "text-[10px] px-1.5 py-0"
+                                              : "text-xs"
+                                          }
+                                        >
+                                          {item.category}
+                                        </Badge>
+                                        {viewMode === "list" && (
+                                          <button
+                                            onClick={(e) => e.stopPropagation()}
+                                            className="text-gray-400 hover:text-red-500 transition-colors"
+                                          >
+                                            <Heart className="h-3 w-3" />
+                                          </button>
+                                        )}
+                                      </div>
+                                      <h3
+                                        className={`font-bold ${
+                                          viewMode === "list"
+                                            ? "text-sm"
+                                            : "text-lg"
+                                        } line-clamp-1 text-gray-900`}
+                                      >
+                                        {item.title}
+                                      </h3>
+                                    </div>
+                                  </div>
 
-                              {/* Title */}
-                              <h3 className="font-bold text-lg line-clamp-1 text-gray-900">
-                                {item.title}
-                              </h3>
-
-                              {/* Description */}
-                              <p className="text-sm text-gray-600 line-clamp-2 min-h-[40px]">
-                                {item.description}
-                              </p>
-
-                              {/* Course Info */}
-                              <div className="flex items-center gap-2 text-xs text-gray-500">
-                                <BookOpen className="h-3.5 w-3.5" />
-                                <span className="font-medium">
-                                  {item.course}
-                                </span>
-                              </div>
-
-                              {/* Price and Rating */}
-                              <div className="flex items-end justify-between pt-2 border-t">
-                                <div>
-                                  <p className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                                    Rp {item.price.toLocaleString()}
+                                  {/* Description */}
+                                  <p
+                                    className={`${
+                                      viewMode === "list"
+                                        ? "text-xs"
+                                        : "text-sm"
+                                    } text-gray-600 ${
+                                      viewMode === "list"
+                                        ? "line-clamp-1"
+                                        : "line-clamp-2 min-h-[40px]"
+                                    }`}
+                                  >
+                                    {item.description}
                                   </p>
-                                  <div className="flex items-center gap-1 mt-1">
-                                    <Star className="h-3.5 w-3.5 text-yellow-400 fill-yellow-400" />
-                                    <span className="text-xs font-medium text-gray-700">
-                                      {item.rating}
-                                    </span>
-                                    <span className="text-xs text-gray-500">
-                                      ({item.reviewCount || 0})
+
+                                  {/* Course Info */}
+                                  <div
+                                    className={`flex items-center gap-1.5 ${
+                                      viewMode === "list"
+                                        ? "text-[11px]"
+                                        : "text-xs"
+                                    } text-gray-500`}
+                                  >
+                                    <BookOpen
+                                      className={
+                                        viewMode === "list"
+                                          ? "h-3 w-3"
+                                          : "h-3.5 w-3.5"
+                                      }
+                                    />
+                                    <span className="font-medium">
+                                      {item.course}
                                     </span>
                                   </div>
-                                </div>
-                                <div className="text-right">
-                                  <p className="text-xs text-gray-500">by</p>
-                                  <p className="text-xs font-medium text-gray-700">
-                                    {typeof item.seller === "string"
-                                      ? `Student ${item.seller.slice(-9)}`
-                                      : item.seller?.name || "Unknown"}
-                                  </p>
-                                </div>
-                              </div>
-                            </CardContent>
 
-                            {/* Action Buttons */}
-                            <CardFooter className="flex gap-2 p-4 pt-0">
-                              {item.sellerId === currentUser?.id ? (
-                                <Button
-                                  variant="destructive"
-                                  size="sm"
-                                  className="w-full"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDeleteItem(item.id);
-                                  }}
-                                >
-                                  <Trash2 className="h-4 w-4 mr-1" />
-                                  Delete
-                                </Button>
+                                  {viewMode === "grid" && (
+                                    <>
+                                      {/* Price and Rating */}
+                                      <div className="flex items-end justify-between pt-2 border-t">
+                                        <div>
+                                          <p className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                                            Rp {item.price.toLocaleString()}
+                                          </p>
+                                          <div className="flex items-center gap-1 mt-1">
+                                            <Star className="h-3.5 w-3.5 text-yellow-400 fill-yellow-400" />
+                                            <span className="text-xs font-medium text-gray-700">
+                                              {item.rating}
+                                            </span>
+                                            <span className="text-xs text-gray-500">
+                                              ({item.reviewCount || 0})
+                                            </span>
+                                          </div>
+                                        </div>
+                                        <div className="text-right">
+                                          <p className="text-xs text-gray-500">
+                                            by
+                                          </p>
+                                          <p className="text-xs font-medium text-gray-700">
+                                            {typeof item.seller === "string"
+                                              ? `Student ${item.seller.slice(
+                                                  -9
+                                                )}`
+                                              : item.seller?.name || "Unknown"}
+                                          </p>
+                                        </div>
+                                      </div>
+                                    </>
+                                  )}
+                                </div>
+
+                                {viewMode === "list" && (
+                                  <div className="flex items-center justify-between mt-1 pt-1 border-t">
+                                    <div className="flex items-center gap-2">
+                                      <div>
+                                        <p className="text-base font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                                          Rp {item.price.toLocaleString()}
+                                        </p>
+                                        <div className="flex items-center gap-0.5">
+                                          <Star className="h-2.5 w-2.5 text-yellow-400 fill-yellow-400" />
+                                          <span className="text-[10px] font-medium text-gray-700">
+                                            {item.rating}
+                                          </span>
+                                          <span className="text-[10px] text-gray-500">
+                                            ({item.reviewCount || 0})
+                                          </span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div className="text-right">
+                                      <p className="text-[10px] text-gray-500">
+                                        by
+                                      </p>
+                                      <p className="text-[10px] font-medium text-gray-700">
+                                        {typeof item.seller === "string"
+                                          ? `Student ${item.seller.slice(-9)}`
+                                          : item.seller?.name || "Unknown"}
+                                      </p>
+                                    </div>
+                                  </div>
+                                )}
+                              </CardContent>
+
+                              {/* Action Buttons */}
+                              {viewMode === "list" ? (
+                                <div className="flex flex-col gap-1.5 p-2 justify-center border-l">
+                                  {item.sellerId === currentUser?.id ? (
+                                    <Button
+                                      variant="destructive"
+                                      size="sm"
+                                      className="h-8 w-8 p-0"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDeleteItem(item.id);
+                                      }}
+                                    >
+                                      <Trash2 className="h-3.5 w-3.5" />
+                                    </Button>
+                                  ) : (
+                                    <>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-8 w-8 p-0"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setMessageContextItem(item);
+                                          handleCreateConversation(
+                                            item.sellerId,
+                                            typeof item.seller === "string"
+                                              ? item.seller
+                                              : item.seller?.name || "Unknown"
+                                          );
+                                        }}
+                                      >
+                                        <MessageCircle className="h-3.5 w-3.5" />
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        className="h-8 w-8 p-0"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleBuyItem(item);
+                                        }}
+                                      >
+                                        <ShoppingCart className="h-3.5 w-3.5" />
+                                      </Button>
+                                    </>
+                                  )}
+                                </div>
                               ) : (
-                                <>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="flex-1"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setMessageContextItem(item);
-                                      handleCreateConversation(
-                                        item.sellerId,
-                                        typeof item.seller === "string"
-                                          ? item.seller
-                                          : item.seller?.name || "Unknown"
-                                      );
-                                    }}
-                                  >
-                                    <MessageCircle className="h-4 w-4 mr-1" />
-                                    Message
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    className="flex-1"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleBuyItem(item);
-                                    }}
-                                  >
-                                    <ShoppingCart className="h-4 w-4 mr-1" />
-                                    Buy
-                                  </Button>
-                                </>
+                                <CardFooter className="flex gap-2 p-4 pt-0">
+                                  {item.sellerId === currentUser?.id ? (
+                                    <Button
+                                      variant="destructive"
+                                      size="sm"
+                                      className="w-full"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDeleteItem(item.id);
+                                      }}
+                                    >
+                                      <Trash2 className="h-4 w-4 mr-1" />
+                                      Delete
+                                    </Button>
+                                  ) : (
+                                    <>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="flex-1"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setMessageContextItem(item);
+                                          handleCreateConversation(
+                                            item.sellerId,
+                                            typeof item.seller === "string"
+                                              ? item.seller
+                                              : item.seller?.name || "Unknown"
+                                          );
+                                        }}
+                                      >
+                                        <MessageCircle className="h-4 w-4 mr-1" />
+                                        Message
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        className="flex-1"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleBuyItem(item);
+                                        }}
+                                      >
+                                        <ShoppingCart className="h-4 w-4 mr-1" />
+                                        Buy
+                                      </Button>
+                                    </>
+                                  )}
+                                </CardFooter>
                               )}
-                            </CardFooter>
+                            </div>
                           </Card>
                         ))
                       )}
