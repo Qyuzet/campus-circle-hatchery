@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { pusherClient, getConversationChannel } from "@/lib/pusher";
+import { playNotificationSound } from "@/lib/notification-sound";
 import Image from "next/image";
 import { toast, Toaster } from "sonner";
 import {
@@ -140,19 +142,95 @@ export default function Dashboard() {
     };
   }, [showNotifications]);
 
-  // Load messages when conversation is selected and poll for updates
+  // Load messages when conversation is selected and subscribe to real-time updates
   useEffect(() => {
     if (selectedConversation) {
       loadMessages(selectedConversation);
 
-      // Poll for new messages every 3 seconds
-      const pollInterval = setInterval(() => {
-        loadMessages(selectedConversation);
-      }, 3000);
+      // Subscribe to Pusher channel for real-time messages
+      const channel = pusherClient.subscribe(
+        getConversationChannel(selectedConversation)
+      );
 
-      return () => clearInterval(pollInterval);
+      // Listen for new messages
+      channel.bind("new-message", (newMessage: any) => {
+        console.log("Real-time message received:", newMessage);
+        setMessages((prevMessages) => {
+          // Avoid duplicates
+          if (prevMessages.some((msg) => msg.id === newMessage.id)) {
+            return prevMessages;
+          }
+          return [...prevMessages, newMessage];
+        });
+
+        // Play notification sound and show toast for incoming messages
+        if (newMessage.senderId !== currentUser?.id) {
+          playNotificationSound();
+          toast.success("New message received!", {
+            duration: 2000,
+          });
+        }
+      });
+
+      // Listen for typing indicators (optional)
+      channel.bind("typing", (data: { userId: string; isTyping: boolean }) => {
+        console.log("Typing indicator:", data);
+        // You can add typing indicator UI here
+      });
+
+      // Cleanup: Unsubscribe when conversation changes or component unmounts
+      return () => {
+        channel.unbind_all();
+        pusherClient.unsubscribe(getConversationChannel(selectedConversation));
+      };
     }
-  }, [selectedConversation]);
+  }, [selectedConversation, currentUser]);
+
+  // Subscribe to all user's conversations for real-time updates
+  useEffect(() => {
+    if (currentUser && conversations.length > 0) {
+      // Subscribe to all conversation channels
+      conversations.forEach((conversation) => {
+        const channel = pusherClient.subscribe(
+          getConversationChannel(conversation.id)
+        );
+
+        // Listen for new messages to update conversation list
+        channel.bind("new-message", (newMessage: any) => {
+          // Update conversations list with latest message
+          setConversations((prevConvos) =>
+            prevConvos.map((convo) =>
+              convo.id === conversation.id
+                ? {
+                    ...convo,
+                    lastMessage: newMessage.content,
+                    lastMessageTime: newMessage.createdAt,
+                  }
+                : convo
+            )
+          );
+
+          // Show notification if message is not from current user and not in active conversation
+          if (
+            newMessage.senderId !== currentUser.id &&
+            selectedConversation !== conversation.id
+          ) {
+            playNotificationSound();
+            toast.info(`New message from ${conversation.otherUserName}`, {
+              duration: 3000,
+            });
+          }
+        });
+      });
+
+      // Cleanup: Unsubscribe from all channels
+      return () => {
+        conversations.forEach((conversation) => {
+          pusherClient.unsubscribe(getConversationChannel(conversation.id));
+        });
+      };
+    }
+  }, [currentUser, conversations, selectedConversation]);
 
   const loadData = async () => {
     try {

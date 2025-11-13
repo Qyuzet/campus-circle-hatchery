@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { triggerNewMessage } from "@/lib/pusher";
 
 // GET /api/messages?conversationId=xxx - Get messages for a conversation
 export async function GET(request: NextRequest) {
@@ -182,7 +183,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // TODO: Create notification for receiver
+    // Create notification for receiver
     await prisma.notification.create({
       data: {
         userId: receiverId,
@@ -191,6 +192,9 @@ export async function POST(request: NextRequest) {
         message: `${user.name} sent you a message`,
       },
     });
+
+    // Trigger real-time event via Pusher
+    await triggerNewMessage(conversationId, message);
 
     return NextResponse.json(message, { status: 201 });
   } catch (error) {
