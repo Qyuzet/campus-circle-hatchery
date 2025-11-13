@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { pusherClient, getConversationChannel } from "@/lib/pusher";
@@ -88,6 +88,7 @@ export default function Dashboard() {
   const [isSendingMessage, setIsSendingMessage] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentItem, setPaymentItem] = useState<{
     id: string;
@@ -145,23 +146,45 @@ export default function Dashboard() {
   // Load messages when conversation is selected and subscribe to real-time updates
   useEffect(() => {
     if (selectedConversation) {
+      console.log(
+        "📱 Loading messages for conversation:",
+        selectedConversation
+      );
       loadMessages(selectedConversation);
 
       // Subscribe to Pusher channel for real-time messages
-      const channel = pusherClient.subscribe(
-        getConversationChannel(selectedConversation)
-      );
+      const channelName = getConversationChannel(selectedConversation);
+      console.log("🔌 Subscribing to Pusher channel:", channelName);
+      const channel = pusherClient.subscribe(channelName);
 
       // Listen for new messages
       channel.bind("new-message", (newMessage: any) => {
-        console.log("Real-time message received:", newMessage);
+        console.log("✅ Real-time message received:", newMessage);
         setMessages((prevMessages) => {
           // Avoid duplicates
           if (prevMessages.some((msg) => msg.id === newMessage.id)) {
+            console.log(
+              "⚠️ Duplicate message detected, skipping:",
+              newMessage.id
+            );
             return prevMessages;
           }
+          console.log("➕ Adding new message to chat:", newMessage.id);
           return [...prevMessages, newMessage];
         });
+
+        // Update conversation list with latest message
+        setConversations((prevConvos) =>
+          prevConvos.map((convo) =>
+            convo.id === selectedConversation
+              ? {
+                  ...convo,
+                  lastMessage: newMessage.content,
+                  lastMessageTime: newMessage.createdAt,
+                }
+              : convo
+          )
+        );
 
         // Play notification sound and show toast for incoming messages
         if (newMessage.senderId !== currentUser?.id) {
@@ -186,51 +209,12 @@ export default function Dashboard() {
     }
   }, [selectedConversation, currentUser]);
 
-  // Subscribe to all user's conversations for real-time updates
+  // Auto-scroll to bottom when messages change
   useEffect(() => {
-    if (currentUser && conversations.length > 0) {
-      // Subscribe to all conversation channels
-      conversations.forEach((conversation) => {
-        const channel = pusherClient.subscribe(
-          getConversationChannel(conversation.id)
-        );
-
-        // Listen for new messages to update conversation list
-        channel.bind("new-message", (newMessage: any) => {
-          // Update conversations list with latest message
-          setConversations((prevConvos) =>
-            prevConvos.map((convo) =>
-              convo.id === conversation.id
-                ? {
-                    ...convo,
-                    lastMessage: newMessage.content,
-                    lastMessageTime: newMessage.createdAt,
-                  }
-                : convo
-            )
-          );
-
-          // Show notification if message is not from current user and not in active conversation
-          if (
-            newMessage.senderId !== currentUser.id &&
-            selectedConversation !== conversation.id
-          ) {
-            playNotificationSound();
-            toast.info(`New message from ${conversation.otherUserName}`, {
-              duration: 3000,
-            });
-          }
-        });
-      });
-
-      // Cleanup: Unsubscribe from all channels
-      return () => {
-        conversations.forEach((conversation) => {
-          pusherClient.unsubscribe(getConversationChannel(conversation.id));
-        });
-      };
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
-  }, [currentUser, conversations, selectedConversation]);
+  }, [messages]);
 
   const loadData = async () => {
     try {
@@ -1561,6 +1545,8 @@ export default function Dashboard() {
                                 </p>
                               </div>
                             )}
+                            {/* Invisible div for auto-scroll */}
+                            <div ref={messagesEndRef} />
                           </div>
                         </div>
 

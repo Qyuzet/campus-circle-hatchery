@@ -19,6 +19,11 @@ export const pusherClient = new PusherClient(
   }
 );
 
+// Enable Pusher logging in development
+if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
+  (PusherClient as any).logToConsole = true;
+}
+
 // Helper function to get conversation channel name
 export const getConversationChannel = (conversationId: string) => {
   return `conversation-${conversationId}`;
@@ -60,4 +65,3 @@ export const triggerTypingIndicator = async (
     return { success: false, error };
   }
 };
-
