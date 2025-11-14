@@ -1878,7 +1878,7 @@ export default function Dashboard() {
             )}
 
             {activeTab === "messages" && (
-              <div className="h-full flex flex-col">
+              <div className="flex flex-col">
                 {/* Show skeleton loader while loading */}
                 {loadingStates.messages ? (
                   <div className="bg-white rounded-lg shadow border border-light-gray h-[500px] sm:h-[600px] flex animate-pulse">
@@ -2092,7 +2092,7 @@ export default function Dashboard() {
                           selectedConversation || selectedGroup
                             ? "flex"
                             : "hidden sm:flex"
-                        } flex-1 flex-col`}
+                        } flex-1 flex-col h-full`}
                       >
                         {selectedConversation || selectedGroup ? (
                           <>
@@ -2198,7 +2198,7 @@ export default function Dashboard() {
                             </div>
 
                             {/* Messages Area */}
-                            <div className="flex-1 p-4 overflow-y-auto bg-gray-50">
+                            <div className="flex-1 p-4 overflow-y-auto bg-gray-50 min-h-0">
                               <div className="space-y-4">
                                 {(selectedConversation
                                   ? messages
