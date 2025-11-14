@@ -78,6 +78,15 @@ import { WithdrawalForm } from "@/components/WithdrawalForm";
 export default function Dashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
+
+  // Helper function to format price with K for thousands
+  const formatPrice = (price: number) => {
+    if (price >= 1000) {
+      return `${(price / 1000).toFixed(price % 1000 === 0 ? 0 : 1)}K`;
+    }
+    return price.toString();
+  };
+
   const [activeTab, setActiveTab] = useState("discovery");
   const [viewMode, setViewMode] = useState("grid");
   const [searchQuery, setSearchQuery] = useState("");
@@ -1115,36 +1124,38 @@ export default function Dashboard() {
                   <>
                     {/* Header with Search and Filters */}
                     <Card>
-                      <CardHeader>
-                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                          <div>
-                            <CardTitle className="text-2xl">
+                      <CardHeader className="p-3 sm:p-6">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex-1">
+                            <CardTitle className="text-base sm:text-2xl">
                               Discover Study Materials
                             </CardTitle>
-                            <CardDescription>
+                            <CardDescription className="text-[10px] sm:text-sm mt-0.5 hidden sm:block">
                               Browse and purchase study materials from fellow
                               students
                             </CardDescription>
                           </div>
                           <Button
                             onClick={() => setShowAddItemModal(true)}
-                            className="md:w-auto"
+                            className="text-xs sm:text-sm h-7 sm:h-10 px-2 sm:px-4"
                           >
-                            <Plus className="h-4 w-4 mr-2" />
-                            Add New Item
+                            <Plus className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
+                            <span className="hidden sm:inline">
+                              Add New Item
+                            </span>
                           </Button>
                         </div>
                       </CardHeader>
-                      <CardContent>
-                        <div className="flex flex-col md:flex-row gap-4">
+                      <CardContent className="p-3 sm:p-6 pt-0">
+                        <div className="flex gap-1.5 sm:gap-4">
                           {/* Search */}
                           <div className="flex-1 relative">
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Search className="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
                             <Input
-                              placeholder="Search by title, course, or description..."
+                              placeholder="Search..."
                               value={searchQuery}
                               onChange={(e) => setSearchQuery(e.target.value)}
-                              className="pl-10"
+                              className="pl-7 sm:pl-10 h-7 sm:h-10 text-xs sm:text-sm"
                             />
                           </div>
 
@@ -1154,9 +1165,9 @@ export default function Dashboard() {
                             onChange={(e) =>
                               handleCategoryFilter(e.target.value)
                             }
-                            className="px-3 py-2 border border-input rounded-md text-sm bg-background hover:bg-accent transition-colors"
+                            className="px-1.5 sm:px-3 py-1 sm:py-2 border border-input rounded-md text-[10px] sm:text-sm bg-background hover:bg-accent transition-colors h-7 sm:h-10 w-20 sm:w-auto"
                           >
-                            <option value="">All Categories</option>
+                            <option value="">All</option>
                             <option value="Notes">📝 Notes</option>
                             <option value="Tutorial">🎥 Tutorial</option>
                             <option value="Tutoring">👨‍🏫 Tutoring</option>
@@ -1166,16 +1177,16 @@ export default function Dashboard() {
                           </select>
 
                           {/* View Mode Toggle */}
-                          <div className="flex border border-input rounded-md">
+                          <div className="flex border border-input rounded-md h-7 sm:h-10">
                             <Button
                               variant={
                                 viewMode === "grid" ? "secondary" : "ghost"
                               }
                               size="sm"
                               onClick={() => setViewMode("grid")}
-                              className="rounded-r-none"
+                              className="rounded-r-none h-full px-1.5 sm:px-3"
                             >
-                              <Grid className="h-4 w-4" />
+                              <Grid className="h-3 w-3 sm:h-4 sm:w-4" />
                             </Button>
                             <Button
                               variant={
@@ -1183,9 +1194,9 @@ export default function Dashboard() {
                               }
                               size="sm"
                               onClick={() => setViewMode("list")}
-                              className="rounded-l-none"
+                              className="rounded-l-none h-full px-1.5 sm:px-3"
                             >
-                              <List className="h-4 w-4" />
+                              <List className="h-3 w-3 sm:h-4 sm:w-4" />
                             </Button>
                           </div>
                         </div>
@@ -1225,9 +1236,9 @@ export default function Dashboard() {
 
                     {/* Marketplace Items */}
                     <div
-                      className={`grid gap-4 ${
+                      className={`grid gap-2 sm:gap-4 ${
                         viewMode === "grid"
-                          ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+                          ? "grid-cols-3 md:grid-cols-2 lg:grid-cols-3"
                           : "grid-cols-1"
                       }`}
                     >
@@ -1294,7 +1305,7 @@ export default function Dashboard() {
                                         className={`${
                                           viewMode === "list"
                                             ? "h-8 w-8"
-                                            : "h-16 w-16"
+                                            : "h-8 w-8 sm:h-16 sm:w-16"
                                         } text-blue-600 mx-auto`}
                                       />
                                     )}
@@ -1303,7 +1314,7 @@ export default function Dashboard() {
                                         className={`${
                                           viewMode === "list"
                                             ? "h-8 w-8"
-                                            : "h-16 w-16"
+                                            : "h-8 w-8 sm:h-16 sm:w-16"
                                         } text-green-600 mx-auto`}
                                       />
                                     )}
@@ -1312,7 +1323,7 @@ export default function Dashboard() {
                                         className={`${
                                           viewMode === "list"
                                             ? "h-8 w-8"
-                                            : "h-16 w-16"
+                                            : "h-8 w-8 sm:h-16 sm:w-16"
                                         } text-purple-600 mx-auto`}
                                       />
                                     )}
@@ -1321,7 +1332,7 @@ export default function Dashboard() {
                                         className={`${
                                           viewMode === "list"
                                             ? "h-8 w-8"
-                                            : "h-16 w-16"
+                                            : "h-8 w-8 sm:h-16 sm:w-16"
                                         } text-orange-600 mx-auto`}
                                       />
                                     )}
@@ -1330,7 +1341,7 @@ export default function Dashboard() {
                                         className={`${
                                           viewMode === "list"
                                             ? "h-8 w-8"
-                                            : "h-16 w-16"
+                                            : "h-8 w-8 sm:h-16 sm:w-16"
                                         } text-red-600 mx-auto`}
                                       />
                                     )}
@@ -1345,12 +1356,12 @@ export default function Dashboard() {
                                         className={`${
                                           viewMode === "list"
                                             ? "h-8 w-8"
-                                            : "h-16 w-16"
+                                            : "h-8 w-8 sm:h-16 sm:w-16"
                                         } text-gray-600 mx-auto`}
                                       />
                                     )}
                                     {viewMode === "grid" && (
-                                      <p className="text-sm font-semibold text-gray-700 mt-2">
+                                      <p className="text-[10px] sm:text-sm font-semibold text-gray-700 mt-1 sm:mt-2">
                                         {item.category}
                                       </p>
                                     )}
@@ -1361,9 +1372,9 @@ export default function Dashboard() {
                               {viewMode === "grid" && (
                                 <button
                                   onClick={(e) => e.stopPropagation()}
-                                  className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm p-2 rounded-full text-gray-600 hover:text-red-500 hover:bg-white transition-all shadow-sm"
+                                  className="absolute top-1 right-1 sm:top-3 sm:right-3 bg-white/90 backdrop-blur-sm p-1 sm:p-2 rounded-full text-gray-600 hover:text-red-500 hover:bg-white transition-all shadow-sm"
                                 >
-                                  <Heart className="h-4 w-4" />
+                                  <Heart className="h-3 w-3 sm:h-4 sm:w-4" />
                                 </button>
                               )}
                             </div>
@@ -1380,7 +1391,7 @@ export default function Dashboard() {
                                 className={`${
                                   viewMode === "list"
                                     ? "p-2 flex-1 flex flex-col justify-between"
-                                    : "p-4 space-y-3"
+                                    : "p-2 sm:p-4 space-y-1.5 sm:space-y-3"
                                 }`}
                               >
                                 <div
@@ -1393,75 +1404,61 @@ export default function Dashboard() {
                                   {/* Category Badge and Title */}
                                   <div className="flex items-start justify-between gap-2">
                                     <div className="flex-1 min-w-0">
-                                      <div
-                                        className={`flex items-center gap-2 ${
-                                          viewMode === "list"
-                                            ? "mb-0.5"
-                                            : "mb-1"
-                                        }`}
-                                      >
-                                        <Badge
-                                          variant="secondary"
-                                          className={
-                                            viewMode === "list"
-                                              ? "text-[10px] px-1.5 py-0"
-                                              : "text-xs"
-                                          }
-                                        >
-                                          {item.category}
-                                        </Badge>
-                                        {viewMode === "list" && (
+                                      {viewMode === "list" && (
+                                        <div className="flex items-center gap-2 mb-0.5">
+                                          <Badge
+                                            variant="secondary"
+                                            className="text-[10px] px-1.5 py-0"
+                                          >
+                                            {item.category}
+                                          </Badge>
                                           <button
                                             onClick={(e) => e.stopPropagation()}
                                             className="text-gray-400 hover:text-red-500 transition-colors"
                                           >
                                             <Heart className="h-3 w-3" />
                                           </button>
-                                        )}
-                                      </div>
+                                        </div>
+                                      )}
                                       <h3
                                         className={`font-bold ${
                                           viewMode === "list"
                                             ? "text-sm"
-                                            : "text-lg"
-                                        } line-clamp-1 text-gray-900`}
+                                            : "text-xs sm:text-lg"
+                                        } line-clamp-1 text-gray-900 leading-tight`}
                                       >
                                         {item.title}
                                       </h3>
                                     </div>
                                   </div>
 
-                                  {/* Description */}
-                                  <p
-                                    className={`${
-                                      viewMode === "list"
-                                        ? "text-xs"
-                                        : "text-sm"
-                                    } text-gray-600 ${
-                                      viewMode === "list"
-                                        ? "line-clamp-1"
-                                        : "line-clamp-2 min-h-[40px]"
-                                    }`}
-                                  >
-                                    {item.description}
-                                  </p>
+                                  {/* Description - Hidden on mobile grid view */}
+                                  {viewMode === "list" ? (
+                                    <p className="text-xs text-gray-600 line-clamp-1">
+                                      {item.description}
+                                    </p>
+                                  ) : (
+                                    <p className="hidden sm:block text-sm text-gray-600 line-clamp-2 min-h-[40px]">
+                                      {item.description}
+                                    </p>
+                                  )}
 
                                   {/* Course Info */}
                                   <div
-                                    className={`flex items-center gap-1.5 ${
+                                    className={`flex items-center gap-0.5 sm:gap-1.5 ${
                                       viewMode === "list"
                                         ? "text-[11px]"
-                                        : "text-xs"
+                                        : "text-[9px] sm:text-xs"
                                     } text-gray-500`}
                                   >
                                     <BookOpen
                                       className={
                                         viewMode === "list"
                                           ? "h-3 w-3"
-                                          : "h-3.5 w-3.5"
+                                          : "h-2.5 w-2.5 sm:h-3.5 sm:w-3.5"
                                       }
                                     />
-                                    <span className="font-medium">
+                                    <span className="font-medium truncate">
                                       {item.course}
                                     </span>
                                   </div>
@@ -1469,22 +1466,27 @@ export default function Dashboard() {
                                   {viewMode === "grid" && (
                                     <>
                                       {/* Price and Rating */}
-                                      <div className="flex items-end justify-between pt-2 border-t">
-                                        <div>
-                                          <p className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                                            Rp {item.price.toLocaleString()}
+                                      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between pt-1 sm:pt-2 border-t gap-0.5 sm:gap-0">
+                                        <div className="flex items-center justify-between sm:block">
+                                          <p className="text-sm sm:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent leading-tight">
+                                            <span className="sm:hidden">
+                                              Rp {formatPrice(item.price)}
+                                            </span>
+                                            <span className="hidden sm:inline">
+                                              Rp {item.price.toLocaleString()}
+                                            </span>
                                           </p>
-                                          <div className="flex items-center gap-1 mt-1">
-                                            <Star className="h-3.5 w-3.5 text-yellow-400 fill-yellow-400" />
-                                            <span className="text-xs font-medium text-gray-700">
+                                          <div className="flex items-center gap-0.5 sm:gap-1 sm:mt-1">
+                                            <Star className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 text-yellow-400 fill-yellow-400" />
+                                            <span className="text-[9px] sm:text-xs font-medium text-gray-700">
                                               {item.rating}
                                             </span>
-                                            <span className="text-xs text-gray-500">
+                                            <span className="text-[9px] sm:text-xs text-gray-500">
                                               ({item.reviewCount || 0})
                                             </span>
                                           </div>
                                         </div>
-                                        <div className="text-right">
+                                        <div className="text-right hidden sm:block">
                                           <p className="text-xs text-gray-500">
                                             by
                                           </p>
@@ -1581,26 +1583,28 @@ export default function Dashboard() {
                                   )}
                                 </div>
                               ) : (
-                                <CardFooter className="flex gap-2 p-4 pt-0">
+                                <CardFooter className="flex gap-1 sm:gap-2 p-2 sm:p-4 pt-0">
                                   {item.sellerId === currentUser?.id ? (
                                     <Button
                                       variant="destructive"
                                       size="sm"
-                                      className="w-full"
+                                      className="w-full text-[9px] sm:text-sm px-1.5 sm:px-4 py-1 sm:py-2 h-6 sm:h-9"
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         handleDeleteItem(item.id);
                                       }}
                                     >
-                                      <Trash2 className="h-4 w-4 mr-1" />
-                                      Delete
+                                      <Trash2 className="h-2.5 w-2.5 sm:h-4 sm:w-4 sm:mr-1" />
+                                      <span className="hidden sm:inline">
+                                        Delete
+                                      </span>
                                     </Button>
                                   ) : (
                                     <>
                                       <Button
                                         variant="outline"
                                         size="sm"
-                                        className="flex-1"
+                                        className="flex-1 text-[9px] sm:text-sm px-1.5 sm:px-4 py-1 sm:py-2 h-6 sm:h-9"
                                         onClick={(e) => {
                                           e.stopPropagation();
                                           setMessageContextItem(item);
@@ -1612,19 +1616,23 @@ export default function Dashboard() {
                                           );
                                         }}
                                       >
-                                        <MessageCircle className="h-4 w-4 mr-1" />
-                                        Message
+                                        <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
+                                        <span className="hidden sm:inline">
+                                          Message
+                                        </span>
                                       </Button>
                                       <Button
                                         size="sm"
-                                        className="flex-1"
+                                        className="flex-1 text-[9px] sm:text-sm px-1.5 sm:px-4 py-1 sm:py-2 h-6 sm:h-9"
                                         onClick={(e) => {
                                           e.stopPropagation();
                                           handleBuyItem(item);
                                         }}
                                       >
-                                        <ShoppingCart className="h-4 w-4 mr-1" />
-                                        Buy
+                                        <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
+                                        <span className="hidden sm:inline">
+                                          Buy
+                                        </span>
                                       </Button>
                                     </>
                                   )}
