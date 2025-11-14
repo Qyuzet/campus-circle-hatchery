@@ -65,7 +65,7 @@ export default function Hero({
         className
       )}
     >
-      <div className="max-w-container mx-auto flex flex-col gap-12 pt-16 sm:gap-24">
+      <div className="max-w-container mx-auto flex flex-col gap-12 -mt-8 sm:gap-24">
         <div className="flex flex-col items-center gap-6 text-center sm:gap-12">
           {badge !== false && badge}
           <h1 className="animate-appear relative z-10 text-4xl leading-tight font-bold text-gray-900 text-balance sm:text-6xl sm:leading-tight md:text-7xl md:leading-tight">
