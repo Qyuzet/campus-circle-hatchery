@@ -1273,7 +1273,7 @@ export default function Dashboard() {
                             <div
                               className={`relative bg-secondary-200 overflow-hidden ${
                                 viewMode === "list"
-                                  ? "w-20 h-20 flex-shrink-0"
+                                  ? "w-12 h-12 flex-shrink-0 rounded-md"
                                   : "aspect-square sm:aspect-video lg:aspect-[3/2]"
                               }`}
                             >
@@ -1304,7 +1304,7 @@ export default function Dashboard() {
                                       <FileText
                                         className={`${
                                           viewMode === "list"
-                                            ? "h-8 w-8"
+                                            ? "h-5 w-5"
                                             : "h-8 w-8 sm:h-12 sm:w-12 lg:h-7 lg:w-7"
                                         } text-blue-600 mx-auto`}
                                       />
@@ -1313,7 +1313,7 @@ export default function Dashboard() {
                                       <Video
                                         className={`${
                                           viewMode === "list"
-                                            ? "h-8 w-8"
+                                            ? "h-5 w-5"
                                             : "h-8 w-8 sm:h-12 sm:w-12 lg:h-7 lg:w-7"
                                         } text-green-600 mx-auto`}
                                       />
@@ -1322,7 +1322,7 @@ export default function Dashboard() {
                                       <GraduationCap
                                         className={`${
                                           viewMode === "list"
-                                            ? "h-8 w-8"
+                                            ? "h-5 w-5"
                                             : "h-8 w-8 sm:h-12 sm:w-12 lg:h-7 lg:w-7"
                                         } text-purple-600 mx-auto`}
                                       />
@@ -1331,7 +1331,7 @@ export default function Dashboard() {
                                       <FileText
                                         className={`${
                                           viewMode === "list"
-                                            ? "h-8 w-8"
+                                            ? "h-5 w-5"
                                             : "h-8 w-8 sm:h-12 sm:w-12 lg:h-7 lg:w-7"
                                         } text-orange-600 mx-auto`}
                                       />
@@ -1340,7 +1340,7 @@ export default function Dashboard() {
                                       <Book
                                         className={`${
                                           viewMode === "list"
-                                            ? "h-8 w-8"
+                                            ? "h-5 w-5"
                                             : "h-8 w-8 sm:h-12 sm:w-12 lg:h-7 lg:w-7"
                                         } text-red-600 mx-auto`}
                                       />
@@ -1355,7 +1355,7 @@ export default function Dashboard() {
                                       <BookOpen
                                         className={`${
                                           viewMode === "list"
-                                            ? "h-8 w-8"
+                                            ? "h-5 w-5"
                                             : "h-8 w-8 sm:h-12 sm:w-12 lg:h-7 lg:w-7"
                                         } text-gray-600 mx-auto`}
                                       />
@@ -1390,78 +1390,69 @@ export default function Dashboard() {
                               <CardContent
                                 className={`${
                                   viewMode === "list"
-                                    ? "p-2 flex-1 flex flex-col justify-between"
+                                    ? "p-1.5 flex-1 flex items-center"
                                     : "p-2 sm:p-3 lg:p-2.5 space-y-1.5 sm:space-y-2 lg:space-y-1.5"
                                 }`}
                               >
                                 <div
                                   className={
                                     viewMode === "list"
-                                      ? "space-y-0.5"
+                                      ? "flex-1 min-w-0"
                                       : "space-y-3"
                                   }
                                 >
                                   {/* Category Badge and Title */}
                                   <div className="flex items-start justify-between gap-2">
                                     <div className="flex-1 min-w-0">
-                                      {viewMode === "list" && (
-                                        <div className="flex items-center gap-2 mb-0.5">
+                                      {viewMode === "list" ? (
+                                        <div className="flex items-center gap-1.5">
                                           <Badge
                                             variant="secondary"
-                                            className="text-[10px] px-1.5 py-0"
+                                            className="text-[9px] px-1 py-0 flex-shrink-0"
                                           >
                                             {item.category}
                                           </Badge>
-                                          <button
-                                            onClick={(e) => e.stopPropagation()}
-                                            className="text-gray-400 hover:text-red-500 transition-colors"
-                                          >
-                                            <Heart className="h-3 w-3" />
-                                          </button>
+                                          <h3 className="font-bold text-xs line-clamp-1 text-gray-900 flex-1 min-w-0">
+                                            {item.title}
+                                          </h3>
+                                          <BookOpen className="h-2.5 w-2.5 text-gray-400 flex-shrink-0" />
+                                          <span className="text-[9px] text-gray-500 truncate max-w-[60px]">
+                                            {item.course}
+                                          </span>
+                                          <div className="flex items-center gap-0.5 flex-shrink-0">
+                                            <Star className="h-2.5 w-2.5 text-yellow-400 fill-yellow-400" />
+                                            <span className="text-[9px] font-medium text-gray-700">
+                                              {item.rating}
+                                            </span>
+                                          </div>
+                                          <p className="text-xs font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent flex-shrink-0">
+                                            Rp {formatPrice(item.price)}
+                                          </p>
                                         </div>
+                                      ) : (
+                                        <h3 className="font-bold text-xs sm:text-base lg:text-sm line-clamp-1 text-gray-900 leading-tight">
+                                          {item.title}
+                                        </h3>
                                       )}
-                                      <h3
-                                        className={`font-bold ${
-                                          viewMode === "list"
-                                            ? "text-sm"
-                                            : "text-xs sm:text-base lg:text-sm"
-                                        } line-clamp-1 text-gray-900 leading-tight`}
-                                      >
-                                        {item.title}
-                                      </h3>
                                     </div>
                                   </div>
 
                                   {/* Description - Hidden on mobile grid view */}
-                                  {viewMode === "list" ? (
-                                    <p className="text-xs text-gray-600 line-clamp-1">
-                                      {item.description}
-                                    </p>
-                                  ) : (
+                                  {viewMode === "list" ? null : (
                                     <p className="hidden sm:block text-xs lg:text-[11px] text-gray-600 line-clamp-2 lg:line-clamp-1 lg:min-h-0 min-h-[40px]">
                                       {item.description}
                                     </p>
                                   )}
 
                                   {/* Course Info */}
-                                  <div
-                                    className={`flex items-center gap-0.5 sm:gap-1 lg:gap-0.5 ${
-                                      viewMode === "list"
-                                        ? "text-[11px]"
-                                        : "text-[9px] sm:text-xs lg:text-[10px]"
-                                    } text-gray-500`}
-                                  >
-                                    <BookOpen
-                                      className={
-                                        viewMode === "list"
-                                          ? "h-3 w-3"
-                                          : "h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 lg:h-2.5 lg:w-2.5"
-                                      }
-                                    />
-                                    <span className="font-medium truncate">
-                                      {item.course}
-                                    </span>
-                                  </div>
+                                  {viewMode === "list" ? null : (
+                                    <div className="flex items-center gap-0.5 sm:gap-1 lg:gap-0.5 text-[9px] sm:text-xs lg:text-[10px] text-gray-500">
+                                      <BookOpen className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 lg:h-2.5 lg:w-2.5" />
+                                      <span className="font-medium truncate">
+                                        {item.course}
+                                      </span>
+                                    </div>
+                                  )}
 
                                   {viewMode === "grid" && (
                                     <>
@@ -1502,60 +1493,29 @@ export default function Dashboard() {
                                     </>
                                   )}
                                 </div>
-
-                                {viewMode === "list" && (
-                                  <div className="flex items-center justify-between mt-1 pt-1 border-t">
-                                    <div className="flex items-center gap-2">
-                                      <div>
-                                        <p className="text-base font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                                          Rp {item.price.toLocaleString()}
-                                        </p>
-                                        <div className="flex items-center gap-0.5">
-                                          <Star className="h-2.5 w-2.5 text-yellow-400 fill-yellow-400" />
-                                          <span className="text-[10px] font-medium text-gray-700">
-                                            {item.rating}
-                                          </span>
-                                          <span className="text-[10px] text-gray-500">
-                                            ({item.reviewCount || 0})
-                                          </span>
-                                        </div>
-                                      </div>
-                                    </div>
-                                    <div className="text-right">
-                                      <p className="text-[10px] text-gray-500">
-                                        by
-                                      </p>
-                                      <p className="text-[10px] font-medium text-gray-700">
-                                        {typeof item.seller === "string"
-                                          ? `Student ${item.seller.slice(-9)}`
-                                          : item.seller?.name || "Unknown"}
-                                      </p>
-                                    </div>
-                                  </div>
-                                )}
                               </CardContent>
 
                               {/* Action Buttons */}
                               {viewMode === "list" ? (
-                                <div className="flex flex-col gap-1.5 p-2 justify-center border-l">
+                                <div className="flex flex-col gap-1 p-1 justify-center border-l">
                                   {item.sellerId === currentUser?.id ? (
                                     <Button
                                       variant="destructive"
                                       size="sm"
-                                      className="h-8 w-8 p-0"
+                                      className="h-6 w-6 p-0"
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         handleDeleteItem(item.id);
                                       }}
                                     >
-                                      <Trash2 className="h-3.5 w-3.5" />
+                                      <Trash2 className="h-3 w-3" />
                                     </Button>
                                   ) : (
                                     <>
                                       <Button
                                         variant="outline"
                                         size="sm"
-                                        className="h-8 w-8 p-0"
+                                        className="h-6 w-6 p-0"
                                         onClick={(e) => {
                                           e.stopPropagation();
                                           setMessageContextItem(item);
@@ -1567,17 +1527,17 @@ export default function Dashboard() {
                                           );
                                         }}
                                       >
-                                        <MessageCircle className="h-3.5 w-3.5" />
+                                        <MessageCircle className="h-3 w-3" />
                                       </Button>
                                       <Button
                                         size="sm"
-                                        className="h-8 w-8 p-0"
+                                        className="h-6 w-6 p-0"
                                         onClick={(e) => {
                                           e.stopPropagation();
                                           handleBuyItem(item);
                                         }}
                                       >
-                                        <ShoppingCart className="h-3.5 w-3.5" />
+                                        <ShoppingCart className="h-3 w-3" />
                                       </Button>
                                     </>
                                   )}
@@ -3153,219 +3113,201 @@ export default function Dashboard() {
 
       {/* Item Detail Modal */}
       {showItemDetailModal && selectedItem && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl w-full max-w-lg max-h-[85vh] overflow-hidden shadow-2xl">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-3">
+          <div className="bg-white rounded-lg w-full max-w-md shadow-2xl">
             {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b">
-              <h2 className="text-lg font-bold text-gray-900 line-clamp-1">
+            <div className="flex items-center justify-between px-3 py-2 border-b">
+              <h2 className="text-base font-bold text-gray-900 line-clamp-1">
                 {selectedItem.title}
               </h2>
               <button
                 onClick={() => setShowItemDetailModal(false)}
                 className="text-gray-400 hover:text-gray-600 transition-colors p-1 hover:bg-gray-100 rounded-full flex-shrink-0"
               >
-                <X className="h-5 w-5" />
+                <X className="h-4 w-4" />
               </button>
             </div>
 
-            {/* Content */}
-            <div className="overflow-y-auto max-h-[calc(85vh-60px)]">
-              <div className="p-4 space-y-4">
-                {/* Image Section */}
-                <div className="relative w-full h-48 rounded-lg overflow-hidden">
-                  {selectedItem.imageUrl ? (
-                    <img
-                      src={selectedItem.imageUrl}
-                      alt={selectedItem.title}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div
-                      className={`w-full h-full flex items-center justify-center ${
-                        selectedItem.category === "Notes"
-                          ? "bg-gradient-to-br from-blue-100 to-blue-200"
-                          : selectedItem.category === "Tutorial"
-                          ? "bg-gradient-to-br from-green-100 to-green-200"
-                          : selectedItem.category === "Tutoring"
-                          ? "bg-gradient-to-br from-purple-100 to-purple-200"
-                          : selectedItem.category === "Assignment"
-                          ? "bg-gradient-to-br from-orange-100 to-orange-200"
-                          : selectedItem.category === "Book"
-                          ? "bg-gradient-to-br from-red-100 to-red-200"
-                          : "bg-gradient-to-br from-gray-100 to-gray-200"
-                      }`}
-                    >
-                      <div className="text-center">
-                        {selectedItem.category === "Notes" && (
-                          <FileText className="h-16 w-16 text-blue-600 mx-auto mb-2" />
-                        )}
-                        {selectedItem.category === "Tutorial" && (
-                          <Video className="h-16 w-16 text-green-600 mx-auto mb-2" />
-                        )}
-                        {selectedItem.category === "Tutoring" && (
-                          <GraduationCap className="h-16 w-16 text-purple-600 mx-auto mb-2" />
-                        )}
-                        {selectedItem.category === "Assignment" && (
-                          <FileText className="h-16 w-16 text-orange-600 mx-auto mb-2" />
-                        )}
-                        {selectedItem.category === "Book" && (
-                          <Book className="h-16 w-16 text-red-600 mx-auto mb-2" />
-                        )}
-                        {![
-                          "Notes",
-                          "Tutorial",
-                          "Tutoring",
-                          "Assignment",
-                          "Book",
-                        ].includes(selectedItem.category) && (
-                          <BookOpen className="h-16 w-16 text-gray-600 mx-auto mb-2" />
-                        )}
-                        <p className="text-sm font-semibold text-gray-700">
-                          {selectedItem.category}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Details Section */}
-                <div className="space-y-3">
-                  {/* Category Badge */}
-                  <Badge variant="secondary" className="text-xs">
-                    {selectedItem.category}
-                  </Badge>
-
-                  {/* Title & Description */}
-                  <div>
-                    <h3 className="text-base font-bold text-gray-900 mb-1">
-                      {selectedItem.title}
-                    </h3>
-                    <p className="text-sm text-gray-600 line-clamp-2">
-                      {selectedItem.description}
-                    </p>
-                  </div>
-
-                  {/* Info Grid */}
-                  <div className="grid grid-cols-2 gap-3 p-3 bg-gray-50 rounded-lg text-xs">
-                    <div className="flex items-center gap-2 text-sm">
-                      <BookOpen className="h-4 w-4 text-gray-500" />
-                      <div>
-                        <p className="text-xs text-gray-500">Course</p>
-                        <p className="font-medium text-gray-900">
-                          {selectedItem.course}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <User className="h-4 w-4 text-gray-500" />
-                      <div>
-                        <p className="text-xs text-gray-500">Seller</p>
-                        <p className="font-medium text-gray-900">
-                          {typeof selectedItem.seller === "string"
-                            ? `Student ${selectedItem.seller.slice(-9)}`
-                            : selectedItem.seller?.name || "Unknown"}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
-                      <div>
-                        <p className="text-xs text-gray-500">Rating</p>
-                        <p className="font-medium text-gray-900">
-                          {selectedItem.rating} ({selectedItem.reviews || 0}{" "}
-                          reviews)
-                        </p>
-                      </div>
-                    </div>
-                    {selectedItem.condition && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <Eye className="h-4 w-4 text-gray-500" />
-                        <div>
-                          <p className="text-xs text-gray-500">Condition</p>
-                          <p className="font-medium text-gray-900">
-                            {selectedItem.condition}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Price & Status */}
-                  <div className="flex items-center justify-between p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg">
-                    <div>
-                      <p className="text-xs text-gray-600 mb-0.5">Price</p>
-                      <p className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                        Rp {selectedItem.price.toLocaleString()}
+            {/* Content - No scrollbar */}
+            <div className="p-3 space-y-2">
+              {/* Image Section - Smaller */}
+              <div className="relative w-full h-32 rounded-md overflow-hidden">
+                {selectedItem.imageUrl ? (
+                  <img
+                    src={selectedItem.imageUrl}
+                    alt={selectedItem.title}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div
+                    className={`w-full h-full flex items-center justify-center ${
+                      selectedItem.category === "Notes"
+                        ? "bg-gradient-to-br from-blue-100 to-blue-200"
+                        : selectedItem.category === "Tutorial"
+                        ? "bg-gradient-to-br from-green-100 to-green-200"
+                        : selectedItem.category === "Tutoring"
+                        ? "bg-gradient-to-br from-purple-100 to-purple-200"
+                        : selectedItem.category === "Assignment"
+                        ? "bg-gradient-to-br from-orange-100 to-orange-200"
+                        : selectedItem.category === "Book"
+                        ? "bg-gradient-to-br from-red-100 to-red-200"
+                        : "bg-gradient-to-br from-gray-100 to-gray-200"
+                    }`}
+                  >
+                    <div className="text-center">
+                      {selectedItem.category === "Notes" && (
+                        <FileText className="h-12 w-12 text-blue-600 mx-auto mb-1" />
+                      )}
+                      {selectedItem.category === "Tutorial" && (
+                        <Video className="h-12 w-12 text-green-600 mx-auto mb-1" />
+                      )}
+                      {selectedItem.category === "Tutoring" && (
+                        <GraduationCap className="h-12 w-12 text-purple-600 mx-auto mb-1" />
+                      )}
+                      {selectedItem.category === "Assignment" && (
+                        <FileText className="h-12 w-12 text-orange-600 mx-auto mb-1" />
+                      )}
+                      {selectedItem.category === "Book" && (
+                        <Book className="h-12 w-12 text-red-600 mx-auto mb-1" />
+                      )}
+                      {![
+                        "Notes",
+                        "Tutorial",
+                        "Tutoring",
+                        "Assignment",
+                        "Book",
+                      ].includes(selectedItem.category) && (
+                        <BookOpen className="h-12 w-12 text-gray-600 mx-auto mb-1" />
+                      )}
+                      <p className="text-xs font-semibold text-gray-700">
+                        {selectedItem.category}
                       </p>
                     </div>
-                    <Badge
-                      variant={
-                        selectedItem.status === "available"
-                          ? "default"
-                          : "secondary"
-                      }
-                      className={`text-xs px-3 py-1 ${
-                        selectedItem.status === "available"
-                          ? "bg-green-100 text-green-700 hover:bg-green-100"
-                          : selectedItem.status === "sold"
-                          ? "bg-red-100 text-red-700"
-                          : "bg-yellow-100 text-yellow-700"
-                      }`}
-                    >
-                      {selectedItem.status}
-                    </Badge>
                   </div>
+                )}
+              </div>
 
-                  {/* Action Buttons */}
-                  <div className="flex gap-2">
-                    {selectedItem.sellerId === currentUser?.id ? (
-                      <Button
-                        variant="destructive"
-                        className="flex-1"
-                        onClick={() => {
-                          handleDeleteItem(selectedItem.id);
-                          setShowItemDetailModal(false);
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Delete Item
-                      </Button>
-                    ) : selectedItem.status === "available" ? (
-                      <>
-                        <Button
-                          variant="outline"
-                          className="flex-1"
-                          onClick={() => {
-                            setMessageContextItem(selectedItem);
-                            handleCreateConversation(
-                              selectedItem.sellerId,
-                              typeof selectedItem.seller === "string"
-                                ? selectedItem.seller
-                                : selectedItem.seller?.name || "Unknown"
-                            );
-                            setShowItemDetailModal(false);
-                          }}
-                        >
-                          <MessageCircle className="h-4 w-4 mr-2" />
-                          Message Seller
-                        </Button>
-                        <Button
-                          className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-                          onClick={() => handleBuyItem(selectedItem)}
-                        >
-                          <ShoppingCart className="h-4 w-4 mr-2" />
-                          Buy Now
-                        </Button>
-                      </>
-                    ) : (
-                      <div className="flex-1 bg-gray-100 text-gray-500 px-4 py-3 rounded-lg text-center font-medium">
-                        {selectedItem.status === "sold"
-                          ? "Item Sold"
-                          : "Not Available"}
-                      </div>
-                    )}
-                  </div>
+              {/* Category Badge */}
+              <Badge variant="secondary" className="text-[10px] px-2 py-0.5">
+                {selectedItem.category}
+              </Badge>
+
+              {/* Description */}
+              <p className="text-xs text-gray-600 line-clamp-2">
+                {selectedItem.description}
+              </p>
+
+              {/* Info - Single Line with Icons */}
+              <div className="flex items-center gap-3 text-[10px] text-gray-600 bg-gray-50 px-2 py-1.5 rounded-md">
+                <div className="flex items-center gap-1" title="Course">
+                  <BookOpen className="h-3 w-3 text-gray-500" />
+                  <span className="font-medium text-gray-900 truncate max-w-[60px]">
+                    {selectedItem.course}
+                  </span>
                 </div>
+                <div className="w-px h-3 bg-gray-300"></div>
+                <div className="flex items-center gap-1" title="Seller">
+                  <User className="h-3 w-3 text-gray-500" />
+                  <span className="font-medium text-gray-900 truncate max-w-[80px]">
+                    {typeof selectedItem.seller === "string"
+                      ? `${selectedItem.seller.slice(-9)}`
+                      : selectedItem.seller?.name || "Unknown"}
+                  </span>
+                </div>
+                <div className="w-px h-3 bg-gray-300"></div>
+                <div className="flex items-center gap-1" title="Rating">
+                  <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
+                  <span className="font-medium text-gray-900">
+                    {selectedItem.rating} ({selectedItem.reviews || 0})
+                  </span>
+                </div>
+                {selectedItem.condition && (
+                  <>
+                    <div className="w-px h-3 bg-gray-300"></div>
+                    <div className="flex items-center gap-1" title="Condition">
+                      <Eye className="h-3 w-3 text-gray-500" />
+                      <span className="font-medium text-gray-900">
+                        {selectedItem.condition}
+                      </span>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Price & Status */}
+              <div className="flex items-center justify-between px-2 py-1.5 bg-gradient-to-r from-blue-50 to-purple-50 rounded-md">
+                <div>
+                  <p className="text-[10px] text-gray-600">Price</p>
+                  <p className="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                    Rp {selectedItem.price.toLocaleString()}
+                  </p>
+                </div>
+                <Badge
+                  variant={
+                    selectedItem.status === "available"
+                      ? "default"
+                      : "secondary"
+                  }
+                  className={`text-[10px] px-2 py-0.5 ${
+                    selectedItem.status === "available"
+                      ? "bg-green-100 text-green-700 hover:bg-green-100"
+                      : selectedItem.status === "sold"
+                      ? "bg-red-100 text-red-700"
+                      : "bg-yellow-100 text-yellow-700"
+                  }`}
+                >
+                  {selectedItem.status}
+                </Badge>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-2 pt-1">
+                {selectedItem.sellerId === currentUser?.id ? (
+                  <Button
+                    variant="destructive"
+                    className="flex-1 text-xs px-3 py-1.5 h-auto"
+                    onClick={() => {
+                      handleDeleteItem(selectedItem.id);
+                      setShowItemDetailModal(false);
+                    }}
+                  >
+                    <Trash2 className="h-3 w-3 mr-1.5" />
+                    Delete Item
+                  </Button>
+                ) : selectedItem.status === "available" ? (
+                  <>
+                    <Button
+                      variant="outline"
+                      className="flex-1 text-xs px-3 py-1.5 h-auto"
+                      onClick={() => {
+                        setMessageContextItem(selectedItem);
+                        handleCreateConversation(
+                          selectedItem.sellerId,
+                          typeof selectedItem.seller === "string"
+                            ? selectedItem.seller
+                            : selectedItem.seller?.name || "Unknown"
+                        );
+                        setShowItemDetailModal(false);
+                      }}
+                    >
+                      <MessageCircle className="h-3 w-3 mr-1.5" />
+                      Message Seller
+                    </Button>
+                    <Button
+                      className="flex-1 text-xs px-3 py-1.5 h-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                      onClick={() => handleBuyItem(selectedItem)}
+                    >
+                      <ShoppingCart className="h-3 w-3 mr-1.5" />
+                      Buy Now
+                    </Button>
+                  </>
+                ) : (
+                  <div className="flex-1 bg-gray-100 text-gray-500 px-3 py-1.5 rounded-md text-center text-xs font-medium">
+                    {selectedItem.status === "sold"
+                      ? "Item Sold"
+                      : "Not Available"}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -3983,7 +3925,6 @@ function AddItemForm({
     price: "",
     category: "Notes",
     course: "",
-    condition: "Good",
   });
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -4007,22 +3948,25 @@ function AddItemForm({
       return;
     }
 
+    if (!uploadedFile) {
+      alert("Please upload a file");
+      return;
+    }
+
     try {
       setUploading(true);
       let fileData = {};
 
-      // Upload file if selected
-      if (uploadedFile) {
-        setUploadProgress(30);
-        const uploadResult = await fileAPI.uploadFile(uploadedFile);
-        setUploadProgress(70);
-        fileData = {
-          fileUrl: uploadResult.url,
-          fileName: uploadResult.fileName,
-          fileSize: uploadResult.fileSize,
-          fileType: uploadResult.fileType,
-        };
-      }
+      // Upload file (required)
+      setUploadProgress(30);
+      const uploadResult = await fileAPI.uploadFile(uploadedFile);
+      setUploadProgress(70);
+      fileData = {
+        fileUrl: uploadResult.url,
+        fileName: uploadResult.fileName,
+        fileSize: uploadResult.fileSize,
+        fileType: uploadResult.fileType,
+      };
 
       setUploadProgress(90);
 
@@ -4073,7 +4017,7 @@ function AddItemForm({
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-2.5">
+      <div className="grid grid-cols-3 gap-2">
         <div>
           <label className="block text-xs font-medium text-dark-gray mb-0.5">
             Price (Rp) *
@@ -4108,9 +4052,7 @@ function AddItemForm({
             <option value="Other">Other</option>
           </select>
         </div>
-      </div>
 
-      <div className="grid grid-cols-2 gap-2.5">
         <div>
           <label className="block text-xs font-medium text-dark-gray mb-0.5">
             Course *
@@ -4125,30 +4067,12 @@ function AddItemForm({
             placeholder="e.g., COMP6048"
           />
         </div>
-
-        <div>
-          <label className="block text-xs font-medium text-dark-gray mb-0.5">
-            Condition
-          </label>
-          <select
-            value={formData.condition}
-            onChange={(e) =>
-              setFormData({ ...formData, condition: e.target.value })
-            }
-            className="w-full px-2.5 py-1.5 text-sm border border-light-gray rounded-md focus:outline-none focus:ring-1 focus:ring-dark-blue focus:border-dark-blue"
-          >
-            <option value="New">New</option>
-            <option value="Like New">Like New</option>
-            <option value="Good">Good</option>
-            <option value="Fair">Fair</option>
-          </select>
-        </div>
       </div>
 
       {/* File Upload */}
       <div>
         <label className="block text-xs font-medium text-dark-gray mb-0.5">
-          Upload File (PDF, DOC, PPT, etc.)
+          Upload File (PDF, DOC, PPT, etc.) *
         </label>
         <div className="mt-0.5">
           <input
@@ -4156,6 +4080,7 @@ function AddItemForm({
             onChange={handleFileChange}
             accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.zip,.rar,image/*,video/*"
             className="w-full px-2 py-1 border border-light-gray rounded-md focus:outline-none focus:ring-1 focus:ring-dark-blue focus:border-dark-blue text-xs"
+            required
           />
           {uploadedFile && (
             <div className="mt-1.5 p-1.5 bg-green-50 border border-green-200 rounded-md flex items-center justify-between">

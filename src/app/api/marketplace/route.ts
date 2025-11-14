@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
         category,
         course,
         faculty: user.faculty || "Unknown", // Use user's faculty
-        condition: condition || "Good",
+        condition: "Digital", // All products are digital
         imageUrl: imageUrl || null,
         fileUrl: fileUrl || null,
         fileName: fileName || null,
