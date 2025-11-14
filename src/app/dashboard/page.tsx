@@ -1238,7 +1238,7 @@ export default function Dashboard() {
                     <div
                       className={`grid gap-2 sm:gap-4 ${
                         viewMode === "grid"
-                          ? "grid-cols-3 md:grid-cols-2 lg:grid-cols-3"
+                          ? "grid-cols-3 md:grid-cols-3 lg:grid-cols-5"
                           : "grid-cols-1"
                       }`}
                     >
@@ -1274,7 +1274,7 @@ export default function Dashboard() {
                               className={`relative bg-secondary-200 overflow-hidden ${
                                 viewMode === "list"
                                   ? "w-20 h-20 flex-shrink-0"
-                                  : "aspect-video"
+                                  : "aspect-square sm:aspect-video lg:aspect-[3/2]"
                               }`}
                             >
                               {item.imageUrl ? (
@@ -1305,7 +1305,7 @@ export default function Dashboard() {
                                         className={`${
                                           viewMode === "list"
                                             ? "h-8 w-8"
-                                            : "h-8 w-8 sm:h-16 sm:w-16"
+                                            : "h-8 w-8 sm:h-12 sm:w-12 lg:h-7 lg:w-7"
                                         } text-blue-600 mx-auto`}
                                       />
                                     )}
@@ -1314,7 +1314,7 @@ export default function Dashboard() {
                                         className={`${
                                           viewMode === "list"
                                             ? "h-8 w-8"
-                                            : "h-8 w-8 sm:h-16 sm:w-16"
+                                            : "h-8 w-8 sm:h-12 sm:w-12 lg:h-7 lg:w-7"
                                         } text-green-600 mx-auto`}
                                       />
                                     )}
@@ -1323,7 +1323,7 @@ export default function Dashboard() {
                                         className={`${
                                           viewMode === "list"
                                             ? "h-8 w-8"
-                                            : "h-8 w-8 sm:h-16 sm:w-16"
+                                            : "h-8 w-8 sm:h-12 sm:w-12 lg:h-7 lg:w-7"
                                         } text-purple-600 mx-auto`}
                                       />
                                     )}
@@ -1332,7 +1332,7 @@ export default function Dashboard() {
                                         className={`${
                                           viewMode === "list"
                                             ? "h-8 w-8"
-                                            : "h-8 w-8 sm:h-16 sm:w-16"
+                                            : "h-8 w-8 sm:h-12 sm:w-12 lg:h-7 lg:w-7"
                                         } text-orange-600 mx-auto`}
                                       />
                                     )}
@@ -1341,7 +1341,7 @@ export default function Dashboard() {
                                         className={`${
                                           viewMode === "list"
                                             ? "h-8 w-8"
-                                            : "h-8 w-8 sm:h-16 sm:w-16"
+                                            : "h-8 w-8 sm:h-12 sm:w-12 lg:h-7 lg:w-7"
                                         } text-red-600 mx-auto`}
                                       />
                                     )}
@@ -1356,12 +1356,12 @@ export default function Dashboard() {
                                         className={`${
                                           viewMode === "list"
                                             ? "h-8 w-8"
-                                            : "h-8 w-8 sm:h-16 sm:w-16"
+                                            : "h-8 w-8 sm:h-12 sm:w-12 lg:h-7 lg:w-7"
                                         } text-gray-600 mx-auto`}
                                       />
                                     )}
                                     {viewMode === "grid" && (
-                                      <p className="text-[10px] sm:text-sm font-semibold text-gray-700 mt-1 sm:mt-2">
+                                      <p className="text-[10px] sm:text-xs lg:text-[11px] font-semibold text-gray-700 mt-1 sm:mt-1.5">
                                         {item.category}
                                       </p>
                                     )}
@@ -1372,9 +1372,9 @@ export default function Dashboard() {
                               {viewMode === "grid" && (
                                 <button
                                   onClick={(e) => e.stopPropagation()}
-                                  className="absolute top-1 right-1 sm:top-3 sm:right-3 bg-white/90 backdrop-blur-sm p-1 sm:p-2 rounded-full text-gray-600 hover:text-red-500 hover:bg-white transition-all shadow-sm"
+                                  className="absolute top-1 right-1 sm:top-2 sm:right-2 lg:top-1.5 lg:right-1.5 bg-white/90 backdrop-blur-sm p-1 sm:p-1.5 lg:p-1 rounded-full text-gray-600 hover:text-red-500 hover:bg-white transition-all shadow-sm"
                                 >
-                                  <Heart className="h-3 w-3 sm:h-4 sm:w-4" />
+                                  <Heart className="h-3 w-3 sm:h-4 sm:w-4 lg:h-3 lg:w-3" />
                                 </button>
                               )}
                             </div>
@@ -1391,7 +1391,7 @@ export default function Dashboard() {
                                 className={`${
                                   viewMode === "list"
                                     ? "p-2 flex-1 flex flex-col justify-between"
-                                    : "p-2 sm:p-4 space-y-1.5 sm:space-y-3"
+                                    : "p-2 sm:p-3 lg:p-2.5 space-y-1.5 sm:space-y-2 lg:space-y-1.5"
                                 }`}
                               >
                                 <div
@@ -1424,7 +1424,7 @@ export default function Dashboard() {
                                         className={`font-bold ${
                                           viewMode === "list"
                                             ? "text-sm"
-                                            : "text-xs sm:text-lg"
+                                            : "text-xs sm:text-base lg:text-sm"
                                         } line-clamp-1 text-gray-900 leading-tight`}
                                       >
                                         {item.title}
@@ -1438,24 +1438,24 @@ export default function Dashboard() {
                                       {item.description}
                                     </p>
                                   ) : (
-                                    <p className="hidden sm:block text-sm text-gray-600 line-clamp-2 min-h-[40px]">
+                                    <p className="hidden sm:block text-xs lg:text-[11px] text-gray-600 line-clamp-2 lg:line-clamp-1 lg:min-h-0 min-h-[40px]">
                                       {item.description}
                                     </p>
                                   )}
 
                                   {/* Course Info */}
                                   <div
-                                    className={`flex items-center gap-0.5 sm:gap-1.5 ${
+                                    className={`flex items-center gap-0.5 sm:gap-1 lg:gap-0.5 ${
                                       viewMode === "list"
                                         ? "text-[11px]"
-                                        : "text-[9px] sm:text-xs"
+                                        : "text-[9px] sm:text-xs lg:text-[10px]"
                                     } text-gray-500`}
                                   >
                                     <BookOpen
                                       className={
                                         viewMode === "list"
                                           ? "h-3 w-3"
-                                          : "h-2.5 w-2.5 sm:h-3.5 sm:w-3.5"
+                                          : "h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 lg:h-2.5 lg:w-2.5"
                                       }
                                     />
                                     <span className="font-medium truncate">
@@ -1466,9 +1466,9 @@ export default function Dashboard() {
                                   {viewMode === "grid" && (
                                     <>
                                       {/* Price and Rating */}
-                                      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between pt-1 sm:pt-2 border-t gap-0.5 sm:gap-0">
+                                      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between pt-1 sm:pt-1.5 lg:pt-1 border-t gap-0.5 sm:gap-0">
                                         <div className="flex items-center justify-between sm:block">
-                                          <p className="text-sm sm:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent leading-tight">
+                                          <p className="text-sm sm:text-lg lg:text-base font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent leading-tight">
                                             <span className="sm:hidden">
                                               Rp {formatPrice(item.price)}
                                             </span>
@@ -1476,21 +1476,21 @@ export default function Dashboard() {
                                               Rp {item.price.toLocaleString()}
                                             </span>
                                           </p>
-                                          <div className="flex items-center gap-0.5 sm:gap-1 sm:mt-1">
-                                            <Star className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 text-yellow-400 fill-yellow-400" />
-                                            <span className="text-[9px] sm:text-xs font-medium text-gray-700">
+                                          <div className="flex items-center gap-0.5 sm:gap-1 sm:mt-0.5 lg:mt-0">
+                                            <Star className="h-2.5 w-2.5 sm:h-3 sm:w-3 lg:h-2.5 lg:w-2.5 text-yellow-400 fill-yellow-400" />
+                                            <span className="text-[9px] sm:text-xs lg:text-[10px] font-medium text-gray-700">
                                               {item.rating}
                                             </span>
-                                            <span className="text-[9px] sm:text-xs text-gray-500">
+                                            <span className="text-[9px] sm:text-xs lg:text-[10px] text-gray-500">
                                               ({item.reviewCount || 0})
                                             </span>
                                           </div>
                                         </div>
                                         <div className="text-right hidden sm:block">
-                                          <p className="text-xs text-gray-500">
+                                          <p className="text-[10px] lg:text-[9px] text-gray-500">
                                             by
                                           </p>
-                                          <p className="text-xs font-medium text-gray-700">
+                                          <p className="text-xs lg:text-[10px] font-medium text-gray-700">
                                             {typeof item.seller === "string"
                                               ? `Student ${item.seller.slice(
                                                   -9
@@ -1588,13 +1588,13 @@ export default function Dashboard() {
                                     <Button
                                       variant="destructive"
                                       size="sm"
-                                      className="w-full text-[9px] sm:text-sm px-1.5 sm:px-4 py-1 sm:py-2 h-6 sm:h-9"
+                                      className="w-full text-[9px] sm:text-xs lg:text-[10px] px-1.5 sm:px-3 lg:px-2 py-1 sm:py-1.5 lg:py-1 h-6 sm:h-8 lg:h-7"
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         handleDeleteItem(item.id);
                                       }}
                                     >
-                                      <Trash2 className="h-2.5 w-2.5 sm:h-4 sm:w-4 sm:mr-1" />
+                                      <Trash2 className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 lg:h-3 lg:w-3 sm:mr-1 lg:mr-0.5" />
                                       <span className="hidden sm:inline">
                                         Delete
                                       </span>
@@ -1604,7 +1604,7 @@ export default function Dashboard() {
                                       <Button
                                         variant="outline"
                                         size="sm"
-                                        className="flex-1 text-[9px] sm:text-sm px-1.5 sm:px-4 py-1 sm:py-2 h-6 sm:h-9"
+                                        className="flex-1 text-[9px] sm:text-xs lg:text-[10px] px-1.5 sm:px-3 lg:px-2 py-1 sm:py-1.5 lg:py-1 h-6 sm:h-8 lg:h-7"
                                         onClick={(e) => {
                                           e.stopPropagation();
                                           setMessageContextItem(item);
@@ -1616,20 +1616,20 @@ export default function Dashboard() {
                                           );
                                         }}
                                       >
-                                        <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
+                                        <MessageCircle className="h-3 w-3 sm:h-3.5 sm:w-3.5 lg:h-3 lg:w-3 sm:mr-1 lg:mr-0.5" />
                                         <span className="hidden sm:inline">
                                           Message
                                         </span>
                                       </Button>
                                       <Button
                                         size="sm"
-                                        className="flex-1 text-[9px] sm:text-sm px-1.5 sm:px-4 py-1 sm:py-2 h-6 sm:h-9"
+                                        className="flex-1 text-[9px] sm:text-xs lg:text-[10px] px-1.5 sm:px-3 lg:px-2 py-1 sm:py-1.5 lg:py-1 h-6 sm:h-8 lg:h-7"
                                         onClick={(e) => {
                                           e.stopPropagation();
                                           handleBuyItem(item);
                                         }}
                                       >
-                                        <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
+                                        <ShoppingCart className="h-3 w-3 sm:h-3.5 sm:w-3.5 lg:h-3 lg:w-3 sm:mr-1 lg:mr-0.5" />
                                         <span className="hidden sm:inline">
                                           Buy
                                         </span>
@@ -2942,14 +2942,16 @@ export default function Dashboard() {
       {/* Add Item Modal */}
       {showAddItemModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-4 sm:p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-dark-gray">Add New Item</h2>
+          <div className="bg-white rounded-lg p-3 sm:p-4 w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-2.5">
+              <h2 className="text-base sm:text-lg font-bold text-dark-gray">
+                Add New Item
+              </h2>
               <button
                 onClick={() => setShowAddItemModal(false)}
                 className="text-medium-gray hover:text-dark-gray"
               >
-                <X className="h-6 w-6" />
+                <X className="h-5 w-5" />
               </button>
             </div>
             <AddItemForm
@@ -4042,22 +4044,22 @@ function AddItemForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-2.5">
       <div>
-        <label className="block text-sm font-medium text-dark-gray mb-1">
+        <label className="block text-xs font-medium text-dark-gray mb-0.5">
           Title *
         </label>
         <input
           type="text"
           value={formData.title}
           onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-          className="w-full p-2 border border-light-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-dark-blue focus:border-dark-blue"
+          className="w-full px-2.5 py-1.5 text-sm border border-light-gray rounded-md focus:outline-none focus:ring-1 focus:ring-dark-blue focus:border-dark-blue"
           placeholder="e.g., Data Structures Notes"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-dark-gray mb-1">
+        <label className="block text-xs font-medium text-dark-gray mb-0.5">
           Description *
         </label>
         <textarea
@@ -4065,15 +4067,15 @@ function AddItemForm({
           onChange={(e) =>
             setFormData({ ...formData, description: e.target.value })
           }
-          className="w-full p-2 border border-light-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-dark-blue focus:border-dark-blue"
-          rows={3}
+          className="w-full px-2.5 py-1.5 text-sm border border-light-gray rounded-md focus:outline-none focus:ring-1 focus:ring-dark-blue focus:border-dark-blue"
+          rows={2}
           placeholder="Describe your item..."
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-2.5">
         <div>
-          <label className="block text-sm font-medium text-dark-gray mb-1">
+          <label className="block text-xs font-medium text-dark-gray mb-0.5">
             Price (Rp) *
           </label>
           <input
@@ -4082,13 +4084,13 @@ function AddItemForm({
             onChange={(e) =>
               setFormData({ ...formData, price: e.target.value })
             }
-            className="w-full p-2 border border-light-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-dark-blue focus:border-dark-blue"
+            className="w-full px-2.5 py-1.5 text-sm border border-light-gray rounded-md focus:outline-none focus:ring-1 focus:ring-dark-blue focus:border-dark-blue"
             placeholder="50000"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-dark-gray mb-1">
+          <label className="block text-xs font-medium text-dark-gray mb-0.5">
             Category *
           </label>
           <select
@@ -4096,7 +4098,7 @@ function AddItemForm({
             onChange={(e) =>
               setFormData({ ...formData, category: e.target.value })
             }
-            className="w-full p-2 border border-light-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-dark-blue focus:border-dark-blue"
+            className="w-full px-2.5 py-1.5 text-sm border border-light-gray rounded-md focus:outline-none focus:ring-1 focus:ring-dark-blue focus:border-dark-blue"
           >
             <option value="Notes">Notes</option>
             <option value="Tutorial">Tutorial</option>
@@ -4108,9 +4110,9 @@ function AddItemForm({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-2.5">
         <div>
-          <label className="block text-sm font-medium text-dark-gray mb-1">
+          <label className="block text-xs font-medium text-dark-gray mb-0.5">
             Course *
           </label>
           <input
@@ -4119,13 +4121,13 @@ function AddItemForm({
             onChange={(e) =>
               setFormData({ ...formData, course: e.target.value })
             }
-            className="w-full p-2 border border-light-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-dark-blue focus:border-dark-blue"
+            className="w-full px-2.5 py-1.5 text-sm border border-light-gray rounded-md focus:outline-none focus:ring-1 focus:ring-dark-blue focus:border-dark-blue"
             placeholder="e.g., COMP6048"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-dark-gray mb-1">
+          <label className="block text-xs font-medium text-dark-gray mb-0.5">
             Condition
           </label>
           <select
@@ -4133,7 +4135,7 @@ function AddItemForm({
             onChange={(e) =>
               setFormData({ ...formData, condition: e.target.value })
             }
-            className="w-full p-2 border border-light-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-dark-blue focus:border-dark-blue"
+            className="w-full px-2.5 py-1.5 text-sm border border-light-gray rounded-md focus:outline-none focus:ring-1 focus:ring-dark-blue focus:border-dark-blue"
           >
             <option value="New">New</option>
             <option value="Like New">Like New</option>
@@ -4145,24 +4147,24 @@ function AddItemForm({
 
       {/* File Upload */}
       <div>
-        <label className="block text-sm font-medium text-dark-gray mb-1">
+        <label className="block text-xs font-medium text-dark-gray mb-0.5">
           Upload File (PDF, DOC, PPT, etc.)
         </label>
-        <div className="mt-1">
+        <div className="mt-0.5">
           <input
             type="file"
             onChange={handleFileChange}
             accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.zip,.rar,image/*,video/*"
-            className="w-full p-2 border border-light-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-dark-blue focus:border-dark-blue text-sm"
+            className="w-full px-2 py-1 border border-light-gray rounded-md focus:outline-none focus:ring-1 focus:ring-dark-blue focus:border-dark-blue text-xs"
           />
           {uploadedFile && (
-            <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-lg flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <FileText className="h-4 w-4 text-green-600" />
-                <span className="text-sm text-green-700">
+            <div className="mt-1.5 p-1.5 bg-green-50 border border-green-200 rounded-md flex items-center justify-between">
+              <div className="flex items-center space-x-1.5">
+                <FileText className="h-3 w-3 text-green-600" />
+                <span className="text-xs text-green-700 truncate">
                   {uploadedFile.name}
                 </span>
-                <span className="text-xs text-green-600">
+                <span className="text-[10px] text-green-600">
                   ({(uploadedFile.size / 1024 / 1024).toFixed(2)} MB)
                 </span>
               </div>
@@ -4171,12 +4173,12 @@ function AddItemForm({
                 onClick={() => setUploadedFile(null)}
                 className="text-red-600 hover:text-red-800"
               >
-                <X className="h-4 w-4" />
+                <X className="h-3 w-3" />
               </button>
             </div>
           )}
         </div>
-        <p className="text-xs text-medium-gray mt-1">
+        <p className="text-[10px] text-medium-gray mt-0.5">
           Max file size: 50MB. Supported formats: PDF, Word, PowerPoint, Excel,
           Images, Videos
         </p>
@@ -4184,34 +4186,34 @@ function AddItemForm({
 
       {/* Upload Progress */}
       {uploading && (
-        <div className="space-y-2">
-          <div className="flex justify-between text-sm">
+        <div className="space-y-1">
+          <div className="flex justify-between text-xs">
             <span className="text-medium-gray">Uploading...</span>
             <span className="text-dark-blue font-medium">
               {uploadProgress}%
             </span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
+          <div className="w-full bg-gray-200 rounded-full h-1.5">
             <div
-              className="bg-dark-blue h-2 rounded-full transition-all duration-300"
+              className="bg-dark-blue h-1.5 rounded-full transition-all duration-300"
               style={{ width: `${uploadProgress}%` }}
             ></div>
           </div>
         </div>
       )}
 
-      <div className="flex gap-2 pt-4">
+      <div className="flex gap-2 pt-2">
         <button
           type="submit"
           disabled={uploading}
-          className="flex-1 bg-dark-blue text-white px-4 py-2 rounded-lg hover:bg-primary-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex-1 bg-dark-blue text-white px-3 py-1.5 text-sm rounded-md hover:bg-primary-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {uploading ? "Uploading..." : "Add Item"}
         </button>
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 border border-light-gray text-medium-gray rounded-lg hover:bg-secondary-50 transition-colors"
+          className="px-3 py-1.5 text-sm border border-light-gray text-medium-gray rounded-md hover:bg-secondary-50 transition-colors"
         >
           Cancel
         </button>
