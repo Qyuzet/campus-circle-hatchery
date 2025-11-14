@@ -38,25 +38,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate file type (documents, images)
-    const allowedTypes = [
-      "application/pdf",
-      "application/msword",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      "application/vnd.ms-powerpoint",
-      "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-      "application/vnd.ms-excel",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "image/jpeg",
-      "image/png",
-      "image/gif",
-      "image/webp",
-      "text/plain",
-    ];
-
-    if (!allowedTypes.includes(file.type)) {
+    // ONLY ACCEPT PDF FILES
+    if (file.type !== "application/pdf") {
       return NextResponse.json(
-        { error: "File type not allowed" },
+        {
+          error:
+            "Only PDF files are allowed. Please convert your file to PDF first.",
+        },
         { status: 400 }
       );
     }
@@ -67,17 +55,15 @@ export async function POST(request: NextRequest) {
     const base64 = buffer.toString("base64");
     const dataURI = `data:${file.type};base64,${base64}`;
 
-    // Determine resource type based on file type
-    const resourceType = file.type.startsWith("image/") ? "image" : "raw";
-
-    // Upload to Cloudinary with flags to allow inline viewing
+    // Upload PDF to Cloudinary as "image" type for thumbnail generation
     const uploadResult = await cloudinary.uploader.upload(dataURI, {
-      resource_type: resourceType,
+      resource_type: "image", // PDFs need "image" type for thumbnail generation
       folder: "campus-circle",
       public_id: `${Date.now()}-${file.name.split(".")[0]}`,
-      // This allows the file to be viewed inline in browser instead of forcing download
       type: "upload",
       access_mode: "public",
+      flags: "attachment",
+      format: "pdf",
     });
 
     return NextResponse.json({

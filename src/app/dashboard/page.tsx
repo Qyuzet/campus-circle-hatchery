@@ -74,6 +74,7 @@ import {
 } from "@/types";
 import PaymentModal from "@/components/PaymentModal";
 import { WithdrawalForm } from "@/components/WithdrawalForm";
+import FilePreview from "@/components/FilePreview";
 
 export default function Dashboard() {
   const { data: session, status } = useSession();
@@ -120,6 +121,11 @@ export default function Dashboard() {
   const [marketplaceItems, setMarketplaceItems] = useState<MarketplaceItem[]>(
     []
   );
+
+  // Helper function to filter out items without files (untradable items)
+  const filterTradableItems = (items: MarketplaceItem[]) => {
+    return items.filter((item) => item.fileUrl && item.fileUrl.trim() !== "");
+  };
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [tutoringSessions, setTutoringSessions] = useState<TutoringSession[]>(
     []
@@ -372,7 +378,7 @@ export default function Dashboard() {
       switch (tab) {
         case "discovery":
           const items = await marketplaceAPI.getItems();
-          setMarketplaceItems(items);
+          setMarketplaceItems(filterTradableItems(items));
           break;
 
         case "messages":
@@ -416,7 +422,7 @@ export default function Dashboard() {
           // Also load marketplace items for insights
           if (tab === "insights") {
             const marketplaceData = await marketplaceAPI.getItems();
-            setMarketplaceItems(marketplaceData);
+            setMarketplaceItems(filterTradableItems(marketplaceData));
           }
           break;
 
@@ -465,7 +471,7 @@ export default function Dashboard() {
         search: query,
         category: selectedCategory !== "All" ? selectedCategory : undefined,
       });
-      setMarketplaceItems(items);
+      setMarketplaceItems(filterTradableItems(items));
     } catch (error) {
       console.error("Error searching items:", error);
     }
@@ -478,7 +484,7 @@ export default function Dashboard() {
         search: searchQuery,
         category: category !== "All" ? category : undefined,
       });
-      setMarketplaceItems(items);
+      setMarketplaceItems(filterTradableItems(items));
     } catch (error) {
       console.error("Error filtering items:", error);
     }
@@ -489,7 +495,7 @@ export default function Dashboard() {
       await marketplaceAPI.createItem(itemData);
       // Reload marketplace items
       const items = await marketplaceAPI.getItems();
-      setMarketplaceItems(items);
+      setMarketplaceItems(filterTradableItems(items));
       setShowAddItemModal(false);
 
       // Reload stats
@@ -502,14 +508,26 @@ export default function Dashboard() {
   };
 
   const handleDeleteItem = async (itemId: string) => {
+    // Confirmation dialog
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this item? This action cannot be undone and will permanently remove the item from the database."
+    );
+
+    if (!confirmed) {
+      return; // User cancelled
+    }
+
     try {
       await marketplaceAPI.deleteItem(itemId);
       // Reload marketplace items
       const items = await marketplaceAPI.getItems();
-      setMarketplaceItems(items);
+      setMarketplaceItems(filterTradableItems(items));
+
+      // Show success message
+      alert("Item deleted successfully from the database!");
     } catch (error) {
       console.error("Error deleting item:", error);
-      alert("Failed to delete item. Please try again.");
+      alert("Failed to delete item from database. Please try again.");
     }
   };
 
@@ -658,7 +676,7 @@ export default function Dashboard() {
     // Reload data after successful payment
     try {
       const items = await marketplaceAPI.getItems();
-      setMarketplaceItems(items);
+      setMarketplaceItems(filterTradableItems(items));
 
       const stats = await statsAPI.getUserStats();
       setUserStats(stats);
@@ -1169,8 +1187,6 @@ export default function Dashboard() {
                           >
                             <option value="">All</option>
                             <option value="Notes">📝 Notes</option>
-                            <option value="Tutorial">🎥 Tutorial</option>
-                            <option value="Tutoring">👨‍🏫 Tutoring</option>
                             <option value="Assignment">📄 Assignment</option>
                             <option value="Book">📚 Book</option>
                             <option value="Other">📦 Other</option>
@@ -1269,7 +1285,7 @@ export default function Dashboard() {
                               viewMode === "list" ? "flex flex-row" : ""
                             }`}
                           >
-                            {/* Image Section */}
+                            {/* Image Section - Show File Preview */}
                             <div
                               className={`relative bg-secondary-200 overflow-hidden ${
                                 viewMode === "list"
@@ -1277,102 +1293,19 @@ export default function Dashboard() {
                                   : "aspect-square sm:aspect-video lg:aspect-[3/2]"
                               }`}
                             >
-                              {item.imageUrl ? (
-                                <img
-                                  src={item.imageUrl}
-                                  alt={item.title}
-                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                />
-                              ) : (
-                                <div
-                                  className={`w-full h-full flex items-center justify-center ${
-                                    item.category === "Notes"
-                                      ? "bg-gradient-to-br from-blue-100 to-blue-200"
-                                      : item.category === "Tutorial"
-                                      ? "bg-gradient-to-br from-green-100 to-green-200"
-                                      : item.category === "Tutoring"
-                                      ? "bg-gradient-to-br from-purple-100 to-purple-200"
-                                      : item.category === "Assignment"
-                                      ? "bg-gradient-to-br from-orange-100 to-orange-200"
-                                      : item.category === "Book"
-                                      ? "bg-gradient-to-br from-red-100 to-red-200"
-                                      : "bg-gradient-to-br from-gray-100 to-gray-200"
-                                  }`}
-                                >
-                                  <div className="text-center">
-                                    {item.category === "Notes" && (
-                                      <FileText
-                                        className={`${
-                                          viewMode === "list"
-                                            ? "h-5 w-5"
-                                            : "h-8 w-8 sm:h-12 sm:w-12 lg:h-7 lg:w-7"
-                                        } text-blue-600 mx-auto`}
-                                      />
-                                    )}
-                                    {item.category === "Tutorial" && (
-                                      <Video
-                                        className={`${
-                                          viewMode === "list"
-                                            ? "h-5 w-5"
-                                            : "h-8 w-8 sm:h-12 sm:w-12 lg:h-7 lg:w-7"
-                                        } text-green-600 mx-auto`}
-                                      />
-                                    )}
-                                    {item.category === "Tutoring" && (
-                                      <GraduationCap
-                                        className={`${
-                                          viewMode === "list"
-                                            ? "h-5 w-5"
-                                            : "h-8 w-8 sm:h-12 sm:w-12 lg:h-7 lg:w-7"
-                                        } text-purple-600 mx-auto`}
-                                      />
-                                    )}
-                                    {item.category === "Assignment" && (
-                                      <FileText
-                                        className={`${
-                                          viewMode === "list"
-                                            ? "h-5 w-5"
-                                            : "h-8 w-8 sm:h-12 sm:w-12 lg:h-7 lg:w-7"
-                                        } text-orange-600 mx-auto`}
-                                      />
-                                    )}
-                                    {item.category === "Book" && (
-                                      <Book
-                                        className={`${
-                                          viewMode === "list"
-                                            ? "h-5 w-5"
-                                            : "h-8 w-8 sm:h-12 sm:w-12 lg:h-7 lg:w-7"
-                                        } text-red-600 mx-auto`}
-                                      />
-                                    )}
-                                    {![
-                                      "Notes",
-                                      "Tutorial",
-                                      "Tutoring",
-                                      "Assignment",
-                                      "Book",
-                                    ].includes(item.category) && (
-                                      <BookOpen
-                                        className={`${
-                                          viewMode === "list"
-                                            ? "h-5 w-5"
-                                            : "h-8 w-8 sm:h-12 sm:w-12 lg:h-7 lg:w-7"
-                                        } text-gray-600 mx-auto`}
-                                      />
-                                    )}
-                                    {viewMode === "grid" && (
-                                      <p className="text-[10px] sm:text-xs lg:text-[11px] font-semibold text-gray-700 mt-1 sm:mt-1.5">
-                                        {item.category}
-                                      </p>
-                                    )}
-                                  </div>
-                                </div>
-                              )}
+                              <FilePreview
+                                fileUrl={item.fileUrl}
+                                fileType={item.fileType}
+                                fileName={item.fileName}
+                                category={item.category}
+                                title={item.title}
+                                compact={viewMode === "list"}
+                              />
                               {/* Favorite Button */}
                               {viewMode === "grid" && (
                                 <button
                                   onClick={(e) => e.stopPropagation()}
-                                  className="absolute top-1 right-1 sm:top-2 sm:right-2 lg:top-1.5 lg:right-1.5 bg-white/90 backdrop-blur-sm p-1 sm:p-1.5 lg:p-1 rounded-full text-gray-600 hover:text-red-500 hover:bg-white transition-all shadow-sm"
+                                  className="absolute top-1 right-1 sm:top-2 sm:right-2 lg:top-1.5 lg:right-1.5 bg-white/90 backdrop-blur-sm p-1 sm:p-1.5 lg:p-1 rounded-full text-gray-600 hover:text-red-500 hover:bg-white transition-all shadow-sm z-10"
                                 >
                                   <Heart className="h-3 w-3 sm:h-4 sm:w-4 lg:h-3 lg:w-3" />
                                 </button>
@@ -3932,7 +3865,26 @@ function AddItemForm({
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setUploadedFile(e.target.files[0]);
+      const file = e.target.files[0];
+
+      // Validate file type - ONLY PDF
+      if (file.type !== "application/pdf") {
+        alert(
+          "Only PDF files are allowed. Please convert your document to PDF first."
+        );
+        e.target.value = ""; // Reset input
+        return;
+      }
+
+      // Validate file size (max 10MB)
+      const maxSize = 10 * 1024 * 1024; // 10MB
+      if (file.size > maxSize) {
+        alert("File size exceeds 10MB limit. Please compress your PDF.");
+        e.target.value = ""; // Reset input
+        return;
+      }
+
+      setUploadedFile(file);
     }
   };
 
@@ -4045,8 +3997,6 @@ function AddItemForm({
             className="w-full px-2.5 py-1.5 text-sm border border-light-gray rounded-md focus:outline-none focus:ring-1 focus:ring-dark-blue focus:border-dark-blue"
           >
             <option value="Notes">Notes</option>
-            <option value="Tutorial">Tutorial</option>
-            <option value="Tutoring">Tutoring</option>
             <option value="Assignment">Assignment</option>
             <option value="Book">Book</option>
             <option value="Other">Other</option>
@@ -4072,13 +4022,13 @@ function AddItemForm({
       {/* File Upload */}
       <div>
         <label className="block text-xs font-medium text-dark-gray mb-0.5">
-          Upload File (PDF, DOC, PPT, etc.) *
+          Upload PDF File *
         </label>
         <div className="mt-0.5">
           <input
             type="file"
             onChange={handleFileChange}
-            accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.zip,.rar,image/*,video/*"
+            accept=".pdf,application/pdf"
             className="w-full px-2 py-1 border border-light-gray rounded-md focus:outline-none focus:ring-1 focus:ring-dark-blue focus:border-dark-blue text-xs"
             required
           />
@@ -4104,8 +4054,8 @@ function AddItemForm({
           )}
         </div>
         <p className="text-[10px] text-medium-gray mt-0.5">
-          Max file size: 50MB. Supported formats: PDF, Word, PowerPoint, Excel,
-          Images, Videos
+          Only PDF files are accepted. Max file size: 10MB. Convert your
+          documents to PDF before uploading.
         </p>
       </div>
 

@@ -167,16 +167,26 @@ export async function DELETE(
       );
     }
 
-    // Delete item
+    console.log(
+      `🗑️ Deleting marketplace item from database: ${params.id} - "${existingItem.title}"`
+    );
+
+    // Delete item from database (cascade will delete related reviews and transactions)
     await prisma.marketplaceItem.delete({
       where: { id: params.id },
     });
 
-    return NextResponse.json({ message: "Item deleted successfully" });
+    console.log(`✅ Successfully deleted item ${params.id} from database`);
+
+    return NextResponse.json({
+      message: "Item deleted successfully from database",
+      deletedItemId: params.id,
+      deletedItemTitle: existingItem.title,
+    });
   } catch (error) {
-    console.error("Error deleting marketplace item:", error);
+    console.error("❌ Error deleting marketplace item from database:", error);
     return NextResponse.json(
-      { error: "Failed to delete marketplace item" },
+      { error: "Failed to delete marketplace item from database" },
       { status: 500 }
     );
   }

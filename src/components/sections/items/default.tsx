@@ -47,7 +47,8 @@ export default function Items({
     },
     {
       title: "Study Materials",
-      description: "Buy and sell notes, books, and study resources",
+      description:
+        "Buy and sell notes, books, assignments, and study resources",
       icon: <Box className="size-5 stroke-1" />,
     },
     {
@@ -56,8 +57,8 @@ export default function Items({
       icon: <Zap className="size-5 stroke-1" />,
     },
     {
-      title: "Tutoring Services",
-      description: "Connect with tutors or offer your expertise to peers",
+      title: "PDF Documents",
+      description: "All materials in standardized PDF format for easy access",
       icon: <Rocket className="size-5 stroke-1" />,
     },
     {

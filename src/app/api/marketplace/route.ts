@@ -15,6 +15,13 @@ export async function GET(request: NextRequest) {
 
     const where: any = {
       status,
+      // Only show items with files (tradable items)
+      fileUrl: {
+        not: null,
+      },
+      NOT: {
+        fileUrl: "",
+      },
     };
 
     if (category && category !== "All") {
@@ -93,6 +100,17 @@ export async function POST(request: NextRequest) {
     if (!title || !description || !price || !category || !course) {
       return NextResponse.json(
         { error: "Missing required fields" },
+        { status: 400 }
+      );
+    }
+
+    // Validate that file is uploaded (required for tradable items)
+    if (!fileUrl || fileUrl.trim() === "") {
+      return NextResponse.json(
+        {
+          error:
+            "File upload is required. Items without files are not tradable.",
+        },
         { status: 400 }
       );
     }

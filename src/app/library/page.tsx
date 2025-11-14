@@ -412,7 +412,6 @@ export default function LibraryPage() {
                 <SelectContent>
                   <SelectItem value="all">All Categories</SelectItem>
                   <SelectItem value="Notes">Notes</SelectItem>
-                  <SelectItem value="Tutorial">Tutorial</SelectItem>
                   <SelectItem value="Book">Book</SelectItem>
                   <SelectItem value="Assignment">Assignment</SelectItem>
                 </SelectContent>
@@ -459,7 +458,6 @@ export default function LibraryPage() {
                   <SelectContent>
                     <SelectItem value="all">All Categories</SelectItem>
                     <SelectItem value="Notes">Notes</SelectItem>
-                    <SelectItem value="Tutorial">Tutorial</SelectItem>
                     <SelectItem value="Book">Book</SelectItem>
                     <SelectItem value="Assignment">Assignment</SelectItem>
                   </SelectContent>
