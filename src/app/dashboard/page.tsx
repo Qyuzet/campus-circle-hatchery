@@ -2489,74 +2489,76 @@ export default function Dashboard() {
                 ) : (
                   <>
                     {/* Balance Cards - Compact */}
-                    <div className="grid grid-cols-4 gap-2">
+                    <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
                       <Card className="border border-gray-300">
-                        <CardHeader className="p-3 pb-2">
-                          <CardTitle className="text-xs font-medium text-medium-gray">
-                            Total Earnings
+                        <CardHeader className="p-2 sm:p-3 pb-1 sm:pb-2">
+                          <CardTitle className="text-[10px] sm:text-xs font-medium text-medium-gray leading-tight">
+                            Total
+                            <br className="sm:hidden" />
+                            Earnings
                           </CardTitle>
                         </CardHeader>
-                        <CardContent className="p-3 pt-0">
-                          <div className="text-lg font-semibold text-dark-gray">
+                        <CardContent className="p-2 sm:p-3 pt-0">
+                          <div className="text-sm sm:text-lg font-semibold text-dark-gray leading-tight break-all">
                             Rp{" "}
                             {(userStats?.totalEarnings || 0).toLocaleString()}
                           </div>
-                          <p className="text-[10px] text-medium-gray mt-0.5">
+                          <p className="text-[8px] sm:text-[10px] text-medium-gray mt-0.5 leading-tight">
                             After platform fee
                           </p>
                         </CardContent>
                       </Card>
 
                       <Card className="border border-gray-300">
-                        <CardHeader className="p-3 pb-2">
-                          <CardTitle className="text-xs font-medium text-medium-gray">
+                        <CardHeader className="p-2 sm:p-3 pb-1 sm:pb-2">
+                          <CardTitle className="text-[10px] sm:text-xs font-medium text-medium-gray leading-tight">
                             Available
                           </CardTitle>
                         </CardHeader>
-                        <CardContent className="p-3 pt-0">
-                          <div className="text-lg font-semibold text-dark-gray">
+                        <CardContent className="p-2 sm:p-3 pt-0">
+                          <div className="text-sm sm:text-lg font-semibold text-dark-gray leading-tight break-all">
                             Rp{" "}
                             {(
                               userStats?.availableBalance || 0
                             ).toLocaleString()}
                           </div>
-                          <p className="text-[10px] text-medium-gray mt-0.5">
+                          <p className="text-[8px] sm:text-[10px] text-medium-gray mt-0.5 leading-tight">
                             Ready to withdraw
                           </p>
                         </CardContent>
                       </Card>
 
                       <Card className="border border-gray-300">
-                        <CardHeader className="p-3 pb-2">
-                          <CardTitle className="text-xs font-medium text-medium-gray">
+                        <CardHeader className="p-2 sm:p-3 pb-1 sm:pb-2">
+                          <CardTitle className="text-[10px] sm:text-xs font-medium text-medium-gray leading-tight">
                             Pending
                           </CardTitle>
                         </CardHeader>
-                        <CardContent className="p-3 pt-0">
-                          <div className="text-lg font-semibold text-dark-gray">
+                        <CardContent className="p-2 sm:p-3 pt-0">
+                          <div className="text-sm sm:text-lg font-semibold text-dark-gray leading-tight break-all">
                             Rp{" "}
                             {(userStats?.pendingBalance || 0).toLocaleString()}
                           </div>
-                          <p className="text-[10px] text-medium-gray mt-0.5">
+                          <p className="text-[8px] sm:text-[10px] text-medium-gray mt-0.5 leading-tight">
                             3-day hold
                           </p>
                         </CardContent>
                       </Card>
 
                       <Card className="border border-gray-300">
-                        <CardHeader className="p-3 pb-2">
-                          <CardTitle className="text-xs font-medium text-medium-gray">
+                        <CardHeader className="p-2 sm:p-3 pb-1 sm:pb-2">
+                          <CardTitle className="text-[10px] sm:text-xs font-medium text-medium-gray leading-tight">
                             Withdrawn
                           </CardTitle>
                         </CardHeader>
-                        <CardContent className="p-3 pt-0">
-                          <div className="text-lg font-semibold text-dark-gray">
+                        <CardContent className="p-2 sm:p-3 pt-0">
+                          <div className="text-sm sm:text-lg font-semibold text-dark-gray leading-tight break-all">
                             Rp{" "}
                             {(
                               userStats?.withdrawnBalance || 0
                             ).toLocaleString()}
                           </div>
-                          <p className="text-[10px] text-medium-gray mt-0.5">
+                          <p className="text-[8px] sm:text-[10px] text-medium-gray mt-0.5 leading-tight">
                             All-time
                           </p>
                         </CardContent>
