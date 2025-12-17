@@ -272,6 +272,14 @@ export const transactionsAPI = {
     const data = await response.json();
     return data.transactions;
   },
+
+  async checkPurchase(itemId: string) {
+    const response = await fetch(
+      `/api/transactions/check-purchase?itemId=${itemId}`
+    );
+    if (!response.ok) throw new Error("Failed to check purchase");
+    return await response.json();
+  },
 };
 
 // ============================================
@@ -495,6 +503,38 @@ export const groupsAPI = {
       body: JSON.stringify({ content }),
     });
     if (!response.ok) throw new Error("Failed to send group message");
+    return response.json();
+  },
+};
+
+// ============================================
+// USER API
+// ============================================
+export const userAPI = {
+  async updateProfile(data: {
+    name?: string;
+    faculty?: string;
+    major?: string;
+    year?: number;
+    bio?: string;
+    studentId?: string;
+    avatarUrl?: string;
+  }) {
+    const response = await fetch("/api/user/update", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || "Failed to update profile");
+    }
+    return response.json();
+  },
+
+  async getProfile() {
+    const response = await fetch("/api/user/me");
+    if (!response.ok) throw new Error("Failed to fetch profile");
     return response.json();
   },
 };

@@ -61,6 +61,7 @@ import {
   transactionsAPI,
   fileAPI,
   withdrawalsAPI,
+  userAPI,
 } from "@/lib/api";
 import {
   MarketplaceItem,
@@ -112,6 +113,19 @@ export default function Dashboard() {
     price: number;
     type: "marketplace" | "tutoring";
   } | null>(null);
+  const [hasPurchasedItem, setHasPurchasedItem] = useState(false);
+  const [showReorderConfirm, setShowReorderConfirm] = useState(false);
+  const [showProfileCompleteModal, setShowProfileCompleteModal] =
+    useState(false);
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [profileFormData, setProfileFormData] = useState({
+    name: "",
+    studentId: "",
+    faculty: "",
+    major: "",
+    year: 1,
+  });
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
 
   // Data states
   const [marketplaceItems, setMarketplaceItems] = useState<MarketplaceItem[]>(
@@ -346,13 +360,15 @@ export default function Dashboard() {
   // Load only essential data on mount (notifications, stats, current user)
   const loadEssentialData = async () => {
     try {
-      const [notifs, stats] = await Promise.all([
+      const [notifs, stats, profile] = await Promise.all([
         notificationsAPI.getNotifications(),
         statsAPI.getUserStats(),
+        userAPI.getProfile(),
       ]);
 
       setNotifications(notifs);
       setUserStats(stats);
+      setUserProfile(profile);
 
       // Set current user from session
       if (session?.user) {
@@ -483,6 +499,184 @@ export default function Dashboard() {
       setMarketplaceItems(filterTradableItems(items));
     } catch (error) {
       console.error("Error filtering items:", error);
+    }
+  };
+
+  const isProfileComplete = () => {
+    if (!userProfile) {
+      console.log("Profile check: No user profile loaded");
+      return false;
+    }
+
+    const isComplete = !!(
+      userProfile.name &&
+      userProfile.studentId &&
+      userProfile.faculty &&
+      userProfile.faculty !== "Unknown" &&
+      userProfile.major &&
+      userProfile.major !== "Unknown" &&
+      userProfile.year
+    );
+
+    console.log("Profile check:", {
+      name: userProfile.name,
+      studentId: userProfile.studentId,
+      faculty: userProfile.faculty,
+      major: userProfile.major,
+      year: userProfile.year,
+      isComplete,
+    });
+
+    return isComplete;
+  };
+
+  const handleAddItemClick = async () => {
+    // Ensure profile is loaded
+    if (!userProfile) {
+      console.log("Loading profile before checking...");
+      try {
+        const profile = await userAPI.getProfile();
+        setUserProfile(profile);
+
+        // Check if profile is complete after loading
+        const isComplete = !!(
+          profile.name &&
+          profile.studentId &&
+          profile.faculty &&
+          profile.faculty !== "Unknown" &&
+          profile.major &&
+          profile.major !== "Unknown" &&
+          profile.year
+        );
+
+        if (!isComplete) {
+          setProfileFormData({
+            name: profile?.name || "",
+            studentId: profile?.studentId || "",
+            faculty:
+              profile?.faculty === "Unknown" ? "" : profile?.faculty || "",
+            major: profile?.major === "Unknown" ? "" : profile?.major || "",
+            year: profile?.year || 1,
+          });
+          setShowProfileCompleteModal(true);
+        } else {
+          setShowAddItemModal(true);
+        }
+      } catch (error) {
+        console.error("Error loading profile:", error);
+        alert("Failed to load profile. Please try again.");
+      }
+      return;
+    }
+
+    if (!isProfileComplete()) {
+      // Pre-fill form with existing data
+      setProfileFormData({
+        name: userProfile?.name || "",
+        studentId: userProfile?.studentId || "",
+        faculty:
+          userProfile?.faculty === "Unknown" ? "" : userProfile?.faculty || "",
+        major: userProfile?.major === "Unknown" ? "" : userProfile?.major || "",
+        year: userProfile?.year || 1,
+      });
+      setShowProfileCompleteModal(true);
+    } else {
+      setShowAddItemModal(true);
+    }
+  };
+
+  const handleAddTutoringClick = async () => {
+    // Ensure profile is loaded
+    if (!userProfile) {
+      console.log("Loading profile before checking...");
+      try {
+        const profile = await userAPI.getProfile();
+        setUserProfile(profile);
+
+        // Check if profile is complete after loading
+        const isComplete = !!(
+          profile.name &&
+          profile.studentId &&
+          profile.faculty &&
+          profile.faculty !== "Unknown" &&
+          profile.major &&
+          profile.major !== "Unknown" &&
+          profile.year
+        );
+
+        if (!isComplete) {
+          setProfileFormData({
+            name: profile?.name || "",
+            studentId: profile?.studentId || "",
+            faculty:
+              profile?.faculty === "Unknown" ? "" : profile?.faculty || "",
+            major: profile?.major === "Unknown" ? "" : profile?.major || "",
+            year: profile?.year || 1,
+          });
+          setShowProfileCompleteModal(true);
+        } else {
+          setShowTutoringModal(true);
+        }
+      } catch (error) {
+        console.error("Error loading profile:", error);
+        alert("Failed to load profile. Please try again.");
+      }
+      return;
+    }
+
+    if (!isProfileComplete()) {
+      // Pre-fill form with existing data
+      setProfileFormData({
+        name: userProfile?.name || "",
+        studentId: userProfile?.studentId || "",
+        faculty:
+          userProfile?.faculty === "Unknown" ? "" : userProfile?.faculty || "",
+        major: userProfile?.major === "Unknown" ? "" : userProfile?.major || "",
+        year: userProfile?.year || 1,
+      });
+      setShowProfileCompleteModal(true);
+    } else {
+      setShowTutoringModal(true);
+    }
+  };
+
+  const handleSaveProfileFromModal = async () => {
+    try {
+      setIsSavingProfile(true);
+
+      // Validate required fields
+      if (
+        !profileFormData.name ||
+        !profileFormData.studentId ||
+        !profileFormData.faculty ||
+        !profileFormData.major ||
+        !profileFormData.year
+      ) {
+        alert("Please fill in all required fields");
+        return;
+      }
+
+      // Update profile
+      await userAPI.updateProfile(profileFormData);
+
+      // Reload profile
+      const updatedProfile = await userAPI.getProfile();
+      setUserProfile(updatedProfile);
+
+      // Close modal
+      setShowProfileCompleteModal(false);
+
+      // Show success message
+      alert("Profile updated successfully! You can now add items.");
+
+      // Reload stats
+      const stats = await statsAPI.getUserStats();
+      setUserStats(stats);
+    } catch (error: any) {
+      console.error("Error updating profile:", error);
+      alert(error.message || "Failed to update profile. Please try again.");
+    } finally {
+      setIsSavingProfile(false);
     }
   };
 
@@ -652,13 +846,28 @@ export default function Dashboard() {
     }
   };
 
-  const handleItemClick = (item: MarketplaceItem) => {
+  const handleItemClick = async (item: MarketplaceItem) => {
     setSelectedItem(item);
     setShowItemDetailModal(true);
+
+    try {
+      const result = await transactionsAPI.checkPurchase(item.id);
+      setHasPurchasedItem(result.hasPurchased);
+    } catch (error) {
+      console.error("Error checking purchase:", error);
+      setHasPurchasedItem(false);
+    }
   };
 
   const handleBuyItem = async (item: MarketplaceItem) => {
-    // Open payment modal
+    if (hasPurchasedItem) {
+      setShowReorderConfirm(true);
+    } else {
+      proceedWithPurchase(item);
+    }
+  };
+
+  const proceedWithPurchase = (item: MarketplaceItem) => {
     setPaymentItem({
       id: item.id,
       title: item.title,
@@ -666,6 +875,7 @@ export default function Dashboard() {
       type: "marketplace",
     });
     setShowPaymentModal(true);
+    setShowReorderConfirm(false);
   };
 
   const handlePaymentSuccess = async () => {
@@ -1095,7 +1305,7 @@ export default function Dashboard() {
 
               <div className="mt-6 pt-6 border-t border-gray-200">
                 <button
-                  onClick={() => setShowAddItemModal(true)}
+                  onClick={handleAddItemClick}
                   className="w-full bg-dark-blue text-white px-4 py-2.5 rounded-md hover:bg-primary-800 transition-colors flex items-center justify-center font-medium"
                 >
                   <Plus className="mr-2 h-4 w-4" />
@@ -1150,7 +1360,7 @@ export default function Dashboard() {
                             </CardDescription>
                           </div>
                           <Button
-                            onClick={() => setShowAddItemModal(true)}
+                            onClick={handleAddItemClick}
                             className="text-xs sm:text-sm h-7 sm:h-10 px-2 sm:px-4"
                           >
                             <Plus className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
@@ -1266,7 +1476,7 @@ export default function Dashboard() {
                                 ? "Try adjusting your filters"
                                 : "Be the first to add a study material!"}
                             </p>
-                            <Button onClick={() => setShowAddItemModal(true)}>
+                            <Button onClick={handleAddItemClick}>
                               <Plus className="h-4 w-4 mr-2" />
                               Add Item
                             </Button>
@@ -1674,7 +1884,7 @@ export default function Dashboard() {
                       Start selling your study materials to see your sales here!
                     </p>
                     <button
-                      onClick={() => setShowAddItemModal(true)}
+                      onClick={handleAddItemClick}
                       className="bg-dark-blue text-white px-4 py-2 rounded-md hover:bg-primary-800 transition-colors"
                     >
                       Add Your First Item
@@ -1764,7 +1974,7 @@ export default function Dashboard() {
                       Start selling your study materials to earn money!
                     </p>
                     <button
-                      onClick={() => setShowAddItemModal(true)}
+                      onClick={handleAddItemClick}
                       className="bg-dark-blue text-white px-4 py-2 rounded-md hover:bg-primary-800 transition-colors"
                     >
                       Add Your First Item
@@ -2361,7 +2571,7 @@ export default function Dashboard() {
                     </p>
                     <div className="flex justify-center space-x-4">
                       <button
-                        onClick={() => setShowTutoringModal(true)}
+                        onClick={handleAddTutoringClick}
                         className="bg-campus-green text-white px-4 py-2 rounded-md hover:bg-success-700 transition-colors"
                       >
                         Offer Tutoring
@@ -3193,7 +3403,7 @@ export default function Dashboard() {
                       onClick={() => handleBuyItem(selectedItem)}
                     >
                       <ShoppingCart className="h-3 w-3 mr-1.5" />
-                      Buy Now
+                      {hasPurchasedItem ? "Order Again" : "Buy Now"}
                     </Button>
                   </>
                 ) : (
@@ -3204,6 +3414,39 @@ export default function Dashboard() {
                   </div>
                 )}
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reorder Confirmation Modal */}
+      {showReorderConfirm && selectedItem && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg w-full max-w-md shadow-2xl p-6">
+            <h2 className="text-lg font-bold text-gray-900 mb-3">
+              Already Purchased
+            </h2>
+            <p className="text-sm text-gray-600 mb-6">
+              You have already purchased this item. Do you want to order it
+              again?
+            </p>
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setShowReorderConfirm(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                onClick={() => {
+                  proceedWithPurchase(selectedItem);
+                  setShowItemDetailModal(false);
+                }}
+              >
+                Yes, Order Again
+              </Button>
             </div>
           </div>
         </div>
@@ -3220,6 +3463,185 @@ export default function Dashboard() {
           item={paymentItem}
           onSuccess={handlePaymentSuccess}
         />
+      )}
+
+      {/* Profile Completion Modal */}
+      {showProfileCompleteModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg w-full max-w-lg shadow-2xl p-6 max-h-[90vh] overflow-y-auto">
+            <h2 className="text-xl font-bold text-gray-900 mb-2">
+              Complete Your Profile
+            </h2>
+            <p className="text-sm text-gray-600 mb-6">
+              Please complete your profile before adding items or offering
+              tutoring. This helps other students know more about you and builds
+              trust in the community.
+            </p>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSaveProfileFromModal();
+              }}
+              className="space-y-4"
+            >
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Full Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={profileFormData.name}
+                  onChange={(e) =>
+                    setProfileFormData({
+                      ...profileFormData,
+                      name: e.target.value,
+                    })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter your full name"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Student ID <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={profileFormData.studentId}
+                  onChange={(e) =>
+                    setProfileFormData({
+                      ...profileFormData,
+                      studentId: e.target.value,
+                    })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="e.g., 2502012345"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Faculty/School <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={profileFormData.faculty}
+                  onChange={(e) =>
+                    setProfileFormData({
+                      ...profileFormData,
+                      faculty: e.target.value,
+                    })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                >
+                  <option value="">Select Faculty/School</option>
+                  <option value="School of Computer Science">
+                    School of Computer Science
+                  </option>
+                  <option value="School of Information Systems">
+                    School of Information Systems
+                  </option>
+                  <option value="School of Design">School of Design</option>
+                  <option value="School of Accounting">
+                    School of Accounting
+                  </option>
+                  <option value="Faculty of Engineering">
+                    Faculty of Engineering
+                  </option>
+                  <option value="Faculty of Humanities">
+                    Faculty of Humanities
+                  </option>
+                  <option value="Faculty of Digital Communication and Hotel & Tourism">
+                    Faculty of Digital Communication and Hotel & Tourism
+                  </option>
+                  <option value="BINUS Business School">
+                    BINUS Business School
+                  </option>
+                  <option value="BINUS ASO School of Engineering">
+                    BINUS ASO School of Engineering
+                  </option>
+                  <option value="School of Computing and Creative Arts">
+                    School of Computing and Creative Arts (Binus International)
+                  </option>
+                  <option value="BINUS Graduate Program">
+                    BINUS Graduate Program
+                  </option>
+                  <option value="BINUS Online Learning">
+                    BINUS Online Learning
+                  </option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Major <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={profileFormData.major}
+                  onChange={(e) =>
+                    setProfileFormData({
+                      ...profileFormData,
+                      major: e.target.value,
+                    })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="e.g., Computer Science"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Year <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={profileFormData.year}
+                  onChange={(e) =>
+                    setProfileFormData({
+                      ...profileFormData,
+                      year: parseInt(e.target.value),
+                    })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                >
+                  <option value={1}>Year 1</option>
+                  <option value={2}>Year 2</option>
+                  <option value={3}>Year 3</option>
+                  <option value={4}>Year 4</option>
+                  <option value={5}>Year 5</option>
+                  <option value={6}>Year 6</option>
+                  <option value={7}>Year 7</option>
+                  <option value={8}>Year 8</option>
+                </select>
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setShowProfileCompleteModal(false)}
+                  disabled={isSavingProfile}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                  disabled={isSavingProfile}
+                >
+                  {isSavingProfile ? "Saving..." : "Save & Continue"}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
 
       {/* Create Group Modal */}

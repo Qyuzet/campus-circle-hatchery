@@ -37,9 +37,10 @@ export const authConfig: NextAuthConfig = {
               email,
               studentId,
               name: user.name || `User ${studentId}`,
-              faculty: "Unknown", // Can be updated later
+              faculty: "Unknown",
               major: "Unknown",
               year: 1,
+              avatarUrl: user.image || null,
             },
           });
 
@@ -48,6 +49,12 @@ export const authConfig: NextAuthConfig = {
             data: {
               userId: newUser.id,
             },
+          });
+        } else if (user.image && existingUser.avatarUrl !== user.image) {
+          // Update avatar URL if it changed
+          await prisma.user.update({
+            where: { email },
+            data: { avatarUrl: user.image },
           });
         }
       }

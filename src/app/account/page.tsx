@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import {
   User,
   Bell,
@@ -24,38 +25,94 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { statsAPI, notificationsAPI } from "@/lib/api";
+import { statsAPI, notificationsAPI, userAPI } from "@/lib/api";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function AccountPage() {
-  const { data: session, status } = useSession();
+  const { data: session, status, update } = useSession();
   const router = useRouter();
   const [userStats, setUserStats] = useState<any>(null);
+  const [userProfile, setUserProfile] = useState<any>(null);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
-  const [editedName, setEditedName] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [editedProfile, setEditedProfile] = useState({
+    name: "",
+    studentId: "",
+    faculty: "",
+    major: "",
+    year: 1,
+    bio: "",
+  });
 
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/");
     } else if (status === "authenticated") {
       loadData();
-      setEditedName(session?.user?.name || "");
     }
-  }, [status, router, session]);
+  }, [status, router]);
 
   const loadData = async () => {
     try {
-      const [stats, notifs] = await Promise.all([
+      const [stats, notifs, profile] = await Promise.all([
         statsAPI.getUserStats(),
         notificationsAPI.getNotifications(),
+        userAPI.getProfile(),
       ]);
+      console.log("Account page - User profile loaded:", profile);
+      console.log("Account page - Avatar URL:", profile?.avatarUrl);
+      console.log("Account page - Session image:", session?.user?.image);
+
+      // If profile doesn't have avatarUrl but session has image, update it
+      if (!profile.avatarUrl && session?.user?.image) {
+        console.log("Updating avatarUrl from session...");
+        try {
+          await userAPI.updateProfile({ avatarUrl: session.user.image });
+          profile.avatarUrl = session.user.image;
+        } catch (error) {
+          console.error("Failed to update avatarUrl:", error);
+        }
+      }
+
       setUserStats(stats);
       setNotifications(notifs);
+      setUserProfile(profile);
+      setEditedProfile({
+        name: profile.name || "",
+        studentId: profile.studentId || "",
+        faculty: profile.faculty || "",
+        major: profile.major || "",
+        year: profile.year || 1,
+        bio: profile.bio || "",
+      });
     } catch (error) {
       console.error("Error loading data:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    try {
+      setIsSaving(true);
+      const result = await userAPI.updateProfile(editedProfile);
+      setUserProfile(result.user);
+      setIsEditing(false);
+      await update();
+    } catch (error: any) {
+      console.error("Error updating profile:", error);
+      alert(error.message || "Failed to update profile");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -101,10 +158,13 @@ export default function AccountPage() {
                 className="flex items-center space-x-2"
               >
                 {session?.user?.image ? (
-                  <img
-                    src={session.user.image}
-                    alt={session.user.name || "User"}
+                  <Image
+                    src={session?.user?.image || ""}
+                    alt={session?.user?.name || "User"}
+                    width={32}
+                    height={32}
                     className="w-6 h-6 sm:w-8 sm:h-8 rounded-full"
+                    unoptimized
                   />
                 ) : (
                   <div className="w-6 h-6 sm:w-8 sm:h-8 bg-dark-blue rounded-full flex items-center justify-center">
@@ -239,10 +299,13 @@ export default function AccountPage() {
                   {/* Avatar */}
                   <div className="flex-shrink-0">
                     {session?.user?.image ? (
-                      <img
-                        src={session.user.image}
-                        alt={session.user.name || "User"}
+                      <Image
+                        src={session?.user?.image || ""}
+                        alt={session?.user?.name || "User"}
+                        width={96}
+                        height={96}
                         className="w-24 h-24 rounded-full border-4 border-primary-100"
+                        unoptimized
                       />
                     ) : (
                       <div className="w-24 h-24 bg-dark-blue rounded-full flex items-center justify-center border-4 border-primary-100">
@@ -255,33 +318,181 @@ export default function AccountPage() {
                   <div className="flex-1 text-center sm:text-left">
                     {isEditing ? (
                       <div className="space-y-3">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div>
+                            <Label htmlFor="name">Full Name</Label>
+                            <Input
+                              id="name"
+                              value={editedProfile.name}
+                              onChange={(e) =>
+                                setEditedProfile({
+                                  ...editedProfile,
+                                  name: e.target.value,
+                                })
+                              }
+                              className="mt-1"
+                              placeholder="Enter your full name"
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="studentId">Student ID</Label>
+                            <Input
+                              id="studentId"
+                              value={editedProfile.studentId}
+                              onChange={(e) =>
+                                setEditedProfile({
+                                  ...editedProfile,
+                                  studentId: e.target.value,
+                                })
+                              }
+                              className="mt-1"
+                              placeholder="e.g., 2502012345"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div>
+                            <Label htmlFor="faculty">Faculty/School</Label>
+                            <Select
+                              value={editedProfile.faculty}
+                              onValueChange={(value) =>
+                                setEditedProfile({
+                                  ...editedProfile,
+                                  faculty: value,
+                                })
+                              }
+                            >
+                              <SelectTrigger className="mt-1">
+                                <SelectValue placeholder="Select faculty/school" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="School of Computer Science">
+                                  School of Computer Science
+                                </SelectItem>
+                                <SelectItem value="School of Information Systems">
+                                  School of Information Systems
+                                </SelectItem>
+                                <SelectItem value="School of Design">
+                                  School of Design
+                                </SelectItem>
+                                <SelectItem value="School of Accounting">
+                                  School of Accounting
+                                </SelectItem>
+                                <SelectItem value="Faculty of Engineering">
+                                  Faculty of Engineering
+                                </SelectItem>
+                                <SelectItem value="Faculty of Humanities">
+                                  Faculty of Humanities
+                                </SelectItem>
+                                <SelectItem value="Faculty of Digital Communication and Hotel & Tourism">
+                                  Faculty of Digital Communication and Hotel &
+                                  Tourism
+                                </SelectItem>
+                                <SelectItem value="BINUS Business School">
+                                  BINUS Business School
+                                </SelectItem>
+                                <SelectItem value="BINUS ASO School of Engineering">
+                                  BINUS ASO School of Engineering
+                                </SelectItem>
+                                <SelectItem value="School of Computing and Creative Arts">
+                                  School of Computing and Creative Arts (Binus
+                                  International)
+                                </SelectItem>
+                                <SelectItem value="BINUS Graduate Program">
+                                  BINUS Graduate Program
+                                </SelectItem>
+                                <SelectItem value="BINUS Online Learning">
+                                  BINUS Online Learning
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <Label htmlFor="major">Major</Label>
+                            <Input
+                              id="major"
+                              value={editedProfile.major}
+                              onChange={(e) =>
+                                setEditedProfile({
+                                  ...editedProfile,
+                                  major: e.target.value,
+                                })
+                              }
+                              className="mt-1"
+                              placeholder="e.g., Computer Science"
+                            />
+                          </div>
+                        </div>
+
                         <div>
-                          <Label htmlFor="name">Name</Label>
-                          <Input
-                            id="name"
-                            value={editedName}
-                            onChange={(e) => setEditedName(e.target.value)}
+                          <Label htmlFor="year">Year</Label>
+                          <Select
+                            value={editedProfile.year.toString()}
+                            onValueChange={(value) =>
+                              setEditedProfile({
+                                ...editedProfile,
+                                year: parseInt(value),
+                              })
+                            }
+                          >
+                            <SelectTrigger className="mt-1">
+                              <SelectValue placeholder="Select year" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="1">Year 1</SelectItem>
+                              <SelectItem value="2">Year 2</SelectItem>
+                              <SelectItem value="3">Year 3</SelectItem>
+                              <SelectItem value="4">Year 4</SelectItem>
+                              <SelectItem value="5">Year 5</SelectItem>
+                              <SelectItem value="6">Year 6</SelectItem>
+                              <SelectItem value="7">Year 7</SelectItem>
+                              <SelectItem value="8">Year 8</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div>
+                          <Label htmlFor="bio">Bio</Label>
+                          <Textarea
+                            id="bio"
+                            value={editedProfile.bio}
+                            onChange={(e) =>
+                              setEditedProfile({
+                                ...editedProfile,
+                                bio: e.target.value,
+                              })
+                            }
                             className="mt-1"
+                            placeholder="Tell us about yourself..."
+                            rows={3}
                           />
                         </div>
+
                         <div className="flex gap-2">
                           <Button
                             size="sm"
-                            onClick={() => {
-                              // TODO: Implement update user API
-                              setIsEditing(false);
-                            }}
+                            onClick={handleSaveProfile}
+                            disabled={isSaving}
                           >
                             <Save className="h-4 w-4 mr-1" />
-                            Save
+                            {isSaving ? "Saving..." : "Save"}
                           </Button>
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={() => {
-                              setEditedName(session?.user?.name || "");
+                              setEditedProfile({
+                                name: userProfile?.name || "",
+                                studentId: userProfile?.studentId || "",
+                                faculty: userProfile?.faculty || "",
+                                major: userProfile?.major || "",
+                                year: userProfile?.year || 1,
+                                bio: userProfile?.bio || "",
+                              });
                               setIsEditing(false);
                             }}
+                            disabled={isSaving}
                           >
                             <X className="h-4 w-4 mr-1" />
                             Cancel
@@ -292,7 +503,7 @@ export default function AccountPage() {
                       <>
                         <div className="flex items-center justify-center sm:justify-start gap-2 mb-2">
                           <h2 className="text-2xl font-bold text-dark-gray">
-                            {session?.user?.name || "User"}
+                            {userProfile?.name || "User"}
                           </h2>
                           <button
                             onClick={() => setIsEditing(true)}
@@ -304,12 +515,32 @@ export default function AccountPage() {
                         <div className="space-y-2 text-sm text-medium-gray">
                           <div className="flex items-center justify-center sm:justify-start gap-2">
                             <Mail className="h-4 w-4" />
-                            <span>{session?.user?.email}</span>
+                            <span>{userProfile?.email}</span>
+                          </div>
+                          <div className="flex items-center justify-center sm:justify-start gap-2">
+                            <User className="h-4 w-4" />
+                            <span>
+                              {userProfile?.studentId || "No Student ID"}
+                            </span>
                           </div>
                           <div className="flex items-center justify-center sm:justify-start gap-2">
                             <Calendar className="h-4 w-4" />
-                            <span>Member since {new Date().getFullYear()}</span>
+                            <span>
+                              {userProfile?.faculty || "No Faculty"} -{" "}
+                              {userProfile?.major || "No Major"}
+                            </span>
                           </div>
+                          <div className="flex items-center justify-center sm:justify-start gap-2">
+                            <TrendingUp className="h-4 w-4" />
+                            <span>Year {userProfile?.year || "N/A"}</span>
+                          </div>
+                          {userProfile?.bio && (
+                            <div className="mt-3 pt-3 border-t border-gray-200">
+                              <p className="text-sm text-gray-700 italic">
+                                {userProfile.bio}
+                              </p>
+                            </div>
+                          )}
                         </div>
                       </>
                     )}
