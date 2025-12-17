@@ -27,6 +27,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { statsAPI, notificationsAPI, userAPI } from "@/lib/api";
 import { Textarea } from "@/components/ui/textarea";
+import { toast, Toaster } from "sonner";
 import {
   Select,
   SelectContent,
@@ -108,9 +109,10 @@ export default function AccountPage() {
       setUserProfile(result.user);
       setIsEditing(false);
       await update();
+      toast.success("Profile updated successfully!");
     } catch (error: any) {
       console.error("Error updating profile:", error);
-      alert(error.message || "Failed to update profile");
+      toast.error(error.message || "Failed to update profile");
     } finally {
       setIsSaving(false);
     }
@@ -135,6 +137,7 @@ export default function AccountPage() {
 
   return (
     <div className="min-h-screen bg-secondary-50">
+      <Toaster position="top-center" richColors />
       {/* Header */}
       <header className="bg-white shadow-sm border-b border-light-gray sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">

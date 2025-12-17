@@ -12,10 +12,10 @@ import { playNotificationSound } from "@/lib/notification-sound";
 import { groupsAPI, usersAPI } from "@/lib/api";
 import Image from "next/image";
 import { toast, Toaster } from "sonner";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
@@ -115,6 +115,13 @@ export default function Dashboard() {
   } | null>(null);
   const [hasPurchasedItem, setHasPurchasedItem] = useState(false);
   const [showReorderConfirm, setShowReorderConfirm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+  const [showRemoveMemberConfirm, setShowRemoveMemberConfirm] = useState(false);
+  const [memberToRemove, setMemberToRemove] = useState<{
+    userId: string;
+    name: string;
+  } | null>(null);
   const [showProfileCompleteModal, setShowProfileCompleteModal] =
     useState(false);
   const [userProfile, setUserProfile] = useState<any>(null);
@@ -564,7 +571,7 @@ export default function Dashboard() {
         }
       } catch (error) {
         console.error("Error loading profile:", error);
-        alert("Failed to load profile. Please try again.");
+        toast.error("Failed to load profile. Please try again.");
       }
       return;
     }
@@ -619,7 +626,7 @@ export default function Dashboard() {
         }
       } catch (error) {
         console.error("Error loading profile:", error);
-        alert("Failed to load profile. Please try again.");
+        toast.error("Failed to load profile. Please try again.");
       }
       return;
     }
@@ -652,7 +659,7 @@ export default function Dashboard() {
         !profileFormData.major ||
         !profileFormData.year
       ) {
-        alert("Please fill in all required fields");
+        toast.error("Please fill in all required fields");
         return;
       }
 
@@ -667,14 +674,16 @@ export default function Dashboard() {
       setShowProfileCompleteModal(false);
 
       // Show success message
-      alert("Profile updated successfully! You can now add items.");
+      toast.success("Profile updated successfully! You can now add items.");
 
       // Reload stats
       const stats = await statsAPI.getUserStats();
       setUserStats(stats);
     } catch (error: any) {
       console.error("Error updating profile:", error);
-      alert(error.message || "Failed to update profile. Please try again.");
+      toast.error(
+        error.message || "Failed to update profile. Please try again."
+      );
     } finally {
       setIsSavingProfile(false);
     }
@@ -691,33 +700,48 @@ export default function Dashboard() {
       // Reload stats
       const stats = await statsAPI.getUserStats();
       setUserStats(stats);
+      toast.success("Item added successfully!");
     } catch (error) {
       console.error("Error adding item:", error);
-      alert("Failed to add item. Please try again.");
+      toast.error("Failed to add item. Please try again.");
     }
   };
 
   const handleDeleteItem = async (itemId: string) => {
-    // Confirmation dialog
-    const confirmed = window.confirm(
-      "Are you sure you want to delete this item? This action cannot be undone and will permanently remove the item from the database."
-    );
+    setItemToDelete(itemId);
+    setShowDeleteConfirm(true);
+  };
 
-    if (!confirmed) {
-      return; // User cancelled
-    }
+  const confirmDeleteItem = async () => {
+    if (!itemToDelete) return;
 
     try {
-      await marketplaceAPI.deleteItem(itemId);
+      await marketplaceAPI.deleteItem(itemToDelete);
       // Reload marketplace items
       const items = await marketplaceAPI.getItems();
       setMarketplaceItems(filterTradableItems(items));
 
       // Show success message
-      alert("Item deleted successfully from the database!");
+      toast.success("Item deleted successfully!");
+      setItemToDelete(null);
     } catch (error) {
       console.error("Error deleting item:", error);
-      alert("Failed to delete item from database. Please try again.");
+      toast.error("Failed to delete item. Please try again.");
+    }
+  };
+
+  const confirmRemoveMember = async () => {
+    if (!memberToRemove || !selectedGroup) return;
+
+    try {
+      await groupsAPI.removeMember(selectedGroup, memberToRemove.userId);
+      toast.success("Member removed successfully!");
+      await loadGroupMembers(selectedGroup);
+      await loadGroups();
+      setMemberToRemove(null);
+    } catch (error) {
+      console.error("Error removing member:", error);
+      toast.error("Failed to remove member");
     }
   };
 
@@ -791,7 +815,7 @@ export default function Dashboard() {
       await loadMessages(conversationId);
     } catch (error) {
       console.error("Error sending message:", error);
-      alert("Failed to send message. Please try again.");
+      toast.error("Failed to send message. Please try again.");
     } finally {
       setIsSendingMessage(false);
     }
@@ -811,7 +835,7 @@ export default function Dashboard() {
       setShowMessageModal(true);
     } catch (error) {
       console.error("Error creating conversation:", error);
-      alert("Failed to create conversation. Please try again.");
+      toast.error("Failed to create conversation. Please try again.");
     }
   };
 
@@ -829,7 +853,7 @@ export default function Dashboard() {
       setUserStats(stats);
     } catch (error) {
       console.error("Error adding tutoring session:", error);
-      alert("Failed to add tutoring session. Please try again.");
+      toast.error("Failed to add tutoring session. Please try again.");
     }
   };
 
@@ -840,9 +864,10 @@ export default function Dashboard() {
       // Reload tutoring sessions
       const sessions = await tutoringAPI.getSessions({ type: "all" });
       setTutoringSessions(sessions);
+      toast.success("Tutoring session deleted successfully!");
     } catch (error) {
       console.error("Error deleting tutoring session:", error);
-      alert("Failed to delete tutoring session. Please try again.");
+      toast.error("Failed to delete tutoring session. Please try again.");
     }
   };
 
@@ -1346,40 +1371,23 @@ export default function Dashboard() {
                 {/* Show content when loaded */}
                 {!loadingStates.discovery && (
                   <>
-                    {/* Header with Search and Filters */}
+                    {/* Header with Search and Filters - Ultra Compact Desktop Version */}
                     <Card>
-                      <CardHeader className="p-3 sm:p-6">
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="flex-1">
-                            <CardTitle className="text-base sm:text-2xl">
-                              Discover Study Materials
-                            </CardTitle>
-                            <CardDescription className="text-[10px] sm:text-sm mt-0.5 hidden sm:block">
-                              Browse and purchase study materials from fellow
-                              students
-                            </CardDescription>
-                          </div>
-                          <Button
-                            onClick={handleAddItemClick}
-                            className="text-xs sm:text-sm h-7 sm:h-10 px-2 sm:px-4"
-                          >
-                            <Plus className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
-                            <span className="hidden sm:inline">
-                              Add New Item
-                            </span>
-                          </Button>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="p-3 sm:p-6 pt-0">
-                        <div className="flex gap-1.5 sm:gap-4">
+                      <CardContent className="p-3 sm:p-3">
+                        <div className="flex items-center gap-1.5 sm:gap-2">
+                          {/* Title - Compact */}
+                          <h3 className="text-sm sm:text-base font-semibold text-foreground shrink-0">
+                            Study Materials
+                          </h3>
+
                           {/* Search */}
                           <div className="flex-1 relative">
-                            <Search className="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
+                            <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3 w-3 sm:h-3.5 sm:w-3.5 text-muted-foreground" />
                             <Input
                               placeholder="Search..."
                               value={searchQuery}
                               onChange={(e) => setSearchQuery(e.target.value)}
-                              className="pl-7 sm:pl-10 h-7 sm:h-10 text-xs sm:text-sm"
+                              className="pl-7 sm:pl-8 h-7 sm:h-8 text-xs sm:text-sm"
                             />
                           </div>
 
@@ -1389,26 +1397,26 @@ export default function Dashboard() {
                             onChange={(e) =>
                               handleCategoryFilter(e.target.value)
                             }
-                            className="px-1.5 sm:px-3 py-1 sm:py-2 border border-input rounded-md text-[10px] sm:text-sm bg-background hover:bg-accent transition-colors h-7 sm:h-10 w-20 sm:w-auto"
+                            className="px-1.5 sm:px-2 py-1 border border-input rounded-md text-[10px] sm:text-xs bg-background hover:bg-accent transition-colors h-7 sm:h-8 w-20 sm:w-auto shrink-0"
                           >
                             <option value="">All</option>
-                            <option value="Notes">📝 Notes</option>
-                            <option value="Assignment">📄 Assignment</option>
-                            <option value="Book">📚 Book</option>
-                            <option value="Other">📦 Other</option>
+                            <option value="Notes">Notes</option>
+                            <option value="Assignment">Assignment</option>
+                            <option value="Book">Book</option>
+                            <option value="Other">Other</option>
                           </select>
 
                           {/* View Mode Toggle */}
-                          <div className="flex border border-input rounded-md h-7 sm:h-10">
+                          <div className="flex border border-input rounded-md h-7 sm:h-8 shrink-0">
                             <Button
                               variant={
                                 viewMode === "grid" ? "secondary" : "ghost"
                               }
                               size="sm"
                               onClick={() => setViewMode("grid")}
-                              className="rounded-r-none h-full px-1.5 sm:px-3"
+                              className="rounded-r-none h-full px-1.5 sm:px-2"
                             >
-                              <Grid className="h-3 w-3 sm:h-4 sm:w-4" />
+                              <Grid className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                             </Button>
                             <Button
                               variant={
@@ -1416,11 +1424,21 @@ export default function Dashboard() {
                               }
                               size="sm"
                               onClick={() => setViewMode("list")}
-                              className="rounded-l-none h-full px-1.5 sm:px-3"
+                              className="rounded-l-none h-full px-1.5 sm:px-2"
                             >
-                              <List className="h-3 w-3 sm:h-4 sm:w-4" />
+                              <List className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                             </Button>
                           </div>
+
+                          {/* Add Button */}
+                          <Button
+                            onClick={handleAddItemClick}
+                            size="sm"
+                            className="text-xs sm:text-sm h-7 sm:h-8 px-2 sm:px-3 shrink-0"
+                          >
+                            <Plus className="h-3 w-3 sm:h-3.5 sm:w-3.5 sm:mr-1" />
+                            <span className="hidden sm:inline">Add</span>
+                          </Button>
                         </div>
 
                         {/* Active Filters */}
@@ -4027,25 +4045,12 @@ export default function Dashboard() {
                     {member.role !== "admin" &&
                       member.userId !== currentUser?.id && (
                         <button
-                          onClick={async () => {
-                            if (
-                              confirm(
-                                `Remove ${member.user?.name} from the group?`
-                              )
-                            ) {
-                              try {
-                                await groupsAPI.removeMember(
-                                  selectedGroup,
-                                  member.userId
-                                );
-                                toast.success("Member removed successfully!");
-                                await loadGroupMembers(selectedGroup);
-                                await loadGroups();
-                              } catch (error) {
-                                console.error("Error removing member:", error);
-                                toast.error("Failed to remove member");
-                              }
-                            }
+                          onClick={() => {
+                            setMemberToRemove({
+                              userId: member.userId,
+                              name: member.user?.name || "this member",
+                            });
+                            setShowRemoveMemberConfirm(true);
                           }}
                           className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                           title="Remove member"
@@ -4076,6 +4081,38 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+
+      {/* Delete Item Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        onClose={() => {
+          setShowDeleteConfirm(false);
+          setItemToDelete(null);
+        }}
+        onConfirm={confirmDeleteItem}
+        title="Delete Item"
+        description="Are you sure you want to delete this item? This action cannot be undone and will permanently remove the item from the database."
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+        icon="trash"
+      />
+
+      {/* Remove Member Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={showRemoveMemberConfirm}
+        onClose={() => {
+          setShowRemoveMemberConfirm(false);
+          setMemberToRemove(null);
+        }}
+        onConfirm={confirmRemoveMember}
+        title="Remove Member"
+        description={`Are you sure you want to remove ${memberToRemove?.name} from the group?`}
+        confirmText="Remove"
+        cancelText="Cancel"
+        variant="danger"
+        icon="user-minus"
+      />
     </div>
   );
 }
@@ -4106,7 +4143,7 @@ function TutoringForm({
       !formData.price ||
       !formData.scheduledAt
     ) {
-      alert("Please fill in all required fields");
+      toast.error("Please fill in all required fields");
       return;
     }
 
@@ -4419,7 +4456,7 @@ function AddItemForm({
       ];
 
       if (!allowedTypes.includes(file.type)) {
-        alert(
+        toast.error(
           "Only PDF, Word (DOC/DOCX), and image files (JPG/PNG) are allowed."
         );
         e.target.value = "";
@@ -4429,7 +4466,7 @@ function AddItemForm({
       // Validate file size (max 10MB)
       const maxSize = 10 * 1024 * 1024; // 10MB
       if (file.size > maxSize) {
-        alert("File size exceeds 10MB limit. Please compress your file.");
+        toast.error("File size exceeds 10MB limit. Please compress your file.");
         e.target.value = "";
         return;
       }
@@ -4446,12 +4483,12 @@ function AddItemForm({
       !formData.price ||
       !formData.course
     ) {
-      alert("Please fill in all required fields");
+      toast.error("Please fill in all required fields");
       return;
     }
 
     if (!uploadedFile) {
-      alert("Please upload a file");
+      toast.error("Please upload a file");
       return;
     }
 
@@ -4573,7 +4610,7 @@ function AddItemForm({
       setUploadProgress(100);
     } catch (error: any) {
       console.error("Error submitting form:", error);
-      alert(error.message || "Failed to add item. Please try again.");
+      toast.error(error.message || "Failed to add item. Please try again.");
     } finally {
       setUploading(false);
       setUploadProgress(0);

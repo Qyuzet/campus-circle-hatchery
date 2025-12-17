@@ -25,6 +25,7 @@ import {
   User,
   Bell,
   Package,
+  Wallet,
 } from "lucide-react";
 import {
   transactionsAPI,
@@ -246,6 +247,13 @@ export default function LibraryPage() {
                 )}
               </button>
               <button
+                onClick={() => router.push("/dashboard?tab=wallet")}
+                className="p-2 text-medium-gray hover:text-dark-blue transition-colors"
+                title="Wallet"
+              >
+                <Wallet className="h-5 w-5" />
+              </button>
+              <button
                 onClick={() => router.push("/dashboard?tab=insights")}
                 className="p-2 text-medium-gray hover:text-dark-blue transition-colors"
                 title="Analytics"
@@ -299,7 +307,15 @@ export default function LibraryPage() {
                 </button>
 
                 <button
-                  onClick={() => router.push("/dashboard")}
+                  onClick={() => router.push("/dashboard?tab=wallet")}
+                  className="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors text-medium-gray hover:bg-secondary-100"
+                >
+                  <Wallet className="mr-3 h-5 w-5" />
+                  Wallet
+                </button>
+
+                <button
+                  onClick={() => router.push("/dashboard?tab=insights")}
                   className="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors text-medium-gray hover:bg-secondary-100"
                 >
                   <TrendingUp className="mr-3 h-5 w-5" />
