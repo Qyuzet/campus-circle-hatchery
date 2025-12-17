@@ -572,3 +572,24 @@ export const userAPI = {
     return response.json();
   },
 };
+
+// ============================================
+// WISHLIST API
+// ============================================
+export const wishlistAPI = {
+  async getWishlist() {
+    const response = await fetch("/api/wishlist");
+    if (!response.ok) throw new Error("Failed to fetch wishlist");
+    return response.json();
+  },
+
+  async toggleWishlist(itemId: string) {
+    const response = await fetch("/api/wishlist", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ itemId }),
+    });
+    if (!response.ok) throw new Error("Failed to toggle wishlist");
+    return response.json();
+  },
+};

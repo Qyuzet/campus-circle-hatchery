@@ -9,7 +9,7 @@ import {
   getGroupChannel,
 } from "@/lib/pusher";
 import { playNotificationSound } from "@/lib/notification-sound";
-import { groupsAPI, usersAPI } from "@/lib/api";
+import { groupsAPI, usersAPI, wishlistAPI } from "@/lib/api";
 import Image from "next/image";
 import { toast, Toaster } from "sonner";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
@@ -143,6 +143,11 @@ function DashboardContent() {
     course: "",
   });
   const [isSavingItem, setIsSavingItem] = useState(false);
+  const [wishlistItemIds, setWishlistItemIds] = useState<Set<string>>(
+    new Set()
+  );
+  const [showWishlistModal, setShowWishlistModal] = useState(false);
+  const [wishlistItems, setWishlistItems] = useState<any[]>([]);
 
   // Data states
   const [marketplaceItems, setMarketplaceItems] = useState<MarketplaceItem[]>(
@@ -409,6 +414,9 @@ function DashboardContent() {
       if (session?.user) {
         setCurrentUser(session.user);
       }
+
+      // Load wishlist
+      await loadWishlist();
     } catch (error) {
       console.error("Error loading essential data:", error);
     } finally {
@@ -808,6 +816,46 @@ function DashboardContent() {
     }
   };
 
+  const handleToggleWishlist = async (itemId: string, e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+    }
+
+    try {
+      const result = await wishlistAPI.toggleWishlist(itemId);
+
+      setWishlistItemIds((prev) => {
+        const newSet = new Set(prev);
+        if (result.wishlisted) {
+          newSet.add(itemId);
+          toast.success("Added to wishlist!");
+        } else {
+          newSet.delete(itemId);
+          toast.success("Removed from wishlist!");
+        }
+        return newSet;
+      });
+
+      await loadWishlist();
+    } catch (error) {
+      console.error("Error toggling wishlist:", error);
+      toast.error("Failed to update wishlist");
+    }
+  };
+
+  const loadWishlist = async () => {
+    try {
+      const wishlist = await wishlistAPI.getWishlist();
+      const itemIds = new Set<string>(
+        wishlist.map((w: any) => w.itemId as string)
+      );
+      setWishlistItemIds(itemIds);
+      setWishlistItems(wishlist);
+    } catch (error) {
+      console.error("Error loading wishlist:", error);
+    }
+  };
+
   const confirmRemoveMember = async () => {
     if (!memberToRemove || !selectedGroup) return;
 
@@ -1093,6 +1141,19 @@ function DashboardContent() {
                   className="pl-10 pr-4 py-2 border border-light-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-dark-blue focus:border-dark-blue w-48 lg:w-64 transition-colors"
                 />
               </div>
+
+              <button
+                className="relative p-2 text-medium-gray hover:text-dark-gray transition-colors"
+                onClick={() => setShowWishlistModal(true)}
+                title="Wishlist"
+              >
+                <Heart className="h-5 w-5 sm:h-6 sm:w-6" />
+                {wishlistItemIds.size > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    {wishlistItemIds.size}
+                  </span>
+                )}
+              </button>
 
               <div className="relative">
                 <button
@@ -1607,10 +1668,22 @@ function DashboardContent() {
                               {/* Favorite Button */}
                               {viewMode === "grid" && (
                                 <button
-                                  onClick={(e) => e.stopPropagation()}
-                                  className="absolute top-1 right-1 sm:top-2 sm:right-2 lg:top-1.5 lg:right-1.5 bg-white/90 backdrop-blur-sm p-1 sm:p-1.5 lg:p-1 rounded-full text-gray-600 hover:text-red-500 hover:bg-white transition-all shadow-sm z-10"
+                                  onClick={(e) =>
+                                    handleToggleWishlist(item.id, e)
+                                  }
+                                  className={`absolute top-1 right-1 sm:top-2 sm:right-2 lg:top-1.5 lg:right-1.5 bg-white/90 backdrop-blur-sm p-1 sm:p-1.5 lg:p-1 rounded-full transition-all shadow-sm z-10 ${
+                                    wishlistItemIds.has(item.id)
+                                      ? "text-red-500 hover:text-red-600"
+                                      : "text-gray-600 hover:text-red-500"
+                                  } hover:bg-white`}
                                 >
-                                  <Heart className="h-3 w-3 sm:h-4 sm:w-4 lg:h-3 lg:w-3" />
+                                  <Heart
+                                    className={`h-3 w-3 sm:h-4 sm:w-4 lg:h-3 lg:w-3 ${
+                                      wishlistItemIds.has(item.id)
+                                        ? "fill-current"
+                                        : ""
+                                    }`}
+                                  />
                                 </button>
                               )}
                             </div>
@@ -4336,6 +4409,95 @@ function DashboardContent() {
         variant="danger"
         icon="user-minus"
       />
+
+      {/* Wishlist Modal */}
+      {showWishlistModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            <div className="p-6 border-b border-light-gray flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-dark-gray">My Wishlist</h2>
+              <button
+                onClick={() => setShowWishlistModal(false)}
+                className="text-medium-gray hover:text-dark-gray transition-colors"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+              {wishlistItems.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12">
+                  <Heart className="h-16 w-16 text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-semibold text-dark-gray mb-2">
+                    Your wishlist is empty
+                  </h3>
+                  <p className="text-muted-foreground mb-4">
+                    Start adding items to your wishlist by clicking the heart
+                    icon on marketplace items
+                  </p>
+                  <Button onClick={() => setShowWishlistModal(false)}>
+                    Browse Marketplace
+                  </Button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {wishlistItems.map((wishlistItem: any) => {
+                    const item = wishlistItem.item;
+                    return (
+                      <Card
+                        key={wishlistItem.id}
+                        className="cursor-pointer hover:shadow-lg transition-shadow"
+                        onClick={() => {
+                          setSelectedItem(item);
+                          setShowWishlistModal(false);
+                        }}
+                      >
+                        <div className="relative">
+                          <FilePreview
+                            fileUrl={item.fileUrl}
+                            fileType={item.fileType}
+                            fileName={item.fileName}
+                            category={item.category}
+                            title={item.title}
+                            compact={false}
+                            thumbnailUrl={item.thumbnailUrl}
+                          />
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleToggleWishlist(item.id);
+                            }}
+                            className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm p-1.5 rounded-full text-red-500 hover:text-red-600 hover:bg-white transition-all shadow-sm z-10"
+                          >
+                            <Heart className="h-4 w-4 fill-current" />
+                          </button>
+                        </div>
+                        <CardContent className="p-4">
+                          <h3 className="font-semibold text-dark-gray mb-1 line-clamp-1">
+                            {item.title}
+                          </h3>
+                          <p className="text-sm text-medium-gray mb-2 line-clamp-2">
+                            {item.description}
+                          </p>
+                          <div className="flex items-center justify-between">
+                            <span className="text-lg font-bold text-dark-blue">
+                              Rp {item.price.toLocaleString()}
+                            </span>
+                            <Badge variant="secondary">{item.category}</Badge>
+                          </div>
+                          <div className="mt-2 flex items-center text-xs text-medium-gray">
+                            <User className="h-3 w-3 mr-1" />
+                            {item.seller.name}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

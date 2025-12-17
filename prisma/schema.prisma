@@ -49,6 +49,7 @@ model User {
   createdGroups        Group[]             @relation("CreatedGroups")
   groupMemberships     GroupMember[]       @relation("GroupMemberships")
   sentGroupMessages    GroupMessage[]      @relation("SentGroupMessages")
+  wishlistItems        WishlistItem[]
 
   @@index([studentId])
   @@index([email])
@@ -84,8 +85,9 @@ model MarketplaceItem {
   sellerId String
   seller   User   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
 
-  reviews      Review[]
-  transactions Transaction[]
+  reviews       Review[]
+  transactions  Transaction[]
+  wishlistItems WishlistItem[]
 
   @@index([sellerId])
   @@index([category])
@@ -367,4 +369,22 @@ model Withdrawal {
   @@index([userId])
   @@index([status])
   @@index([createdAt])
+}
+
+// ============================================
+// WISHLIST MODEL
+// ============================================
+model WishlistItem {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  // Relations
+  userId String
+  itemId String
+  user   User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  item   MarketplaceItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, itemId])
+  @@index([userId])
+  @@index([itemId])
 }

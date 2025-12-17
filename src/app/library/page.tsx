@@ -26,6 +26,7 @@ import {
   Bell,
   Package,
   Wallet,
+  Heart,
 } from "lucide-react";
 import {
   transactionsAPI,
@@ -167,6 +168,14 @@ export default function LibraryPage() {
                   className="pl-10 pr-4 py-2 border border-light-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-dark-blue focus:border-dark-blue w-48 lg:w-64 transition-colors"
                 />
               </div>
+
+              <button
+                className="relative p-2 text-medium-gray hover:text-dark-gray transition-colors"
+                onClick={() => router.push("/dashboard")}
+                title="Wishlist"
+              >
+                <Heart className="h-5 w-5 sm:h-6 sm:w-6" />
+              </button>
 
               <div className="relative">
                 <button
