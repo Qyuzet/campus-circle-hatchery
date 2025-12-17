@@ -70,9 +70,8 @@ export default function LibraryPage() {
     if (status === "unauthenticated") {
       router.push("/");
     } else if (status === "authenticated") {
-      loadLibrary();
-      loadStats();
-      loadNotifications();
+      // Load all data in parallel for faster initial load
+      Promise.all([loadLibrary(), loadStats(), loadNotifications()]);
     }
   }, [status, router]);
 

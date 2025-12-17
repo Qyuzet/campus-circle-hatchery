@@ -1,6 +1,8 @@
 // API Client Functions for CampusCircle
 // Replaces localStorage with real API calls
 
+import { apiCache, CACHE_KEYS, CACHE_DURATION } from "./cache";
+
 // ============================================
 // MARKETPLACE API
 // ============================================
@@ -197,10 +199,18 @@ export const tutoringAPI = {
 // NOTIFICATIONS API
 // ============================================
 export const notificationsAPI = {
-  async getNotifications() {
+  async getNotifications(useCache = true) {
+    if (useCache) {
+      const cached = apiCache.get(CACHE_KEYS.NOTIFICATIONS);
+      if (cached) return cached;
+    }
+
     const response = await fetch("/api/notifications");
     if (!response.ok) throw new Error("Failed to fetch notifications");
-    return response.json();
+    const data = await response.json();
+
+    apiCache.set(CACHE_KEYS.NOTIFICATIONS, data, CACHE_DURATION.SHORT);
+    return data;
   },
 
   async markAsRead(notificationIds: string[]) {
@@ -210,6 +220,8 @@ export const notificationsAPI = {
       body: JSON.stringify({ notificationIds }),
     });
     if (!response.ok) throw new Error("Failed to mark notifications as read");
+
+    apiCache.invalidate(CACHE_KEYS.NOTIFICATIONS);
     return response.json();
   },
 };
@@ -218,10 +230,18 @@ export const notificationsAPI = {
 // USER STATS API
 // ============================================
 export const statsAPI = {
-  async getUserStats() {
+  async getUserStats(useCache = true) {
+    if (useCache) {
+      const cached = apiCache.get(CACHE_KEYS.USER_STATS);
+      if (cached) return cached;
+    }
+
     const response = await fetch("/api/stats");
     if (!response.ok) throw new Error("Failed to fetch user stats");
-    return response.json();
+    const data = await response.json();
+
+    apiCache.set(CACHE_KEYS.USER_STATS, data, CACHE_DURATION.MEDIUM);
+    return data;
   },
 };
 
@@ -258,20 +278,33 @@ export const paymentAPI = {
 // TRANSACTIONS API
 // ============================================
 export const transactionsAPI = {
-  async getTransactions(filters?: {
-    type?: "purchases" | "sales";
-    status?: string;
-    itemType?: "marketplace" | "tutoring";
-  }) {
+  async getTransactions(
+    filters?: {
+      type?: "purchases" | "sales";
+      status?: string;
+      itemType?: "marketplace" | "tutoring";
+    },
+    useCache = true
+  ) {
     const params = new URLSearchParams();
     if (filters?.type) params.append("type", filters.type);
     if (filters?.status) params.append("status", filters.status);
     if (filters?.itemType) params.append("itemType", filters.itemType);
 
+    const cacheKey = `transactions-${params.toString()}`;
+
+    if (useCache) {
+      const cached = apiCache.get(cacheKey);
+      if (cached) return cached;
+    }
+
     const response = await fetch(`/api/transactions?${params.toString()}`);
     if (!response.ok) throw new Error("Failed to fetch transactions");
     const data = await response.json();
-    return data.transactions;
+    const transactions = data.transactions;
+
+    apiCache.set(cacheKey, transactions, CACHE_DURATION.MEDIUM);
+    return transactions;
   },
 
   async checkPurchase(itemId: string) {

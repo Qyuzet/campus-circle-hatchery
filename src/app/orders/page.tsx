@@ -61,9 +61,8 @@ export default function OrdersPage() {
     if (status === "unauthenticated") {
       router.push("/");
     } else if (status === "authenticated") {
-      loadPurchases();
-      loadStats();
-      loadNotifications();
+      // Load all data in parallel for faster initial load
+      Promise.all([loadPurchases(), loadStats(), loadNotifications()]);
 
       // Auto-refresh every 5 seconds to check for payment updates
       const interval = setInterval(async () => {

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   pusherClient,
   getConversationChannel,
@@ -76,6 +76,7 @@ import FilePreview from "@/components/FilePreview";
 export default function Dashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   // Helper function to format price with K for thousands
   const formatPrice = (price: number) => {
@@ -196,6 +197,24 @@ export default function Dashboard() {
       router.push("/");
     }
   }, [status, router]);
+
+  // Handle URL tab parameter
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (
+      tab &&
+      [
+        "discovery",
+        "messages",
+        "tutoring",
+        "orders",
+        "insights",
+        "wallet",
+      ].includes(tab)
+    ) {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
 
   // Initialize essential data on component mount (notifications and stats only)
   useEffect(() => {
