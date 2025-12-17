@@ -39,21 +39,17 @@ import {
   List,
   Send,
   X,
-  Edit,
   Trash2,
   Calendar,
   Clock,
   DollarSign,
   FileText,
   GraduationCap,
-  Video,
-  Book,
   TrendingUp,
   Package,
   Library,
   RefreshCw,
   Wallet,
-  CreditCard,
 } from "lucide-react";
 import {
   marketplaceAPI,
@@ -1892,7 +1888,7 @@ export default function Dashboard() {
                                         <h3 className="font-medium text-dark-gray truncate">
                                           {conversation.otherUserName}
                                         </h3>
-                                        <span className="text-xs text-medium-gray">
+                                        <span className="text-xs text-medium-gray flex-shrink-0 ml-2">
                                           {new Date(
                                             conversation.lastMessageTime
                                           ).toLocaleTimeString([], {
@@ -1901,13 +1897,19 @@ export default function Dashboard() {
                                           })}
                                         </span>
                                       </div>
-                                      <div className="flex items-center justify-between">
-                                        <p className="text-sm text-medium-gray truncate">
-                                          {conversation.lastMessage ||
-                                            "No messages yet"}
+                                      <div className="flex items-center justify-between gap-2">
+                                        <p className="text-sm text-medium-gray truncate break-all line-clamp-1">
+                                          {conversation.lastMessage &&
+                                          conversation.lastMessage.length > 50
+                                            ? conversation.lastMessage.substring(
+                                                0,
+                                                50
+                                              ) + "..."
+                                            : conversation.lastMessage ||
+                                              "No messages yet"}
                                         </p>
                                         {conversation.unreadCount > 0 && (
-                                          <span className="bg-campus-green text-white text-xs px-2 py-1 rounded-full min-w-[20px] text-center">
+                                          <span className="bg-campus-green text-white text-xs px-2 py-1 rounded-full min-w-[20px] text-center flex-shrink-0">
                                             {conversation.unreadCount}
                                           </span>
                                         )}
@@ -1948,7 +1950,7 @@ export default function Dashboard() {
                                       <h3 className="font-medium text-dark-gray truncate">
                                         {group.name}
                                       </h3>
-                                      <span className="text-xs text-medium-gray">
+                                      <span className="text-xs text-medium-gray flex-shrink-0 ml-2">
                                         {group.lastMessage
                                           ? new Date(
                                               group.lastMessage.createdAt
@@ -1959,10 +1961,16 @@ export default function Dashboard() {
                                           : ""}
                                       </span>
                                     </div>
-                                    <div className="flex items-center justify-between">
-                                      <p className="text-sm text-medium-gray truncate">
+                                    <div className="flex items-center justify-between gap-2">
+                                      <p className="text-sm text-medium-gray truncate break-all line-clamp-1">
                                         {group.lastMessage
-                                          ? `${group.lastMessage.sender.name}: ${group.lastMessage.content}`
+                                          ? (() => {
+                                              const fullMessage = `${group.lastMessage.sender.name}: ${group.lastMessage.content}`;
+                                              return fullMessage.length > 50
+                                                ? fullMessage.substring(0, 50) +
+                                                    "..."
+                                                : fullMessage;
+                                            })()
                                           : `${group.memberCount} members`}
                                       </p>
                                     </div>
@@ -3063,61 +3071,15 @@ export default function Dashboard() {
 
             {/* Content - No scrollbar */}
             <div className="p-3 space-y-2">
-              {/* Image Section - Smaller */}
-              <div className="relative w-full h-32 rounded-md overflow-hidden">
-                {selectedItem.imageUrl ? (
-                  <img
-                    src={selectedItem.imageUrl}
-                    alt={selectedItem.title}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div
-                    className={`w-full h-full flex items-center justify-center ${
-                      selectedItem.category === "Notes"
-                        ? "bg-gradient-to-br from-blue-100 to-blue-200"
-                        : selectedItem.category === "Tutorial"
-                        ? "bg-gradient-to-br from-green-100 to-green-200"
-                        : selectedItem.category === "Tutoring"
-                        ? "bg-gradient-to-br from-purple-100 to-purple-200"
-                        : selectedItem.category === "Assignment"
-                        ? "bg-gradient-to-br from-orange-100 to-orange-200"
-                        : selectedItem.category === "Book"
-                        ? "bg-gradient-to-br from-red-100 to-red-200"
-                        : "bg-gradient-to-br from-gray-100 to-gray-200"
-                    }`}
-                  >
-                    <div className="text-center">
-                      {selectedItem.category === "Notes" && (
-                        <FileText className="h-12 w-12 text-blue-600 mx-auto mb-1" />
-                      )}
-                      {selectedItem.category === "Tutorial" && (
-                        <Video className="h-12 w-12 text-green-600 mx-auto mb-1" />
-                      )}
-                      {selectedItem.category === "Tutoring" && (
-                        <GraduationCap className="h-12 w-12 text-purple-600 mx-auto mb-1" />
-                      )}
-                      {selectedItem.category === "Assignment" && (
-                        <FileText className="h-12 w-12 text-orange-600 mx-auto mb-1" />
-                      )}
-                      {selectedItem.category === "Book" && (
-                        <Book className="h-12 w-12 text-red-600 mx-auto mb-1" />
-                      )}
-                      {![
-                        "Notes",
-                        "Tutorial",
-                        "Tutoring",
-                        "Assignment",
-                        "Book",
-                      ].includes(selectedItem.category) && (
-                        <BookOpen className="h-12 w-12 text-gray-600 mx-auto mb-1" />
-                      )}
-                      <p className="text-xs font-semibold text-gray-700">
-                        {selectedItem.category}
-                      </p>
-                    </div>
-                  </div>
-                )}
+              {/* File Preview Section */}
+              <div className="relative w-full h-48 rounded-md overflow-hidden">
+                <FilePreview
+                  fileUrl={selectedItem.fileUrl || selectedItem.imageUrl || ""}
+                  fileType={selectedItem.fileType || ""}
+                  fileName={selectedItem.fileName || selectedItem.title}
+                  title={selectedItem.title}
+                  category={selectedItem.category}
+                />
               </div>
 
               {/* Category Badge */}
@@ -3867,20 +3829,29 @@ function AddItemForm({
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
 
-      // Validate file type - ONLY PDF
-      if (file.type !== "application/pdf") {
+      // Validate file type - PDF, Word, and Images
+      const allowedTypes = [
+        "application/pdf",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "image/jpeg",
+        "image/jpg",
+        "image/png",
+      ];
+
+      if (!allowedTypes.includes(file.type)) {
         alert(
-          "Only PDF files are allowed. Please convert your document to PDF first."
+          "Only PDF, Word (DOC/DOCX), and image files (JPG/PNG) are allowed."
         );
-        e.target.value = ""; // Reset input
+        e.target.value = "";
         return;
       }
 
       // Validate file size (max 10MB)
       const maxSize = 10 * 1024 * 1024; // 10MB
       if (file.size > maxSize) {
-        alert("File size exceeds 10MB limit. Please compress your PDF.");
-        e.target.value = ""; // Reset input
+        alert("File size exceeds 10MB limit. Please compress your file.");
+        e.target.value = "";
         return;
       }
 
@@ -4035,13 +4006,13 @@ function AddItemForm({
       {/* File Upload */}
       <div>
         <label className="block text-xs font-medium text-dark-gray mb-0.5">
-          Upload PDF File *
+          Upload File (PDF, Word, or Image) *
         </label>
         <div className="mt-0.5">
           <input
             type="file"
             onChange={handleFileChange}
-            accept=".pdf,application/pdf"
+            accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png"
             className="w-full px-2 py-1 border border-light-gray rounded-md focus:outline-none focus:ring-1 focus:ring-dark-blue focus:border-dark-blue text-xs"
             required
           />

@@ -1,17 +1,10 @@
 // File Upload API Route
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { v2 as cloudinary } from "cloudinary";
+import { supabaseAdmin } from "@/lib/supabase";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-// Configure Cloudinary
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
 
 // POST /api/upload - Upload file to Cloudinary
 export async function POST(request: NextRequest) {
@@ -38,54 +31,66 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // ONLY ACCEPT PDF FILES
-    if (file.type !== "application/pdf") {
+    // Accept PDF, Word documents, and images
+    const allowedTypes = [
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+    ];
+
+    if (!allowedTypes.includes(file.type)) {
       return NextResponse.json(
         {
           error:
-            "Only PDF files are allowed. Please convert your file to PDF first.",
+            "Only PDF, Word (DOC/DOCX), and image files (JPG/PNG) are allowed.",
         },
         { status: 400 }
       );
     }
 
-    // Convert file to base64 for Cloudinary upload
+    // Convert file to buffer for Supabase upload
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
-    const base64 = buffer.toString("base64");
-    const dataURI = `data:${file.type};base64,${base64}`;
 
-    console.log("📤 Uploading PDF to Cloudinary:", file.name);
+    // Generate unique filename
+    const fileName = `${Date.now()}-${file.name}`;
 
-    // Upload PDF to Cloudinary as "raw" type (PDFs cannot be uploaded as "image")
-    const uploadResult = await cloudinary.uploader.upload(dataURI, {
-      resource_type: "raw", // PDFs must be uploaded as "raw" type
-      folder: "campus-circle",
-      public_id: `${Date.now()}-${file.name.replace(/\.[^/.]+$/, "")}`,
-      type: "upload",
-      access_mode: "public",
-    });
+    console.log("Uploading file to Supabase Storage:", file.name);
 
-    console.log("✅ PDF uploaded successfully:", uploadResult.secure_url);
+    // Upload file to Supabase Storage
+    const { data, error } = await supabaseAdmin.storage
+      .from("study-materials")
+      .upload(fileName, buffer, {
+        contentType: file.type,
+        upsert: false,
+      });
+
+    if (error) {
+      console.error("Supabase upload error:", error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    // Get public URL
+    const {
+      data: { publicUrl },
+    } = supabaseAdmin.storage.from("study-materials").getPublicUrl(fileName);
+
+    console.log("File uploaded successfully:", publicUrl);
 
     return NextResponse.json({
       success: true,
-      url: uploadResult.secure_url,
+      url: publicUrl,
       fileName: file.name,
       fileSize: file.size,
       fileType: file.type,
     });
   } catch (error: any) {
-    console.error("❌ Upload error:", error);
+    console.error("Upload error:", error);
 
-    // Return detailed error message
     const errorMessage = error?.message || "Failed to upload file";
-    return NextResponse.json(
-      {
-        error: errorMessage,
-        details: error?.error?.message || "Unknown error occurred",
-      },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }

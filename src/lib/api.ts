@@ -357,38 +357,27 @@ export const fileAPI = {
     return response.json();
   },
 
-  // Track download
-  async trackDownload(itemId: string) {
-    const response = await fetch("/api/download", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ itemId }),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || "Failed to track download");
-    }
-
-    return response.json();
-  },
-
-  // Download file (with tracking)
+  // Download file (with verification and tracking)
   async downloadFile(itemId: string, fileUrl: string, fileName: string) {
     try {
-      // Track the download
-      await this.trackDownload(itemId);
+      // Verify purchase and get download URL
+      const response = await fetch(`/api/download?itemId=${itemId}`);
 
-      // Download the file
-      const response = await fetch(fileUrl);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to download file");
+      }
+
+      const result = await response.json();
+
+      // Create a temporary link and trigger download
       const a = document.createElement("a");
-      a.href = url;
-      a.download = fileName;
+      a.href = result.downloadUrl;
+      a.download = result.fileName;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
       document.body.appendChild(a);
       a.click();
-      window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } catch (error) {
       console.error("Download error:", error);

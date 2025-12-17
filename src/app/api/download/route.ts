@@ -1,10 +1,11 @@
-// Download Tracking API Route
+// Download API Route
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { supabaseAdmin } from "@/lib/supabase";
 
-// POST /api/download - Track file download
-export async function POST(request: NextRequest) {
+// GET /api/download - Verify purchase and return signed download URL
+export async function GET(request: NextRequest) {
   try {
     const session = await auth();
 
@@ -12,7 +13,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { itemId } = await request.json();
+    const { searchParams } = new URL(request.url);
+    const itemId = searchParams.get("itemId");
 
     if (!itemId) {
       return NextResponse.json({ error: "Item ID required" }, { status: 400 });
@@ -34,12 +36,41 @@ export async function POST(request: NextRequest) {
         buyerId: user.id,
         status: "COMPLETED",
       },
+      include: {
+        item: true,
+      },
     });
 
     if (!transaction) {
       return NextResponse.json(
         { error: "You must purchase this item to download it" },
         { status: 403 }
+      );
+    }
+
+    if (!transaction.item?.fileUrl) {
+      return NextResponse.json({ error: "File not found" }, { status: 404 });
+    }
+
+    // Extract filename from Supabase Storage URL
+    const fileUrl = transaction.item.fileUrl;
+    const fileName = fileUrl.split("/").pop();
+
+    if (!fileName) {
+      console.error("Invalid file URL format:", fileUrl);
+      return NextResponse.json({ error: "Invalid file URL" }, { status: 500 });
+    }
+
+    // Generate a signed URL (valid for 1 hour)
+    const { data, error } = await supabaseAdmin.storage
+      .from("study-materials")
+      .createSignedUrl(fileName, 3600);
+
+    if (error) {
+      console.error("Failed to generate signed URL:", error);
+      return NextResponse.json(
+        { error: "Failed to generate download link" },
+        { status: 500 }
       );
     }
 
@@ -53,11 +84,16 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({ success: true });
+    // Return the signed download URL and filename
+    return NextResponse.json({
+      success: true,
+      downloadUrl: data.signedUrl,
+      fileName: transaction.item.fileName || `${transaction.itemTitle}.pdf`,
+    });
   } catch (error) {
-    console.error("Download tracking error:", error);
+    console.error("Download error:", error);
     return NextResponse.json(
-      { error: "Failed to track download" },
+      { error: "Failed to process download" },
       { status: 500 }
     );
   }
