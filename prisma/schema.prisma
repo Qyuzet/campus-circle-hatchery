@@ -71,6 +71,7 @@ model MarketplaceItem {
   fileName    String?  // Original file name
   fileSize    Int?     // File size in bytes
   fileType    String?  // MIME type
+  thumbnailUrl String? // Thumbnail image for PDF/document previews
   status      String   @default("available") // available, sold, pending
   rating      Float    @default(0)
   reviewCount Int      @default(0)

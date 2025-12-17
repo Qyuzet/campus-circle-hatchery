@@ -45,6 +45,7 @@ export const marketplaceAPI = {
     fileName?: string;
     fileSize?: number;
     fileType?: string;
+    thumbnailUrl?: string;
   }) {
     const response = await fetch("/api/marketplace", {
       method: "POST",

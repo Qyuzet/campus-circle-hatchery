@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { FileText, File, Image as ImageIcon } from "lucide-react";
 
 interface FilePreviewProps {
@@ -10,6 +10,7 @@ interface FilePreviewProps {
   category?: string;
   title: string;
   compact?: boolean;
+  thumbnailUrl?: string;
 }
 
 export default function FilePreview({
@@ -19,8 +20,9 @@ export default function FilePreview({
   category,
   title,
   compact = false,
+  thumbnailUrl,
 }: FilePreviewProps) {
-  const [imageError, setImageError] = React.useState(false);
+  const [imageError, setImageError] = useState(false);
   const fileExtension = fileName?.split(".").pop()?.toUpperCase() || "FILE";
 
   const isImage =
@@ -108,16 +110,58 @@ export default function FilePreview({
     );
   }
 
-  // PDF Files - Show embedded PDF preview (blurred)
+  // PDF Files - Show thumbnail image if available, otherwise show icon
   if (isPDF) {
+    if (thumbnailUrl) {
+      return (
+        <div className="relative w-full h-full bg-white overflow-hidden">
+          <img
+            src={thumbnailUrl}
+            alt={title}
+            className="w-full h-full object-cover"
+            style={{ filter: "blur(0.8px)" }}
+            onError={(e) => {
+              console.error("Thumbnail load error:", thumbnailUrl);
+              setImageError(true);
+            }}
+            loading="lazy"
+          />
+          <div className="absolute inset-0 bg-white/5"></div>
+          {!compact && (
+            <div className="absolute bottom-1 left-1 bg-black/60 backdrop-blur-sm px-1.5 py-0.5 rounded text-[8px] sm:text-[9px] text-white font-medium flex items-center gap-1 z-10">
+              <FileText className="h-2.5 w-2.5" />
+              PDF
+            </div>
+          )}
+        </div>
+      );
+    }
+
     return (
       <div className="relative w-full h-full bg-white overflow-hidden">
-        <iframe
-          src={`${fileUrl}#toolbar=0&navpanes=0&scrollbar=0`}
-          className="w-full h-full border-0 scale-110 pointer-events-none"
-          style={{ filter: "blur(0.8px)" }}
-          title={title}
-        />
+        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-red-50 to-red-100">
+          <div className="text-center">
+            <div
+              className={`${
+                compact ? "h-8 w-8" : "h-12 w-12 sm:h-16 sm:w-16"
+              } rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-2`}
+            >
+              <FileText
+                className={`${
+                  compact ? "h-4 w-4" : "h-6 w-6 sm:h-8 sm:w-8"
+                } text-red-600`}
+              />
+            </div>
+            {!compact && (
+              <>
+                <p className="text-xs sm:text-sm font-bold text-red-800">PDF</p>
+                <p className="text-[9px] sm:text-[10px] text-red-600">
+                  Document
+                </p>
+              </>
+            )}
+          </div>
+        </div>
         <div className="absolute inset-0 bg-white/5 pointer-events-none"></div>
         {!compact && (
           <div className="absolute bottom-1 left-1 bg-black/60 backdrop-blur-sm px-1.5 py-0.5 rounded text-[8px] sm:text-[9px] text-white font-medium flex items-center gap-1 z-10">
@@ -129,8 +173,33 @@ export default function FilePreview({
     );
   }
 
-  // Word Files - Show blurred document preview (simulated)
+  // Word Files - Show thumbnail image if available, otherwise show simulated preview
   if (isWord) {
+    if (thumbnailUrl) {
+      return (
+        <div className="relative w-full h-full bg-white overflow-hidden">
+          <img
+            src={thumbnailUrl}
+            alt={title}
+            className="w-full h-full object-cover"
+            style={{ filter: "blur(0.8px)" }}
+            onError={(e) => {
+              console.error("Thumbnail load error:", thumbnailUrl);
+              setImageError(true);
+            }}
+            loading="lazy"
+          />
+          <div className="absolute inset-0 bg-white/5"></div>
+          {!compact && (
+            <div className="absolute bottom-1 left-1 bg-black/60 backdrop-blur-sm px-1.5 py-0.5 rounded text-[8px] sm:text-[9px] text-white font-medium flex items-center gap-1 z-10">
+              <FileText className="h-2.5 w-2.5" />
+              {fileExtension}
+            </div>
+          )}
+        </div>
+      );
+    }
+
     return (
       <div className="relative w-full h-full bg-white overflow-hidden">
         <div

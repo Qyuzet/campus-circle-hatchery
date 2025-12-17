@@ -42,6 +42,7 @@ export interface MarketplaceItem {
   fileName?: string;
   fileSize?: number;
   fileType?: string;
+  thumbnailUrl?: string;
   rating: number;
   reviews: number;
   reviewCount: number;

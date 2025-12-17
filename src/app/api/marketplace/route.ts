@@ -94,6 +94,7 @@ export async function POST(request: NextRequest) {
       fileName,
       fileSize,
       fileType,
+      thumbnailUrl,
     } = body;
 
     // Validation
@@ -139,6 +140,7 @@ export async function POST(request: NextRequest) {
         fileName: fileName || null,
         fileSize: fileSize ? parseInt(fileSize) : null,
         fileType: fileType || null,
+        thumbnailUrl: thumbnailUrl || null,
         sellerId: user.id,
         status: "available",
       },

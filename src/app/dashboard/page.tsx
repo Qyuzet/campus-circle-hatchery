@@ -1506,6 +1506,7 @@ export default function Dashboard() {
                                 category={item.category}
                                 title={item.title}
                                 compact={viewMode === "list"}
+                                thumbnailUrl={item.thumbnailUrl}
                               />
                               {/* Favorite Button */}
                               {viewMode === "grid" && (
@@ -3289,6 +3290,7 @@ export default function Dashboard() {
                   fileName={selectedItem.fileName || selectedItem.title}
                   title={selectedItem.title}
                   category={selectedItem.category}
+                  thumbnailUrl={selectedItem.thumbnailUrl}
                 />
               </div>
 
@@ -4228,6 +4230,161 @@ function TutoringForm({
   );
 }
 
+// Helper function to generate PDF thumbnail client-side
+async function generatePdfThumbnailClientSide(file: File): Promise<Blob> {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const pdfjsLib = (window as any).pdfjsLib;
+      if (!pdfjsLib) {
+        const script = document.createElement("script");
+        script.src =
+          "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+        script.onload = () => {
+          (window as any).pdfjsLib.GlobalWorkerOptions.workerSrc =
+            "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+        };
+        document.head.appendChild(script);
+        await new Promise((res) => setTimeout(res, 1000));
+      }
+
+      const arrayBuffer = await file.arrayBuffer();
+      const loadingTask = (window as any).pdfjsLib.getDocument({
+        data: arrayBuffer,
+      });
+      const pdf = await loadingTask.promise;
+      const page = await pdf.getPage(1);
+
+      const viewport = page.getViewport({ scale: 2.0 });
+      const canvas = document.createElement("canvas");
+      const context = canvas.getContext("2d");
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+
+      await page.render({ canvasContext: context, viewport: viewport }).promise;
+
+      const targetWidth = 800;
+      const scale = targetWidth / canvas.width;
+      const targetHeight = canvas.height * scale;
+
+      const resizedCanvas = document.createElement("canvas");
+      resizedCanvas.width = targetWidth;
+      resizedCanvas.height = targetHeight;
+      const resizedContext = resizedCanvas.getContext("2d");
+      resizedContext?.drawImage(canvas, 0, 0, targetWidth, targetHeight);
+
+      resizedCanvas.toBlob(
+        (blob) => {
+          if (blob) {
+            resolve(blob);
+          } else {
+            reject(new Error("Failed to create blob"));
+          }
+        },
+        "image/jpeg",
+        0.85
+      );
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+// Helper function to generate Word document thumbnail with real content
+async function generateWordThumbnailClientSide(fileUrl: string): Promise<Blob> {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const formData = new FormData();
+      formData.append("fileUrl", fileUrl);
+
+      const response = await fetch("/api/generate-word-thumbnail", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to extract Word content");
+      }
+
+      const data = await response.json();
+      const lines = data.lines || [];
+
+      const canvas = document.createElement("canvas");
+      canvas.width = 800;
+      canvas.height = 1000;
+      const ctx = canvas.getContext("2d");
+
+      if (!ctx) {
+        reject(new Error("Failed to get canvas context"));
+        return;
+      }
+
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, 800, 1000);
+
+      ctx.fillStyle = "#1e3a8a";
+      ctx.fillRect(0, 0, 800, 60);
+
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 24px Arial";
+      ctx.fillText("DOCX", 30, 38);
+
+      ctx.fillStyle = "#000000";
+      ctx.font = "16px Arial";
+
+      let yPosition = 100;
+      const lineHeight = 24;
+      const maxWidth = 740;
+
+      for (let i = 0; i < Math.min(lines.length, 25); i++) {
+        const line = lines[i];
+        if (line.length > 80) {
+          const words = line.split(" ");
+          let currentLine = "";
+
+          for (const word of words) {
+            const testLine = currentLine + word + " ";
+            const metrics = ctx.measureText(testLine);
+
+            if (metrics.width > maxWidth && currentLine !== "") {
+              ctx.fillText(currentLine, 30, yPosition);
+              yPosition += lineHeight;
+              currentLine = word + " ";
+
+              if (yPosition > 950) break;
+            } else {
+              currentLine = testLine;
+            }
+          }
+
+          if (currentLine && yPosition <= 950) {
+            ctx.fillText(currentLine, 30, yPosition);
+            yPosition += lineHeight;
+          }
+        } else {
+          ctx.fillText(line, 30, yPosition);
+          yPosition += lineHeight;
+        }
+
+        if (yPosition > 950) break;
+      }
+
+      canvas.toBlob(
+        (blob) => {
+          if (blob) {
+            resolve(blob);
+          } else {
+            reject(new Error("Failed to create blob"));
+          }
+        },
+        "image/jpeg",
+        0.85
+      );
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
 // Add Item Form Component
 function AddItemForm({
   onSubmit,
@@ -4307,7 +4464,7 @@ function AddItemForm({
 
       try {
         const uploadResult = await fileAPI.uploadFile(uploadedFile);
-        setUploadProgress(70);
+        setUploadProgress(60);
 
         if (!uploadResult.success || !uploadResult.url) {
           throw new Error("Upload failed - no URL returned");
@@ -4319,6 +4476,84 @@ function AddItemForm({
           fileSize: uploadResult.fileSize,
           fileType: uploadResult.fileType,
         };
+
+        if (uploadResult.fileType === "application/pdf") {
+          try {
+            setUploadProgress(70);
+            const thumbnailBlob = await generatePdfThumbnailClientSide(
+              uploadedFile
+            );
+            setUploadProgress(80);
+
+            const thumbnailFormData = new FormData();
+            thumbnailFormData.append(
+              "file",
+              thumbnailBlob,
+              `thumbnail-${Date.now()}-${uploadResult.fileName.replace(
+                ".pdf",
+                ".jpg"
+              )}`
+            );
+            thumbnailFormData.append("itemId", "temp");
+
+            const thumbnailUploadResponse = await fetch(
+              "/api/upload-thumbnail",
+              {
+                method: "POST",
+                body: thumbnailFormData,
+              }
+            );
+
+            if (thumbnailUploadResponse.ok) {
+              const thumbnailData = await thumbnailUploadResponse.json();
+              if (thumbnailData.success) {
+                (fileData as any).thumbnailUrl = thumbnailData.thumbnailUrl;
+              }
+            }
+          } catch (thumbError) {
+            console.error("Thumbnail generation failed:", thumbError);
+          }
+        } else if (
+          uploadResult.fileType === "application/msword" ||
+          uploadResult.fileType ===
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        ) {
+          try {
+            setUploadProgress(70);
+            const thumbnailBlob = await generateWordThumbnailClientSide(
+              uploadResult.url
+            );
+            setUploadProgress(80);
+
+            const thumbnailFormData = new FormData();
+            thumbnailFormData.append(
+              "file",
+              thumbnailBlob,
+              `thumbnail-${Date.now()}-${uploadResult.fileName.replace(
+                /\.(doc|docx)$/i,
+                ".jpg"
+              )}`
+            );
+            thumbnailFormData.append("itemId", "temp");
+
+            const thumbnailUploadResponse = await fetch(
+              "/api/upload-thumbnail",
+              {
+                method: "POST",
+                body: thumbnailFormData,
+              }
+            );
+
+            if (thumbnailUploadResponse.ok) {
+              const thumbnailData = await thumbnailUploadResponse.json();
+              if (thumbnailData.success) {
+                (fileData as any).thumbnailUrl = thumbnailData.thumbnailUrl;
+              }
+            }
+          } catch (thumbError) {
+            console.error("Word thumbnail generation failed:", thumbError);
+          }
+        }
       } catch (uploadError: any) {
         console.error("File upload error:", uploadError);
         throw new Error(
@@ -4460,8 +4695,8 @@ function AddItemForm({
           )}
         </div>
         <p className="text-[10px] text-medium-gray mt-0.5">
-          Only PDF files are accepted. Max file size: 10MB. Convert your
-          documents to PDF before uploading.
+          PDF, Word, or Image files are accepted. Max file size: 10MB. Convert
+          your documents to PDF before uploading.
         </p>
       </div>
 
