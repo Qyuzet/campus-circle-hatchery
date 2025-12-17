@@ -134,6 +134,15 @@ function DashboardContent() {
     year: 1,
   });
   const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [isEditingItem, setIsEditingItem] = useState(false);
+  const [editItemFormData, setEditItemFormData] = useState({
+    title: "",
+    description: "",
+    price: 0,
+    category: "",
+    course: "",
+  });
+  const [isSavingItem, setIsSavingItem] = useState(false);
 
   // Data states
   const [marketplaceItems, setMarketplaceItems] = useState<MarketplaceItem[]>(
@@ -746,6 +755,56 @@ function DashboardContent() {
     } catch (error) {
       console.error("Error deleting item:", error);
       toast.error("Failed to delete item. Please try again.");
+    }
+  };
+
+  const handleEditItem = (item: MarketplaceItem) => {
+    setEditItemFormData({
+      title: item.title,
+      description: item.description,
+      price: item.price,
+      category: item.category,
+      course: item.course,
+    });
+    setIsEditingItem(true);
+  };
+
+  const handleCancelEditItem = () => {
+    setIsEditingItem(false);
+    setEditItemFormData({
+      title: "",
+      description: "",
+      price: 0,
+      category: "",
+      course: "",
+    });
+  };
+
+  const handleSaveEditItem = async () => {
+    if (!selectedItem) return;
+
+    try {
+      setIsSavingItem(true);
+      const updatedItem = await marketplaceAPI.updateItem(
+        selectedItem.id,
+        editItemFormData
+      );
+
+      // Reload marketplace items
+      const items = await marketplaceAPI.getItems();
+      setMarketplaceItems(filterTradableItems(items));
+
+      // Update selected item
+      setSelectedItem(updatedItem);
+
+      // Show success message
+      toast.success("Item updated successfully!");
+      setIsEditingItem(false);
+    } catch (error) {
+      console.error("Error updating item:", error);
+      toast.error("Failed to update item. Please try again.");
+    } finally {
+      setIsSavingItem(false);
     }
   };
 
@@ -3307,10 +3366,13 @@ function DashboardContent() {
             {/* Header */}
             <div className="flex items-center justify-between px-3 py-2 border-b">
               <h2 className="text-base font-bold text-gray-900 line-clamp-1">
-                {selectedItem.title}
+                {isEditingItem ? "Edit Item" : selectedItem.title}
               </h2>
               <button
-                onClick={() => setShowItemDetailModal(false)}
+                onClick={() => {
+                  setShowItemDetailModal(false);
+                  setIsEditingItem(false);
+                }}
                 className="text-gray-400 hover:text-gray-600 transition-colors p-1 hover:bg-gray-100 rounded-full flex-shrink-0"
               >
                 <X className="h-4 w-4" />
@@ -3325,99 +3387,241 @@ function DashboardContent() {
                   fileUrl={selectedItem.fileUrl || selectedItem.imageUrl || ""}
                   fileType={selectedItem.fileType || ""}
                   fileName={selectedItem.fileName || selectedItem.title}
-                  title={selectedItem.title}
-                  category={selectedItem.category}
+                  title={
+                    isEditingItem ? editItemFormData.title : selectedItem.title
+                  }
+                  category={
+                    isEditingItem
+                      ? editItemFormData.category
+                      : selectedItem.category
+                  }
                   thumbnailUrl={selectedItem.thumbnailUrl}
                 />
               </div>
 
-              {/* Category Badge */}
-              <Badge variant="secondary" className="text-[10px] px-2 py-0.5">
-                {selectedItem.category}
-              </Badge>
+              {isEditingItem ? (
+                <>
+                  {/* Edit Form */}
+                  <div className="space-y-2">
+                    {/* Title */}
+                    <div>
+                      <label className="text-xs font-medium text-gray-700">
+                        Title
+                      </label>
+                      <Input
+                        value={editItemFormData.title}
+                        onChange={(e) =>
+                          setEditItemFormData({
+                            ...editItemFormData,
+                            title: e.target.value,
+                          })
+                        }
+                        className="text-xs h-8"
+                      />
+                    </div>
 
-              {/* Description */}
-              <p className="text-xs text-gray-600 line-clamp-2">
-                {selectedItem.description}
-              </p>
+                    {/* Description */}
+                    <div>
+                      <label className="text-xs font-medium text-gray-700">
+                        Description
+                      </label>
+                      <textarea
+                        value={editItemFormData.description}
+                        onChange={(e) =>
+                          setEditItemFormData({
+                            ...editItemFormData,
+                            description: e.target.value,
+                          })
+                        }
+                        className="w-full text-xs border rounded-md px-2 py-1.5 min-h-[60px]"
+                      />
+                    </div>
 
-              {/* Info - Single Line with Icons */}
-              <div className="flex items-center gap-3 text-[10px] text-gray-600 bg-gray-50 px-2 py-1.5 rounded-md">
-                <div className="flex items-center gap-1" title="Course">
-                  <BookOpen className="h-3 w-3 text-gray-500" />
-                  <span className="font-medium text-gray-900 truncate max-w-[60px]">
-                    {selectedItem.course}
-                  </span>
-                </div>
-                <div className="w-px h-3 bg-gray-300"></div>
-                <div className="flex items-center gap-1" title="Seller">
-                  <User className="h-3 w-3 text-gray-500" />
-                  <span className="font-medium text-gray-900 truncate max-w-[80px]">
-                    {typeof selectedItem.seller === "string"
-                      ? `${selectedItem.seller.slice(-9)}`
-                      : selectedItem.seller?.name || "Unknown"}
-                  </span>
-                </div>
-                <div className="w-px h-3 bg-gray-300"></div>
-                <div className="flex items-center gap-1" title="Rating">
-                  <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
-                  <span className="font-medium text-gray-900">
-                    {selectedItem.rating} ({selectedItem.reviews || 0})
-                  </span>
-                </div>
-                {selectedItem.condition && (
-                  <>
-                    <div className="w-px h-3 bg-gray-300"></div>
-                    <div className="flex items-center gap-1" title="Condition">
-                      <Eye className="h-3 w-3 text-gray-500" />
-                      <span className="font-medium text-gray-900">
-                        {selectedItem.condition}
+                    {/* Category */}
+                    <div>
+                      <label className="text-xs font-medium text-gray-700">
+                        Category
+                      </label>
+                      <select
+                        value={editItemFormData.category}
+                        onChange={(e) =>
+                          setEditItemFormData({
+                            ...editItemFormData,
+                            category: e.target.value,
+                          })
+                        }
+                        className="w-full text-xs border rounded-md px-2 py-1.5 h-8"
+                      >
+                        <option value="Assignment">Assignment</option>
+                        <option value="Notes">Notes</option>
+                        <option value="Book">Book</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
+
+                    {/* Course */}
+                    <div>
+                      <label className="text-xs font-medium text-gray-700">
+                        Course
+                      </label>
+                      <Input
+                        value={editItemFormData.course}
+                        onChange={(e) =>
+                          setEditItemFormData({
+                            ...editItemFormData,
+                            course: e.target.value,
+                          })
+                        }
+                        className="text-xs h-8"
+                        placeholder="e.g., AEXXX"
+                      />
+                    </div>
+
+                    {/* Price */}
+                    <div>
+                      <label className="text-xs font-medium text-gray-700">
+                        Price (Rp)
+                      </label>
+                      <Input
+                        type="number"
+                        value={editItemFormData.price}
+                        onChange={(e) =>
+                          setEditItemFormData({
+                            ...editItemFormData,
+                            price: parseInt(e.target.value) || 0,
+                          })
+                        }
+                        className="text-xs h-8"
+                      />
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* Category Badge */}
+                  <Badge
+                    variant="secondary"
+                    className="text-[10px] px-2 py-0.5"
+                  >
+                    {selectedItem.category}
+                  </Badge>
+
+                  {/* Description */}
+                  <p className="text-xs text-gray-600 line-clamp-2">
+                    {selectedItem.description}
+                  </p>
+
+                  {/* Info - Single Line with Icons */}
+                  <div className="flex items-center gap-3 text-[10px] text-gray-600 bg-gray-50 px-2 py-1.5 rounded-md">
+                    <div className="flex items-center gap-1" title="Course">
+                      <BookOpen className="h-3 w-3 text-gray-500" />
+                      <span className="font-medium text-gray-900 truncate max-w-[60px]">
+                        {selectedItem.course}
                       </span>
                     </div>
-                  </>
-                )}
-              </div>
+                    <div className="w-px h-3 bg-gray-300"></div>
+                    <div className="flex items-center gap-1" title="Seller">
+                      <User className="h-3 w-3 text-gray-500" />
+                      <span className="font-medium text-gray-900 truncate max-w-[80px]">
+                        {typeof selectedItem.seller === "string"
+                          ? `${selectedItem.seller.slice(-9)}`
+                          : selectedItem.seller?.name || "Unknown"}
+                      </span>
+                    </div>
+                    <div className="w-px h-3 bg-gray-300"></div>
+                    <div className="flex items-center gap-1" title="Rating">
+                      <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
+                      <span className="font-medium text-gray-900">
+                        {selectedItem.rating} ({selectedItem.reviews || 0})
+                      </span>
+                    </div>
+                    {selectedItem.condition && (
+                      <>
+                        <div className="w-px h-3 bg-gray-300"></div>
+                        <div
+                          className="flex items-center gap-1"
+                          title="Condition"
+                        >
+                          <Eye className="h-3 w-3 text-gray-500" />
+                          <span className="font-medium text-gray-900">
+                            {selectedItem.condition}
+                          </span>
+                        </div>
+                      </>
+                    )}
+                  </div>
 
-              {/* Price & Status */}
-              <div className="flex items-center justify-between px-2 py-1.5 bg-gradient-to-r from-blue-50 to-purple-50 rounded-md">
-                <div>
-                  <p className="text-[10px] text-gray-600">Price</p>
-                  <p className="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                    Rp {selectedItem.price.toLocaleString()}
-                  </p>
-                </div>
-                <Badge
-                  variant={
-                    selectedItem.status === "available"
-                      ? "default"
-                      : "secondary"
-                  }
-                  className={`text-[10px] px-2 py-0.5 ${
-                    selectedItem.status === "available"
-                      ? "bg-green-100 text-green-700 hover:bg-green-100"
-                      : selectedItem.status === "sold"
-                      ? "bg-red-100 text-red-700"
-                      : "bg-yellow-100 text-yellow-700"
-                  }`}
-                >
-                  {selectedItem.status}
-                </Badge>
-              </div>
+                  {/* Price & Status */}
+                  <div className="flex items-center justify-between px-2 py-1.5 bg-gradient-to-r from-blue-50 to-purple-50 rounded-md">
+                    <div>
+                      <p className="text-[10px] text-gray-600">Price</p>
+                      <p className="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                        Rp {selectedItem.price.toLocaleString()}
+                      </p>
+                    </div>
+                    <Badge
+                      variant={
+                        selectedItem.status === "available"
+                          ? "default"
+                          : "secondary"
+                      }
+                      className={`text-[10px] px-2 py-0.5 ${
+                        selectedItem.status === "available"
+                          ? "bg-green-100 text-green-700 hover:bg-green-100"
+                          : selectedItem.status === "sold"
+                          ? "bg-red-100 text-red-700"
+                          : "bg-yellow-100 text-yellow-700"
+                      }`}
+                    >
+                      {selectedItem.status}
+                    </Badge>
+                  </div>
+                </>
+              )}
 
               {/* Action Buttons */}
               <div className="flex gap-2 pt-1">
                 {selectedItem.sellerId === currentUser?.id ? (
-                  <Button
-                    variant="destructive"
-                    className="flex-1 text-xs px-3 py-1.5 h-auto"
-                    onClick={() => {
-                      handleDeleteItem(selectedItem.id);
-                      setShowItemDetailModal(false);
-                    }}
-                  >
-                    <Trash2 className="h-3 w-3 mr-1.5" />
-                    Delete Item
-                  </Button>
+                  isEditingItem ? (
+                    <>
+                      <Button
+                        variant="outline"
+                        className="flex-1 text-xs px-3 py-1.5 h-auto"
+                        onClick={handleCancelEditItem}
+                        disabled={isSavingItem}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        className="flex-1 text-xs px-3 py-1.5 h-auto"
+                        onClick={handleSaveEditItem}
+                        disabled={isSavingItem}
+                      >
+                        {isSavingItem ? "Saving..." : "Save Changes"}
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button
+                        variant="outline"
+                        className="flex-1 text-xs px-3 py-1.5 h-auto"
+                        onClick={() => handleEditItem(selectedItem)}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        className="flex-1 text-xs px-3 py-1.5 h-auto"
+                        onClick={() => {
+                          handleDeleteItem(selectedItem.id);
+                          setShowItemDetailModal(false);
+                        }}
+                      >
+                        <Trash2 className="h-3 w-3 mr-1.5" />
+                        Delete Item
+                      </Button>
+                    </>
+                  )
                 ) : selectedItem.status === "available" ? (
                   <>
                     <Button
