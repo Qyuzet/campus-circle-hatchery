@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -73,7 +73,7 @@ import PaymentModal from "@/components/PaymentModal";
 import { WithdrawalForm } from "@/components/WithdrawalForm";
 import FilePreview from "@/components/FilePreview";
 
-export default function Dashboard() {
+function DashboardContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -4794,4 +4794,17 @@ function AddItemForm({
   );
 }
 
-// Add PaymentModal at the end of Dashboard component - find the closing div and add before it
+// Wrapper component with Suspense boundary
+export default function Dashboard() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-screen">
+          Loading...
+        </div>
+      }
+    >
+      <DashboardContent />
+    </Suspense>
+  );
+}
