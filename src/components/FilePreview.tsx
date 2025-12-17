@@ -70,44 +70,37 @@ export default function FilePreview({
     );
   }
 
-  // PDF Files - Use Cloudinary transformation for thumbnails
-  const isCloudinary = fileUrl.includes("cloudinary.com");
-  const thumbnailUrl = isCloudinary
-    ? fileUrl.replace(
-        "/upload/",
-        compact
-          ? "/upload/pg_1,w_100,h_100,c_fill,f_jpg/"
-          : "/upload/pg_1,w_600,h_400,c_fill,f_jpg/"
-      )
-    : fileUrl;
-
+  // PDF Files - Show icon (Cloudinary raw files don't support thumbnails)
   return (
     <div className="relative w-full h-full bg-gray-100 overflow-hidden">
-      {isCloudinary && !imageError ? (
-        <img
-          src={thumbnailUrl}
-          alt={title}
-          className="w-full h-full object-cover"
-          onError={() => setImageError(true)}
-        />
-      ) : (
-        <div
-          className={`w-full h-full flex items-center justify-center ${getCategoryGradient()}`}
-        >
-          <div className="text-center">
+      <div
+        className={`w-full h-full flex items-center justify-center ${getCategoryGradient()}`}
+      >
+        <div className="text-center">
+          <div
+            className={`${
+              compact ? "h-10 w-10" : "h-16 w-16"
+            } rounded-full ${getCategoryIconColor()
+              .replace("text-", "bg-")
+              .replace(
+                "-600",
+                "-100"
+              )} flex items-center justify-center mx-auto mb-2`}
+          >
             <FileText
               className={`${
                 compact ? "h-5 w-5" : "h-8 w-8"
-              } ${getCategoryIconColor()} mx-auto`}
+              } ${getCategoryIconColor()}`}
             />
-            {!compact && (
-              <p className="text-[10px] font-semibold text-gray-700 mt-1">
-                PDF
-              </p>
-            )}
           </div>
+          {!compact && (
+            <>
+              <p className="text-sm font-bold text-gray-800">PDF</p>
+              <p className="text-[10px] text-gray-600">Document</p>
+            </>
+          )}
         </div>
-      )}
+      </div>
       {!compact && (
         <div className="absolute bottom-1 left-1 bg-black/60 backdrop-blur-sm px-1.5 py-0.5 rounded text-[8px] sm:text-[9px] text-white font-medium flex items-center gap-1">
           <FileText className="h-2.5 w-2.5" />

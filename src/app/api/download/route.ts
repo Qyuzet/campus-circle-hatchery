@@ -15,10 +15,7 @@ export async function POST(request: NextRequest) {
     const { itemId } = await request.json();
 
     if (!itemId) {
-      return NextResponse.json(
-        { error: "Item ID required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Item ID required" }, { status: 400 });
     }
 
     // Get user from database
@@ -65,4 +62,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

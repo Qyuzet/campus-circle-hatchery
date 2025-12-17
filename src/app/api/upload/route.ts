@@ -55,16 +55,18 @@ export async function POST(request: NextRequest) {
     const base64 = buffer.toString("base64");
     const dataURI = `data:${file.type};base64,${base64}`;
 
-    // Upload PDF to Cloudinary as "image" type for thumbnail generation
+    console.log("📤 Uploading PDF to Cloudinary:", file.name);
+
+    // Upload PDF to Cloudinary as "raw" type (PDFs cannot be uploaded as "image")
     const uploadResult = await cloudinary.uploader.upload(dataURI, {
-      resource_type: "image", // PDFs need "image" type for thumbnail generation
+      resource_type: "raw", // PDFs must be uploaded as "raw" type
       folder: "campus-circle",
-      public_id: `${Date.now()}-${file.name.split(".")[0]}`,
+      public_id: `${Date.now()}-${file.name.replace(/\.[^/.]+$/, "")}`,
       type: "upload",
       access_mode: "public",
-      flags: "attachment",
-      format: "pdf",
     });
+
+    console.log("✅ PDF uploaded successfully:", uploadResult.secure_url);
 
     return NextResponse.json({
       success: true,
@@ -73,10 +75,16 @@ export async function POST(request: NextRequest) {
       fileSize: file.size,
       fileType: file.type,
     });
-  } catch (error) {
-    console.error("Upload error:", error);
+  } catch (error: any) {
+    console.error("❌ Upload error:", error);
+
+    // Return detailed error message
+    const errorMessage = error?.message || "Failed to upload file";
     return NextResponse.json(
-      { error: "Failed to upload file" },
+      {
+        error: errorMessage,
+        details: error?.error?.message || "Unknown error occurred",
+      },
       { status: 500 }
     );
   }

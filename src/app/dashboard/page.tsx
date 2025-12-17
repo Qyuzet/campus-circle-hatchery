@@ -3911,14 +3911,27 @@ function AddItemForm({
 
       // Upload file (required)
       setUploadProgress(30);
-      const uploadResult = await fileAPI.uploadFile(uploadedFile);
-      setUploadProgress(70);
-      fileData = {
-        fileUrl: uploadResult.url,
-        fileName: uploadResult.fileName,
-        fileSize: uploadResult.fileSize,
-        fileType: uploadResult.fileType,
-      };
+
+      try {
+        const uploadResult = await fileAPI.uploadFile(uploadedFile);
+        setUploadProgress(70);
+
+        if (!uploadResult.success || !uploadResult.url) {
+          throw new Error("Upload failed - no URL returned");
+        }
+
+        fileData = {
+          fileUrl: uploadResult.url,
+          fileName: uploadResult.fileName,
+          fileSize: uploadResult.fileSize,
+          fileType: uploadResult.fileType,
+        };
+      } catch (uploadError: any) {
+        console.error("File upload error:", uploadError);
+        throw new Error(
+          uploadError.message || "Failed to upload PDF file. Please try again."
+        );
+      }
 
       setUploadProgress(90);
 
@@ -3930,9 +3943,9 @@ function AddItemForm({
       });
 
       setUploadProgress(100);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error submitting form:", error);
-      alert("Failed to add item. Please try again.");
+      alert(error.message || "Failed to add item. Please try again.");
     } finally {
       setUploading(false);
       setUploadProgress(0);
