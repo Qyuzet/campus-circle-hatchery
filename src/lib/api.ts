@@ -382,9 +382,12 @@ export const withdrawalsAPI = {
 // ============================================
 export const fileAPI = {
   // Upload file
-  async uploadFile(file: File) {
+  async uploadFile(file: File, forceCompress: boolean = false) {
     const formData = new FormData();
     formData.append("file", file);
+    if (forceCompress) {
+      formData.append("forceCompress", "true");
+    }
 
     const response = await fetch("/api/upload", {
       method: "POST",
@@ -392,8 +395,10 @@ export const fileAPI = {
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || "Failed to upload file");
+      const errorData = await response.json();
+      const error: any = new Error(errorData.error || "Failed to upload file");
+      error.details = errorData.details;
+      throw error;
     }
 
     return response.json();

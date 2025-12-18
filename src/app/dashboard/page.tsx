@@ -148,6 +148,13 @@ function DashboardContent() {
   );
   const [showWishlistModal, setShowWishlistModal] = useState(false);
   const [wishlistItems, setWishlistItems] = useState<any[]>([]);
+  const [showCompressionModal, setShowCompressionModal] = useState(false);
+  const [compressionInfo, setCompressionInfo] = useState<{
+    originalSize: number;
+    compressedSize: number;
+    compressionRatio: number;
+  } | null>(null);
+  const [pendingUploadFile, setPendingUploadFile] = useState<File | null>(null);
 
   // Data states
   const [marketplaceItems, setMarketplaceItems] = useState<MarketplaceItem[]>(
@@ -4825,6 +4832,14 @@ function AddItemForm({
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [showCompressionModal, setShowCompressionModal] = useState(false);
+  const [compressionInfo, setCompressionInfo] = useState<{
+    originalSize: number;
+    compressedSize: number;
+    compressionRatio: number;
+  } | null>(null);
+  const [pendingUploadFile, setPendingUploadFile] = useState<File | null>(null);
+  const [compressionAttempts, setCompressionAttempts] = useState(0);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -4844,14 +4859,6 @@ function AddItemForm({
         toast.error(
           "Only PDF, Word (DOC/DOCX), and image files (JPG/PNG) are allowed."
         );
-        e.target.value = "";
-        return;
-      }
-
-      // Validate file size (max 10MB)
-      const maxSize = 10 * 1024 * 1024; // 10MB
-      if (file.size > maxSize) {
-        toast.error("File size exceeds 10MB limit. Please compress your file.");
         e.target.value = "";
         return;
       }
@@ -4885,11 +4892,29 @@ function AddItemForm({
       setUploadProgress(30);
 
       try {
-        const uploadResult = await fileAPI.uploadFile(uploadedFile);
+        const uploadResult = await fileAPI.uploadFile(uploadedFile, false);
         setUploadProgress(60);
 
         if (!uploadResult.success || !uploadResult.url) {
           throw new Error("Upload failed - no URL returned");
+        }
+
+        if (uploadResult.compressionInfo?.wasCompressed) {
+          toast.success(
+            `File compressed: ${(
+              uploadResult.compressionInfo.originalSize /
+              1024 /
+              1024
+            ).toFixed(2)}MB → ${(
+              uploadResult.compressionInfo.finalSize /
+              1024 /
+              1024
+            ).toFixed(
+              2
+            )}MB (${uploadResult.compressionInfo.compressionRatio.toFixed(
+              1
+            )}% reduction)`
+          );
         }
 
         fileData = {
@@ -4978,14 +5003,32 @@ function AddItemForm({
         }
       } catch (uploadError: any) {
         console.error("File upload error:", uploadError);
-        throw new Error(
-          uploadError.message || "Failed to upload PDF file. Please try again."
-        );
+
+        if (uploadError.message?.includes("too large even after compression")) {
+          if (uploadError.details) {
+            const { originalSize, compressedSize } = uploadError.details;
+            setCompressionInfo({
+              originalSize,
+              compressedSize,
+              compressionRatio:
+                ((originalSize - compressedSize) / originalSize) * 100,
+            });
+          }
+          setPendingUploadFile(uploadedFile);
+          setCompressionAttempts(1);
+          setShowCompressionModal(true);
+          setUploading(false);
+          setUploadProgress(0);
+          return;
+        } else {
+          throw new Error(
+            uploadError.message || "Failed to upload file. Please try again."
+          );
+        }
       }
 
       setUploadProgress(90);
 
-      // Submit form with file data
       await onSubmit({
         ...formData,
         price: parseInt(formData.price),
@@ -5002,161 +5045,427 @@ function AddItemForm({
     }
   };
 
-  return (
-    <form onSubmit={handleSubmit} className="space-y-2.5">
-      <div>
-        <label className="block text-xs font-medium text-dark-gray mb-0.5">
-          Title *
-        </label>
-        <input
-          type="text"
-          value={formData.title}
-          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-          className="w-full px-2.5 py-1.5 text-sm border border-light-gray rounded-md focus:outline-none focus:ring-1 focus:ring-dark-blue focus:border-dark-blue"
-          placeholder="e.g., Data Structures Notes"
-        />
-      </div>
+  const handleRecompress = async () => {
+    if (!pendingUploadFile) return;
 
-      <div>
-        <label className="block text-xs font-medium text-dark-gray mb-0.5">
-          Description *
-        </label>
-        <textarea
-          value={formData.description}
-          onChange={(e) =>
-            setFormData({ ...formData, description: e.target.value })
+    setShowCompressionModal(false);
+    setUploading(true);
+    setUploadProgress(0);
+
+    try {
+      let fileData: any = {};
+
+      try {
+        setUploadProgress(10);
+        const recompressResult = await fileAPI.uploadFile(
+          pendingUploadFile,
+          true
+        );
+        setUploadProgress(60);
+
+        if (!recompressResult.success || !recompressResult.url) {
+          throw new Error("Recompression failed");
+        }
+
+        if (recompressResult.compressionInfo?.wasCompressed) {
+          toast.success(
+            `File recompressed: ${(
+              recompressResult.compressionInfo.originalSize /
+              1024 /
+              1024
+            ).toFixed(2)}MB → ${(
+              recompressResult.compressionInfo.finalSize /
+              1024 /
+              1024
+            ).toFixed(
+              2
+            )}MB (${recompressResult.compressionInfo.compressionRatio.toFixed(
+              1
+            )}% reduction)`
+          );
+        }
+
+        fileData = {
+          fileUrl: recompressResult.url,
+          fileName: recompressResult.fileName,
+          fileSize: recompressResult.fileSize,
+          fileType: recompressResult.fileType,
+        };
+
+        if (recompressResult.fileType === "application/pdf") {
+          try {
+            setUploadProgress(70);
+            const thumbnailBlob = await generatePdfThumbnailClientSide(
+              pendingUploadFile
+            );
+            setUploadProgress(80);
+
+            const thumbnailFormData = new FormData();
+            thumbnailFormData.append(
+              "file",
+              thumbnailBlob,
+              `thumbnail-${Date.now()}-${recompressResult.fileName.replace(
+                ".pdf",
+                ".jpg"
+              )}`
+            );
+            thumbnailFormData.append("itemId", "temp");
+
+            const thumbnailUploadResponse = await fetch(
+              "/api/upload-thumbnail",
+              {
+                method: "POST",
+                body: thumbnailFormData,
+              }
+            );
+
+            if (thumbnailUploadResponse.ok) {
+              const thumbnailData = await thumbnailUploadResponse.json();
+              if (thumbnailData.success) {
+                (fileData as any).thumbnailUrl = thumbnailData.thumbnailUrl;
+              }
+            }
+          } catch (thumbError) {
+            console.error("PDF thumbnail generation failed:", thumbError);
           }
-          className="w-full px-2.5 py-1.5 text-sm border border-light-gray rounded-md focus:outline-none focus:ring-1 focus:ring-dark-blue focus:border-dark-blue"
-          rows={2}
-          placeholder="Describe your item..."
-        />
-      </div>
+        } else if (
+          recompressResult.fileType ===
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+          recompressResult.fileType === "application/msword"
+        ) {
+          try {
+            setUploadProgress(70);
+            const wordThumbnailFormData = new FormData();
+            wordThumbnailFormData.append("file", pendingUploadFile);
+            wordThumbnailFormData.append("itemId", "temp");
 
-      <div className="grid grid-cols-3 gap-2">
-        <div>
-          <label className="block text-xs font-medium text-dark-gray mb-0.5">
-            Price (Rp) *
-          </label>
-          <input
-            type="number"
-            value={formData.price}
-            onChange={(e) =>
-              setFormData({ ...formData, price: e.target.value })
+            const thumbnailResponse = await fetch("/api/upload-thumbnail", {
+              method: "POST",
+              body: wordThumbnailFormData,
+            });
+
+            if (thumbnailResponse.ok) {
+              const thumbnailData = await thumbnailResponse.json();
+              if (thumbnailData.success) {
+                (fileData as any).thumbnailUrl = thumbnailData.thumbnailUrl;
+              }
             }
-            className="w-full px-2.5 py-1.5 text-sm border border-light-gray rounded-md focus:outline-none focus:ring-1 focus:ring-dark-blue focus:border-dark-blue"
-            placeholder="50000"
-          />
-        </div>
+          } catch (thumbError) {
+            console.error("Word thumbnail generation failed:", thumbError);
+          }
+        }
 
+        setUploadProgress(90);
+
+        await onSubmit({
+          ...formData,
+          price: parseInt(formData.price),
+          ...fileData,
+        });
+
+        setUploadProgress(100);
+        setPendingUploadFile(null);
+        setCompressionAttempts(0);
+      } catch (recompressError: any) {
+        console.error("Recompression error:", recompressError);
+
+        if (
+          recompressError.message?.includes("too large even after compression")
+        ) {
+          if (recompressError.details) {
+            const { originalSize, compressedSize } = recompressError.details;
+            setCompressionInfo({
+              originalSize,
+              compressedSize,
+              compressionRatio:
+                ((originalSize - compressedSize) / originalSize) * 100,
+            });
+          }
+          setCompressionAttempts((prev) => prev + 1);
+          setShowCompressionModal(true);
+          setUploading(false);
+          setUploadProgress(0);
+          return;
+        }
+
+        toast.error(
+          recompressError.message ||
+            "Failed to recompress file. Please try reducing the file size manually."
+        );
+      } finally {
+        setUploading(false);
+        setUploadProgress(0);
+      }
+    } catch (error: any) {
+      console.error("Error:", error);
+      toast.error(error.message || "An error occurred");
+    }
+  };
+
+  return (
+    <>
+      <form onSubmit={handleSubmit} className="space-y-2.5">
         <div>
           <label className="block text-xs font-medium text-dark-gray mb-0.5">
-            Category *
-          </label>
-          <select
-            value={formData.category}
-            onChange={(e) =>
-              setFormData({ ...formData, category: e.target.value })
-            }
-            className="w-full px-2.5 py-1.5 text-sm border border-light-gray rounded-md focus:outline-none focus:ring-1 focus:ring-dark-blue focus:border-dark-blue"
-          >
-            <option value="Notes">Notes</option>
-            <option value="Assignment">Assignment</option>
-            <option value="Book">Book</option>
-            <option value="Other">Other</option>
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-xs font-medium text-dark-gray mb-0.5">
-            Course *
+            Title *
           </label>
           <input
             type="text"
-            value={formData.course}
+            value={formData.title}
             onChange={(e) =>
-              setFormData({ ...formData, course: e.target.value })
+              setFormData({ ...formData, title: e.target.value })
             }
             className="w-full px-2.5 py-1.5 text-sm border border-light-gray rounded-md focus:outline-none focus:ring-1 focus:ring-dark-blue focus:border-dark-blue"
-            placeholder="e.g., COMP6048"
+            placeholder="e.g., Data Structures Notes"
           />
         </div>
-      </div>
 
-      {/* File Upload */}
-      <div>
-        <label className="block text-xs font-medium text-dark-gray mb-0.5">
-          Upload File (PDF, Word, or Image) *
-        </label>
-        <div className="mt-0.5">
-          <input
-            type="file"
-            onChange={handleFileChange}
-            accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png"
-            className="w-full px-2 py-1 border border-light-gray rounded-md focus:outline-none focus:ring-1 focus:ring-dark-blue focus:border-dark-blue text-xs"
-            required
+        <div>
+          <label className="block text-xs font-medium text-dark-gray mb-0.5">
+            Description *
+          </label>
+          <textarea
+            value={formData.description}
+            onChange={(e) =>
+              setFormData({ ...formData, description: e.target.value })
+            }
+            className="w-full px-2.5 py-1.5 text-sm border border-light-gray rounded-md focus:outline-none focus:ring-1 focus:ring-dark-blue focus:border-dark-blue"
+            rows={2}
+            placeholder="Describe your item..."
           />
-          {uploadedFile && (
-            <div className="mt-1.5 p-1.5 bg-green-50 border border-green-200 rounded-md flex items-center justify-between">
-              <div className="flex items-center space-x-1.5">
-                <FileText className="h-3 w-3 text-green-600" />
-                <span className="text-xs text-green-700 truncate">
-                  {uploadedFile.name}
-                </span>
-                <span className="text-[10px] text-green-600">
-                  ({(uploadedFile.size / 1024 / 1024).toFixed(2)} MB)
-                </span>
+        </div>
+
+        <div className="grid grid-cols-3 gap-2">
+          <div>
+            <label className="block text-xs font-medium text-dark-gray mb-0.5">
+              Price (Rp) *
+            </label>
+            <input
+              type="number"
+              value={formData.price}
+              onChange={(e) =>
+                setFormData({ ...formData, price: e.target.value })
+              }
+              className="w-full px-2.5 py-1.5 text-sm border border-light-gray rounded-md focus:outline-none focus:ring-1 focus:ring-dark-blue focus:border-dark-blue"
+              placeholder="50000"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-dark-gray mb-0.5">
+              Category *
+            </label>
+            <select
+              value={formData.category}
+              onChange={(e) =>
+                setFormData({ ...formData, category: e.target.value })
+              }
+              className="w-full px-2.5 py-1.5 text-sm border border-light-gray rounded-md focus:outline-none focus:ring-1 focus:ring-dark-blue focus:border-dark-blue"
+            >
+              <option value="Notes">Notes</option>
+              <option value="Assignment">Assignment</option>
+              <option value="Book">Book</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-dark-gray mb-0.5">
+              Course *
+            </label>
+            <input
+              type="text"
+              value={formData.course}
+              onChange={(e) =>
+                setFormData({ ...formData, course: e.target.value })
+              }
+              className="w-full px-2.5 py-1.5 text-sm border border-light-gray rounded-md focus:outline-none focus:ring-1 focus:ring-dark-blue focus:border-dark-blue"
+              placeholder="e.g., COMP6048"
+            />
+          </div>
+        </div>
+
+        {/* File Upload */}
+        <div>
+          <label className="block text-xs font-medium text-dark-gray mb-0.5">
+            Upload File (PDF, Word, or Image) *
+          </label>
+          <div className="mt-0.5">
+            <input
+              type="file"
+              onChange={handleFileChange}
+              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png"
+              className="w-full px-2 py-1 border border-light-gray rounded-md focus:outline-none focus:ring-1 focus:ring-dark-blue focus:border-dark-blue text-xs"
+              required
+            />
+            {uploadedFile && (
+              <div className="mt-1.5 p-1.5 bg-green-50 border border-green-200 rounded-md flex items-center justify-between">
+                <div className="flex items-center space-x-1.5">
+                  <FileText className="h-3 w-3 text-green-600" />
+                  <span className="text-xs text-green-700 truncate">
+                    {uploadedFile.name}
+                  </span>
+                  <span className="text-[10px] text-green-600">
+                    ({(uploadedFile.size / 1024 / 1024).toFixed(2)} MB)
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setUploadedFile(null)}
+                  className="text-red-600 hover:text-red-800"
+                >
+                  <X className="h-3 w-3" />
+                </button>
               </div>
+            )}
+          </div>
+          <p className="text-[10px] text-medium-gray mt-0.5">
+            PDF, Word, or Image files are accepted. Max file size: 10MB. Convert
+            your documents to PDF before uploading.
+          </p>
+        </div>
+
+        {/* Upload Progress */}
+        {uploading && (
+          <div className="space-y-1">
+            <div className="flex justify-between text-xs">
+              <span className="text-medium-gray">Uploading...</span>
+              <span className="text-dark-blue font-medium">
+                {uploadProgress}%
+              </span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-1.5">
+              <div
+                className="bg-dark-blue h-1.5 rounded-full transition-all duration-300"
+                style={{ width: `${uploadProgress}%` }}
+              ></div>
+            </div>
+          </div>
+        )}
+
+        <div className="flex gap-2 pt-2">
+          <button
+            type="submit"
+            disabled={uploading}
+            className="flex-1 bg-dark-blue text-white px-3 py-1.5 text-sm rounded-md hover:bg-primary-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {uploading ? "Uploading..." : "Add Item"}
+          </button>
+          <button
+            type="button"
+            onClick={onCancel}
+            className="px-3 py-1.5 text-sm border border-light-gray text-medium-gray rounded-md hover:bg-secondary-50 transition-colors"
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
+
+      {showCompressionModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <div className="flex items-start gap-3 mb-4">
+              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                <svg
+                  className="w-6 h-6 text-red-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                  />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-dark-blue mb-2">
+                  File is too large even after compression
+                </h3>
+                {compressionAttempts > 1 && (
+                  <div className="mb-2 px-3 py-1.5 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <p className="text-xs text-yellow-800">
+                      Compression attempt {compressionAttempts} - File is still
+                      too large
+                    </p>
+                  </div>
+                )}
+                {compressionInfo && (
+                  <div className="space-y-2 mb-4">
+                    <div className="bg-gray-50 rounded-lg p-3 space-y-1.5">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-medium-gray">Original Size:</span>
+                        <span className="font-medium text-dark-blue">
+                          {(compressionInfo.originalSize / 1024 / 1024).toFixed(
+                            2
+                          )}{" "}
+                          MB
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-medium-gray">
+                          After Compression:
+                        </span>
+                        <span className="font-medium text-dark-blue">
+                          {(
+                            compressionInfo.compressedSize /
+                            1024 /
+                            1024
+                          ).toFixed(2)}{" "}
+                          MB
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-medium-gray">Reduction:</span>
+                        <span className="font-medium text-green-600">
+                          {compressionInfo.compressionRatio.toFixed(1)}%
+                        </span>
+                      </div>
+                      <div className="pt-2 border-t border-gray-200 mt-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-medium-gray">
+                            Maximum Allowed:
+                          </span>
+                          <span className="font-medium text-red-600">
+                            10.00 MB
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <p className="text-sm text-medium-gray">
+                      Would you like to try a more aggressive compression? This
+                      may reduce quality but will make the file smaller.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
               <button
-                type="button"
-                onClick={() => setUploadedFile(null)}
-                className="text-red-600 hover:text-red-800"
+                onClick={handleRecompress}
+                className="flex-1 bg-dark-blue text-white px-4 py-2.5 rounded-lg hover:bg-primary-800 transition-colors font-medium"
               >
-                <X className="h-3 w-3" />
+                Compress More
+              </button>
+              <button
+                onClick={() => {
+                  setShowCompressionModal(false);
+                  setPendingUploadFile(null);
+                  setCompressionInfo(null);
+                  setCompressionAttempts(0);
+                }}
+                className="flex-1 px-4 py-2.5 border border-gray-300 text-medium-gray rounded-lg hover:bg-gray-50 transition-colors font-medium"
+              >
+                Cancel
               </button>
             </div>
-          )}
-        </div>
-        <p className="text-[10px] text-medium-gray mt-0.5">
-          PDF, Word, or Image files are accepted. Max file size: 10MB. Convert
-          your documents to PDF before uploading.
-        </p>
-      </div>
-
-      {/* Upload Progress */}
-      {uploading && (
-        <div className="space-y-1">
-          <div className="flex justify-between text-xs">
-            <span className="text-medium-gray">Uploading...</span>
-            <span className="text-dark-blue font-medium">
-              {uploadProgress}%
-            </span>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-1.5">
-            <div
-              className="bg-dark-blue h-1.5 rounded-full transition-all duration-300"
-              style={{ width: `${uploadProgress}%` }}
-            ></div>
           </div>
         </div>
       )}
-
-      <div className="flex gap-2 pt-2">
-        <button
-          type="submit"
-          disabled={uploading}
-          className="flex-1 bg-dark-blue text-white px-3 py-1.5 text-sm rounded-md hover:bg-primary-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {uploading ? "Uploading..." : "Add Item"}
-        </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="px-3 py-1.5 text-sm border border-light-gray text-medium-gray rounded-md hover:bg-secondary-50 transition-colors"
-        >
-          Cancel
-        </button>
-      </div>
-    </form>
+    </>
   );
 }
 
