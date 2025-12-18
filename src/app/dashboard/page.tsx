@@ -1114,7 +1114,7 @@ function DashboardContent() {
     <div className="min-h-screen bg-secondary-50">
       <Toaster position="top-center" richColors />
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-light-gray">
+      <header className="sticky top-0 z-50 bg-white shadow-sm border-b border-light-gray">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <button
@@ -1318,7 +1318,7 @@ function DashboardContent() {
       </header>
 
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
-        <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
+        <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 lg:relative">
           {/* Mobile Navigation */}
           <div className="lg:hidden">
             {/* Mobile Tab Navigation */}
@@ -1393,7 +1393,7 @@ function DashboardContent() {
 
           {/* Desktop Sidebar */}
           <div className="hidden lg:block lg:w-64 flex-shrink-0">
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="sticky top-28 bg-white rounded-lg shadow p-6 self-start">
               <nav className="space-y-1">
                 <button
                   onClick={() => setActiveTab("discovery")}
@@ -1510,7 +1510,7 @@ function DashboardContent() {
                 {!loadingStates.discovery && (
                   <>
                     {/* Header with Search and Filters - Ultra Compact Desktop Version */}
-                    <Card>
+                    <Card className="sticky top-28 z-40 bg-white">
                       <CardContent className="p-3 sm:p-3">
                         <div className="flex items-center gap-1.5 sm:gap-2">
                           {/* Title - Compact */}
