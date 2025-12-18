@@ -9,10 +9,22 @@ import {
   getGroupChannel,
 } from "@/lib/pusher";
 import { playNotificationSound } from "@/lib/notification-sound";
-import { groupsAPI, usersAPI, wishlistAPI } from "@/lib/api";
+import {
+  groupsAPI,
+  usersAPI,
+  wishlistAPI,
+  foodAPI,
+  eventAPI,
+  FoodItem,
+  Event,
+} from "@/lib/api";
 import Image from "next/image";
 import { toast, Toaster } from "sonner";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { FoodItemCard } from "@/components/FoodItemCard";
+import { EventCard } from "@/components/EventCard";
+import { AddFoodForm } from "@/components/AddFoodForm";
+import { AddEventForm } from "@/components/AddEventForm";
 import {
   Card,
   CardContent,
@@ -50,6 +62,8 @@ import {
   Library,
   RefreshCw,
   Wallet,
+  Sparkles,
+  Loader2,
 } from "lucide-react";
 import {
   marketplaceAPI,
@@ -95,6 +109,10 @@ function DashboardContent() {
   );
   const [showAddItemModal, setShowAddItemModal] = useState(false);
   const [showAddTypeModal, setShowAddTypeModal] = useState(false);
+  const [showAddFoodModal, setShowAddFoodModal] = useState(false);
+  const [showAddEventModal, setShowAddEventModal] = useState(false);
+  const [foodItems, setFoodItems] = useState<FoodItem[]>([]);
+  const [events, setEvents] = useState<Event[]>([]);
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [showTutoringModal, setShowTutoringModal] = useState(false);
   const [showItemDetailModal, setShowItemDetailModal] = useState(false);
@@ -443,8 +461,14 @@ function DashboardContent() {
     try {
       switch (tab) {
         case "discovery":
-          const items = await marketplaceAPI.getItems();
+          const [items, foodData, eventData] = await Promise.all([
+            marketplaceAPI.getItems(),
+            foodAPI.getFoodItems(),
+            eventAPI.getEvents(),
+          ]);
           setMarketplaceItems(filterTradableItems(items));
+          setFoodItems(foodData);
+          setEvents(eventData);
           break;
 
         case "messages":
@@ -751,6 +775,32 @@ function DashboardContent() {
     } catch (error) {
       console.error("Error adding item:", error);
       toast.error("Failed to add item. Please try again.");
+    }
+  };
+
+  const handleAddFood = async (foodData: any) => {
+    try {
+      await foodAPI.createFoodItem(foodData);
+      const foodData2 = await foodAPI.getFoodItems();
+      setFoodItems(foodData2);
+      setShowAddFoodModal(false);
+      toast.success("Food item added successfully!");
+    } catch (error) {
+      console.error("Error adding food item:", error);
+      toast.error("Failed to add food item. Please try again.");
+    }
+  };
+
+  const handleAddEvent = async (eventData: any) => {
+    try {
+      await eventAPI.createEvent(eventData);
+      const eventData2 = await eventAPI.getEvents();
+      setEvents(eventData2);
+      setShowAddEventModal(false);
+      toast.success("Event created successfully!");
+    } catch (error) {
+      console.error("Error creating event:", error);
+      toast.error("Failed to create event. Please try again.");
     }
   };
 
@@ -1637,38 +1687,67 @@ function DashboardContent() {
                     </Card>
 
                     {/* Marketplace Items */}
-                    {contentMode === "food" || contentMode === "event" ? (
-                      <Card>
-                        <CardContent className="flex flex-col items-center justify-center py-16">
-                          {contentMode === "food" ? (
-                            <>
+                    {contentMode === "food" ? (
+                      <div
+                        className={`grid gap-2 sm:gap-4 ${
+                          viewMode === "grid"
+                            ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+                            : "grid-cols-1"
+                        }`}
+                      >
+                        {foodItems.length === 0 ? (
+                          <Card className="col-span-full">
+                            <CardContent className="flex flex-col items-center justify-center py-16">
                               <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mb-4">
                                 <ShoppingCart className="h-8 w-8 text-orange-600" />
                               </div>
                               <h3 className="text-xl font-semibold mb-2">
-                                Food Marketplace Coming Soon
+                                No Food Items Yet
                               </h3>
                               <p className="text-muted-foreground text-center max-w-md">
-                                Share and discover food items with your campus
-                                community. This feature is under development.
+                                Be the first to share food items with your
+                                campus community!
                               </p>
-                            </>
-                          ) : (
-                            <>
+                            </CardContent>
+                          </Card>
+                        ) : (
+                          foodItems.map((item) => (
+                            <FoodItemCard
+                              key={item.id}
+                              item={item}
+                              viewMode={viewMode as "grid" | "list"}
+                            />
+                          ))
+                        )}
+                      </div>
+                    ) : contentMode === "event" ? (
+                      <div
+                        className={`grid gap-2 sm:gap-4 ${
+                          viewMode === "grid"
+                            ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+                            : "grid-cols-1"
+                        }`}
+                      >
+                        {events.length === 0 ? (
+                          <Card className="col-span-full">
+                            <CardContent className="flex flex-col items-center justify-center py-16">
                               <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mb-4">
                                 <Calendar className="h-8 w-8 text-purple-600" />
                               </div>
                               <h3 className="text-xl font-semibold mb-2">
-                                Campus Events Coming Soon
+                                No Events Yet
                               </h3>
                               <p className="text-muted-foreground text-center max-w-md">
-                                Create and discover campus events. This feature
-                                is under development.
+                                Be the first to create campus events!
                               </p>
-                            </>
-                          )}
-                        </CardContent>
-                      </Card>
+                            </CardContent>
+                          </Card>
+                        ) : (
+                          events.map((event) => (
+                            <EventCard key={event.id} event={event} />
+                          ))
+                        )}
+                      </div>
                     ) : (
                       <div
                         className={`grid gap-2 sm:gap-4 ${
@@ -3317,10 +3396,60 @@ function DashboardContent() {
                 </div>
               </button>
               <button
-                onClick={() => {
+                onClick={async () => {
                   setShowAddTypeModal(false);
+
+                  if (!userProfile) {
+                    const profile = await userAPI.getProfile();
+                    setUserProfile(profile);
+
+                    const isComplete = !!(
+                      profile.name &&
+                      profile.studentId &&
+                      profile.faculty &&
+                      profile.faculty !== "Unknown" &&
+                      profile.major &&
+                      profile.major !== "Unknown" &&
+                      profile.year
+                    );
+
+                    if (!isComplete) {
+                      setProfileFormData({
+                        name: profile?.name || "",
+                        studentId: profile?.studentId || "",
+                        faculty:
+                          profile?.faculty === "Unknown"
+                            ? ""
+                            : profile?.faculty || "",
+                        major:
+                          profile?.major === "Unknown"
+                            ? ""
+                            : profile?.major || "",
+                        year: profile?.year || 1,
+                      });
+                      setShowProfileCompleteModal(true);
+                      return;
+                    }
+                  } else if (!isProfileComplete()) {
+                    setProfileFormData({
+                      name: userProfile?.name || "",
+                      studentId: userProfile?.studentId || "",
+                      faculty:
+                        userProfile?.faculty === "Unknown"
+                          ? ""
+                          : userProfile?.faculty || "",
+                      major:
+                        userProfile?.major === "Unknown"
+                          ? ""
+                          : userProfile?.major || "",
+                      year: userProfile?.year || 1,
+                    });
+                    setShowProfileCompleteModal(true);
+                    return;
+                  }
+
                   setContentMode("food");
-                  toast.info("Food marketplace coming soon!");
+                  setShowAddFoodModal(true);
                 }}
                 className="w-full p-4 border-2 border-light-gray rounded-lg hover:border-dark-blue hover:bg-primary-50 transition-all text-left"
               >
@@ -3337,10 +3466,60 @@ function DashboardContent() {
                 </div>
               </button>
               <button
-                onClick={() => {
+                onClick={async () => {
                   setShowAddTypeModal(false);
+
+                  if (!userProfile) {
+                    const profile = await userAPI.getProfile();
+                    setUserProfile(profile);
+
+                    const isComplete = !!(
+                      profile.name &&
+                      profile.studentId &&
+                      profile.faculty &&
+                      profile.faculty !== "Unknown" &&
+                      profile.major &&
+                      profile.major !== "Unknown" &&
+                      profile.year
+                    );
+
+                    if (!isComplete) {
+                      setProfileFormData({
+                        name: profile?.name || "",
+                        studentId: profile?.studentId || "",
+                        faculty:
+                          profile?.faculty === "Unknown"
+                            ? ""
+                            : profile?.faculty || "",
+                        major:
+                          profile?.major === "Unknown"
+                            ? ""
+                            : profile?.major || "",
+                        year: profile?.year || 1,
+                      });
+                      setShowProfileCompleteModal(true);
+                      return;
+                    }
+                  } else if (!isProfileComplete()) {
+                    setProfileFormData({
+                      name: userProfile?.name || "",
+                      studentId: userProfile?.studentId || "",
+                      faculty:
+                        userProfile?.faculty === "Unknown"
+                          ? ""
+                          : userProfile?.faculty || "",
+                      major:
+                        userProfile?.major === "Unknown"
+                          ? ""
+                          : userProfile?.major || "",
+                      year: userProfile?.year || 1,
+                    });
+                    setShowProfileCompleteModal(true);
+                    return;
+                  }
+
                   setContentMode("event");
-                  toast.info("Event creation coming soon!");
+                  setShowAddEventModal(true);
                 }}
                 className="w-full p-4 border-2 border-light-gray rounded-lg hover:border-dark-blue hover:bg-primary-50 transition-all text-left"
               >
@@ -3379,6 +3558,52 @@ function DashboardContent() {
             <AddItemForm
               onSubmit={handleAddItem}
               onCancel={() => setShowAddItemModal(false)}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Add Food Modal */}
+      {showAddFoodModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-3 sm:p-4 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-2.5">
+              <h2 className="text-base sm:text-lg font-bold text-dark-gray">
+                Add Food Item
+              </h2>
+              <button
+                onClick={() => setShowAddFoodModal(false)}
+                className="text-medium-gray hover:text-dark-gray"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <AddFoodForm
+              onSubmit={handleAddFood}
+              onCancel={() => setShowAddFoodModal(false)}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Add Event Modal */}
+      {showAddEventModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-3 sm:p-4 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-2.5">
+              <h2 className="text-base sm:text-lg font-bold text-dark-gray">
+                Create Event
+              </h2>
+              <button
+                onClick={() => setShowAddEventModal(false)}
+                className="text-medium-gray hover:text-dark-gray"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <AddEventForm
+              onSubmit={handleAddEvent}
+              onCancel={() => setShowAddEventModal(false)}
             />
           </div>
         </div>
@@ -4974,8 +5199,10 @@ function AddItemForm({
   } | null>(null);
   const [pendingUploadFile, setPendingUploadFile] = useState<File | null>(null);
   const [compressionAttempts, setCompressionAttempts] = useState(0);
+  const [isAnalyzingStudyMaterial, setIsAnalyzingStudyMaterial] =
+    useState(false);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
 
@@ -4998,6 +5225,57 @@ function AddItemForm({
       }
 
       setUploadedFile(file);
+
+      if (file.type.startsWith("image/")) {
+        await analyzeStudyMaterialWithAI(file);
+      }
+    }
+  };
+
+  const analyzeStudyMaterialWithAI = async (file: File) => {
+    try {
+      setIsAnalyzingStudyMaterial(true);
+      toast.info("Analyzing image with AI...", {
+        duration: 2000,
+      });
+
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("type", "study");
+
+      const response = await fetch("/api/ai-autofill", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to analyze image");
+      }
+
+      const result = await response.json();
+
+      if (result.success && result.data) {
+        const aiData = result.data;
+
+        setFormData((prev) => ({
+          ...prev,
+          title: aiData.title || prev.title,
+          description: aiData.description || prev.description,
+          category: aiData.category || prev.category,
+          course: aiData.course || prev.course,
+        }));
+
+        toast.success("Form auto-filled with AI suggestions!", {
+          description: "Review and adjust the information as needed.",
+        });
+      }
+    } catch (error) {
+      console.error("AI analysis error:", error);
+      toast.error("Could not analyze image", {
+        description: "Please fill in the form manually.",
+      });
+    } finally {
+      setIsAnalyzingStudyMaterial(false);
     }
   };
 
@@ -5421,8 +5699,12 @@ function AddItemForm({
 
         {/* File Upload */}
         <div>
-          <label className="block text-xs font-medium text-dark-gray mb-0.5">
+          <label className="flex items-center gap-1.5 text-xs font-medium text-dark-gray mb-0.5">
             Upload File (PDF, Word, or Image) *
+            <span className="flex items-center gap-0.5 text-[10px] text-purple-600 font-normal">
+              <Sparkles className="h-2.5 w-2.5" />
+              AI Auto-fill for images
+            </span>
           </label>
           <div className="mt-0.5">
             <input
@@ -5432,7 +5714,15 @@ function AddItemForm({
               className="w-full px-2 py-1 border border-light-gray rounded-md focus:outline-none focus:ring-1 focus:ring-dark-blue focus:border-dark-blue text-xs"
               required
             />
-            {uploadedFile && (
+            {isAnalyzingStudyMaterial && (
+              <div className="mt-1.5 p-1.5 bg-purple-50 border border-purple-200 rounded-md flex items-center gap-1.5">
+                <Loader2 className="h-3 w-3 text-purple-600 animate-spin" />
+                <span className="text-xs text-purple-700">
+                  Analyzing image with AI...
+                </span>
+              </div>
+            )}
+            {uploadedFile && !isAnalyzingStudyMaterial && (
               <div className="mt-1.5 p-1.5 bg-green-50 border border-green-200 rounded-md flex items-center justify-between">
                 <div className="flex items-center space-x-1.5">
                   <FileText className="h-3 w-3 text-green-600" />

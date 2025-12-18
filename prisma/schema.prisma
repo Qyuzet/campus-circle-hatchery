@@ -50,6 +50,12 @@ model User {
   groupMemberships     GroupMember[]       @relation("GroupMemberships")
   sentGroupMessages    GroupMessage[]      @relation("SentGroupMessages")
   wishlistItems        WishlistItem[]
+  foodItems            FoodItem[]
+  foodOrders           FoodOrder[]
+  foodReviews          FoodReview[]
+  organizedEvents      Event[]             @relation("EventOrganizer")
+  eventParticipations  EventParticipant[]
+  eventReviews         EventReview[]
 
   @@index([studentId])
   @@index([email])
@@ -387,4 +393,180 @@ model WishlistItem {
   @@unique([userId, itemId])
   @@index([userId])
   @@index([itemId])
+}
+
+// ============================================
+// FOOD MARKETPLACE MODELS
+// ============================================
+model FoodItem {
+  id              String   @id @default(cuid())
+  title           String
+  description     String
+  price           Int
+  category        String   // Snacks, Meals, Drinks, Desserts
+  foodType        String   // Homemade, Restaurant, Packaged
+  quantity        Int      @default(1)
+  unit            String   // pieces, servings, grams
+  imageUrl        String?
+  allergens       String[] // Nuts, Dairy, Gluten, etc.
+  ingredients     String?
+  expiryDate      DateTime?
+  pickupLocation  String
+  pickupTime      String   // Available pickup times
+  isHalal         Boolean  @default(false)
+  isVegan         Boolean  @default(false)
+  isVegetarian    Boolean  @default(false)
+  status          String   @default("available") // available, sold, expired
+  rating          Float    @default(0)
+  reviewCount     Int      @default(0)
+  viewCount       Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  sellerId String
+  seller   User   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+
+  orders  FoodOrder[]
+  reviews FoodReview[]
+
+  @@index([sellerId])
+  @@index([category])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model FoodOrder {
+  id          String   @id @default(cuid())
+  quantity    Int
+  totalPrice  Int
+  pickupTime  String
+  status      String   @default("pending") // pending, confirmed, picked_up, cancelled
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  foodItemId String
+  buyerId    String
+  foodItem   FoodItem @relation(fields: [foodItemId], references: [id], onDelete: Cascade)
+  buyer      User     @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+
+  @@index([foodItemId])
+  @@index([buyerId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model FoodReview {
+  id        String   @id @default(cuid())
+  rating    Int      // 1-5
+  comment   String?
+  createdAt DateTime @default(now())
+
+  // Relations
+  foodItemId String
+  userId     String
+  foodItem   FoodItem @relation(fields: [foodItemId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([foodItemId])
+  @@index([userId])
+}
+
+// ============================================
+// EVENT MODELS
+// ============================================
+model Event {
+  id                   String    @id @default(cuid())
+  title                String
+  description          String
+  category             String    // Academic, Social, Sports, Workshop, Competition
+  eventType            String    // Free, Paid, Registration Required
+  price                Int       @default(0)
+  imageUrl             String?
+  bannerUrl            String?
+  location             String
+  venue                String?   // Room number, building
+  isOnline             Boolean   @default(false)
+  meetingLink          String?
+  startDate            DateTime
+  endDate              DateTime
+  registrationDeadline DateTime?
+  maxParticipants      Int?
+  currentParticipants  Int       @default(0)
+  tags                 String[]  // networking, free-food, certificate, etc.
+  requirements         String?   // Prerequisites or requirements
+  organizer            String    // Club name or individual
+  contactEmail         String?
+  contactPhone         String?
+  status               String    @default("upcoming") // upcoming, ongoing, completed, cancelled
+  isPublished          Boolean   @default(false)
+  isFeatured           Boolean   @default(false)
+  viewCount            Int       @default(0)
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  // Relations
+  organizerId  String
+  organizerUser User              @relation("EventOrganizer", fields: [organizerId], references: [id], onDelete: Cascade)
+
+  participants EventParticipant[]
+  reviews      EventReview[]
+  updates      EventUpdate[]
+
+  @@index([organizerId])
+  @@index([category])
+  @@index([status])
+  @@index([startDate])
+  @@index([createdAt])
+}
+
+model EventParticipant {
+  id            String    @id @default(cuid())
+  status        String    @default("registered") // registered, attended, cancelled
+  registeredAt  DateTime  @default(now())
+  attendedAt    DateTime?
+  paymentStatus String?   @default("pending") // pending, paid, refunded
+  transactionId String?
+
+  // Relations
+  eventId String
+  userId  String
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, userId])
+  @@index([eventId])
+  @@index([userId])
+  @@index([status])
+}
+
+model EventReview {
+  id        String   @id @default(cuid())
+  rating    Int      // 1-5
+  comment   String?
+  createdAt DateTime @default(now())
+
+  // Relations
+  eventId String
+  userId  String
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
+  @@index([userId])
+}
+
+model EventUpdate {
+  id        String   @id @default(cuid())
+  title     String
+  message   String
+  createdAt DateTime @default(now())
+
+  // Relations
+  eventId String
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
+  @@index([createdAt])
 }

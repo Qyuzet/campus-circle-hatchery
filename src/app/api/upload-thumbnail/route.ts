@@ -31,13 +31,19 @@ export async function POST(request: NextRequest) {
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    const fileName = file.name;
+
+    const fileExtension = file.name.split(".").pop() || "jpg";
+    const uniqueFileName = `${Date.now()}-${Math.random()
+      .toString(36)
+      .substring(7)}.${fileExtension}`;
+
+    const contentType = file.type || "image/jpeg";
 
     const { data, error } = await supabaseAdmin.storage
       .from("study-materials")
-      .upload(fileName, buffer, {
-        contentType: "image/jpeg",
-        upsert: false,
+      .upload(uniqueFileName, buffer, {
+        contentType: contentType,
+        upsert: true,
       });
 
     if (error) {
@@ -50,7 +56,9 @@ export async function POST(request: NextRequest) {
 
     const {
       data: { publicUrl },
-    } = supabaseAdmin.storage.from("study-materials").getPublicUrl(fileName);
+    } = supabaseAdmin.storage
+      .from("study-materials")
+      .getPublicUrl(uniqueFileName);
 
     return NextResponse.json({
       success: true,
@@ -64,4 +72,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

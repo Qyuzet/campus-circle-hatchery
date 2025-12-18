@@ -4,6 +4,75 @@
 import { apiCache, CACHE_KEYS, CACHE_DURATION } from "./cache";
 
 // ============================================
+// TYPE DEFINITIONS
+// ============================================
+export interface FoodItem {
+  id: string;
+  title: string;
+  description: string;
+  price: number;
+  category: string;
+  foodType: string;
+  quantity: number;
+  unit: string;
+  imageUrl?: string;
+  allergens: string[];
+  ingredients?: string;
+  expiryDate?: Date;
+  pickupLocation: string;
+  pickupTime: string;
+  isHalal: boolean;
+  isVegan: boolean;
+  isVegetarian: boolean;
+  status: string;
+  rating: number;
+  reviewCount: number;
+  viewCount: number;
+  sellerId: string;
+  seller?: any;
+  orders?: any[];
+  reviews?: any[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Event {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  eventType: string;
+  price: number;
+  imageUrl?: string;
+  bannerUrl?: string;
+  location: string;
+  venue?: string;
+  isOnline: boolean;
+  meetingLink?: string;
+  startDate: Date;
+  endDate: Date;
+  registrationDeadline?: Date;
+  maxParticipants?: number;
+  currentParticipants: number;
+  tags: string[];
+  requirements?: string;
+  organizer: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  status: string;
+  isPublished: boolean;
+  isFeatured: boolean;
+  viewCount: number;
+  organizerId: string;
+  organizerUser?: any;
+  participants?: any[];
+  reviews?: any[];
+  updates?: any[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// ============================================
 // MARKETPLACE API
 // ============================================
 export const marketplaceAPI = {
@@ -595,6 +664,201 @@ export const wishlistAPI = {
       body: JSON.stringify({ itemId }),
     });
     if (!response.ok) throw new Error("Failed to toggle wishlist");
+    return response.json();
+  },
+};
+
+// ============================================
+// FOOD API
+// ============================================
+export const foodAPI = {
+  async getFoodItems(filters?: {
+    category?: string;
+    foodType?: string;
+    isHalal?: boolean;
+    isVegan?: boolean;
+    isVegetarian?: boolean;
+    search?: string;
+    status?: string;
+  }) {
+    const params = new URLSearchParams();
+    if (filters?.category) params.append("category", filters.category);
+    if (filters?.foodType) params.append("foodType", filters.foodType);
+    if (filters?.isHalal !== undefined)
+      params.append("isHalal", String(filters.isHalal));
+    if (filters?.isVegan !== undefined)
+      params.append("isVegan", String(filters.isVegan));
+    if (filters?.isVegetarian !== undefined)
+      params.append("isVegetarian", String(filters.isVegetarian));
+    if (filters?.search) params.append("search", filters.search);
+    if (filters?.status) params.append("status", filters.status);
+
+    const response = await fetch(`/api/food?${params.toString()}`);
+    if (!response.ok) throw new Error("Failed to fetch food items");
+    return response.json();
+  },
+
+  async getFoodItem(id: string) {
+    const response = await fetch(`/api/food/${id}`);
+    if (!response.ok) throw new Error("Failed to fetch food item");
+    return response.json();
+  },
+
+  async createFoodItem(data: Partial<FoodItem>) {
+    const response = await fetch("/api/food", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error("Failed to create food item");
+    return response.json();
+  },
+
+  async updateFoodItem(id: string, data: Partial<FoodItem>) {
+    const response = await fetch(`/api/food/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error("Failed to update food item");
+    return response.json();
+  },
+
+  async deleteFoodItem(id: string) {
+    const response = await fetch(`/api/food/${id}`, {
+      method: "DELETE",
+    });
+    if (!response.ok) throw new Error("Failed to delete food item");
+    return response.json();
+  },
+
+  async createOrder(foodItemId: string, quantity: number, pickupTime: string) {
+    const response = await fetch("/api/food/orders", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ foodItemId, quantity, pickupTime }),
+    });
+    if (!response.ok) throw new Error("Failed to create order");
+    return response.json();
+  },
+
+  async getMyOrders(type?: "purchases" | "sales") {
+    const params = new URLSearchParams();
+    if (type) params.append("type", type);
+
+    const response = await fetch(`/api/food/orders?${params.toString()}`);
+    if (!response.ok) throw new Error("Failed to fetch orders");
+    return response.json();
+  },
+
+  async updateOrderStatus(orderId: string, status: string) {
+    const response = await fetch(`/api/food/orders/${orderId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    });
+    if (!response.ok) throw new Error("Failed to update order status");
+    return response.json();
+  },
+
+  async createReview(foodItemId: string, rating: number, comment?: string) {
+    const response = await fetch("/api/food/reviews", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ foodItemId, rating, comment }),
+    });
+    if (!response.ok) throw new Error("Failed to create review");
+    return response.json();
+  },
+
+  async getReviews(foodItemId: string) {
+    const response = await fetch(`/api/food/reviews?foodItemId=${foodItemId}`);
+    if (!response.ok) throw new Error("Failed to fetch reviews");
+    return response.json();
+  },
+};
+
+// ============================================
+// EVENT API
+// ============================================
+export const eventAPI = {
+  async getEvents(filters?: {
+    category?: string;
+    eventType?: string;
+    status?: string;
+    search?: string;
+    startDate?: string;
+    endDate?: string;
+    isFeatured?: boolean;
+  }) {
+    const params = new URLSearchParams();
+    if (filters?.category) params.append("category", filters.category);
+    if (filters?.eventType) params.append("eventType", filters.eventType);
+    if (filters?.status) params.append("status", filters.status);
+    if (filters?.search) params.append("search", filters.search);
+    if (filters?.startDate) params.append("startDate", filters.startDate);
+    if (filters?.endDate) params.append("endDate", filters.endDate);
+    if (filters?.isFeatured !== undefined)
+      params.append("isFeatured", String(filters.isFeatured));
+
+    const response = await fetch(`/api/events?${params.toString()}`);
+    if (!response.ok) throw new Error("Failed to fetch events");
+    return response.json();
+  },
+
+  async getEvent(id: string) {
+    const response = await fetch(`/api/events/${id}`);
+    if (!response.ok) throw new Error("Failed to fetch event");
+    return response.json();
+  },
+
+  async createEvent(data: Partial<Event>) {
+    const response = await fetch("/api/events", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error("Failed to create event");
+    return response.json();
+  },
+
+  async updateEvent(id: string, data: Partial<Event>) {
+    const response = await fetch(`/api/events/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error("Failed to update event");
+    return response.json();
+  },
+
+  async deleteEvent(id: string) {
+    const response = await fetch(`/api/events/${id}`, {
+      method: "DELETE",
+    });
+    if (!response.ok) throw new Error("Failed to delete event");
+    return response.json();
+  },
+
+  async registerForEvent(eventId: string) {
+    const response = await fetch(`/api/events/${eventId}/register`, {
+      method: "POST",
+    });
+    if (!response.ok) throw new Error("Failed to register for event");
+    return response.json();
+  },
+
+  async cancelRegistration(eventId: string) {
+    const response = await fetch(`/api/events/${eventId}/register`, {
+      method: "DELETE",
+    });
+    if (!response.ok) throw new Error("Failed to cancel registration");
+    return response.json();
+  },
+
+  async getMyEvents() {
+    const response = await fetch("/api/events?myEvents=true");
+    if (!response.ok) throw new Error("Failed to fetch my events");
     return response.json();
   },
 };
