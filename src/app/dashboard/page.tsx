@@ -26,6 +26,8 @@ import { FoodItemCard } from "@/components/FoodItemCard";
 import { EventCard } from "@/components/EventCard";
 import { AddFoodForm } from "@/components/AddFoodForm";
 import { AddEventForm } from "@/components/AddEventForm";
+import { EditFoodForm } from "@/components/EditFoodForm";
+import { EditEventForm } from "@/components/EditEventForm";
 import {
   Card,
   CardContent,
@@ -121,39 +123,6 @@ function DashboardContent() {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [isEditingFood, setIsEditingFood] = useState(false);
   const [isEditingEvent, setIsEditingEvent] = useState(false);
-  const [editFoodFormData, setEditFoodFormData] = useState({
-    title: "",
-    description: "",
-    price: 0,
-    category: "",
-    foodType: "",
-    quantity: 1,
-    unit: "",
-    pickupLocation: "",
-    pickupTime: "",
-    allergens: [] as string[],
-    ingredients: "",
-    isHalal: false,
-    isVegan: false,
-    isVegetarian: false,
-  });
-  const [editEventFormData, setEditEventFormData] = useState({
-    title: "",
-    description: "",
-    price: 0,
-    category: "",
-    eventType: "",
-    location: "",
-    venue: "",
-    isOnline: false,
-    meetingLink: "",
-    maxParticipants: 0,
-    tags: [] as string[],
-    requirements: "",
-    organizer: "",
-    contactEmail: "",
-    contactPhone: "",
-  });
   const [isSavingFood, setIsSavingFood] = useState(false);
   const [isSavingEvent, setIsSavingEvent] = useState(false);
   const [showMessageModal, setShowMessageModal] = useState(false);
@@ -1004,54 +973,22 @@ function DashboardContent() {
     }
   };
 
-  const handleEditFood = (food: FoodItem) => {
-    setEditFoodFormData({
-      title: food.title,
-      description: food.description,
-      price: food.price,
-      category: food.category,
-      foodType: food.foodType,
-      quantity: food.quantity,
-      unit: food.unit,
-      pickupLocation: food.pickupLocation,
-      pickupTime: food.pickupTime,
-      allergens: food.allergens || [],
-      ingredients: food.ingredients || "",
-      isHalal: food.isHalal,
-      isVegan: food.isVegan,
-      isVegetarian: food.isVegetarian,
-    });
+  const handleEditFood = () => {
     setIsEditingFood(true);
   };
 
   const handleCancelEditFood = () => {
     setIsEditingFood(false);
-    setEditFoodFormData({
-      title: "",
-      description: "",
-      price: 0,
-      category: "",
-      foodType: "",
-      quantity: 1,
-      unit: "",
-      pickupLocation: "",
-      pickupTime: "",
-      allergens: [],
-      ingredients: "",
-      isHalal: false,
-      isVegan: false,
-      isVegetarian: false,
-    });
   };
 
-  const handleSaveEditFood = async () => {
+  const handleSaveEditFood = async (formData: any) => {
     if (!selectedFood) return;
 
     setIsSavingFood(true);
     try {
       const updatedFood = await foodAPI.updateFoodItem(
         selectedFood.id,
-        editFoodFormData
+        formData
       );
 
       // Reload food items
@@ -1071,56 +1008,22 @@ function DashboardContent() {
     }
   };
 
-  const handleEditEvent = (event: Event) => {
-    setEditEventFormData({
-      title: event.title,
-      description: event.description,
-      price: event.price,
-      category: event.category,
-      eventType: event.eventType,
-      location: event.location,
-      venue: event.venue || "",
-      isOnline: event.isOnline,
-      meetingLink: event.meetingLink || "",
-      maxParticipants: event.maxParticipants || 0,
-      tags: event.tags || [],
-      requirements: event.requirements || "",
-      organizer: event.organizer,
-      contactEmail: event.contactEmail || "",
-      contactPhone: event.contactPhone || "",
-    });
+  const handleEditEvent = () => {
     setIsEditingEvent(true);
   };
 
   const handleCancelEditEvent = () => {
     setIsEditingEvent(false);
-    setEditEventFormData({
-      title: "",
-      description: "",
-      price: 0,
-      category: "",
-      eventType: "",
-      location: "",
-      venue: "",
-      isOnline: false,
-      meetingLink: "",
-      maxParticipants: 0,
-      tags: [],
-      requirements: "",
-      organizer: "",
-      contactEmail: "",
-      contactPhone: "",
-    });
   };
 
-  const handleSaveEditEvent = async () => {
+  const handleSaveEditEvent = async (formData: any) => {
     if (!selectedEvent) return;
 
     setIsSavingEvent(true);
     try {
       const updatedEvent = await eventAPI.updateEvent(
         selectedEvent.id,
-        editEventFormData
+        formData
       );
 
       // Reload events
@@ -3896,156 +3799,48 @@ function DashboardContent() {
       {showFoodDetailModal && selectedFood && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="relative">
-              {selectedFood.imageUrl && (
-                <div className="relative h-64 w-full">
-                  <Image
-                    src={selectedFood.imageUrl}
-                    alt={selectedFood.title}
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-              )}
-              <button
-                onClick={() => setShowFoodDetailModal(false)}
-                className="absolute top-4 right-4 bg-white/90 hover:bg-white p-2 rounded-full"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
+            {!isEditingFood && (
+              <div className="relative">
+                {selectedFood.imageUrl && (
+                  <div className="relative h-64 w-full">
+                    <Image
+                      src={selectedFood.imageUrl}
+                      alt={selectedFood.title}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                )}
+                <button
+                  onClick={() => setShowFoodDetailModal(false)}
+                  className="absolute top-4 right-4 bg-white/90 hover:bg-white p-2 rounded-full"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            )}
 
-            <div className="p-6">
+            <div className={isEditingFood ? "p-3" : "p-6"}>
               {isEditingFood ? (
-                <div className="space-y-4">
-                  <h2 className="text-2xl font-bold mb-4">Edit Food Item</h2>
-
-                  <div>
-                    <label className="text-sm font-medium">Title</label>
-                    <Input
-                      value={editFoodFormData.title}
-                      onChange={(e) =>
-                        setEditFoodFormData({
-                          ...editFoodFormData,
-                          title: e.target.value,
-                        })
-                      }
-                    />
+                <div>
+                  <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-bold">Edit Food Item</h2>
+                    <button
+                      onClick={() => {
+                        setShowFoodDetailModal(false);
+                        setIsEditingFood(false);
+                      }}
+                      className="text-gray-500 hover:text-gray-700"
+                    >
+                      <X className="h-5 w-5" />
+                    </button>
                   </div>
-
-                  <div>
-                    <label className="text-sm font-medium">Description</label>
-                    <textarea
-                      className="w-full min-h-[100px] px-3 py-2 border rounded-md"
-                      value={editFoodFormData.description}
-                      onChange={(e) =>
-                        setEditFoodFormData({
-                          ...editFoodFormData,
-                          description: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium">Price (Rp)</label>
-                      <Input
-                        type="number"
-                        value={editFoodFormData.price}
-                        onChange={(e) =>
-                          setEditFoodFormData({
-                            ...editFoodFormData,
-                            price: parseInt(e.target.value) || 0,
-                          })
-                        }
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium">Quantity</label>
-                      <Input
-                        type="number"
-                        value={editFoodFormData.quantity}
-                        onChange={(e) =>
-                          setEditFoodFormData({
-                            ...editFoodFormData,
-                            quantity: parseInt(e.target.value) || 1,
-                          })
-                        }
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium">
-                        Pickup Location
-                      </label>
-                      <Input
-                        value={editFoodFormData.pickupLocation}
-                        onChange={(e) =>
-                          setEditFoodFormData({
-                            ...editFoodFormData,
-                            pickupLocation: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium">Pickup Time</label>
-                      <Input
-                        value={editFoodFormData.pickupTime}
-                        onChange={(e) =>
-                          setEditFoodFormData({
-                            ...editFoodFormData,
-                            pickupTime: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex gap-4">
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={editFoodFormData.isHalal}
-                        onChange={(e) =>
-                          setEditFoodFormData({
-                            ...editFoodFormData,
-                            isHalal: e.target.checked,
-                          })
-                        }
-                      />
-                      <span className="text-sm">Halal</span>
-                    </label>
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={editFoodFormData.isVegan}
-                        onChange={(e) =>
-                          setEditFoodFormData({
-                            ...editFoodFormData,
-                            isVegan: e.target.checked,
-                          })
-                        }
-                      />
-                      <span className="text-sm">Vegan</span>
-                    </label>
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={editFoodFormData.isVegetarian}
-                        onChange={(e) =>
-                          setEditFoodFormData({
-                            ...editFoodFormData,
-                            isVegetarian: e.target.checked,
-                          })
-                        }
-                      />
-                      <span className="text-sm">Vegetarian</span>
-                    </label>
-                  </div>
+                  <EditFoodForm
+                    foodItem={selectedFood}
+                    onSubmit={handleSaveEditFood}
+                    onCancel={handleCancelEditFood}
+                    isSaving={isSavingFood}
+                  />
                 </div>
               ) : (
                 <>
@@ -4161,7 +3956,7 @@ function DashboardContent() {
                             <Button
                               variant="outline"
                               className="flex-1"
-                              onClick={() => handleEditFood(selectedFood)}
+                              onClick={handleEditFood}
                             >
                               Edit
                             </Button>
@@ -4250,148 +4045,50 @@ function DashboardContent() {
       {showEventDetailModal && selectedEvent && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="relative">
-              {(selectedEvent.bannerUrl || selectedEvent.imageUrl) && (
-                <div className="relative h-64 w-full">
-                  <Image
-                    src={
-                      selectedEvent.bannerUrl || selectedEvent.imageUrl || ""
-                    }
-                    alt={selectedEvent.title}
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-              )}
-              <button
-                onClick={() => setShowEventDetailModal(false)}
-                className="absolute top-4 right-4 bg-white/90 hover:bg-white p-2 rounded-full"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
+            {!isEditingEvent && (
+              <div className="relative">
+                {(selectedEvent.bannerUrl || selectedEvent.imageUrl) && (
+                  <div className="relative h-64 w-full">
+                    <Image
+                      src={
+                        selectedEvent.bannerUrl || selectedEvent.imageUrl || ""
+                      }
+                      alt={selectedEvent.title}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                )}
+                <button
+                  onClick={() => setShowEventDetailModal(false)}
+                  className="absolute top-4 right-4 bg-white/90 hover:bg-white p-2 rounded-full"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            )}
 
-            <div className="p-6">
+            <div className={isEditingEvent ? "p-3" : "p-6"}>
               {isEditingEvent ? (
-                <div className="space-y-4">
-                  <h2 className="text-2xl font-bold mb-4">Edit Event</h2>
-
-                  <div>
-                    <label className="text-sm font-medium">Title</label>
-                    <Input
-                      value={editEventFormData.title}
-                      onChange={(e) =>
-                        setEditEventFormData({
-                          ...editEventFormData,
-                          title: e.target.value,
-                        })
-                      }
-                    />
+                <div>
+                  <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-bold">Edit Event</h2>
+                    <button
+                      onClick={() => {
+                        setShowEventDetailModal(false);
+                        setIsEditingEvent(false);
+                      }}
+                      className="text-gray-500 hover:text-gray-700"
+                    >
+                      <X className="h-5 w-5" />
+                    </button>
                   </div>
-
-                  <div>
-                    <label className="text-sm font-medium">Description</label>
-                    <textarea
-                      className="w-full min-h-[100px] px-3 py-2 border rounded-md"
-                      value={editEventFormData.description}
-                      onChange={(e) =>
-                        setEditEventFormData({
-                          ...editEventFormData,
-                          description: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium">Price (Rp)</label>
-                      <Input
-                        type="number"
-                        value={editEventFormData.price}
-                        onChange={(e) =>
-                          setEditEventFormData({
-                            ...editEventFormData,
-                            price: parseInt(e.target.value) || 0,
-                          })
-                        }
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium">
-                        Max Participants
-                      </label>
-                      <Input
-                        type="number"
-                        value={editEventFormData.maxParticipants}
-                        onChange={(e) =>
-                          setEditEventFormData({
-                            ...editEventFormData,
-                            maxParticipants: parseInt(e.target.value) || 0,
-                          })
-                        }
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-medium">Location</label>
-                    <Input
-                      value={editEventFormData.location}
-                      onChange={(e) =>
-                        setEditEventFormData({
-                          ...editEventFormData,
-                          location: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-medium">Venue</label>
-                    <Input
-                      value={editEventFormData.venue}
-                      onChange={(e) =>
-                        setEditEventFormData({
-                          ...editEventFormData,
-                          venue: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-
-                  <div>
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={editEventFormData.isOnline}
-                        onChange={(e) =>
-                          setEditEventFormData({
-                            ...editEventFormData,
-                            isOnline: e.target.checked,
-                          })
-                        }
-                      />
-                      <span className="text-sm">Online Event</span>
-                    </label>
-                  </div>
-
-                  {editEventFormData.isOnline && (
-                    <div>
-                      <label className="text-sm font-medium">
-                        Meeting Link
-                      </label>
-                      <Input
-                        value={editEventFormData.meetingLink}
-                        onChange={(e) =>
-                          setEditEventFormData({
-                            ...editEventFormData,
-                            meetingLink: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                  )}
+                  <EditEventForm
+                    event={selectedEvent}
+                    onSubmit={handleSaveEditEvent}
+                    onCancel={handleCancelEditEvent}
+                    isSaving={isSavingEvent}
+                  />
                 </div>
               ) : (
                 <>
@@ -4527,7 +4224,7 @@ function DashboardContent() {
                             <Button
                               variant="outline"
                               className="flex-1"
-                              onClick={() => handleEditEvent(selectedEvent)}
+                              onClick={handleEditEvent}
                             >
                               Edit
                             </Button>
