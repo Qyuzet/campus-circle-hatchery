@@ -846,23 +846,30 @@ function DashboardContent() {
     }
   };
 
-  const handleOrderFood = async (foodId: string) => {
+  const handleOrderFood = async (foodId: string, pickupTime: string) => {
     try {
       const response = await fetch("/api/food/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ foodItemId: foodId, quantity: 1 }),
+        body: JSON.stringify({
+          foodItemId: foodId,
+          quantity: 1,
+          pickupTime: pickupTime,
+        }),
       });
 
       if (!response.ok) {
-        throw new Error("Failed to create order");
+        const data = await response.json();
+        throw new Error(data.error || "Failed to create order");
       }
 
       toast.success("Order placed successfully!");
+      const foodData = await foodAPI.getFoodItems();
+      setFoodItems(foodData);
       setShowFoodDetailModal(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error ordering food:", error);
-      toast.error("Failed to place order.");
+      toast.error(error.message || "Failed to place order.");
     }
   };
 
@@ -1179,6 +1186,12 @@ function DashboardContent() {
       const items = await marketplaceAPI.getItems();
       setMarketplaceItems(filterTradableItems(items));
 
+      const foodData = await foodAPI.getFoodItems();
+      setFoodItems(foodData);
+
+      const eventData = await eventAPI.getEvents();
+      setEvents(eventData);
+
       const stats = await statsAPI.getUserStats();
       setUserStats(stats);
 
@@ -1186,6 +1199,8 @@ function DashboardContent() {
       setNotifications(notifs);
 
       setShowItemDetailModal(false);
+      setShowFoodDetailModal(false);
+      setShowEventDetailModal(false);
       toast.success("Payment successful! 🎉", {
         description: "Your purchase has been confirmed. Check Orders page.",
       });
@@ -3810,6 +3825,16 @@ function DashboardContent() {
                   {session?.user?.email === selectedFood.seller?.email ? (
                     <>
                       <Button
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => {
+                          // TODO: Implement edit functionality
+                          toast.info("Edit functionality coming soon!");
+                        }}
+                      >
+                        Edit
+                      </Button>
+                      <Button
                         variant="destructive"
                         onClick={() => {
                           if (
@@ -3822,19 +3847,54 @@ function DashboardContent() {
                         }}
                         className="flex-1"
                       >
+                        <Trash2 className="h-4 w-4 mr-2" />
                         Delete
                       </Button>
                     </>
+                  ) : selectedFood.status === "available" ? (
+                    <>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setShowFoodDetailModal(false);
+                          handleCreateConversation(
+                            selectedFood.sellerId,
+                            selectedFood.seller?.name || "Seller"
+                          );
+                        }}
+                        className="flex-1"
+                      >
+                        <MessageCircle className="h-4 w-4 mr-2" />
+                        Message Seller
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          if (selectedFood.price > 0) {
+                            setPaymentItem({
+                              id: selectedFood.id,
+                              title: selectedFood.title,
+                              price: selectedFood.price,
+                              type: "marketplace",
+                            });
+                            setShowPaymentModal(true);
+                            setShowFoodDetailModal(false);
+                          } else {
+                            handleOrderFood(
+                              selectedFood.id,
+                              selectedFood.pickupTime
+                            );
+                          }
+                        }}
+                        className="flex-1"
+                      >
+                        <ShoppingCart className="h-4 w-4 mr-2" />
+                        Order Now
+                      </Button>
+                    </>
                   ) : (
-                    <Button
-                      onClick={() => handleOrderFood(selectedFood.id)}
-                      className="flex-1"
-                      disabled={selectedFood.status === "sold"}
-                    >
-                      {selectedFood.status === "sold"
-                        ? "Sold Out"
-                        : "Order Now"}
-                    </Button>
+                    <div className="flex-1 bg-gray-100 text-gray-500 px-4 py-2 rounded-md text-center font-medium">
+                      Sold Out
+                    </div>
                   )}
                   <Button
                     variant="outline"
@@ -3984,6 +4044,16 @@ function DashboardContent() {
                   selectedEvent.organizerUser?.email ? (
                     <>
                       <Button
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => {
+                          // TODO: Implement edit functionality
+                          toast.info("Edit functionality coming soon!");
+                        }}
+                      >
+                        Edit
+                      </Button>
+                      <Button
                         variant="destructive"
                         onClick={() => {
                           if (
@@ -3996,26 +4066,53 @@ function DashboardContent() {
                         }}
                         className="flex-1"
                       >
+                        <Trash2 className="h-4 w-4 mr-2" />
                         Delete
                       </Button>
                     </>
+                  ) : selectedEvent.maxParticipants &&
+                    selectedEvent.currentParticipants >=
+                      selectedEvent.maxParticipants ? (
+                    <div className="flex-1 bg-gray-100 text-gray-500 px-4 py-2 rounded-md text-center font-medium">
+                      Event Full
+                    </div>
                   ) : (
-                    <Button
-                      onClick={() => handleRegisterEvent(selectedEvent.id)}
-                      className="flex-1"
-                      disabled={
-                        selectedEvent.maxParticipants
-                          ? selectedEvent.currentParticipants >=
-                            selectedEvent.maxParticipants
-                          : false
-                      }
-                    >
-                      {selectedEvent.maxParticipants &&
-                      selectedEvent.currentParticipants >=
-                        selectedEvent.maxParticipants
-                        ? "Event Full"
-                        : "Register"}
-                    </Button>
+                    <>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setShowEventDetailModal(false);
+                          handleCreateConversation(
+                            selectedEvent.organizerId,
+                            selectedEvent.organizer || "Organizer"
+                          );
+                        }}
+                        className="flex-1"
+                      >
+                        <MessageCircle className="h-4 w-4 mr-2" />
+                        Message Organizer
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          if (selectedEvent.price > 0) {
+                            setPaymentItem({
+                              id: selectedEvent.id,
+                              title: selectedEvent.title,
+                              price: selectedEvent.price,
+                              type: "marketplace",
+                            });
+                            setShowPaymentModal(true);
+                            setShowEventDetailModal(false);
+                          } else {
+                            handleRegisterEvent(selectedEvent.id);
+                          }
+                        }}
+                        className="flex-1"
+                      >
+                        <Calendar className="h-4 w-4 mr-2" />
+                        Register
+                      </Button>
+                    </>
                   )}
                   <Button
                     variant="outline"

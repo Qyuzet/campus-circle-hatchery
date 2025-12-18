@@ -14,10 +14,17 @@ interface EventCardProps {
   isRegistered?: boolean;
 }
 
-export function EventCard({ event, onClick, onRegister, isRegistered }: EventCardProps) {
+export function EventCard({
+  event,
+  onClick,
+  onRegister,
+  isRegistered,
+}: EventCardProps) {
   const startDate = new Date(event.startDate);
   const endDate = new Date(event.endDate);
-  const isFull = event.maxParticipants ? event.currentParticipants >= event.maxParticipants : false;
+  const isFull = event.maxParticipants
+    ? event.currentParticipants >= event.maxParticipants
+    : false;
 
   const getCategoryColor = (category: string) => {
     const colors: Record<string, string> = {
@@ -31,7 +38,10 @@ export function EventCard({ event, onClick, onRegister, isRegistered }: EventCar
   };
 
   return (
-    <Card className="cursor-pointer hover:shadow-lg transition-all group overflow-hidden">
+    <Card
+      className="cursor-pointer hover:shadow-lg transition-all group overflow-hidden"
+      onClick={onClick}
+    >
       <div className="relative h-48 bg-secondary-200 overflow-hidden">
         {event.bannerUrl || event.imageUrl ? (
           <Image
@@ -57,7 +67,7 @@ export function EventCard({ event, onClick, onRegister, isRegistered }: EventCar
         )}
       </div>
 
-      <CardContent className="p-4" onClick={onClick}>
+      <CardContent className="p-4">
         <div className="flex items-start justify-between gap-2 mb-2">
           <h3 className="font-bold text-lg line-clamp-2">{event.title}</h3>
           <Badge className={getCategoryColor(event.category)}>
@@ -73,7 +83,8 @@ export function EventCard({ event, onClick, onRegister, isRegistered }: EventCar
           <div className="flex items-center gap-2 text-muted-foreground">
             <Calendar className="h-4 w-4 shrink-0" />
             <span className="line-clamp-1">
-              {format(startDate, "MMM dd, yyyy")} at {format(startDate, "HH:mm")}
+              {format(startDate, "MMM dd, yyyy")} at{" "}
+              {format(startDate, "HH:mm")}
             </span>
           </div>
 
@@ -87,8 +98,9 @@ export function EventCard({ event, onClick, onRegister, isRegistered }: EventCar
           <div className="flex items-center gap-2 text-muted-foreground">
             <Users className="h-4 w-4 shrink-0" />
             <span>
-              {event.currentParticipants} 
-              {event.maxParticipants ? ` / ${event.maxParticipants}` : ""} participants
+              {event.currentParticipants}
+              {event.maxParticipants ? ` / ${event.maxParticipants}` : ""}{" "}
+              participants
             </span>
           </div>
 
@@ -132,4 +144,3 @@ export function EventCard({ event, onClick, onRegister, isRegistered }: EventCar
     </Card>
   );
 }
-
