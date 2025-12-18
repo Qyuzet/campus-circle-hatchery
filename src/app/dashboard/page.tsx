@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, Suspense } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { format } from "date-fns";
 import {
   pusherClient,
   getConversationChannel,
@@ -64,6 +65,7 @@ import {
   Wallet,
   Sparkles,
   Loader2,
+  MapPin,
 } from "lucide-react";
 import {
   marketplaceAPI,
@@ -113,6 +115,10 @@ function DashboardContent() {
   const [showAddEventModal, setShowAddEventModal] = useState(false);
   const [foodItems, setFoodItems] = useState<FoodItem[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
+  const [showFoodDetailModal, setShowFoodDetailModal] = useState(false);
+  const [showEventDetailModal, setShowEventDetailModal] = useState(false);
+  const [selectedFood, setSelectedFood] = useState<FoodItem | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [showTutoringModal, setShowTutoringModal] = useState(false);
   const [showItemDetailModal, setShowItemDetailModal] = useState(false);
@@ -801,6 +807,83 @@ function DashboardContent() {
     } catch (error) {
       console.error("Error creating event:", error);
       toast.error("Failed to create event. Please try again.");
+    }
+  };
+
+  const handleFoodClick = (food: FoodItem) => {
+    setSelectedFood(food);
+    setShowFoodDetailModal(true);
+  };
+
+  const handleEventClick = (event: Event) => {
+    setSelectedEvent(event);
+    setShowEventDetailModal(true);
+  };
+
+  const handleDeleteFood = async (foodId: string) => {
+    try {
+      await foodAPI.deleteFoodItem(foodId);
+      const foodData = await foodAPI.getFoodItems();
+      setFoodItems(foodData);
+      setShowFoodDetailModal(false);
+      toast.success("Food item deleted successfully!");
+    } catch (error) {
+      console.error("Error deleting food item:", error);
+      toast.error("Failed to delete food item.");
+    }
+  };
+
+  const handleDeleteEvent = async (eventId: string) => {
+    try {
+      await eventAPI.deleteEvent(eventId);
+      const eventData = await eventAPI.getEvents();
+      setEvents(eventData);
+      setShowEventDetailModal(false);
+      toast.success("Event deleted successfully!");
+    } catch (error) {
+      console.error("Error deleting event:", error);
+      toast.error("Failed to delete event.");
+    }
+  };
+
+  const handleOrderFood = async (foodId: string) => {
+    try {
+      const response = await fetch("/api/food/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ foodItemId: foodId, quantity: 1 }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to create order");
+      }
+
+      toast.success("Order placed successfully!");
+      setShowFoodDetailModal(false);
+    } catch (error) {
+      console.error("Error ordering food:", error);
+      toast.error("Failed to place order.");
+    }
+  };
+
+  const handleRegisterEvent = async (eventId: string) => {
+    try {
+      const response = await fetch(`/api/events/${eventId}/register`, {
+        method: "POST",
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to register");
+      }
+
+      toast.success("Registered for event successfully!");
+      const eventData = await eventAPI.getEvents();
+      setEvents(eventData);
+      setShowEventDetailModal(false);
+    } catch (error: any) {
+      console.error("Error registering for event:", error);
+      toast.error(error.message || "Failed to register for event.");
     }
   };
 
@@ -1716,6 +1799,7 @@ function DashboardContent() {
                               key={item.id}
                               item={item}
                               viewMode={viewMode as "grid" | "list"}
+                              onClick={() => handleFoodClick(item)}
                             />
                           ))
                         )}
@@ -1744,7 +1828,11 @@ function DashboardContent() {
                           </Card>
                         ) : (
                           events.map((event) => (
-                            <EventCard key={event.id} event={event} />
+                            <EventCard
+                              key={event.id}
+                              event={event}
+                              onClick={() => handleEventClick(event)}
+                            />
                           ))
                         )}
                       </div>
@@ -3605,6 +3693,339 @@ function DashboardContent() {
               onSubmit={handleAddEvent}
               onCancel={() => setShowAddEventModal(false)}
             />
+          </div>
+        </div>
+      )}
+
+      {/* Food Detail Modal */}
+      {showFoodDetailModal && selectedFood && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="relative">
+              {selectedFood.imageUrl && (
+                <div className="relative h-64 w-full">
+                  <Image
+                    src={selectedFood.imageUrl}
+                    alt={selectedFood.title}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+              )}
+              <button
+                onClick={() => setShowFoodDetailModal(false)}
+                className="absolute top-4 right-4 bg-white/90 hover:bg-white p-2 rounded-full"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="p-6">
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <h2 className="text-2xl font-bold mb-2">
+                    {selectedFood.title}
+                  </h2>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Badge variant="secondary" className="text-lg">
+                      Rp {selectedFood.price.toLocaleString()}
+                    </Badge>
+                    <Badge>{selectedFood.category}</Badge>
+                    <Badge variant="outline">{selectedFood.foodType}</Badge>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <h3 className="font-semibold mb-2">Description</h3>
+                  <p className="text-muted-foreground">
+                    {selectedFood.description}
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h3 className="font-semibold mb-1">Pickup Location</h3>
+                    <p className="text-sm text-muted-foreground flex items-center gap-1">
+                      <MapPin className="h-4 w-4" />
+                      {selectedFood.pickupLocation}
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold mb-1">Pickup Time</h3>
+                    <p className="text-sm text-muted-foreground flex items-center gap-1">
+                      <Clock className="h-4 w-4" />
+                      {selectedFood.pickupTime}
+                    </p>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold mb-2">Quantity Available</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedFood.quantity} {selectedFood.unit}
+                  </p>
+                </div>
+
+                {(selectedFood.isHalal ||
+                  selectedFood.isVegan ||
+                  selectedFood.isVegetarian) && (
+                  <div>
+                    <h3 className="font-semibold mb-2">Dietary Information</h3>
+                    <div className="flex gap-2">
+                      {selectedFood.isHalal && (
+                        <Badge variant="outline">Halal</Badge>
+                      )}
+                      {selectedFood.isVegan && (
+                        <Badge variant="outline">Vegan</Badge>
+                      )}
+                      {selectedFood.isVegetarian && (
+                        <Badge variant="outline">Vegetarian</Badge>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {selectedFood.allergens &&
+                  selectedFood.allergens.length > 0 && (
+                    <div>
+                      <h3 className="font-semibold mb-2">Allergens</h3>
+                      <p className="text-sm text-orange-600">
+                        {selectedFood.allergens.join(", ")}
+                      </p>
+                    </div>
+                  )}
+
+                {selectedFood.ingredients && (
+                  <div>
+                    <h3 className="font-semibold mb-2">Ingredients</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {selectedFood.ingredients}
+                    </p>
+                  </div>
+                )}
+
+                <div className="flex gap-2 pt-4">
+                  {session?.user?.email === selectedFood.seller?.email ? (
+                    <>
+                      <Button
+                        variant="destructive"
+                        onClick={() => {
+                          if (
+                            confirm(
+                              "Are you sure you want to delete this food item?"
+                            )
+                          ) {
+                            handleDeleteFood(selectedFood.id);
+                          }
+                        }}
+                        className="flex-1"
+                      >
+                        Delete
+                      </Button>
+                    </>
+                  ) : (
+                    <Button
+                      onClick={() => handleOrderFood(selectedFood.id)}
+                      className="flex-1"
+                      disabled={selectedFood.status === "sold"}
+                    >
+                      {selectedFood.status === "sold"
+                        ? "Sold Out"
+                        : "Order Now"}
+                    </Button>
+                  )}
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowFoodDetailModal(false)}
+                  >
+                    Close
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Event Detail Modal */}
+      {showEventDetailModal && selectedEvent && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="relative">
+              {(selectedEvent.bannerUrl || selectedEvent.imageUrl) && (
+                <div className="relative h-64 w-full">
+                  <Image
+                    src={
+                      selectedEvent.bannerUrl || selectedEvent.imageUrl || ""
+                    }
+                    alt={selectedEvent.title}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+              )}
+              <button
+                onClick={() => setShowEventDetailModal(false)}
+                className="absolute top-4 right-4 bg-white/90 hover:bg-white p-2 rounded-full"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="p-6">
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <h2 className="text-2xl font-bold mb-2">
+                    {selectedEvent.title}
+                  </h2>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Badge>{selectedEvent.category}</Badge>
+                    <Badge variant="outline">{selectedEvent.eventType}</Badge>
+                    {selectedEvent.isFeatured && (
+                      <Badge className="bg-yellow-500">Featured</Badge>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <h3 className="font-semibold mb-2">Description</h3>
+                  <p className="text-muted-foreground">
+                    {selectedEvent.description}
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h3 className="font-semibold mb-1">Start Date</h3>
+                    <p className="text-sm text-muted-foreground flex items-center gap-1">
+                      <Calendar className="h-4 w-4" />
+                      {format(
+                        new Date(selectedEvent.startDate),
+                        "MMM dd, yyyy HH:mm"
+                      )}
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold mb-1">End Date</h3>
+                    <p className="text-sm text-muted-foreground flex items-center gap-1">
+                      <Calendar className="h-4 w-4" />
+                      {format(
+                        new Date(selectedEvent.endDate),
+                        "MMM dd, yyyy HH:mm"
+                      )}
+                    </p>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold mb-1">Location</h3>
+                  <p className="text-sm text-muted-foreground flex items-center gap-1">
+                    <MapPin className="h-4 w-4" />
+                    {selectedEvent.isOnline
+                      ? "Online Event"
+                      : selectedEvent.location}
+                  </p>
+                  {selectedEvent.venue && (
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Venue: {selectedEvent.venue}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <h3 className="font-semibold mb-1">Participants</h3>
+                  <p className="text-sm text-muted-foreground flex items-center gap-1">
+                    <Users className="h-4 w-4" />
+                    {selectedEvent.currentParticipants}
+                    {selectedEvent.maxParticipants
+                      ? ` / ${selectedEvent.maxParticipants}`
+                      : ""}{" "}
+                    registered
+                  </p>
+                </div>
+
+                {selectedEvent.price > 0 && (
+                  <div>
+                    <h3 className="font-semibold mb-1">Price</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Rp {selectedEvent.price.toLocaleString()}
+                    </p>
+                  </div>
+                )}
+
+                {selectedEvent.organizer && (
+                  <div>
+                    <h3 className="font-semibold mb-1">Organizer</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {selectedEvent.organizer}
+                    </p>
+                  </div>
+                )}
+
+                {selectedEvent.tags && selectedEvent.tags.length > 0 && (
+                  <div>
+                    <h3 className="font-semibold mb-2">Tags</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedEvent.tags.map((tag, index) => (
+                        <Badge key={index} variant="outline">
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex gap-2 pt-4">
+                  {session?.user?.email ===
+                  selectedEvent.organizerUser?.email ? (
+                    <>
+                      <Button
+                        variant="destructive"
+                        onClick={() => {
+                          if (
+                            confirm(
+                              "Are you sure you want to delete this event?"
+                            )
+                          ) {
+                            handleDeleteEvent(selectedEvent.id);
+                          }
+                        }}
+                        className="flex-1"
+                      >
+                        Delete
+                      </Button>
+                    </>
+                  ) : (
+                    <Button
+                      onClick={() => handleRegisterEvent(selectedEvent.id)}
+                      className="flex-1"
+                      disabled={
+                        selectedEvent.maxParticipants
+                          ? selectedEvent.currentParticipants >=
+                            selectedEvent.maxParticipants
+                          : false
+                      }
+                    >
+                      {selectedEvent.maxParticipants &&
+                      selectedEvent.currentParticipants >=
+                        selectedEvent.maxParticipants
+                        ? "Event Full"
+                        : "Register"}
+                    </Button>
+                  )}
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowEventDetailModal(false)}
+                  >
+                    Close
+                  </Button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
