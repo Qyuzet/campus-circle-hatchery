@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
     const bytes = await file.arrayBuffer();
     let buffer = Buffer.from(bytes);
     const originalSize = buffer.length;
-    const maxSize = 10 * 1024 * 1024; // 10MB
+    const maxSize = 15 * 1024 * 1024; // 15MB
 
     let compressionInfo = {
       wasCompressed: false,
@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
                 compressedSize: compressionResult.compressedSize,
                 maxSize: maxSize,
                 message:
-                  "The file could not be compressed enough to meet the 10MB limit. Please try reducing the file size manually or use a different file.",
+                  "The file could not be compressed enough to meet the 15MB limit. Please try reducing the file size manually or use a different file.",
               },
             },
             { status: 400 }
@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
       } else if (originalSize > maxSize) {
         return NextResponse.json(
           {
-            error: compressionResult.error || "File size exceeds 10MB limit",
+            error: compressionResult.error || "File size exceeds 15MB limit",
             details: {
               originalSize: originalSize,
               maxSize: maxSize,

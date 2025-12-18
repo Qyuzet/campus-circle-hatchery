@@ -2,7 +2,7 @@ export const siteConfig = {
   name: "CampusCircle",
   url: "https://campuscircle.vercel.app",
   getStartedUrl: "/dashboard",
-  ogImage: "/campusCircle-logo.png",
+  ogImage: "/campus-circle-logo.png",
   description:
     "Exclusive marketplace for Binus University students to buy, sell, and exchange study materials, notes, assignments, and books in PDF format.",
   links: {

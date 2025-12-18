@@ -414,16 +414,10 @@ export default function AdminPage() {
                 className="flex items-center hover:opacity-80"
               >
                 <img
-                  src="/campusCircle-logo.png"
+                  src="/campus-circle-logo.png"
                   alt="Logo"
-                  className="h-8 w-8"
+                  className="h-12 w-auto"
                 />
-                <span className="ml-2 text-xl font-bold">
-                  <span className="bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
-                    Campus
-                  </span>
-                  <span className="text-gray-800">Circle</span>
-                </span>
               </button>
               <Badge className="bg-red-600 text-white">ADMIN</Badge>
             </div>

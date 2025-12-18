@@ -10,32 +10,51 @@ export interface CompressionResult {
   compressionRatio: number;
   error?: string;
   wasCompressed: boolean;
+  compressionLevel?: string;
 }
+
+type CompressionQuality = "highest" | "high" | "medium" | "low" | "lowest";
 
 async function compressPDF(
   buffer: Buffer,
-  quality: "low" | "medium" | "high" = "medium"
+  quality: CompressionQuality = "medium"
 ): Promise<CompressionResult> {
   try {
     const originalSize = buffer.length;
 
-    const pdfDoc = await PDFDocument.load(buffer);
+    const pdfDoc = await PDFDocument.load(buffer, {
+      ignoreEncryption: true,
+      updateMetadata: false,
+    });
 
     const pages = pdfDoc.getPages();
-    for (const page of pages) {
-      const { width, height } = page.getSize();
 
-      let scale = 1;
-      if (quality === "low") {
+    let scale = 1;
+    switch (quality) {
+      case "lowest":
+        scale = 0.3;
+        break;
+      case "low":
         scale = 0.5;
-      } else if (quality === "medium") {
+        break;
+      case "medium":
         scale = 0.7;
-      } else {
+        break;
+      case "high":
         scale = 0.85;
-      }
+        break;
+      case "highest":
+        scale = 0.95;
+        break;
+    }
 
-      if (scale < 1) {
-        page.scale(scale, scale);
+    if (scale < 1) {
+      for (const page of pages) {
+        try {
+          page.scale(scale, scale);
+        } catch (pageError) {
+          console.error("Error scaling page:", pageError);
+        }
       }
     }
 
@@ -57,14 +76,16 @@ async function compressPDF(
       compressedSize,
       compressionRatio,
       wasCompressed: true,
+      compressionLevel: quality,
     };
   } catch (error: any) {
+    console.error("PDF compression error:", error);
     return {
       success: false,
       originalSize: buffer.length,
       compressedSize: buffer.length,
       compressionRatio: 0,
-      error: error.message || "PDF compression failed",
+      error: `PDF compression failed: ${error.message || "Unknown error"}`,
       wasCompressed: false,
     };
   }
@@ -73,20 +94,64 @@ async function compressPDF(
 async function compressImage(
   buffer: Buffer,
   mimeType: string,
-  quality: number = 0.7
+  quality: CompressionQuality = "medium"
 ): Promise<CompressionResult> {
   try {
     const originalSize = buffer.length;
 
+    let qualityValue = 70;
+    let resize = false;
+    let resizePercentage = 100;
+
+    switch (quality) {
+      case "lowest":
+        qualityValue = 20;
+        resize = true;
+        resizePercentage = 50;
+        break;
+      case "low":
+        qualityValue = 40;
+        resize = true;
+        resizePercentage = 70;
+        break;
+      case "medium":
+        qualityValue = 60;
+        resize = true;
+        resizePercentage = 85;
+        break;
+      case "high":
+        qualityValue = 75;
+        break;
+      case "highest":
+        qualityValue = 85;
+        break;
+    }
+
+    let sharpInstance = sharp(buffer);
+
+    if (resize) {
+      const metadata = await sharpInstance.metadata();
+      if (metadata.width && metadata.height) {
+        const newWidth = Math.round((metadata.width * resizePercentage) / 100);
+        const newHeight = Math.round(
+          (metadata.height * resizePercentage) / 100
+        );
+        sharpInstance = sharpInstance.resize(newWidth, newHeight, {
+          fit: "inside",
+          withoutEnlargement: true,
+        });
+      }
+    }
+
     let compressedBuffer: Buffer;
 
     if (mimeType === "image/png") {
-      compressedBuffer = await sharp(buffer)
-        .png({ quality: Math.round(quality * 100), compressionLevel: 9 })
+      compressedBuffer = await sharpInstance
+        .png({ quality: qualityValue, compressionLevel: 9, effort: 10 })
         .toBuffer();
     } else {
-      compressedBuffer = await sharp(buffer)
-        .jpeg({ quality: Math.round(quality * 100) })
+      compressedBuffer = await sharpInstance
+        .jpeg({ quality: qualityValue, mozjpeg: true })
         .toBuffer();
     }
 
@@ -101,14 +166,16 @@ async function compressImage(
       compressedSize,
       compressionRatio,
       wasCompressed: true,
+      compressionLevel: quality,
     };
   } catch (error: any) {
+    console.error("Image compression error:", error);
     return {
       success: false,
       originalSize: buffer.length,
       compressedSize: buffer.length,
       compressionRatio: 0,
-      error: error.message || "Image compression failed",
+      error: `Image compression failed: ${error.message || "Unknown error"}`,
       wasCompressed: false,
     };
   }
@@ -116,7 +183,8 @@ async function compressImage(
 
 async function compressWordDocument(
   buffer: Buffer,
-  mimeType: string
+  mimeType: string,
+  quality: CompressionQuality = "medium"
 ): Promise<CompressionResult> {
   try {
     const originalSize = buffer.length;
@@ -135,21 +203,69 @@ async function compressWordDocument(
             filename.endsWith(".png"))
       );
 
-      for (const imageFile of imageFiles) {
-        const imageData = await zip.files[imageFile].async("nodebuffer");
-        const ext = imageFile.split(".").pop()?.toLowerCase();
-        const imageMimeType = ext === "png" ? "image/png" : "image/jpeg";
+      let imageQuality = 70;
+      let resizePercentage = 100;
 
+      switch (quality) {
+        case "lowest":
+          imageQuality = 20;
+          resizePercentage = 50;
+          break;
+        case "low":
+          imageQuality = 40;
+          resizePercentage = 70;
+          break;
+        case "medium":
+          imageQuality = 60;
+          resizePercentage = 85;
+          break;
+        case "high":
+          imageQuality = 75;
+          resizePercentage = 95;
+          break;
+        case "highest":
+          imageQuality = 85;
+          resizePercentage = 100;
+          break;
+      }
+
+      let compressedCount = 0;
+      for (const imageFile of imageFiles) {
         try {
-          const compressedImage = await sharp(imageData)
-            .jpeg({ quality: 70 })
+          const imageData = await zip.files[imageFile].async("nodebuffer");
+
+          let sharpInstance = sharp(imageData);
+
+          if (resizePercentage < 100) {
+            const metadata = await sharpInstance.metadata();
+            if (metadata.width && metadata.height) {
+              const newWidth = Math.round(
+                (metadata.width * resizePercentage) / 100
+              );
+              const newHeight = Math.round(
+                (metadata.height * resizePercentage) / 100
+              );
+              sharpInstance = sharpInstance.resize(newWidth, newHeight, {
+                fit: "inside",
+                withoutEnlargement: true,
+              });
+            }
+          }
+
+          const compressedImage = await sharpInstance
+            .jpeg({ quality: imageQuality, mozjpeg: true })
             .toBuffer();
 
           zip.file(imageFile, compressedImage);
+          compressedCount++;
         } catch (err) {
           console.error(`Failed to compress image ${imageFile}:`, err);
         }
       }
+
+      console.log(
+        `Compressed ${compressedCount} of ${imageFiles.length} images in Word document`
+      );
 
       const compressedBytes = await zip.generateAsync({
         type: "nodebuffer",
@@ -169,6 +285,7 @@ async function compressWordDocument(
         compressedSize,
         compressionRatio,
         wasCompressed: true,
+        compressionLevel: quality,
       };
     } else {
       return {
@@ -182,12 +299,15 @@ async function compressWordDocument(
       };
     }
   } catch (error: any) {
+    console.error("Word document compression error:", error);
     return {
       success: false,
       originalSize: buffer.length,
       compressedSize: buffer.length,
       compressionRatio: 0,
-      error: error.message || "Word document compression failed",
+      error: `Word document compression failed: ${
+        error.message || "Unknown error"
+      }`,
       wasCompressed: false,
     };
   }
@@ -196,7 +316,7 @@ async function compressWordDocument(
 export async function compressFile(
   buffer: Buffer,
   mimeType: string,
-  maxSize: number = 10 * 1024 * 1024
+  maxSize: number = 15 * 1024 * 1024
 ): Promise<CompressionResult> {
   if (buffer.length <= maxSize) {
     return {
@@ -209,45 +329,147 @@ export async function compressFile(
     };
   }
 
+  console.log(
+    `Starting compression for ${mimeType}, size: ${(
+      buffer.length /
+      1024 /
+      1024
+    ).toFixed(2)}MB, max: ${(maxSize / 1024 / 1024).toFixed(2)}MB`
+  );
+
+  const compressionLevels: CompressionQuality[] = [
+    "high",
+    "medium",
+    "low",
+    "lowest",
+  ];
+
   if (mimeType === "application/pdf") {
-    let result = await compressPDF(buffer, "medium");
+    let result: CompressionResult | null = null;
 
-    if (
-      result.success &&
-      result.compressedBuffer &&
-      result.compressedBuffer.length > maxSize
-    ) {
-      result = await compressPDF(buffer, "low");
+    for (const level of compressionLevels) {
+      console.log(`Trying PDF compression with quality: ${level}`);
+      result = await compressPDF(buffer, level);
+
+      if (!result.success) {
+        console.error(
+          `PDF compression failed at level ${level}:`,
+          result.error
+        );
+        continue;
+      }
+
+      console.log(
+        `PDF compressed to ${(result.compressedSize / 1024 / 1024).toFixed(
+          2
+        )}MB with ${level} quality`
+      );
+
+      if (
+        result.compressedBuffer &&
+        result.compressedBuffer.length <= maxSize
+      ) {
+        console.log(`PDF compression successful at level ${level}`);
+        return result;
+      }
     }
 
-    return result;
+    return (
+      result || {
+        success: false,
+        originalSize: buffer.length,
+        compressedSize: buffer.length,
+        compressionRatio: 0,
+        error: "PDF compression failed at all quality levels",
+        wasCompressed: false,
+      }
+    );
   } else if (mimeType.startsWith("image/")) {
-    let result = await compressImage(buffer, mimeType, 0.7);
+    let result: CompressionResult | null = null;
 
-    if (
-      result.success &&
-      result.compressedBuffer &&
-      result.compressedBuffer.length > maxSize
-    ) {
-      result = await compressImage(buffer, mimeType, 0.5);
+    for (const level of compressionLevels) {
+      console.log(`Trying image compression with quality: ${level}`);
+      result = await compressImage(buffer, mimeType, level);
+
+      if (!result.success) {
+        console.error(
+          `Image compression failed at level ${level}:`,
+          result.error
+        );
+        continue;
+      }
+
+      console.log(
+        `Image compressed to ${(result.compressedSize / 1024 / 1024).toFixed(
+          2
+        )}MB with ${level} quality`
+      );
+
+      if (
+        result.compressedBuffer &&
+        result.compressedBuffer.length <= maxSize
+      ) {
+        console.log(`Image compression successful at level ${level}`);
+        return result;
+      }
     }
 
-    if (
-      result.success &&
-      result.compressedBuffer &&
-      result.compressedBuffer.length > maxSize
-    ) {
-      result = await compressImage(buffer, mimeType, 0.3);
-    }
-
-    return result;
+    return (
+      result || {
+        success: false,
+        originalSize: buffer.length,
+        compressedSize: buffer.length,
+        compressionRatio: 0,
+        error: "Image compression failed at all quality levels",
+        wasCompressed: false,
+      }
+    );
   } else if (
     mimeType === "application/msword" ||
     mimeType ===
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
   ) {
-    const result = await compressWordDocument(buffer, mimeType);
-    return result;
+    let result: CompressionResult | null = null;
+
+    for (const level of compressionLevels) {
+      console.log(`Trying Word document compression with quality: ${level}`);
+      result = await compressWordDocument(buffer, mimeType, level);
+
+      if (!result.success) {
+        console.error(
+          `Word compression failed at level ${level}:`,
+          result.error
+        );
+        continue;
+      }
+
+      console.log(
+        `Word document compressed to ${(
+          result.compressedSize /
+          1024 /
+          1024
+        ).toFixed(2)}MB with ${level} quality`
+      );
+
+      if (
+        result.compressedBuffer &&
+        result.compressedBuffer.length <= maxSize
+      ) {
+        console.log(`Word compression successful at level ${level}`);
+        return result;
+      }
+    }
+
+    return (
+      result || {
+        success: false,
+        originalSize: buffer.length,
+        compressedSize: buffer.length,
+        compressionRatio: 0,
+        error: "Word document compression failed at all quality levels",
+        wasCompressed: false,
+      }
+    );
   }
 
   return {

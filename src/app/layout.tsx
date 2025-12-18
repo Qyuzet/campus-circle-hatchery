@@ -10,6 +10,11 @@ export const metadata: Metadata = {
   title: "CampusCircle - Binus University Student Marketplace",
   description:
     "A platform for Binus University students to exchange study materials, notes, and services",
+  icons: {
+    icon: "/campus-circle-icon.png",
+    shortcut: "/campus-circle-icon.png",
+    apple: "/campus-circle-icon.png",
+  },
 };
 
 export default function RootLayout({

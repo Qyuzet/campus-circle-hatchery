@@ -1122,18 +1122,10 @@ function DashboardContent() {
               className="flex items-center hover:opacity-80 transition-opacity"
             >
               <img
-                src="/campusCircle-logo.png"
+                src="/campus-circle-logo.png"
                 alt="CampusCircle Logo"
-                className="h-6 w-6 sm:h-8 sm:w-8"
+                className="h-12 sm:h-14 w-auto"
               />
-              <span className="ml-2 text-lg sm:text-2xl font-bold">
-                <span className="bg-gradient-to-r from-campus-blue-light to-campus-blue-dark bg-clip-text text-transparent">
-                  Campus
-                </span>
-                <span className="bg-gradient-to-r from-circle-teal-light to-circle-teal-dark bg-clip-text text-transparent">
-                  Circle
-                </span>
-              </span>
             </button>
 
             <div className="flex items-center space-x-2 sm:space-x-4">
@@ -5429,7 +5421,7 @@ function AddItemForm({
                             Maximum Allowed:
                           </span>
                           <span className="font-medium text-red-600">
-                            10.00 MB
+                            15.00 MB
                           </span>
                         </div>
                       </div>

@@ -29,18 +29,10 @@ export default function Header({
           {/* Logo */}
           <div className="flex items-center">
             <img
-              src="/campusCircle-logo.png"
+              src="/campus-circle-logo.png"
               alt="CampusCircle Logo"
-              className="h-8 w-8"
+              className="h-12 w-auto"
             />
-            <span className="ml-2 text-2xl font-bold">
-              <span className="bg-gradient-to-r from-campus-blue-light to-campus-blue-dark bg-clip-text text-transparent">
-                Campus
-              </span>
-              <span className="bg-gradient-to-r from-circle-teal-light to-circle-teal-dark bg-clip-text text-transparent">
-                Circle
-              </span>
-            </span>
           </div>
 
           {/* Desktop Search */}

@@ -140,20 +140,12 @@ export default function LibraryPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <Image
-                src="/campusCircle-logo.png"
+                src="/campus-circle-logo.png"
                 alt="CampusCircle Logo"
-                width={32}
-                height={32}
-                className="h-6 w-6 sm:h-8 sm:w-8"
+                width={200}
+                height={50}
+                className="h-12 sm:h-14 w-auto"
               />
-              <span className="ml-2 text-lg sm:text-2xl font-bold">
-                <span className="bg-gradient-to-r from-campus-blue-light to-campus-blue-dark bg-clip-text text-transparent">
-                  Campus
-                </span>
-                <span className="bg-gradient-to-r from-circle-teal-light to-circle-teal-dark bg-clip-text text-transparent">
-                  Circle
-                </span>
-              </span>
             </div>
 
             <div className="flex items-center space-x-2 sm:space-x-4">
