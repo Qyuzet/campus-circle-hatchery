@@ -90,7 +90,11 @@ function DashboardContent() {
   const [viewMode, setViewMode] = useState("grid");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
+  const [contentMode, setContentMode] = useState<"study" | "food" | "event">(
+    "study"
+  );
   const [showAddItemModal, setShowAddItemModal] = useState(false);
+  const [showAddTypeModal, setShowAddTypeModal] = useState(false);
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [showTutoringModal, setShowTutoringModal] = useState(false);
   const [showItemDetailModal, setShowItemDetailModal] = useState(false);
@@ -1513,36 +1517,56 @@ function DashboardContent() {
                     <Card className="sticky top-28 z-40 bg-white">
                       <CardContent className="p-3 sm:p-3">
                         <div className="flex items-center gap-1.5 sm:gap-2">
-                          {/* Title - Compact */}
-                          <h3 className="text-sm sm:text-base font-semibold text-foreground shrink-0">
-                            Study Materials
-                          </h3>
-
-                          {/* Search */}
-                          <div className="flex-1 relative">
-                            <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3 w-3 sm:h-3.5 sm:w-3.5 text-muted-foreground" />
-                            <Input
-                              placeholder="Search..."
-                              value={searchQuery}
-                              onChange={(e) => setSearchQuery(e.target.value)}
-                              className="pl-7 sm:pl-8 h-7 sm:h-8 text-xs sm:text-sm"
-                            />
+                          {/* Mode Selector - Study, Food, Event */}
+                          <div className="flex border border-input rounded-md h-7 sm:h-8 shrink-0">
+                            <Button
+                              variant={
+                                contentMode === "study" ? "secondary" : "ghost"
+                              }
+                              size="sm"
+                              onClick={() => setContentMode("study")}
+                              className="rounded-r-none h-full px-2 sm:px-3 text-xs sm:text-sm"
+                            >
+                              Study
+                            </Button>
+                            <Button
+                              variant={
+                                contentMode === "food" ? "secondary" : "ghost"
+                              }
+                              size="sm"
+                              onClick={() => setContentMode("food")}
+                              className="rounded-none h-full px-2 sm:px-3 text-xs sm:text-sm"
+                            >
+                              Food
+                            </Button>
+                            <Button
+                              variant={
+                                contentMode === "event" ? "secondary" : "ghost"
+                              }
+                              size="sm"
+                              onClick={() => setContentMode("event")}
+                              className="rounded-l-none h-full px-2 sm:px-3 text-xs sm:text-sm"
+                            >
+                              Event
+                            </Button>
                           </div>
 
                           {/* Category Filter */}
-                          <select
-                            value={selectedCategory}
-                            onChange={(e) =>
-                              handleCategoryFilter(e.target.value)
-                            }
-                            className="px-1.5 sm:px-2 py-1 border border-input rounded-md text-[10px] sm:text-xs bg-background hover:bg-accent transition-colors h-7 sm:h-8 w-20 sm:w-auto shrink-0"
-                          >
-                            <option value="">All</option>
-                            <option value="Notes">Notes</option>
-                            <option value="Assignment">Assignment</option>
-                            <option value="Book">Book</option>
-                            <option value="Other">Other</option>
-                          </select>
+                          {contentMode === "study" && (
+                            <select
+                              value={selectedCategory}
+                              onChange={(e) =>
+                                handleCategoryFilter(e.target.value)
+                              }
+                              className="px-1.5 sm:px-2 py-1 border border-input rounded-md text-[10px] sm:text-xs bg-background hover:bg-accent transition-colors h-7 sm:h-8 w-20 sm:w-auto shrink-0"
+                            >
+                              <option value="">All</option>
+                              <option value="Notes">Notes</option>
+                              <option value="Assignment">Assignment</option>
+                              <option value="Book">Book</option>
+                              <option value="Other">Other</option>
+                            </select>
+                          )}
 
                           {/* View Mode Toggle */}
                           <div className="flex border border-input rounded-md h-7 sm:h-8 shrink-0">
@@ -1570,9 +1594,9 @@ function DashboardContent() {
 
                           {/* Add Button */}
                           <Button
-                            onClick={handleAddItemClick}
+                            onClick={() => setShowAddTypeModal(true)}
                             size="sm"
-                            className="text-xs sm:text-sm h-7 sm:h-8 px-2 sm:px-3 shrink-0"
+                            className="text-xs sm:text-sm h-7 sm:h-8 px-2 sm:px-3 shrink-0 ml-auto"
                           >
                             <Plus className="h-3 w-3 sm:h-3.5 sm:w-3.5 sm:mr-1" />
                             <span className="hidden sm:inline">Add</span>
@@ -1613,304 +1637,339 @@ function DashboardContent() {
                     </Card>
 
                     {/* Marketplace Items */}
-                    <div
-                      className={`grid gap-2 sm:gap-4 ${
-                        viewMode === "grid"
-                          ? "grid-cols-3 md:grid-cols-3 lg:grid-cols-5"
-                          : "grid-cols-1"
-                      }`}
-                    >
-                      {marketplaceItems.length === 0 ? (
-                        <Card className="col-span-full">
-                          <CardContent className="flex flex-col items-center justify-center py-12">
-                            <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
-                            <h3 className="text-lg font-semibold mb-2">
-                              No items found
-                            </h3>
-                            <p className="text-muted-foreground text-center mb-4">
-                              {searchQuery || selectedCategory
-                                ? "Try adjusting your filters"
-                                : "Be the first to add a study material!"}
-                            </p>
-                            <Button onClick={handleAddItemClick}>
-                              <Plus className="h-4 w-4 mr-2" />
-                              Add Item
-                            </Button>
-                          </CardContent>
-                        </Card>
-                      ) : (
-                        marketplaceItems.map((item) => (
-                          <Card
-                            key={item.id}
-                            onClick={() => handleItemClick(item)}
-                            className={`cursor-pointer hover:shadow-lg transition-all group overflow-hidden ${
-                              viewMode === "list" ? "flex flex-row" : ""
-                            }`}
-                          >
-                            {/* Image Section - Show File Preview */}
-                            <div
-                              className={`relative bg-secondary-200 overflow-hidden ${
-                                viewMode === "list"
-                                  ? "w-12 h-12 flex-shrink-0 rounded-md"
-                                  : "aspect-square sm:aspect-video lg:aspect-[3/2]"
+                    {contentMode === "food" || contentMode === "event" ? (
+                      <Card>
+                        <CardContent className="flex flex-col items-center justify-center py-16">
+                          {contentMode === "food" ? (
+                            <>
+                              <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mb-4">
+                                <ShoppingCart className="h-8 w-8 text-orange-600" />
+                              </div>
+                              <h3 className="text-xl font-semibold mb-2">
+                                Food Marketplace Coming Soon
+                              </h3>
+                              <p className="text-muted-foreground text-center max-w-md">
+                                Share and discover food items with your campus
+                                community. This feature is under development.
+                              </p>
+                            </>
+                          ) : (
+                            <>
+                              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mb-4">
+                                <Calendar className="h-8 w-8 text-purple-600" />
+                              </div>
+                              <h3 className="text-xl font-semibold mb-2">
+                                Campus Events Coming Soon
+                              </h3>
+                              <p className="text-muted-foreground text-center max-w-md">
+                                Create and discover campus events. This feature
+                                is under development.
+                              </p>
+                            </>
+                          )}
+                        </CardContent>
+                      </Card>
+                    ) : (
+                      <div
+                        className={`grid gap-2 sm:gap-4 ${
+                          viewMode === "grid"
+                            ? "grid-cols-3 md:grid-cols-3 lg:grid-cols-5"
+                            : "grid-cols-1"
+                        }`}
+                      >
+                        {marketplaceItems.length === 0 ? (
+                          <Card className="col-span-full">
+                            <CardContent className="flex flex-col items-center justify-center py-12">
+                              <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
+                              <h3 className="text-lg font-semibold mb-2">
+                                No items found
+                              </h3>
+                              <p className="text-muted-foreground text-center mb-4">
+                                {searchQuery || selectedCategory
+                                  ? "Try adjusting your filters"
+                                  : "Be the first to add a study material!"}
+                              </p>
+                              <Button onClick={() => setShowAddTypeModal(true)}>
+                                <Plus className="h-4 w-4 mr-2" />
+                                Add Item
+                              </Button>
+                            </CardContent>
+                          </Card>
+                        ) : (
+                          marketplaceItems.map((item) => (
+                            <Card
+                              key={item.id}
+                              onClick={() => handleItemClick(item)}
+                              className={`cursor-pointer hover:shadow-lg transition-all group overflow-hidden ${
+                                viewMode === "list" ? "flex flex-row" : ""
                               }`}
                             >
-                              <FilePreview
-                                fileUrl={item.fileUrl}
-                                fileType={item.fileType}
-                                fileName={item.fileName}
-                                category={item.category}
-                                title={item.title}
-                                compact={viewMode === "list"}
-                                thumbnailUrl={item.thumbnailUrl}
-                              />
-                              {/* Favorite Button */}
-                              {viewMode === "grid" && (
-                                <button
-                                  onClick={(e) =>
-                                    handleToggleWishlist(item.id, e)
-                                  }
-                                  className={`absolute top-1 right-1 sm:top-2 sm:right-2 lg:top-1.5 lg:right-1.5 bg-white/90 backdrop-blur-sm p-1 sm:p-1.5 lg:p-1 rounded-full transition-all shadow-sm z-10 ${
-                                    wishlistItemIds.has(item.id)
-                                      ? "text-red-500 hover:text-red-600"
-                                      : "text-gray-600 hover:text-red-500"
-                                  } hover:bg-white`}
-                                >
-                                  <Heart
-                                    className={`h-3 w-3 sm:h-4 sm:w-4 lg:h-3 lg:w-3 ${
-                                      wishlistItemIds.has(item.id)
-                                        ? "fill-current"
-                                        : ""
-                                    }`}
-                                  />
-                                </button>
-                              )}
-                            </div>
-
-                            {/* Content Section */}
-                            <div
-                              className={`flex ${
-                                viewMode === "list"
-                                  ? "flex-row flex-1"
-                                  : "flex-col"
-                              }`}
-                            >
-                              <CardContent
-                                className={`${
+                              {/* Image Section - Show File Preview */}
+                              <div
+                                className={`relative bg-secondary-200 overflow-hidden ${
                                   viewMode === "list"
-                                    ? "p-1.5 flex-1 flex items-center"
-                                    : "p-2 sm:p-3 lg:p-2.5 space-y-1.5 sm:space-y-2 lg:space-y-1.5"
+                                    ? "w-12 h-12 flex-shrink-0 rounded-md"
+                                    : "aspect-square sm:aspect-video lg:aspect-[3/2]"
                                 }`}
                               >
-                                <div
-                                  className={
+                                <FilePreview
+                                  fileUrl={item.fileUrl}
+                                  fileType={item.fileType}
+                                  fileName={item.fileName}
+                                  category={item.category}
+                                  title={item.title}
+                                  compact={viewMode === "list"}
+                                  thumbnailUrl={item.thumbnailUrl}
+                                />
+                                {/* Favorite Button */}
+                                {viewMode === "grid" && (
+                                  <button
+                                    onClick={(e) =>
+                                      handleToggleWishlist(item.id, e)
+                                    }
+                                    className={`absolute top-1 right-1 sm:top-2 sm:right-2 lg:top-1.5 lg:right-1.5 bg-white/90 backdrop-blur-sm p-1 sm:p-1.5 lg:p-1 rounded-full transition-all shadow-sm z-10 ${
+                                      wishlistItemIds.has(item.id)
+                                        ? "text-red-500 hover:text-red-600"
+                                        : "text-gray-600 hover:text-red-500"
+                                    } hover:bg-white`}
+                                  >
+                                    <Heart
+                                      className={`h-3 w-3 sm:h-4 sm:w-4 lg:h-3 lg:w-3 ${
+                                        wishlistItemIds.has(item.id)
+                                          ? "fill-current"
+                                          : ""
+                                      }`}
+                                    />
+                                  </button>
+                                )}
+                              </div>
+
+                              {/* Content Section */}
+                              <div
+                                className={`flex ${
+                                  viewMode === "list"
+                                    ? "flex-row flex-1"
+                                    : "flex-col"
+                                }`}
+                              >
+                                <CardContent
+                                  className={`${
                                     viewMode === "list"
-                                      ? "flex-1 min-w-0"
-                                      : "space-y-3"
-                                  }
+                                      ? "p-1.5 flex-1 flex items-center"
+                                      : "p-2 sm:p-3 lg:p-2.5 space-y-1.5 sm:space-y-2 lg:space-y-1.5"
+                                  }`}
                                 >
-                                  {/* Category Badge and Title */}
-                                  <div className="flex items-start justify-between gap-2">
-                                    <div className="flex-1 min-w-0">
-                                      {viewMode === "list" ? (
-                                        <div className="flex items-center gap-1.5">
-                                          <Badge
-                                            variant="secondary"
-                                            className="text-[9px] px-1 py-0 flex-shrink-0"
-                                          >
-                                            {item.category}
-                                          </Badge>
-                                          <h3 className="font-bold text-xs line-clamp-1 text-gray-900 flex-1 min-w-0">
+                                  <div
+                                    className={
+                                      viewMode === "list"
+                                        ? "flex-1 min-w-0"
+                                        : "space-y-3"
+                                    }
+                                  >
+                                    {/* Category Badge and Title */}
+                                    <div className="flex items-start justify-between gap-2">
+                                      <div className="flex-1 min-w-0">
+                                        {viewMode === "list" ? (
+                                          <div className="flex items-center gap-1.5">
+                                            <Badge
+                                              variant="secondary"
+                                              className="text-[9px] px-1 py-0 flex-shrink-0"
+                                            >
+                                              {item.category}
+                                            </Badge>
+                                            <h3 className="font-bold text-xs line-clamp-1 text-gray-900 flex-1 min-w-0">
+                                              {item.title}
+                                            </h3>
+                                            <BookOpen className="h-2.5 w-2.5 text-gray-400 flex-shrink-0" />
+                                            <span className="text-[9px] text-gray-500 truncate max-w-[60px]">
+                                              {item.course}
+                                            </span>
+                                            <div className="flex items-center gap-0.5 flex-shrink-0">
+                                              <Star className="h-2.5 w-2.5 text-yellow-400 fill-yellow-400" />
+                                              <span className="text-[9px] font-medium text-gray-700">
+                                                {item.rating}
+                                              </span>
+                                            </div>
+                                            <p className="text-xs font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent flex-shrink-0">
+                                              Rp {formatPrice(item.price)}
+                                            </p>
+                                          </div>
+                                        ) : (
+                                          <h3 className="font-bold text-xs sm:text-base lg:text-sm line-clamp-1 text-gray-900 leading-tight">
                                             {item.title}
                                           </h3>
-                                          <BookOpen className="h-2.5 w-2.5 text-gray-400 flex-shrink-0" />
-                                          <span className="text-[9px] text-gray-500 truncate max-w-[60px]">
-                                            {item.course}
-                                          </span>
-                                          <div className="flex items-center gap-0.5 flex-shrink-0">
-                                            <Star className="h-2.5 w-2.5 text-yellow-400 fill-yellow-400" />
-                                            <span className="text-[9px] font-medium text-gray-700">
-                                              {item.rating}
-                                            </span>
-                                          </div>
-                                          <p className="text-xs font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent flex-shrink-0">
-                                            Rp {formatPrice(item.price)}
-                                          </p>
-                                        </div>
-                                      ) : (
-                                        <h3 className="font-bold text-xs sm:text-base lg:text-sm line-clamp-1 text-gray-900 leading-tight">
-                                          {item.title}
-                                        </h3>
-                                      )}
-                                    </div>
-                                  </div>
-
-                                  {/* Description - Hidden on mobile grid view */}
-                                  {viewMode === "list" ? null : (
-                                    <p className="hidden sm:block text-xs lg:text-[11px] text-gray-600 line-clamp-2 lg:line-clamp-1 lg:min-h-0 min-h-[40px]">
-                                      {item.description}
-                                    </p>
-                                  )}
-
-                                  {/* Course Info */}
-                                  {viewMode === "list" ? null : (
-                                    <div className="flex items-center gap-0.5 sm:gap-1 lg:gap-0.5 text-[9px] sm:text-xs lg:text-[10px] text-gray-500">
-                                      <BookOpen className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 lg:h-2.5 lg:w-2.5" />
-                                      <span className="font-medium truncate">
-                                        {item.course}
-                                      </span>
-                                    </div>
-                                  )}
-
-                                  {viewMode === "grid" && (
-                                    <>
-                                      {/* Price and Rating */}
-                                      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between pt-1 sm:pt-1.5 lg:pt-1 border-t gap-0.5 sm:gap-0">
-                                        <div className="flex items-center justify-between sm:block">
-                                          <p className="text-sm sm:text-lg lg:text-base font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent leading-tight">
-                                            <span className="sm:hidden">
-                                              Rp {formatPrice(item.price)}
-                                            </span>
-                                            <span className="hidden sm:inline">
-                                              Rp {item.price.toLocaleString()}
-                                            </span>
-                                          </p>
-                                          <div className="flex items-center gap-0.5 sm:gap-1 sm:mt-0.5 lg:mt-0">
-                                            <Star className="h-2.5 w-2.5 sm:h-3 sm:w-3 lg:h-2.5 lg:w-2.5 text-yellow-400 fill-yellow-400" />
-                                            <span className="text-[9px] sm:text-xs lg:text-[10px] font-medium text-gray-700">
-                                              {item.rating}
-                                            </span>
-                                            <span className="text-[9px] sm:text-xs lg:text-[10px] text-gray-500">
-                                              ({item.reviewCount || 0})
-                                            </span>
-                                          </div>
-                                        </div>
-                                        <div className="text-right hidden sm:block">
-                                          <p className="text-[10px] lg:text-[9px] text-gray-500">
-                                            by
-                                          </p>
-                                          <p className="text-xs lg:text-[10px] font-medium text-gray-700">
-                                            {typeof item.seller === "string"
-                                              ? `Student ${item.seller.slice(
-                                                  -9
-                                                )}`
-                                              : item.seller?.name || "Unknown"}
-                                          </p>
-                                        </div>
+                                        )}
                                       </div>
-                                    </>
-                                  )}
-                                </div>
-                              </CardContent>
+                                    </div>
 
-                              {/* Action Buttons */}
-                              {viewMode === "list" ? (
-                                <div className="flex flex-col gap-1 p-1 justify-center border-l">
-                                  {item.sellerId === currentUser?.id ? (
-                                    <Button
-                                      variant="destructive"
-                                      size="sm"
-                                      className="h-6 w-6 p-0"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleDeleteItem(item.id);
-                                      }}
-                                    >
-                                      <Trash2 className="h-3 w-3" />
-                                    </Button>
-                                  ) : (
-                                    <>
+                                    {/* Description - Hidden on mobile grid view */}
+                                    {viewMode === "list" ? null : (
+                                      <p className="hidden sm:block text-xs lg:text-[11px] text-gray-600 line-clamp-2 lg:line-clamp-1 lg:min-h-0 min-h-[40px]">
+                                        {item.description}
+                                      </p>
+                                    )}
+
+                                    {/* Course Info */}
+                                    {viewMode === "list" ? null : (
+                                      <div className="flex items-center gap-0.5 sm:gap-1 lg:gap-0.5 text-[9px] sm:text-xs lg:text-[10px] text-gray-500">
+                                        <BookOpen className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 lg:h-2.5 lg:w-2.5" />
+                                        <span className="font-medium truncate">
+                                          {item.course}
+                                        </span>
+                                      </div>
+                                    )}
+
+                                    {viewMode === "grid" && (
+                                      <>
+                                        {/* Price and Rating */}
+                                        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between pt-1 sm:pt-1.5 lg:pt-1 border-t gap-0.5 sm:gap-0">
+                                          <div className="flex items-center justify-between sm:block">
+                                            <p className="text-sm sm:text-lg lg:text-base font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent leading-tight">
+                                              <span className="sm:hidden">
+                                                Rp {formatPrice(item.price)}
+                                              </span>
+                                              <span className="hidden sm:inline">
+                                                Rp {item.price.toLocaleString()}
+                                              </span>
+                                            </p>
+                                            <div className="flex items-center gap-0.5 sm:gap-1 sm:mt-0.5 lg:mt-0">
+                                              <Star className="h-2.5 w-2.5 sm:h-3 sm:w-3 lg:h-2.5 lg:w-2.5 text-yellow-400 fill-yellow-400" />
+                                              <span className="text-[9px] sm:text-xs lg:text-[10px] font-medium text-gray-700">
+                                                {item.rating}
+                                              </span>
+                                              <span className="text-[9px] sm:text-xs lg:text-[10px] text-gray-500">
+                                                ({item.reviewCount || 0})
+                                              </span>
+                                            </div>
+                                          </div>
+                                          <div className="text-right hidden sm:block">
+                                            <p className="text-[10px] lg:text-[9px] text-gray-500">
+                                              by
+                                            </p>
+                                            <p className="text-xs lg:text-[10px] font-medium text-gray-700">
+                                              {typeof item.seller === "string"
+                                                ? `Student ${item.seller.slice(
+                                                    -9
+                                                  )}`
+                                                : item.seller?.name ||
+                                                  "Unknown"}
+                                            </p>
+                                          </div>
+                                        </div>
+                                      </>
+                                    )}
+                                  </div>
+                                </CardContent>
+
+                                {/* Action Buttons */}
+                                {viewMode === "list" ? (
+                                  <div className="flex flex-col gap-1 p-1 justify-center border-l">
+                                    {item.sellerId === currentUser?.id ? (
                                       <Button
-                                        variant="outline"
+                                        variant="destructive"
                                         size="sm"
                                         className="h-6 w-6 p-0"
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          setMessageContextItem(item);
-                                          handleCreateConversation(
-                                            item.sellerId,
-                                            typeof item.seller === "string"
-                                              ? item.seller
-                                              : item.seller?.name || "Unknown"
-                                          );
+                                          handleDeleteItem(item.id);
                                         }}
                                       >
-                                        <MessageCircle className="h-3 w-3" />
+                                        <Trash2 className="h-3 w-3" />
                                       </Button>
+                                    ) : (
+                                      <>
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          className="h-6 w-6 p-0"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setMessageContextItem(item);
+                                            handleCreateConversation(
+                                              item.sellerId,
+                                              typeof item.seller === "string"
+                                                ? item.seller
+                                                : item.seller?.name || "Unknown"
+                                            );
+                                          }}
+                                        >
+                                          <MessageCircle className="h-3 w-3" />
+                                        </Button>
+                                        <Button
+                                          size="sm"
+                                          className="h-6 w-6 p-0"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleBuyItem(item);
+                                          }}
+                                        >
+                                          <ShoppingCart className="h-3 w-3" />
+                                        </Button>
+                                      </>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <CardFooter className="flex gap-1 sm:gap-2 p-2 sm:p-4 pt-0">
+                                    {item.sellerId === currentUser?.id ? (
                                       <Button
+                                        variant="destructive"
                                         size="sm"
-                                        className="h-6 w-6 p-0"
+                                        className="w-full text-[9px] sm:text-xs lg:text-[10px] px-1.5 sm:px-3 lg:px-2 py-1 sm:py-1.5 lg:py-1 h-6 sm:h-8 lg:h-7"
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          handleBuyItem(item);
+                                          handleDeleteItem(item.id);
                                         }}
                                       >
-                                        <ShoppingCart className="h-3 w-3" />
-                                      </Button>
-                                    </>
-                                  )}
-                                </div>
-                              ) : (
-                                <CardFooter className="flex gap-1 sm:gap-2 p-2 sm:p-4 pt-0">
-                                  {item.sellerId === currentUser?.id ? (
-                                    <Button
-                                      variant="destructive"
-                                      size="sm"
-                                      className="w-full text-[9px] sm:text-xs lg:text-[10px] px-1.5 sm:px-3 lg:px-2 py-1 sm:py-1.5 lg:py-1 h-6 sm:h-8 lg:h-7"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleDeleteItem(item.id);
-                                      }}
-                                    >
-                                      <Trash2 className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 lg:h-3 lg:w-3 sm:mr-1 lg:mr-0.5" />
-                                      <span className="hidden sm:inline">
-                                        Delete
-                                      </span>
-                                    </Button>
-                                  ) : (
-                                    <>
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="flex-1 text-[9px] sm:text-xs lg:text-[10px] px-1.5 sm:px-3 lg:px-2 py-1 sm:py-1.5 lg:py-1 h-6 sm:h-8 lg:h-7"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setMessageContextItem(item);
-                                          handleCreateConversation(
-                                            item.sellerId,
-                                            typeof item.seller === "string"
-                                              ? item.seller
-                                              : item.seller?.name || "Unknown"
-                                          );
-                                        }}
-                                      >
-                                        <MessageCircle className="h-3 w-3 sm:h-3.5 sm:w-3.5 lg:h-3 lg:w-3 sm:mr-1 lg:mr-0.5" />
+                                        <Trash2 className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 lg:h-3 lg:w-3 sm:mr-1 lg:mr-0.5" />
                                         <span className="hidden sm:inline">
-                                          Message
+                                          Delete
                                         </span>
                                       </Button>
-                                      <Button
-                                        size="sm"
-                                        className="flex-1 text-[9px] sm:text-xs lg:text-[10px] px-1.5 sm:px-3 lg:px-2 py-1 sm:py-1.5 lg:py-1 h-6 sm:h-8 lg:h-7"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleBuyItem(item);
-                                        }}
-                                      >
-                                        <ShoppingCart className="h-3 w-3 sm:h-3.5 sm:w-3.5 lg:h-3 lg:w-3 sm:mr-1 lg:mr-0.5" />
-                                        <span className="hidden sm:inline">
-                                          Buy
-                                        </span>
-                                      </Button>
-                                    </>
-                                  )}
-                                </CardFooter>
-                              )}
-                            </div>
-                          </Card>
-                        ))
-                      )}
-                    </div>
+                                    ) : (
+                                      <>
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          className="flex-1 text-[9px] sm:text-xs lg:text-[10px] px-1.5 sm:px-3 lg:px-2 py-1 sm:py-1.5 lg:py-1 h-6 sm:h-8 lg:h-7"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setMessageContextItem(item);
+                                            handleCreateConversation(
+                                              item.sellerId,
+                                              typeof item.seller === "string"
+                                                ? item.seller
+                                                : item.seller?.name || "Unknown"
+                                            );
+                                          }}
+                                        >
+                                          <MessageCircle className="h-3 w-3 sm:h-3.5 sm:w-3.5 lg:h-3 lg:w-3 sm:mr-1 lg:mr-0.5" />
+                                          <span className="hidden sm:inline">
+                                            Message
+                                          </span>
+                                        </Button>
+                                        <Button
+                                          size="sm"
+                                          className="flex-1 text-[9px] sm:text-xs lg:text-[10px] px-1.5 sm:px-3 lg:px-2 py-1 sm:py-1.5 lg:py-1 h-6 sm:h-8 lg:h-7"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleBuyItem(item);
+                                          }}
+                                        >
+                                          <ShoppingCart className="h-3 w-3 sm:h-3.5 sm:w-3.5 lg:h-3 lg:w-3 sm:mr-1 lg:mr-0.5" />
+                                          <span className="hidden sm:inline">
+                                            Buy
+                                          </span>
+                                        </Button>
+                                      </>
+                                    )}
+                                  </CardFooter>
+                                )}
+                              </div>
+                            </Card>
+                          ))
+                        )}
+                      </div>
+                    )}
                   </>
                 )}
               </div>
@@ -3218,6 +3277,89 @@ function DashboardContent() {
           </div>
         </div>
       </div>
+
+      {/* Add Type Selection Modal */}
+      {showAddTypeModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-bold text-dark-gray">
+                What would you like to add?
+              </h2>
+              <button
+                onClick={() => setShowAddTypeModal(false)}
+                className="text-medium-gray hover:text-dark-gray"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="space-y-3">
+              <button
+                onClick={() => {
+                  setShowAddTypeModal(false);
+                  setContentMode("study");
+                  handleAddItemClick();
+                }}
+                className="w-full p-4 border-2 border-light-gray rounded-lg hover:border-dark-blue hover:bg-primary-50 transition-all text-left"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <BookOpen className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-dark-gray">
+                      Study Material
+                    </h3>
+                    <p className="text-sm text-medium-gray">
+                      Notes, assignments, books
+                    </p>
+                  </div>
+                </div>
+              </button>
+              <button
+                onClick={() => {
+                  setShowAddTypeModal(false);
+                  setContentMode("food");
+                  toast.info("Food marketplace coming soon!");
+                }}
+                className="w-full p-4 border-2 border-light-gray rounded-lg hover:border-dark-blue hover:bg-primary-50 transition-all text-left"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                    <ShoppingCart className="h-6 w-6 text-orange-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-dark-gray">Food</h3>
+                    <p className="text-sm text-medium-gray">
+                      Share or sell food items
+                    </p>
+                  </div>
+                </div>
+              </button>
+              <button
+                onClick={() => {
+                  setShowAddTypeModal(false);
+                  setContentMode("event");
+                  toast.info("Event creation coming soon!");
+                }}
+                className="w-full p-4 border-2 border-light-gray rounded-lg hover:border-dark-blue hover:bg-primary-50 transition-all text-left"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <Calendar className="h-6 w-6 text-purple-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-dark-gray">Event</h3>
+                    <p className="text-sm text-medium-gray">
+                      Create campus events
+                    </p>
+                  </div>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Add Item Modal */}
       {showAddItemModal && (
