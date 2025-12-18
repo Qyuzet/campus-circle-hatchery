@@ -25,6 +25,7 @@ async function compressPDF(
     const pdfDoc = await PDFDocument.load(buffer, {
       ignoreEncryption: true,
       updateMetadata: false,
+      throwOnInvalidObject: false,
     });
 
     const pages = pdfDoc.getPages();

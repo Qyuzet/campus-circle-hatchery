@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@supabase/supabase-js";
+import { generateRandomFilename } from "@/lib/sanitize-filename";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -45,13 +46,15 @@ export async function POST(request: NextRequest) {
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    const fileName = file.name;
+
+    const fileExtension = file.name.split(".").pop() || "jpg";
+    const uniqueFileName = generateRandomFilename(fileExtension);
 
     const { data, error } = await supabaseAdmin.storage
       .from("study-materials")
-      .upload(fileName, buffer, {
+      .upload(uniqueFileName, buffer, {
         contentType: "image/jpeg",
-        upsert: false,
+        upsert: true,
       });
 
     if (error) {
@@ -64,7 +67,9 @@ export async function POST(request: NextRequest) {
 
     const {
       data: { publicUrl },
-    } = supabaseAdmin.storage.from("study-materials").getPublicUrl(fileName);
+    } = supabaseAdmin.storage
+      .from("study-materials")
+      .getPublicUrl(uniqueFileName);
 
     if (itemId && itemId !== "temp") {
       await prisma.marketplaceItem.update({
