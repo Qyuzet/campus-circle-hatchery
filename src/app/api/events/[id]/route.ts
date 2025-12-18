@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 
 export async function GET(
   request: NextRequest,
@@ -78,9 +78,17 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const user = await getCurrentUser();
-    if (!user) {
+    const session = await auth();
+    if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     const event = await prisma.event.findUnique({
@@ -102,7 +110,9 @@ export async function PUT(
         ...body,
         startDate: body.startDate ? new Date(body.startDate) : undefined,
         endDate: body.endDate ? new Date(body.endDate) : undefined,
-        registrationDeadline: body.registrationDeadline ? new Date(body.registrationDeadline) : undefined,
+        registrationDeadline: body.registrationDeadline
+          ? new Date(body.registrationDeadline)
+          : undefined,
       },
       include: {
         organizerUser: {
@@ -130,9 +140,17 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const user = await getCurrentUser();
-    if (!user) {
+    const session = await auth();
+    if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     const event = await prisma.event.findUnique({
@@ -160,4 +178,3 @@ export async function DELETE(
     );
   }
 }
-

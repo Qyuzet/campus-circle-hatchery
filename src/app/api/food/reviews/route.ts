@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
   try {
@@ -42,9 +42,17 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await getCurrentUser();
-    if (!user) {
+    const session = await auth();
+    if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     const body = await request.json();
@@ -69,7 +77,10 @@ export async function POST(request: NextRequest) {
     });
 
     if (!foodItem) {
-      return NextResponse.json({ error: "Food item not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Food item not found" },
+        { status: 404 }
+      );
     }
 
     const existingReview = await prisma.foodReview.findFirst({
@@ -143,4 +154,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

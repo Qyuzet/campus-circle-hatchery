@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 
 export async function GET(
   request: NextRequest,
@@ -42,7 +42,10 @@ export async function GET(
     });
 
     if (!foodItem) {
-      return NextResponse.json({ error: "Food item not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Food item not found" },
+        { status: 404 }
+      );
     }
 
     await prisma.foodItem.update({
@@ -65,9 +68,17 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const user = await getCurrentUser();
-    if (!user) {
+    const session = await auth();
+    if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     const foodItem = await prisma.foodItem.findUnique({
@@ -75,7 +86,10 @@ export async function PUT(
     });
 
     if (!foodItem) {
-      return NextResponse.json({ error: "Food item not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Food item not found" },
+        { status: 404 }
+      );
     }
 
     if (foodItem.sellerId !== user.id) {
@@ -117,9 +131,17 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const user = await getCurrentUser();
-    if (!user) {
+    const session = await auth();
+    if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     const foodItem = await prisma.foodItem.findUnique({
@@ -127,7 +149,10 @@ export async function DELETE(
     });
 
     if (!foodItem) {
-      return NextResponse.json({ error: "Food item not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Food item not found" },
+        { status: 404 }
+      );
     }
 
     if (foodItem.sellerId !== user.id && user.role !== "admin") {
@@ -147,4 +172,3 @@ export async function DELETE(
     );
   }
 }
-

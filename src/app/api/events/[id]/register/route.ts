@@ -1,15 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 
 export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const user = await getCurrentUser();
-    if (!user) {
+    const session = await auth();
+    if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     const event = await prisma.event.findUnique({
@@ -44,11 +52,11 @@ export async function POST(
       );
     }
 
-    if (event.maxParticipants && event.currentParticipants >= event.maxParticipants) {
-      return NextResponse.json(
-        { error: "Event is full" },
-        { status: 400 }
-      );
+    if (
+      event.maxParticipants &&
+      event.currentParticipants >= event.maxParticipants
+    ) {
+      return NextResponse.json({ error: "Event is full" }, { status: 400 });
     }
 
     const existingParticipant = await prisma.eventParticipant.findUnique({
@@ -114,9 +122,17 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const user = await getCurrentUser();
-    if (!user) {
+    const session = await auth();
+    if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     const participant = await prisma.eventParticipant.findUnique({
@@ -164,7 +180,9 @@ export async function DELETE(
       },
     });
 
-    return NextResponse.json({ message: "Registration cancelled successfully" });
+    return NextResponse.json({
+      message: "Registration cancelled successfully",
+    });
   } catch (error) {
     console.error("Error cancelling registration:", error);
     return NextResponse.json(
@@ -173,4 +191,3 @@ export async function DELETE(
     );
   }
 }
-

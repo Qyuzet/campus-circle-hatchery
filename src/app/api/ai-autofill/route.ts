@@ -31,9 +31,10 @@ export async function POST(request: NextRequest) {
 
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
-    const base64Image = buffer.toString("base64");
+    const base64Data = buffer.toString("base64");
 
-    console.log("AI Autofill - Image size:", buffer.length, "bytes");
+    console.log("AI Autofill - File size:", buffer.length, "bytes");
+    console.log("AI Autofill - File type:", file.type);
 
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
@@ -74,12 +75,12 @@ Only return valid JSON, no additional text.`;
 
 Only return valid JSON, no additional text.`;
     } else if (type === "study") {
-      prompt = `Analyze this study material image (could be a book cover, notes, assignment, etc.) and extract the following information in JSON format:
+      prompt = `Analyze this study material (could be a book cover, notes, assignment, PDF document, etc.) and extract the following information in JSON format:
 {
-  "title": "Title of the material",
-  "description": "Brief description of the content",
+  "title": "Title of the material (from cover page, header, or document title)",
+  "description": "Brief description of the content (summarize the main topics or purpose)",
   "category": "One of: Notes, Textbooks, Assignments, Past Papers, Projects, Other",
-  "course": "Course name or subject if visible"
+  "course": "Course name, course code, or subject if visible (e.g., COMP6048, Data Structures)"
 }
 
 Only return valid JSON, no additional text.`;
@@ -87,15 +88,34 @@ Only return valid JSON, no additional text.`;
 
     console.log("AI Autofill - Sending request to Gemini...");
 
-    const result = await model.generateContent([
-      {
-        inlineData: {
-          mimeType: file.type,
-          data: base64Image,
+    let result;
+
+    if (
+      file.type === "application/pdf" ||
+      file.type === "application/msword" ||
+      file.type ===
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    ) {
+      result = await model.generateContent([
+        {
+          inlineData: {
+            mimeType: file.type,
+            data: base64Data,
+          },
         },
-      },
-      { text: prompt },
-    ]);
+        { text: prompt },
+      ]);
+    } else {
+      result = await model.generateContent([
+        {
+          inlineData: {
+            mimeType: file.type,
+            data: base64Data,
+          },
+        },
+        { text: prompt },
+      ]);
+    }
 
     console.log("AI Autofill - Received response from Gemini");
 

@@ -5226,9 +5226,7 @@ function AddItemForm({
 
       setUploadedFile(file);
 
-      if (file.type.startsWith("image/")) {
-        await analyzeStudyMaterialWithAI(file);
-      }
+      await analyzeStudyMaterialWithAI(file);
     }
   };
 
@@ -5703,7 +5701,7 @@ function AddItemForm({
             Upload File (PDF, Word, or Image) *
             <span className="flex items-center gap-0.5 text-[10px] text-purple-600 font-normal">
               <Sparkles className="h-2.5 w-2.5" />
-              AI Auto-fill for images
+              AI Auto-fill enabled
             </span>
           </label>
           <div className="mt-0.5">
@@ -5718,7 +5716,7 @@ function AddItemForm({
               <div className="mt-1.5 p-1.5 bg-purple-50 border border-purple-200 rounded-md flex items-center gap-1.5">
                 <Loader2 className="h-3 w-3 text-purple-600 animate-spin" />
                 <span className="text-xs text-purple-700">
-                  Analyzing image with AI...
+                  Analyzing document with AI...
                 </span>
               </div>
             )}
@@ -5744,8 +5742,8 @@ function AddItemForm({
             )}
           </div>
           <p className="text-[10px] text-medium-gray mt-0.5">
-            PDF, Word, or Image files are accepted. Max file size: 10MB. Convert
-            your documents to PDF before uploading.
+            AI will automatically analyze your file and fill in the form.
+            Supports PDF, Word, and Image files. Max file size: 10MB.
           </p>
         </div>
 
