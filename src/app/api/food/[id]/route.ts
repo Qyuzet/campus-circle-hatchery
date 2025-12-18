@@ -97,13 +97,42 @@ export async function PUT(
     }
 
     const body = await request.json();
+
+    const updateData: any = {};
+
+    if (body.title !== undefined) updateData.title = body.title;
+    if (body.description !== undefined)
+      updateData.description = body.description;
+    if (body.price !== undefined) updateData.price = parseInt(body.price);
+    if (body.category !== undefined) updateData.category = body.category;
+    if (body.foodType !== undefined) updateData.foodType = body.foodType;
+    if (body.quantity !== undefined)
+      updateData.quantity = parseInt(body.quantity);
+    if (body.unit !== undefined) updateData.unit = body.unit;
+    if (body.imageUrl !== undefined) updateData.imageUrl = body.imageUrl;
+    if (body.allergens !== undefined) updateData.allergens = body.allergens;
+    if (body.ingredients !== undefined) {
+      updateData.ingredients =
+        typeof body.ingredients === "string"
+          ? body.ingredients
+          : Array.isArray(body.ingredients)
+          ? body.ingredients.join(", ")
+          : null;
+    }
+    if (body.expiryDate !== undefined)
+      updateData.expiryDate = new Date(body.expiryDate);
+    if (body.pickupLocation !== undefined)
+      updateData.pickupLocation = body.pickupLocation;
+    if (body.pickupTime !== undefined) updateData.pickupTime = body.pickupTime;
+    if (body.isHalal !== undefined) updateData.isHalal = body.isHalal;
+    if (body.isVegan !== undefined) updateData.isVegan = body.isVegan;
+    if (body.isVegetarian !== undefined)
+      updateData.isVegetarian = body.isVegetarian;
+    if (body.status !== undefined) updateData.status = body.status;
+
     const updatedFoodItem = await prisma.foodItem.update({
       where: { id: params.id },
-      data: {
-        ...body,
-        price: body.price ? parseInt(body.price) : undefined,
-        expiryDate: body.expiryDate ? new Date(body.expiryDate) : undefined,
-      },
+      data: updateData,
       include: {
         seller: {
           select: {

@@ -2,7 +2,15 @@ import React from "react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, Clock, Star, ShoppingCart, Leaf, Heart } from "lucide-react";
+import {
+  MapPin,
+  Clock,
+  Star,
+  ShoppingCart,
+  Leaf,
+  Heart,
+  Edit,
+} from "lucide-react";
 import { FoodItem } from "@/lib/api";
 import Image from "next/image";
 
@@ -10,9 +18,15 @@ interface FoodItemCardProps {
   item: FoodItem;
   onClick?: () => void;
   viewMode?: "grid" | "list";
+  isOwner?: boolean;
 }
 
-export function FoodItemCard({ item, onClick, viewMode = "grid" }: FoodItemCardProps) {
+export function FoodItemCard({
+  item,
+  onClick,
+  viewMode = "grid",
+  isOwner = false,
+}: FoodItemCardProps) {
   const isListView = viewMode === "list";
 
   return (
@@ -24,9 +38,7 @@ export function FoodItemCard({ item, onClick, viewMode = "grid" }: FoodItemCardP
     >
       <div
         className={`relative bg-secondary-200 overflow-hidden ${
-          isListView
-            ? "w-24 h-24 flex-shrink-0"
-            : "aspect-square"
+          isListView ? "w-24 h-24 flex-shrink-0" : "aspect-square"
         }`}
       >
         {item.imageUrl ? (
@@ -45,6 +57,12 @@ export function FoodItemCard({ item, onClick, viewMode = "grid" }: FoodItemCardP
           <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
             <Badge variant="destructive">Sold Out</Badge>
           </div>
+        )}
+        {isOwner && (
+          <Badge className="absolute top-2 left-2 bg-blue-600 text-white">
+            <Edit className="h-3 w-3 mr-1" />
+            My Item
+          </Badge>
         )}
       </div>
 
@@ -91,7 +109,9 @@ export function FoodItemCard({ item, onClick, viewMode = "grid" }: FoodItemCardP
           {item.rating > 0 && (
             <div className="flex items-center gap-1">
               <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-              <span>{item.rating.toFixed(1)} ({item.reviewCount})</span>
+              <span>
+                {item.rating.toFixed(1)} ({item.reviewCount})
+              </span>
             </div>
           )}
         </div>
@@ -106,7 +126,9 @@ export function FoodItemCard({ item, onClick, viewMode = "grid" }: FoodItemCardP
       {!isListView && (
         <CardFooter className="p-3 pt-0">
           <div className="flex items-center justify-between w-full text-xs text-muted-foreground">
-            <span>{item.quantity} {item.unit} left</span>
+            <span>
+              {item.quantity} {item.unit} left
+            </span>
             <span className="flex items-center gap-1">
               <Heart className="h-3 w-3" />
               {item.viewCount}
@@ -117,4 +139,3 @@ export function FoodItemCard({ item, onClick, viewMode = "grid" }: FoodItemCardP
     </Card>
   );
 }
-

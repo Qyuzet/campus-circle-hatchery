@@ -2,7 +2,15 @@ import React from "react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, MapPin, Users, Clock, Star, DollarSign } from "lucide-react";
+import {
+  Calendar,
+  MapPin,
+  Users,
+  Clock,
+  Star,
+  DollarSign,
+  Edit,
+} from "lucide-react";
 import { Event } from "@/lib/api";
 import Image from "next/image";
 import { format } from "date-fns";
@@ -12,6 +20,7 @@ interface EventCardProps {
   onClick?: () => void;
   onRegister?: () => void;
   isRegistered?: boolean;
+  isOwner?: boolean;
 }
 
 export function EventCard({
@@ -19,6 +28,7 @@ export function EventCard({
   onClick,
   onRegister,
   isRegistered,
+  isOwner = false,
 }: EventCardProps) {
   const startDate = new Date(event.startDate);
   const endDate = new Date(event.endDate);
@@ -63,6 +73,12 @@ export function EventCard({
         {isFull && (
           <Badge variant="destructive" className="absolute top-2 left-2">
             Full
+          </Badge>
+        )}
+        {isOwner && (
+          <Badge className="absolute bottom-2 left-2 bg-blue-600 text-white">
+            <Edit className="h-3 w-3 mr-1" />
+            My Event
           </Badge>
         )}
       </div>

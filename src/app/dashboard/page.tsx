@@ -119,6 +119,43 @@ function DashboardContent() {
   const [showEventDetailModal, setShowEventDetailModal] = useState(false);
   const [selectedFood, setSelectedFood] = useState<FoodItem | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [isEditingFood, setIsEditingFood] = useState(false);
+  const [isEditingEvent, setIsEditingEvent] = useState(false);
+  const [editFoodFormData, setEditFoodFormData] = useState({
+    title: "",
+    description: "",
+    price: 0,
+    category: "",
+    foodType: "",
+    quantity: 1,
+    unit: "",
+    pickupLocation: "",
+    pickupTime: "",
+    allergens: [] as string[],
+    ingredients: "",
+    isHalal: false,
+    isVegan: false,
+    isVegetarian: false,
+  });
+  const [editEventFormData, setEditEventFormData] = useState({
+    title: "",
+    description: "",
+    price: 0,
+    category: "",
+    eventType: "",
+    location: "",
+    venue: "",
+    isOnline: false,
+    meetingLink: "",
+    maxParticipants: 0,
+    tags: [] as string[],
+    requirements: "",
+    organizer: "",
+    contactEmail: "",
+    contactPhone: "",
+  });
+  const [isSavingFood, setIsSavingFood] = useState(false);
+  const [isSavingEvent, setIsSavingEvent] = useState(false);
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [showTutoringModal, setShowTutoringModal] = useState(false);
   const [showItemDetailModal, setShowItemDetailModal] = useState(false);
@@ -964,6 +1001,142 @@ function DashboardContent() {
       toast.error("Failed to update item. Please try again.");
     } finally {
       setIsSavingItem(false);
+    }
+  };
+
+  const handleEditFood = (food: FoodItem) => {
+    setEditFoodFormData({
+      title: food.title,
+      description: food.description,
+      price: food.price,
+      category: food.category,
+      foodType: food.foodType,
+      quantity: food.quantity,
+      unit: food.unit,
+      pickupLocation: food.pickupLocation,
+      pickupTime: food.pickupTime,
+      allergens: food.allergens || [],
+      ingredients: food.ingredients || "",
+      isHalal: food.isHalal,
+      isVegan: food.isVegan,
+      isVegetarian: food.isVegetarian,
+    });
+    setIsEditingFood(true);
+  };
+
+  const handleCancelEditFood = () => {
+    setIsEditingFood(false);
+    setEditFoodFormData({
+      title: "",
+      description: "",
+      price: 0,
+      category: "",
+      foodType: "",
+      quantity: 1,
+      unit: "",
+      pickupLocation: "",
+      pickupTime: "",
+      allergens: [],
+      ingredients: "",
+      isHalal: false,
+      isVegan: false,
+      isVegetarian: false,
+    });
+  };
+
+  const handleSaveEditFood = async () => {
+    if (!selectedFood) return;
+
+    setIsSavingFood(true);
+    try {
+      const updatedFood = await foodAPI.updateFoodItem(
+        selectedFood.id,
+        editFoodFormData
+      );
+
+      // Reload food items
+      const foodData = await foodAPI.getFoodItems();
+      setFoodItems(foodData);
+
+      // Update selected food
+      setSelectedFood(updatedFood);
+
+      toast.success("Food item updated successfully!");
+      setIsEditingFood(false);
+    } catch (error) {
+      console.error("Error updating food item:", error);
+      toast.error("Failed to update food item. Please try again.");
+    } finally {
+      setIsSavingFood(false);
+    }
+  };
+
+  const handleEditEvent = (event: Event) => {
+    setEditEventFormData({
+      title: event.title,
+      description: event.description,
+      price: event.price,
+      category: event.category,
+      eventType: event.eventType,
+      location: event.location,
+      venue: event.venue || "",
+      isOnline: event.isOnline,
+      meetingLink: event.meetingLink || "",
+      maxParticipants: event.maxParticipants || 0,
+      tags: event.tags || [],
+      requirements: event.requirements || "",
+      organizer: event.organizer,
+      contactEmail: event.contactEmail || "",
+      contactPhone: event.contactPhone || "",
+    });
+    setIsEditingEvent(true);
+  };
+
+  const handleCancelEditEvent = () => {
+    setIsEditingEvent(false);
+    setEditEventFormData({
+      title: "",
+      description: "",
+      price: 0,
+      category: "",
+      eventType: "",
+      location: "",
+      venue: "",
+      isOnline: false,
+      meetingLink: "",
+      maxParticipants: 0,
+      tags: [],
+      requirements: "",
+      organizer: "",
+      contactEmail: "",
+      contactPhone: "",
+    });
+  };
+
+  const handleSaveEditEvent = async () => {
+    if (!selectedEvent) return;
+
+    setIsSavingEvent(true);
+    try {
+      const updatedEvent = await eventAPI.updateEvent(
+        selectedEvent.id,
+        editEventFormData
+      );
+
+      // Reload events
+      const eventData = await eventAPI.getEvents();
+      setEvents(eventData);
+
+      // Update selected event
+      setSelectedEvent(updatedEvent);
+
+      toast.success("Event updated successfully!");
+      setIsEditingEvent(false);
+    } catch (error) {
+      console.error("Error updating event:", error);
+      toast.error("Failed to update event. Please try again.");
+    } finally {
+      setIsSavingEvent(false);
     }
   };
 
@@ -1815,6 +1988,9 @@ function DashboardContent() {
                               item={item}
                               viewMode={viewMode as "grid" | "list"}
                               onClick={() => handleFoodClick(item)}
+                              isOwner={
+                                session?.user?.email === item.seller?.email
+                              }
                             />
                           ))
                         )}
@@ -1847,6 +2023,10 @@ function DashboardContent() {
                               key={event.id}
                               event={event}
                               onClick={() => handleEventClick(event)}
+                              isOwner={
+                                session?.user?.email ===
+                                event.organizerUser?.email
+                              }
                             />
                           ))
                         )}
@@ -3736,174 +3916,331 @@ function DashboardContent() {
             </div>
 
             <div className="p-6">
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <h2 className="text-2xl font-bold mb-2">
-                    {selectedFood.title}
-                  </h2>
-                  <div className="flex items-center gap-2 mb-2">
-                    <Badge variant="secondary" className="text-lg">
-                      Rp {selectedFood.price.toLocaleString()}
-                    </Badge>
-                    <Badge>{selectedFood.category}</Badge>
-                    <Badge variant="outline">{selectedFood.foodType}</Badge>
-                  </div>
-                </div>
-              </div>
+              {isEditingFood ? (
+                <div className="space-y-4">
+                  <h2 className="text-2xl font-bold mb-4">Edit Food Item</h2>
 
-              <div className="space-y-4">
-                <div>
-                  <h3 className="font-semibold mb-2">Description</h3>
-                  <p className="text-muted-foreground">
-                    {selectedFood.description}
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <h3 className="font-semibold mb-1">Pickup Location</h3>
-                    <p className="text-sm text-muted-foreground flex items-center gap-1">
-                      <MapPin className="h-4 w-4" />
-                      {selectedFood.pickupLocation}
-                    </p>
+                    <label className="text-sm font-medium">Title</label>
+                    <Input
+                      value={editFoodFormData.title}
+                      onChange={(e) =>
+                        setEditFoodFormData({
+                          ...editFoodFormData,
+                          title: e.target.value,
+                        })
+                      }
+                    />
                   </div>
+
                   <div>
-                    <h3 className="font-semibold mb-1">Pickup Time</h3>
-                    <p className="text-sm text-muted-foreground flex items-center gap-1">
-                      <Clock className="h-4 w-4" />
-                      {selectedFood.pickupTime}
-                    </p>
+                    <label className="text-sm font-medium">Description</label>
+                    <textarea
+                      className="w-full min-h-[100px] px-3 py-2 border rounded-md"
+                      value={editFoodFormData.description}
+                      onChange={(e) =>
+                        setEditFoodFormData({
+                          ...editFoodFormData,
+                          description: e.target.value,
+                        })
+                      }
+                    />
                   </div>
-                </div>
 
-                <div>
-                  <h3 className="font-semibold mb-2">Quantity Available</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {selectedFood.quantity} {selectedFood.unit}
-                  </p>
-                </div>
-
-                {(selectedFood.isHalal ||
-                  selectedFood.isVegan ||
-                  selectedFood.isVegetarian) && (
-                  <div>
-                    <h3 className="font-semibold mb-2">Dietary Information</h3>
-                    <div className="flex gap-2">
-                      {selectedFood.isHalal && (
-                        <Badge variant="outline">Halal</Badge>
-                      )}
-                      {selectedFood.isVegan && (
-                        <Badge variant="outline">Vegan</Badge>
-                      )}
-                      {selectedFood.isVegetarian && (
-                        <Badge variant="outline">Vegetarian</Badge>
-                      )}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium">Price (Rp)</label>
+                      <Input
+                        type="number"
+                        value={editFoodFormData.price}
+                        onChange={(e) =>
+                          setEditFoodFormData({
+                            ...editFoodFormData,
+                            price: parseInt(e.target.value) || 0,
+                          })
+                        }
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Quantity</label>
+                      <Input
+                        type="number"
+                        value={editFoodFormData.quantity}
+                        onChange={(e) =>
+                          setEditFoodFormData({
+                            ...editFoodFormData,
+                            quantity: parseInt(e.target.value) || 1,
+                          })
+                        }
+                      />
                     </div>
                   </div>
-                )}
 
-                {selectedFood.allergens &&
-                  selectedFood.allergens.length > 0 && (
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <h3 className="font-semibold mb-2">Allergens</h3>
-                      <p className="text-sm text-orange-600">
-                        {selectedFood.allergens.join(", ")}
+                      <label className="text-sm font-medium">
+                        Pickup Location
+                      </label>
+                      <Input
+                        value={editFoodFormData.pickupLocation}
+                        onChange={(e) =>
+                          setEditFoodFormData({
+                            ...editFoodFormData,
+                            pickupLocation: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Pickup Time</label>
+                      <Input
+                        value={editFoodFormData.pickupTime}
+                        onChange={(e) =>
+                          setEditFoodFormData({
+                            ...editFoodFormData,
+                            pickupTime: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex gap-4">
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={editFoodFormData.isHalal}
+                        onChange={(e) =>
+                          setEditFoodFormData({
+                            ...editFoodFormData,
+                            isHalal: e.target.checked,
+                          })
+                        }
+                      />
+                      <span className="text-sm">Halal</span>
+                    </label>
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={editFoodFormData.isVegan}
+                        onChange={(e) =>
+                          setEditFoodFormData({
+                            ...editFoodFormData,
+                            isVegan: e.target.checked,
+                          })
+                        }
+                      />
+                      <span className="text-sm">Vegan</span>
+                    </label>
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={editFoodFormData.isVegetarian}
+                        onChange={(e) =>
+                          setEditFoodFormData({
+                            ...editFoodFormData,
+                            isVegetarian: e.target.checked,
+                          })
+                        }
+                      />
+                      <span className="text-sm">Vegetarian</span>
+                    </label>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <h2 className="text-2xl font-bold mb-2">
+                        {selectedFood.title}
+                      </h2>
+                      <div className="flex items-center gap-2 mb-2">
+                        <Badge variant="secondary" className="text-lg">
+                          Rp {selectedFood.price.toLocaleString()}
+                        </Badge>
+                        <Badge>{selectedFood.category}</Badge>
+                        <Badge variant="outline">{selectedFood.foodType}</Badge>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <h3 className="font-semibold mb-2">Description</h3>
+                      <p className="text-muted-foreground">
+                        {selectedFood.description}
                       </p>
                     </div>
-                  )}
 
-                {selectedFood.ingredients && (
-                  <div>
-                    <h3 className="font-semibold mb-2">Ingredients</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {selectedFood.ingredients}
-                    </p>
-                  </div>
-                )}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <h3 className="font-semibold mb-1">Pickup Location</h3>
+                        <p className="text-sm text-muted-foreground flex items-center gap-1">
+                          <MapPin className="h-4 w-4" />
+                          {selectedFood.pickupLocation}
+                        </p>
+                      </div>
+                      <div>
+                        <h3 className="font-semibold mb-1">Pickup Time</h3>
+                        <p className="text-sm text-muted-foreground flex items-center gap-1">
+                          <Clock className="h-4 w-4" />
+                          {selectedFood.pickupTime}
+                        </p>
+                      </div>
+                    </div>
 
-                <div className="flex gap-2 pt-4">
-                  {session?.user?.email === selectedFood.seller?.email ? (
-                    <>
-                      <Button
-                        variant="outline"
-                        className="flex-1"
-                        onClick={() => {
-                          // TODO: Implement edit functionality
-                          toast.info("Edit functionality coming soon!");
-                        }}
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        onClick={() => {
-                          if (
-                            confirm(
-                              "Are you sure you want to delete this food item?"
-                            )
-                          ) {
-                            handleDeleteFood(selectedFood.id);
-                          }
-                        }}
-                        className="flex-1"
-                      >
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Delete
-                      </Button>
-                    </>
-                  ) : selectedFood.status === "available" ? (
-                    <>
+                    <div>
+                      <h3 className="font-semibold mb-2">Quantity Available</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {selectedFood.quantity} {selectedFood.unit}
+                      </p>
+                    </div>
+
+                    {(selectedFood.isHalal ||
+                      selectedFood.isVegan ||
+                      selectedFood.isVegetarian) && (
+                      <div>
+                        <h3 className="font-semibold mb-2">
+                          Dietary Information
+                        </h3>
+                        <div className="flex gap-2">
+                          {selectedFood.isHalal && (
+                            <Badge variant="outline">Halal</Badge>
+                          )}
+                          {selectedFood.isVegan && (
+                            <Badge variant="outline">Vegan</Badge>
+                          )}
+                          {selectedFood.isVegetarian && (
+                            <Badge variant="outline">Vegetarian</Badge>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {selectedFood.allergens &&
+                      selectedFood.allergens.length > 0 && (
+                        <div>
+                          <h3 className="font-semibold mb-2">Allergens</h3>
+                          <p className="text-sm text-orange-600">
+                            {selectedFood.allergens.join(", ")}
+                          </p>
+                        </div>
+                      )}
+
+                    {selectedFood.ingredients && (
+                      <div>
+                        <h3 className="font-semibold mb-2">Ingredients</h3>
+                        <p className="text-sm text-muted-foreground">
+                          {selectedFood.ingredients}
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="flex gap-2 pt-4">
+                      {session?.user?.email === selectedFood.seller?.email ? (
+                        isEditingFood ? (
+                          <>
+                            <Button
+                              variant="outline"
+                              className="flex-1"
+                              onClick={handleCancelEditFood}
+                              disabled={isSavingFood}
+                            >
+                              Cancel
+                            </Button>
+                            <Button
+                              className="flex-1"
+                              onClick={handleSaveEditFood}
+                              disabled={isSavingFood}
+                            >
+                              {isSavingFood ? "Saving..." : "Save Changes"}
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button
+                              variant="outline"
+                              className="flex-1"
+                              onClick={() => handleEditFood(selectedFood)}
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              onClick={() => {
+                                if (
+                                  confirm(
+                                    "Are you sure you want to delete this food item?"
+                                  )
+                                ) {
+                                  handleDeleteFood(selectedFood.id);
+                                }
+                              }}
+                              className="flex-1"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete
+                            </Button>
+                          </>
+                        )
+                      ) : selectedFood.status === "available" ? (
+                        <>
+                          <Button
+                            variant="outline"
+                            onClick={() => {
+                              setShowFoodDetailModal(false);
+                              handleCreateConversation(
+                                selectedFood.sellerId,
+                                selectedFood.seller?.name || "Seller"
+                              );
+                            }}
+                            className="flex-1"
+                          >
+                            <MessageCircle className="h-4 w-4 mr-2" />
+                            Message Seller
+                          </Button>
+                          <Button
+                            onClick={() => {
+                              if (selectedFood.price > 0) {
+                                setPaymentItem({
+                                  id: selectedFood.id,
+                                  title: selectedFood.title,
+                                  price: selectedFood.price,
+                                  type: "marketplace",
+                                });
+                                setShowPaymentModal(true);
+                                setShowFoodDetailModal(false);
+                              } else {
+                                handleOrderFood(
+                                  selectedFood.id,
+                                  selectedFood.pickupTime
+                                );
+                              }
+                            }}
+                            className="flex-1"
+                          >
+                            <ShoppingCart className="h-4 w-4 mr-2" />
+                            Order Now
+                          </Button>
+                        </>
+                      ) : (
+                        <div className="flex-1 bg-gray-100 text-gray-500 px-4 py-2 rounded-md text-center font-medium">
+                          Sold Out
+                        </div>
+                      )}
                       <Button
                         variant="outline"
                         onClick={() => {
                           setShowFoodDetailModal(false);
-                          handleCreateConversation(
-                            selectedFood.sellerId,
-                            selectedFood.seller?.name || "Seller"
-                          );
+                          setIsEditingFood(false);
                         }}
-                        className="flex-1"
                       >
-                        <MessageCircle className="h-4 w-4 mr-2" />
-                        Message Seller
+                        Close
                       </Button>
-                      <Button
-                        onClick={() => {
-                          if (selectedFood.price > 0) {
-                            setPaymentItem({
-                              id: selectedFood.id,
-                              title: selectedFood.title,
-                              price: selectedFood.price,
-                              type: "marketplace",
-                            });
-                            setShowPaymentModal(true);
-                            setShowFoodDetailModal(false);
-                          } else {
-                            handleOrderFood(
-                              selectedFood.id,
-                              selectedFood.pickupTime
-                            );
-                          }
-                        }}
-                        className="flex-1"
-                      >
-                        <ShoppingCart className="h-4 w-4 mr-2" />
-                        Order Now
-                      </Button>
-                    </>
-                  ) : (
-                    <div className="flex-1 bg-gray-100 text-gray-500 px-4 py-2 rounded-md text-center font-medium">
-                      Sold Out
                     </div>
-                  )}
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowFoodDetailModal(false)}
-                  >
-                    Close
-                  </Button>
-                </div>
-              </div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -3935,193 +4272,340 @@ function DashboardContent() {
             </div>
 
             <div className="p-6">
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <h2 className="text-2xl font-bold mb-2">
-                    {selectedEvent.title}
-                  </h2>
-                  <div className="flex items-center gap-2 mb-2">
-                    <Badge>{selectedEvent.category}</Badge>
-                    <Badge variant="outline">{selectedEvent.eventType}</Badge>
-                    {selectedEvent.isFeatured && (
-                      <Badge className="bg-yellow-500">Featured</Badge>
-                    )}
-                  </div>
-                </div>
-              </div>
+              {isEditingEvent ? (
+                <div className="space-y-4">
+                  <h2 className="text-2xl font-bold mb-4">Edit Event</h2>
 
-              <div className="space-y-4">
-                <div>
-                  <h3 className="font-semibold mb-2">Description</h3>
-                  <p className="text-muted-foreground">
-                    {selectedEvent.description}
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <h3 className="font-semibold mb-1">Start Date</h3>
-                    <p className="text-sm text-muted-foreground flex items-center gap-1">
-                      <Calendar className="h-4 w-4" />
-                      {format(
-                        new Date(selectedEvent.startDate),
-                        "MMM dd, yyyy HH:mm"
-                      )}
-                    </p>
+                    <label className="text-sm font-medium">Title</label>
+                    <Input
+                      value={editEventFormData.title}
+                      onChange={(e) =>
+                        setEditEventFormData({
+                          ...editEventFormData,
+                          title: e.target.value,
+                        })
+                      }
+                    />
                   </div>
-                  <div>
-                    <h3 className="font-semibold mb-1">End Date</h3>
-                    <p className="text-sm text-muted-foreground flex items-center gap-1">
-                      <Calendar className="h-4 w-4" />
-                      {format(
-                        new Date(selectedEvent.endDate),
-                        "MMM dd, yyyy HH:mm"
-                      )}
-                    </p>
-                  </div>
-                </div>
 
-                <div>
-                  <h3 className="font-semibold mb-1">Location</h3>
-                  <p className="text-sm text-muted-foreground flex items-center gap-1">
-                    <MapPin className="h-4 w-4" />
-                    {selectedEvent.isOnline
-                      ? "Online Event"
-                      : selectedEvent.location}
-                  </p>
-                  {selectedEvent.venue && (
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Venue: {selectedEvent.venue}
-                    </p>
+                  <div>
+                    <label className="text-sm font-medium">Description</label>
+                    <textarea
+                      className="w-full min-h-[100px] px-3 py-2 border rounded-md"
+                      value={editEventFormData.description}
+                      onChange={(e) =>
+                        setEditEventFormData({
+                          ...editEventFormData,
+                          description: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium">Price (Rp)</label>
+                      <Input
+                        type="number"
+                        value={editEventFormData.price}
+                        onChange={(e) =>
+                          setEditEventFormData({
+                            ...editEventFormData,
+                            price: parseInt(e.target.value) || 0,
+                          })
+                        }
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">
+                        Max Participants
+                      </label>
+                      <Input
+                        type="number"
+                        value={editEventFormData.maxParticipants}
+                        onChange={(e) =>
+                          setEditEventFormData({
+                            ...editEventFormData,
+                            maxParticipants: parseInt(e.target.value) || 0,
+                          })
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium">Location</label>
+                    <Input
+                      value={editEventFormData.location}
+                      onChange={(e) =>
+                        setEditEventFormData({
+                          ...editEventFormData,
+                          location: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium">Venue</label>
+                    <Input
+                      value={editEventFormData.venue}
+                      onChange={(e) =>
+                        setEditEventFormData({
+                          ...editEventFormData,
+                          venue: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+
+                  <div>
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={editEventFormData.isOnline}
+                        onChange={(e) =>
+                          setEditEventFormData({
+                            ...editEventFormData,
+                            isOnline: e.target.checked,
+                          })
+                        }
+                      />
+                      <span className="text-sm">Online Event</span>
+                    </label>
+                  </div>
+
+                  {editEventFormData.isOnline && (
+                    <div>
+                      <label className="text-sm font-medium">
+                        Meeting Link
+                      </label>
+                      <Input
+                        value={editEventFormData.meetingLink}
+                        onChange={(e) =>
+                          setEditEventFormData({
+                            ...editEventFormData,
+                            meetingLink: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
                   )}
                 </div>
-
-                <div>
-                  <h3 className="font-semibold mb-1">Participants</h3>
-                  <p className="text-sm text-muted-foreground flex items-center gap-1">
-                    <Users className="h-4 w-4" />
-                    {selectedEvent.currentParticipants}
-                    {selectedEvent.maxParticipants
-                      ? ` / ${selectedEvent.maxParticipants}`
-                      : ""}{" "}
-                    registered
-                  </p>
-                </div>
-
-                {selectedEvent.price > 0 && (
-                  <div>
-                    <h3 className="font-semibold mb-1">Price</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Rp {selectedEvent.price.toLocaleString()}
-                    </p>
-                  </div>
-                )}
-
-                {selectedEvent.organizer && (
-                  <div>
-                    <h3 className="font-semibold mb-1">Organizer</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {selectedEvent.organizer}
-                    </p>
-                  </div>
-                )}
-
-                {selectedEvent.tags && selectedEvent.tags.length > 0 && (
-                  <div>
-                    <h3 className="font-semibold mb-2">Tags</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedEvent.tags.map((tag, index) => (
-                        <Badge key={index} variant="outline">
-                          {tag}
+              ) : (
+                <>
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <h2 className="text-2xl font-bold mb-2">
+                        {selectedEvent.title}
+                      </h2>
+                      <div className="flex items-center gap-2 mb-2">
+                        <Badge>{selectedEvent.category}</Badge>
+                        <Badge variant="outline">
+                          {selectedEvent.eventType}
                         </Badge>
-                      ))}
+                        {selectedEvent.isFeatured && (
+                          <Badge className="bg-yellow-500">Featured</Badge>
+                        )}
+                      </div>
                     </div>
                   </div>
-                )}
 
-                <div className="flex gap-2 pt-4">
-                  {session?.user?.email ===
-                  selectedEvent.organizerUser?.email ? (
-                    <>
-                      <Button
-                        variant="outline"
-                        className="flex-1"
-                        onClick={() => {
-                          // TODO: Implement edit functionality
-                          toast.info("Edit functionality coming soon!");
-                        }}
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        onClick={() => {
-                          if (
-                            confirm(
-                              "Are you sure you want to delete this event?"
-                            )
-                          ) {
-                            handleDeleteEvent(selectedEvent.id);
-                          }
-                        }}
-                        className="flex-1"
-                      >
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Delete
-                      </Button>
-                    </>
-                  ) : selectedEvent.maxParticipants &&
-                    selectedEvent.currentParticipants >=
-                      selectedEvent.maxParticipants ? (
-                    <div className="flex-1 bg-gray-100 text-gray-500 px-4 py-2 rounded-md text-center font-medium">
-                      Event Full
+                  <div className="space-y-4">
+                    <div>
+                      <h3 className="font-semibold mb-2">Description</h3>
+                      <p className="text-muted-foreground">
+                        {selectedEvent.description}
+                      </p>
                     </div>
-                  ) : (
-                    <>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <h3 className="font-semibold mb-1">Start Date</h3>
+                        <p className="text-sm text-muted-foreground flex items-center gap-1">
+                          <Calendar className="h-4 w-4" />
+                          {format(
+                            new Date(selectedEvent.startDate),
+                            "MMM dd, yyyy HH:mm"
+                          )}
+                        </p>
+                      </div>
+                      <div>
+                        <h3 className="font-semibold mb-1">End Date</h3>
+                        <p className="text-sm text-muted-foreground flex items-center gap-1">
+                          <Calendar className="h-4 w-4" />
+                          {format(
+                            new Date(selectedEvent.endDate),
+                            "MMM dd, yyyy HH:mm"
+                          )}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h3 className="font-semibold mb-1">Location</h3>
+                      <p className="text-sm text-muted-foreground flex items-center gap-1">
+                        <MapPin className="h-4 w-4" />
+                        {selectedEvent.isOnline
+                          ? "Online Event"
+                          : selectedEvent.location}
+                      </p>
+                      {selectedEvent.venue && (
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Venue: {selectedEvent.venue}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <h3 className="font-semibold mb-1">Participants</h3>
+                      <p className="text-sm text-muted-foreground flex items-center gap-1">
+                        <Users className="h-4 w-4" />
+                        {selectedEvent.currentParticipants}
+                        {selectedEvent.maxParticipants
+                          ? ` / ${selectedEvent.maxParticipants}`
+                          : ""}{" "}
+                        registered
+                      </p>
+                    </div>
+
+                    {selectedEvent.price > 0 && (
+                      <div>
+                        <h3 className="font-semibold mb-1">Price</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Rp {selectedEvent.price.toLocaleString()}
+                        </p>
+                      </div>
+                    )}
+
+                    {selectedEvent.organizer && (
+                      <div>
+                        <h3 className="font-semibold mb-1">Organizer</h3>
+                        <p className="text-sm text-muted-foreground">
+                          {selectedEvent.organizer}
+                        </p>
+                      </div>
+                    )}
+
+                    {selectedEvent.tags && selectedEvent.tags.length > 0 && (
+                      <div>
+                        <h3 className="font-semibold mb-2">Tags</h3>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedEvent.tags.map((tag, index) => (
+                            <Badge key={index} variant="outline">
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex gap-2 pt-4">
+                      {session?.user?.email ===
+                      selectedEvent.organizerUser?.email ? (
+                        isEditingEvent ? (
+                          <>
+                            <Button
+                              variant="outline"
+                              className="flex-1"
+                              onClick={handleCancelEditEvent}
+                              disabled={isSavingEvent}
+                            >
+                              Cancel
+                            </Button>
+                            <Button
+                              className="flex-1"
+                              onClick={handleSaveEditEvent}
+                              disabled={isSavingEvent}
+                            >
+                              {isSavingEvent ? "Saving..." : "Save Changes"}
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button
+                              variant="outline"
+                              className="flex-1"
+                              onClick={() => handleEditEvent(selectedEvent)}
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              onClick={() => {
+                                if (
+                                  confirm(
+                                    "Are you sure you want to delete this event?"
+                                  )
+                                ) {
+                                  handleDeleteEvent(selectedEvent.id);
+                                }
+                              }}
+                              className="flex-1"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete
+                            </Button>
+                          </>
+                        )
+                      ) : selectedEvent.maxParticipants &&
+                        selectedEvent.currentParticipants >=
+                          selectedEvent.maxParticipants ? (
+                        <div className="flex-1 bg-gray-100 text-gray-500 px-4 py-2 rounded-md text-center font-medium">
+                          Event Full
+                        </div>
+                      ) : (
+                        <>
+                          <Button
+                            variant="outline"
+                            onClick={() => {
+                              setShowEventDetailModal(false);
+                              handleCreateConversation(
+                                selectedEvent.organizerId,
+                                selectedEvent.organizer || "Organizer"
+                              );
+                            }}
+                            className="flex-1"
+                          >
+                            <MessageCircle className="h-4 w-4 mr-2" />
+                            Message Organizer
+                          </Button>
+                          <Button
+                            onClick={() => {
+                              if (selectedEvent.price > 0) {
+                                setPaymentItem({
+                                  id: selectedEvent.id,
+                                  title: selectedEvent.title,
+                                  price: selectedEvent.price,
+                                  type: "marketplace",
+                                });
+                                setShowPaymentModal(true);
+                                setShowEventDetailModal(false);
+                              } else {
+                                handleRegisterEvent(selectedEvent.id);
+                              }
+                            }}
+                            className="flex-1"
+                          >
+                            <Calendar className="h-4 w-4 mr-2" />
+                            Register
+                          </Button>
+                        </>
+                      )}
                       <Button
                         variant="outline"
                         onClick={() => {
                           setShowEventDetailModal(false);
-                          handleCreateConversation(
-                            selectedEvent.organizerId,
-                            selectedEvent.organizer || "Organizer"
-                          );
+                          setIsEditingEvent(false);
                         }}
-                        className="flex-1"
                       >
-                        <MessageCircle className="h-4 w-4 mr-2" />
-                        Message Organizer
+                        Close
                       </Button>
-                      <Button
-                        onClick={() => {
-                          if (selectedEvent.price > 0) {
-                            setPaymentItem({
-                              id: selectedEvent.id,
-                              title: selectedEvent.title,
-                              price: selectedEvent.price,
-                              type: "marketplace",
-                            });
-                            setShowPaymentModal(true);
-                            setShowEventDetailModal(false);
-                          } else {
-                            handleRegisterEvent(selectedEvent.id);
-                          }
-                        }}
-                        className="flex-1"
-                      >
-                        <Calendar className="h-4 w-4 mr-2" />
-                        Register
-                      </Button>
-                    </>
-                  )}
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowEventDetailModal(false)}
-                  >
-                    Close
-                  </Button>
-                </div>
-              </div>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
