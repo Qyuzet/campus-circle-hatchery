@@ -92,7 +92,7 @@ export default function FilePreview({
           src={fileUrl}
           alt={title}
           className="w-full h-full object-cover"
-          style={{ filter: "blur(0.8px)" }}
+          style={{ filter: "blur(0.3px)" }}
           onError={(e) => {
             console.error("Image load error:", fileUrl);
             setImageError(true);
@@ -119,7 +119,7 @@ export default function FilePreview({
             src={thumbnailUrl}
             alt={title}
             className="w-full h-full object-cover"
-            style={{ filter: "blur(0.8px)" }}
+            style={{ filter: "blur(0.3px)" }}
             onError={(e) => {
               console.error("Thumbnail load error:", thumbnailUrl);
               setImageError(true);
@@ -182,7 +182,7 @@ export default function FilePreview({
             src={thumbnailUrl}
             alt={title}
             className="w-full h-full object-cover"
-            style={{ filter: "blur(0.8px)" }}
+            style={{ filter: "blur(0.3px)" }}
             onError={(e) => {
               console.error("Thumbnail load error:", thumbnailUrl);
               setImageError(true);
@@ -204,7 +204,7 @@ export default function FilePreview({
       <div className="relative w-full h-full bg-white overflow-hidden">
         <div
           className="w-full h-full bg-white p-3 sm:p-4"
-          style={{ filter: "blur(0.8px)" }}
+          style={{ filter: "blur(0.3px)" }}
         >
           <div className="space-y-1.5 sm:space-y-2">
             <div className="h-3 sm:h-3.5 bg-gray-800 rounded-sm w-2/3"></div>

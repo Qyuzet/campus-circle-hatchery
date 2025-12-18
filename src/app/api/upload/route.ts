@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
 
     // Convert file to buffer
     const bytes = await file.arrayBuffer();
-    let buffer = Buffer.from(bytes);
+    let buffer: Buffer = Buffer.from(bytes);
     const originalSize = buffer.length;
     const maxSize = 15 * 1024 * 1024; // 15MB
 
