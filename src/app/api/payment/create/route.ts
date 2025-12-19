@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate item type
-    if (!["marketplace", "tutoring"].includes(itemType)) {
+    if (!["marketplace", "tutoring", "food"].includes(itemType)) {
       return NextResponse.json({ error: "Invalid item type" }, { status: 400 });
     }
 
@@ -88,6 +88,34 @@ export async function POST(request: NextRequest) {
       if (item.tutorId === session.user.id) {
         return NextResponse.json(
           { error: "Cannot book your own tutoring session" },
+          { status: 400 }
+        );
+      }
+    } else if (itemType === "food") {
+      item = await prisma.foodItem.findUnique({
+        where: { id: itemId },
+        include: { seller: true },
+      });
+
+      if (!item) {
+        return NextResponse.json(
+          { error: "Food item not found" },
+          { status: 404 }
+        );
+      }
+
+      // Check if item is available
+      if (item.status !== "available") {
+        return NextResponse.json(
+          { error: "Food item is not available" },
+          { status: 400 }
+        );
+      }
+
+      // Prevent buying own item
+      if (item.sellerId === session.user.id) {
+        return NextResponse.json(
+          { error: "Cannot buy your own food item" },
           { status: 400 }
         );
       }

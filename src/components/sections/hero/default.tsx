@@ -36,8 +36,8 @@ export default function Hero({
   description = "Exclusively for Binus University students. Buy, sell, and exchange study materials, notes, and tutoring services in a trusted community.",
   mockup = (
     <Screenshot
-      srcLight="/binus-student.jpg"
-      srcDark="/binus-student.jpg"
+      srcLight="/binus-student.png"
+      srcDark="/binus-student.png"
       alt="Binus University Students"
       width={1248}
       height={765}

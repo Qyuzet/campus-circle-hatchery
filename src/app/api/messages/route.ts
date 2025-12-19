@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { conversationId, content } = body;
+    const { conversationId, content, messageType, orderData } = body;
 
     if (!conversationId || !content) {
       return NextResponse.json(
@@ -150,6 +150,8 @@ export async function POST(request: NextRequest) {
         senderId: user.id,
         receiverId,
         conversationId,
+        messageType: messageType || "text",
+        orderData: orderData || null,
       },
       include: {
         sender: {

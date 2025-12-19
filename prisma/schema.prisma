@@ -126,10 +126,12 @@ model Conversation {
 }
 
 model Message {
-  id        String   @id @default(cuid())
-  content   String
-  isRead    Boolean  @default(false)
-  createdAt DateTime @default(now())
+  id          String   @id @default(cuid())
+  content     String
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  messageType String   @default("text")
+  orderData   Json?
 
   // Relations
   senderId       String

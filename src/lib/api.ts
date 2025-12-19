@@ -188,14 +188,42 @@ export const messagesAPI = {
   },
 
   // Send a message
-  async sendMessage(conversationId: string, content: string) {
+  async sendMessage(
+    conversationId: string,
+    content: string,
+    messageType?: string,
+    orderData?: any
+  ) {
     const response = await fetch("/api/messages", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ conversationId, content }),
+      body: JSON.stringify({ conversationId, content, messageType, orderData }),
     });
     if (!response.ok) throw new Error("Failed to send message");
     return response.json();
+  },
+
+  // Send order request message
+  async sendOrderRequest(conversationId: string, foodItem: any) {
+    const orderData = {
+      type: "food_order",
+      foodId: foodItem.id,
+      foodTitle: foodItem.title,
+      foodImage: foodItem.imageUrl,
+      price: foodItem.price,
+      pickupLocation: foodItem.pickupLocation,
+      pickupTime: foodItem.pickupTime,
+      status: "pending",
+    };
+
+    return this.sendMessage(
+      conversationId,
+      `Order Request: ${
+        foodItem.title
+      } - Rp ${foodItem.price.toLocaleString()}`,
+      "order_request",
+      orderData
+    );
   },
 };
 
@@ -320,7 +348,7 @@ export const statsAPI = {
 export const paymentAPI = {
   async createPayment(data: {
     itemId: string;
-    itemType: "marketplace" | "tutoring";
+    itemType: "marketplace" | "tutoring" | "food";
     amount: number;
     itemTitle: string;
   }) {

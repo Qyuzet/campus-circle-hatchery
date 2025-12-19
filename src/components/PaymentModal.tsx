@@ -11,7 +11,7 @@ interface PaymentModalProps {
     id: string;
     title: string;
     price: number;
-    type: "marketplace" | "tutoring";
+    type: "marketplace" | "tutoring" | "food";
   };
   onSuccess?: () => void;
 }
@@ -51,18 +51,31 @@ export default function PaymentModal({
               console.log("Payment success:", result);
               onSuccess?.();
               onClose();
-              // Redirect to Orders page which will auto-sync and redirect to Library
-              setTimeout(() => {
-                router.push("/orders");
-              }, 1000);
+
+              // Different flow for food items vs study materials
+              if (item.type === "food") {
+                // For food: stay in chat, don't redirect
+                // The chat will show confirmation message
+              } else {
+                // For marketplace/tutoring: redirect to Orders page which will auto-sync and redirect to Library
+                setTimeout(() => {
+                  router.push("/orders");
+                }, 1000);
+              }
             },
             onPending: function (result: any) {
               console.log("Payment pending:", result);
               onClose();
-              // Redirect to Orders page to track payment status
-              setTimeout(() => {
-                router.push("/orders");
-              }, 500);
+
+              // Different flow for food items vs study materials
+              if (item.type === "food") {
+                // For food: stay in chat
+              } else {
+                // For marketplace/tutoring: redirect to Orders page to track payment status
+                setTimeout(() => {
+                  router.push("/orders");
+                }, 500);
+              }
             },
             onError: function (result: any) {
               console.log("Payment error:", result);
@@ -72,11 +85,16 @@ export default function PaymentModal({
             onClose: function () {
               console.log("Payment popup closed");
               setIsProcessing(false);
-              // When popup closes (user might have completed QRIS payment)
-              // Redirect to Orders page to check status
-              setTimeout(() => {
-                router.push("/orders");
-              }, 500);
+
+              // Different flow for food items vs study materials
+              if (item.type === "food") {
+                // For food: stay in chat
+              } else {
+                // For marketplace/tutoring: redirect to Orders page to check status
+                setTimeout(() => {
+                  router.push("/orders");
+                }, 500);
+              }
             },
           });
         } else {

@@ -16,6 +16,7 @@ import {
   wishlistAPI,
   foodAPI,
   eventAPI,
+  paymentAPI,
   FoodItem,
   Event,
 } from "@/lib/api";
@@ -146,7 +147,9 @@ function DashboardContent() {
     id: string;
     title: string;
     price: number;
-    type: "marketplace" | "tutoring";
+    type: "marketplace" | "tutoring" | "food";
+    conversationId?: string;
+    messageId?: string;
   } | null>(null);
   const [hasPurchasedItem, setHasPurchasedItem] = useState(false);
   const [showReorderConfirm, setShowReorderConfirm] = useState(false);
@@ -323,13 +326,16 @@ function DashboardContent() {
       channel.bind("new-message", (newMessage: any) => {
         console.log("✅ Real-time message received:", newMessage);
         setMessages((prevMessages) => {
-          // Avoid duplicates
-          if (prevMessages.some((msg) => msg.id === newMessage.id)) {
-            console.log(
-              "⚠️ Duplicate message detected, skipping:",
-              newMessage.id
-            );
-            return prevMessages;
+          // Check if message already exists (update scenario)
+          const existingIndex = prevMessages.findIndex(
+            (msg) => msg.id === newMessage.id
+          );
+          if (existingIndex !== -1) {
+            console.log("🔄 Updating existing message:", newMessage.id);
+            // Update the existing message
+            const updatedMessages = [...prevMessages];
+            updatedMessages[existingIndex] = newMessage;
+            return updatedMessages;
           }
           console.log("➕ Adding new message to chat:", newMessage.id);
           return [...prevMessages, newMessage];
@@ -852,6 +858,25 @@ function DashboardContent() {
     }
   };
 
+  const handleSendFoodOrderRequest = async (foodItem: any) => {
+    try {
+      const conversation = await conversationsAPI.createConversation(
+        foodItem.sellerId
+      );
+
+      await messagesAPI.sendOrderRequest(conversation.id, foodItem);
+
+      setShowFoodDetailModal(false);
+      setActiveTab("messages");
+      setSelectedConversation(conversation.id);
+
+      toast.success("Order request sent to seller!");
+    } catch (error) {
+      console.error("Error sending order request:", error);
+      toast.error("Failed to send order request. Please try again.");
+    }
+  };
+
   const handleOrderFood = async (foodId: string, pickupTime: string) => {
     try {
       const response = await fetch("/api/food/orders", {
@@ -1277,9 +1302,36 @@ function DashboardContent() {
       setShowItemDetailModal(false);
       setShowFoodDetailModal(false);
       setShowEventDetailModal(false);
-      toast.success("Payment successful! 🎉", {
-        description: "Your purchase has been confirmed. Check Orders page.",
-      });
+
+      // If this was a food order payment, send confirmation message in chat
+      if (paymentItem?.type === "food" && paymentItem?.conversationId) {
+        try {
+          await messagesAPI.sendMessage(
+            paymentItem.conversationId,
+            `Payment completed! Order confirmed for ${paymentItem.title}. The seller will prepare your order for pickup.`,
+            "text"
+          );
+
+          // Reload messages to show the confirmation
+          const msgs = await messagesAPI.getMessages(
+            paymentItem.conversationId
+          );
+          setMessages(msgs);
+
+          toast.success("Payment successful!", {
+            description: "Order confirmed! Check your chat for details.",
+          });
+        } catch (error) {
+          console.error("Error sending confirmation message:", error);
+          toast.success("Payment successful!", {
+            description: "Your order has been confirmed.",
+          });
+        }
+      } else {
+        toast.success("Payment successful! 🎉", {
+          description: "Your purchase has been confirmed. Check Orders page.",
+        });
+      }
     } catch (error) {
       console.error("Error reloading data:", error);
     }
@@ -2838,30 +2890,395 @@ function DashboardContent() {
                                             </span>
                                           )}
                                         <div
-                                          className={`rounded-lg p-3 shadow-sm ${
+                                          className={`rounded-lg shadow-sm ${
                                             message.senderId === currentUser?.id
                                               ? "bg-dark-blue text-white rounded-br-none self-end"
                                               : "bg-white text-dark-gray rounded-bl-none"
+                                          } ${
+                                            message.messageType ===
+                                              "order_request" ||
+                                            message.messageType ===
+                                              "payment_request"
+                                              ? "p-0 overflow-hidden"
+                                              : "p-3"
                                           }`}
                                         >
-                                          <p className="text-sm">
-                                            {message.content}
-                                          </p>
-                                          <span
-                                            className={`text-xs mt-1 block ${
-                                              message.senderId ===
-                                              currentUser?.id
-                                                ? "text-blue-200"
-                                                : "text-medium-gray"
-                                            }`}
-                                          >
-                                            {new Date(
-                                              message.createdAt
-                                            ).toLocaleTimeString([], {
-                                              hour: "2-digit",
-                                              minute: "2-digit",
-                                            })}
-                                          </span>
+                                          {message.messageType ===
+                                          "order_request" ? (
+                                            <div className="p-3 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200">
+                                              <div className="flex items-start gap-3">
+                                                {message.orderData
+                                                  ?.foodImage && (
+                                                  <Image
+                                                    src={
+                                                      message.orderData
+                                                        .foodImage
+                                                    }
+                                                    alt={
+                                                      message.orderData
+                                                        .foodTitle
+                                                    }
+                                                    width={60}
+                                                    height={60}
+                                                    className="rounded object-cover"
+                                                  />
+                                                )}
+                                                <div className="flex-1">
+                                                  <p className="font-semibold text-sm text-gray-900">
+                                                    {
+                                                      message.orderData
+                                                        ?.foodTitle
+                                                    }
+                                                  </p>
+                                                  <p className="text-sm text-gray-700 font-medium">
+                                                    Rp{" "}
+                                                    {message.orderData?.price?.toLocaleString()}
+                                                  </p>
+                                                  <p className="text-xs text-gray-600 mt-1">
+                                                    Pickup:{" "}
+                                                    {
+                                                      message.orderData
+                                                        ?.pickupLocation
+                                                    }
+                                                  </p>
+                                                  <p className="text-xs text-gray-600">
+                                                    Time:{" "}
+                                                    {
+                                                      message.orderData
+                                                        ?.pickupTime
+                                                    }
+                                                  </p>
+                                                  {message.orderData?.status ===
+                                                    "pending" &&
+                                                    message.receiverId ===
+                                                      currentUser?.id && (
+                                                      <div className="flex gap-2 mt-2">
+                                                        <Button
+                                                          size="sm"
+                                                          onClick={async () => {
+                                                            try {
+                                                              await fetch(
+                                                                `/api/messages/${message.id}/respond`,
+                                                                {
+                                                                  method:
+                                                                    "POST",
+                                                                  headers: {
+                                                                    "Content-Type":
+                                                                      "application/json",
+                                                                  },
+                                                                  body: JSON.stringify(
+                                                                    {
+                                                                      action:
+                                                                        "accept",
+                                                                    }
+                                                                  ),
+                                                                }
+                                                              );
+                                                              toast.success(
+                                                                "Order accepted!"
+                                                              );
+                                                              // Reload messages to show updated status
+                                                              await loadMessages(
+                                                                message.conversationId
+                                                              );
+                                                            } catch (error) {
+                                                              toast.error(
+                                                                "Failed to accept order"
+                                                              );
+                                                            }
+                                                          }}
+                                                          className="bg-green-600 hover:bg-green-700 text-white"
+                                                        >
+                                                          Accept
+                                                        </Button>
+                                                        <Button
+                                                          size="sm"
+                                                          variant="outline"
+                                                          onClick={async () => {
+                                                            try {
+                                                              await fetch(
+                                                                `/api/messages/${message.id}/respond`,
+                                                                {
+                                                                  method:
+                                                                    "POST",
+                                                                  headers: {
+                                                                    "Content-Type":
+                                                                      "application/json",
+                                                                  },
+                                                                  body: JSON.stringify(
+                                                                    {
+                                                                      action:
+                                                                        "reject",
+                                                                    }
+                                                                  ),
+                                                                }
+                                                              );
+                                                              toast.success(
+                                                                "Order declined"
+                                                              );
+                                                              // Reload messages to show updated status
+                                                              await loadMessages(
+                                                                message.conversationId
+                                                              );
+                                                            } catch (error) {
+                                                              toast.error(
+                                                                "Failed to decline order"
+                                                              );
+                                                            }
+                                                          }}
+                                                          className="border-red-600 text-red-600 hover:bg-red-50"
+                                                        >
+                                                          Decline
+                                                        </Button>
+                                                      </div>
+                                                    )}
+                                                  {message.orderData?.status ===
+                                                    "accepted" && (
+                                                    <p className="text-xs text-green-600 font-medium mt-2">
+                                                      ✓ Accepted
+                                                    </p>
+                                                  )}
+                                                  {message.orderData?.status ===
+                                                    "rejected" && (
+                                                    <p className="text-xs text-red-600 font-medium mt-2">
+                                                      ✗ Declined
+                                                    </p>
+                                                  )}
+                                                </div>
+                                              </div>
+                                              <span className="text-xs mt-2 block text-gray-500">
+                                                {new Date(
+                                                  message.createdAt
+                                                ).toLocaleTimeString([], {
+                                                  hour: "2-digit",
+                                                  minute: "2-digit",
+                                                })}
+                                              </span>
+                                            </div>
+                                          ) : message.messageType ===
+                                            "payment_request" ? (
+                                            <div className="p-3 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200">
+                                              <p className="text-sm text-gray-900 font-medium mb-2">
+                                                {message.content}
+                                              </p>
+                                              {message.orderData?.status ===
+                                                "awaiting_payment" &&
+                                                message.receiverId ===
+                                                  currentUser?.id && (
+                                                  <Button
+                                                    size="sm"
+                                                    onClick={async () => {
+                                                      try {
+                                                        const result =
+                                                          await paymentAPI.createPayment(
+                                                            {
+                                                              itemId:
+                                                                message
+                                                                  .orderData
+                                                                  .foodId,
+                                                              itemType: "food",
+                                                              amount:
+                                                                message
+                                                                  .orderData
+                                                                  .price,
+                                                              itemTitle:
+                                                                message
+                                                                  .orderData
+                                                                  .foodTitle,
+                                                            }
+                                                          );
+
+                                                        if (
+                                                          result.success &&
+                                                          result.payment.token
+                                                        ) {
+                                                          // @ts-ignore - Midtrans Snap is loaded via script tag
+                                                          if (window.snap) {
+                                                            // @ts-ignore
+                                                            window.snap.pay(
+                                                              result.payment
+                                                                .token,
+                                                              {
+                                                                onSuccess:
+                                                                  async function (
+                                                                    result: any
+                                                                  ) {
+                                                                    console.log(
+                                                                      "Payment success:",
+                                                                      result
+                                                                    );
+
+                                                                    try {
+                                                                      // Update the payment request message status
+                                                                      const updateResponse =
+                                                                        await fetch(
+                                                                          `/api/messages/${message.id}`,
+                                                                          {
+                                                                            method:
+                                                                              "PATCH",
+                                                                            headers:
+                                                                              {
+                                                                                "Content-Type":
+                                                                                  "application/json",
+                                                                              },
+                                                                            body: JSON.stringify(
+                                                                              {
+                                                                                orderData:
+                                                                                  {
+                                                                                    ...message.orderData,
+                                                                                    status:
+                                                                                      "paid",
+                                                                                  },
+                                                                              }
+                                                                            ),
+                                                                          }
+                                                                        );
+
+                                                                      if (
+                                                                        !updateResponse.ok
+                                                                      ) {
+                                                                        console.error(
+                                                                          "Failed to update message status"
+                                                                        );
+                                                                      }
+
+                                                                      // Send confirmation message in chat
+                                                                      await messagesAPI.sendMessage(
+                                                                        message.conversationId,
+                                                                        `Payment completed! Order confirmed for ${message.orderData.foodTitle}. The seller will prepare your order for pickup.`,
+                                                                        "text"
+                                                                      );
+
+                                                                      // Reload messages to show updated status
+                                                                      await loadMessages(
+                                                                        message.conversationId
+                                                                      );
+
+                                                                      // Reload food items
+                                                                      const foodData =
+                                                                        await foodAPI.getFoodItems();
+                                                                      setFoodItems(
+                                                                        foodData
+                                                                      );
+
+                                                                      toast.success(
+                                                                        "Payment successful!",
+                                                                        {
+                                                                          description:
+                                                                            "Order confirmed! Check your chat for details.",
+                                                                        }
+                                                                      );
+                                                                    } catch (error) {
+                                                                      console.error(
+                                                                        "Error in payment success handler:",
+                                                                        error
+                                                                      );
+                                                                      toast.error(
+                                                                        "Payment successful but failed to update status. Please refresh."
+                                                                      );
+                                                                    }
+                                                                  },
+                                                                onPending:
+                                                                  function (
+                                                                    result: any
+                                                                  ) {
+                                                                    console.log(
+                                                                      "Payment pending:",
+                                                                      result
+                                                                    );
+                                                                    toast.info(
+                                                                      "Payment pending",
+                                                                      {
+                                                                        description:
+                                                                          "Waiting for payment confirmation.",
+                                                                      }
+                                                                    );
+                                                                  },
+                                                                onError:
+                                                                  function (
+                                                                    result: any
+                                                                  ) {
+                                                                    console.log(
+                                                                      "Payment error:",
+                                                                      result
+                                                                    );
+                                                                    toast.error(
+                                                                      "Payment failed. Please try again."
+                                                                    );
+                                                                  },
+                                                                onClose:
+                                                                  function () {
+                                                                    console.log(
+                                                                      "Payment popup closed"
+                                                                    );
+                                                                  },
+                                                              }
+                                                            );
+                                                          } else {
+                                                            toast.error(
+                                                              "Payment system not loaded. Please refresh the page."
+                                                            );
+                                                          }
+                                                        } else {
+                                                          toast.error(
+                                                            "Failed to create payment. Please try again."
+                                                          );
+                                                        }
+                                                      } catch (error) {
+                                                        console.error(
+                                                          "Payment error:",
+                                                          error
+                                                        );
+                                                        toast.error(
+                                                          "Failed to process payment"
+                                                        );
+                                                      }
+                                                    }}
+                                                    className="bg-green-600 hover:bg-green-700 text-white w-full"
+                                                  >
+                                                    Pay Now - Rp{" "}
+                                                    {message.orderData?.price?.toLocaleString()}
+                                                  </Button>
+                                                )}
+                                              {message.orderData?.status ===
+                                                "paid" && (
+                                                <div className="bg-green-100 border border-green-300 rounded p-2 text-center">
+                                                  <p className="text-sm text-green-700 font-medium">
+                                                    ✓ Payment Completed
+                                                  </p>
+                                                </div>
+                                              )}
+                                              <span className="text-xs mt-2 block text-gray-500">
+                                                {new Date(
+                                                  message.createdAt
+                                                ).toLocaleTimeString([], {
+                                                  hour: "2-digit",
+                                                  minute: "2-digit",
+                                                })}
+                                              </span>
+                                            </div>
+                                          ) : (
+                                            <>
+                                              <p className="text-sm">
+                                                {message.content}
+                                              </p>
+                                              <span
+                                                className={`text-xs mt-1 block ${
+                                                  message.senderId ===
+                                                  currentUser?.id
+                                                    ? "text-blue-200"
+                                                    : "text-medium-gray"
+                                                }`}
+                                              >
+                                                {new Date(
+                                                  message.createdAt
+                                                ).toLocaleTimeString([], {
+                                                  hour: "2-digit",
+                                                  minute: "2-digit",
+                                                })}
+                                              </span>
+                                            </>
+                                          )}
                                         </div>
                                       </div>
                                     </div>
@@ -3995,23 +4412,9 @@ function DashboardContent() {
                             Message Seller
                           </Button>
                           <Button
-                            onClick={() => {
-                              if (selectedFood.price > 0) {
-                                setPaymentItem({
-                                  id: selectedFood.id,
-                                  title: selectedFood.title,
-                                  price: selectedFood.price,
-                                  type: "marketplace",
-                                });
-                                setShowPaymentModal(true);
-                                setShowFoodDetailModal(false);
-                              } else {
-                                handleOrderFood(
-                                  selectedFood.id,
-                                  selectedFood.pickupTime
-                                );
-                              }
-                            }}
+                            onClick={() =>
+                              handleSendFoodOrderRequest(selectedFood)
+                            }
                             className="flex-1"
                           >
                             <ShoppingCart className="h-4 w-4 mr-2" />
