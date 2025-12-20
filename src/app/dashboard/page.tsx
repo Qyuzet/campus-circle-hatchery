@@ -272,6 +272,8 @@ function DashboardContent() {
     wallet: false,
   });
 
+  const [loadingConversation, setLoadingConversation] = useState(false);
+
   // Track which tabs have been loaded
   const [loadedTabs, setLoadedTabs] = useState({
     discovery: false,
@@ -1131,6 +1133,17 @@ function DashboardContent() {
     []
   );
 
+  const displayedMessages = useMemo(() => {
+    return selectedConversation ? messages : groupMessages;
+  }, [selectedConversation, messages, groupMessages]);
+
+  const formatMessageTime = useCallback((dateString: string) => {
+    return new Date(dateString).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }, []);
+
   const handleDeleteFood = async (foodId: string) => {
     try {
       await foodAPI.deleteFoodItem(foodId);
@@ -1441,6 +1454,7 @@ function DashboardContent() {
 
   const loadMessages = async (conversationId: string) => {
     try {
+      setLoadingConversation(true);
       const msgs = await messagesAPI.getMessages(conversationId);
       setMessages(msgs);
 
@@ -1452,6 +1466,8 @@ function DashboardContent() {
       }, 100);
     } catch (error) {
       console.error("Error loading messages:", error);
+    } finally {
+      setLoadingConversation(false);
     }
   };
 
@@ -1466,6 +1482,7 @@ function DashboardContent() {
 
   const loadGroupMessages = async (groupId: string) => {
     try {
+      setLoadingConversation(true);
       const msgs = await groupsAPI.getMessages(groupId);
       setGroupMessages(msgs);
 
@@ -1477,6 +1494,8 @@ function DashboardContent() {
       }, 100);
     } catch (error) {
       console.error("Error loading group messages:", error);
+    } finally {
+      setLoadingConversation(false);
     }
   };
 
@@ -2901,7 +2920,7 @@ function DashboardContent() {
                                   }`}
                                 >
                                   <div className="flex items-center space-x-3">
-                                    <div className="w-12 h-12 bg-gradient-to-br from-dark-blue to-campus-green rounded-full flex items-center justify-center flex-shrink-0">
+                                    <div className="w-12 h-12 bg-dark-blue rounded-full flex items-center justify-center flex-shrink-0">
                                       <span className="text-white font-semibold text-sm">
                                         {conversation.otherUserName
                                           .charAt(0)
@@ -2914,12 +2933,9 @@ function DashboardContent() {
                                           {conversation.otherUserName}
                                         </h3>
                                         <span className="text-xs text-medium-gray flex-shrink-0 ml-2">
-                                          {new Date(
+                                          {formatMessageTime(
                                             conversation.lastMessageTime
-                                          ).toLocaleTimeString([], {
-                                            hour: "2-digit",
-                                            minute: "2-digit",
-                                          })}
+                                          )}
                                         </span>
                                       </div>
                                       <div className="flex items-center justify-between gap-2">
@@ -2967,7 +2983,7 @@ function DashboardContent() {
                                 }`}
                               >
                                 <div className="flex items-center space-x-3">
-                                  <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center flex-shrink-0">
+                                  <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
                                     <Users className="h-6 w-6 text-white" />
                                   </div>
                                   <div className="flex-1 min-w-0">
@@ -2977,12 +2993,9 @@ function DashboardContent() {
                                       </h3>
                                       <span className="text-xs text-medium-gray flex-shrink-0 ml-2">
                                         {group.lastMessage
-                                          ? new Date(
+                                          ? formatMessageTime(
                                               group.lastMessage.createdAt
-                                            ).toLocaleTimeString([], {
-                                              hour: "2-digit",
-                                              minute: "2-digit",
-                                            })
+                                            )
                                           : ""}
                                       </span>
                                     </div>
@@ -3133,419 +3146,427 @@ function DashboardContent() {
 
                             {/* Messages Area */}
                             <div className="flex-1 p-4 overflow-y-auto bg-gray-50 min-h-0">
-                              <div className="space-y-4">
-                                {(selectedConversation
-                                  ? messages
-                                  : groupMessages
-                                ).length > 0 ? (
-                                  (selectedConversation
-                                    ? messages
-                                    : groupMessages
-                                  ).map((message) => (
+                              {loadingConversation ? (
+                                <div className="space-y-4">
+                                  {[1, 2, 3, 4, 5].map((i) => (
                                     <div
-                                      key={message.id}
+                                      key={i}
                                       className={`flex ${
-                                        message.senderId === currentUser?.id
+                                        i % 2 === 0
                                           ? "justify-end"
                                           : "justify-start"
                                       }`}
                                     >
-                                      <div className="flex flex-col items-start max-w-xs">
-                                        {/* Show sender name for group messages */}
-                                        {selectedGroup &&
-                                          message.senderId !==
-                                            currentUser?.id && (
-                                            <span className="text-xs text-medium-gray mb-1 ml-2">
-                                              {message.sender?.name}
-                                            </span>
-                                          )}
-                                        <div
-                                          className={`rounded-lg shadow-sm ${
-                                            message.senderId === currentUser?.id
-                                              ? "bg-dark-blue text-white rounded-br-none self-end"
-                                              : "bg-white text-dark-gray rounded-bl-none"
-                                          } ${
-                                            message.messageType ===
-                                              "order_request" ||
-                                            message.messageType ===
-                                              "payment_request"
-                                              ? "p-0 overflow-hidden"
-                                              : "p-3"
-                                          }`}
-                                        >
-                                          {message.messageType ===
-                                          "order_request" ? (
-                                            <div className="p-3 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200">
-                                              <div className="flex items-start gap-3">
-                                                {message.orderData
-                                                  ?.foodImage && (
-                                                  <Image
-                                                    src={
-                                                      message.orderData
-                                                        .foodImage
-                                                    }
-                                                    alt={
-                                                      message.orderData
-                                                        .foodTitle
-                                                    }
-                                                    width={60}
-                                                    height={60}
-                                                    className="rounded object-cover"
-                                                  />
-                                                )}
-                                                <div className="flex-1">
-                                                  <p className="font-semibold text-sm text-gray-900">
-                                                    {
-                                                      message.orderData
-                                                        ?.foodTitle
-                                                    }
-                                                  </p>
-                                                  <p className="text-sm text-gray-700 font-medium">
-                                                    Rp{" "}
-                                                    {message.orderData?.price?.toLocaleString()}
-                                                  </p>
-                                                  <p className="text-xs text-gray-600 mt-1">
-                                                    Pickup:{" "}
-                                                    {
-                                                      message.orderData
-                                                        ?.pickupLocation
-                                                    }
-                                                  </p>
-                                                  <p className="text-xs text-gray-600">
-                                                    Time:{" "}
-                                                    {
-                                                      message.orderData
-                                                        ?.pickupTime
-                                                    }
-                                                  </p>
-                                                  {message.orderData?.status ===
-                                                    "pending" &&
-                                                    message.receiverId ===
-                                                      currentUser?.id && (
-                                                      <div className="flex gap-2 mt-2">
-                                                        <Button
-                                                          size="sm"
-                                                          onClick={async () => {
-                                                            try {
-                                                              await fetch(
-                                                                `/api/messages/${message.id}/respond`,
-                                                                {
-                                                                  method:
-                                                                    "POST",
-                                                                  headers: {
-                                                                    "Content-Type":
-                                                                      "application/json",
-                                                                  },
-                                                                  body: JSON.stringify(
-                                                                    {
-                                                                      action:
-                                                                        "accept",
-                                                                    }
-                                                                  ),
-                                                                }
-                                                              );
-                                                              toast.success(
-                                                                "Order accepted!"
-                                                              );
-                                                              // Reload messages to show updated status
-                                                              await loadMessages(
-                                                                message.conversationId
-                                                              );
-                                                            } catch (error) {
-                                                              toast.error(
-                                                                "Failed to accept order"
-                                                              );
-                                                            }
-                                                          }}
-                                                          className="bg-green-600 hover:bg-green-700 text-white"
-                                                        >
-                                                          Accept
-                                                        </Button>
-                                                        <Button
-                                                          size="sm"
-                                                          variant="outline"
-                                                          onClick={async () => {
-                                                            try {
-                                                              await fetch(
-                                                                `/api/messages/${message.id}/respond`,
-                                                                {
-                                                                  method:
-                                                                    "POST",
-                                                                  headers: {
-                                                                    "Content-Type":
-                                                                      "application/json",
-                                                                  },
-                                                                  body: JSON.stringify(
-                                                                    {
-                                                                      action:
-                                                                        "reject",
-                                                                    }
-                                                                  ),
-                                                                }
-                                                              );
-                                                              toast.success(
-                                                                "Order declined"
-                                                              );
-                                                              // Reload messages to show updated status
-                                                              await loadMessages(
-                                                                message.conversationId
-                                                              );
-                                                            } catch (error) {
-                                                              toast.error(
-                                                                "Failed to decline order"
-                                                              );
-                                                            }
-                                                          }}
-                                                          className="border-red-600 text-red-600 hover:bg-red-50"
-                                                        >
-                                                          Decline
-                                                        </Button>
-                                                      </div>
-                                                    )}
-                                                  {message.orderData?.status ===
-                                                    "accepted" && (
-                                                    <p className="text-xs text-green-600 font-medium mt-2">
-                                                      ✓ Accepted
-                                                    </p>
-                                                  )}
-                                                  {message.orderData?.status ===
-                                                    "rejected" && (
-                                                    <p className="text-xs text-red-600 font-medium mt-2">
-                                                      ✗ Declined
-                                                    </p>
-                                                  )}
-                                                </div>
-                                              </div>
-                                              <span className="text-xs mt-2 block text-gray-500">
-                                                {new Date(
-                                                  message.createdAt
-                                                ).toLocaleTimeString([], {
-                                                  hour: "2-digit",
-                                                  minute: "2-digit",
-                                                })}
+                                      <div className="flex flex-col max-w-xs w-64">
+                                        <div className="h-16 bg-gray-200 rounded-lg animate-pulse" />
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <div className="space-y-4">
+                                  {displayedMessages.length > 0 ? (
+                                    displayedMessages.map((message) => (
+                                      <div
+                                        key={message.id}
+                                        className={`flex ${
+                                          message.senderId === currentUser?.id
+                                            ? "justify-end"
+                                            : "justify-start"
+                                        }`}
+                                      >
+                                        <div className="flex flex-col items-start max-w-xs">
+                                          {/* Show sender name for group messages */}
+                                          {selectedGroup &&
+                                            message.senderId !==
+                                              currentUser?.id && (
+                                              <span className="text-xs text-medium-gray mb-1 ml-2">
+                                                {message.sender?.name}
                                               </span>
-                                            </div>
-                                          ) : message.messageType ===
-                                            "payment_request" ? (
-                                            <div className="p-3 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200">
-                                              <p className="text-sm text-gray-900 font-medium mb-2">
-                                                {message.content}
-                                              </p>
-                                              {message.orderData?.status ===
-                                                "awaiting_payment" &&
-                                                message.receiverId ===
-                                                  currentUser?.id && (
-                                                  <Button
-                                                    size="sm"
-                                                    onClick={async () => {
-                                                      try {
-                                                        const result =
-                                                          await paymentAPI.createPayment(
-                                                            {
-                                                              itemId:
-                                                                message
-                                                                  .orderData
-                                                                  .foodId,
-                                                              itemType: "food",
-                                                              amount:
-                                                                message
-                                                                  .orderData
-                                                                  .price,
-                                                              itemTitle:
-                                                                message
-                                                                  .orderData
-                                                                  .foodTitle,
-                                                            }
-                                                          );
-
-                                                        if (
-                                                          result.success &&
-                                                          result.payment.token
-                                                        ) {
-                                                          // @ts-ignore - Midtrans Snap is loaded via script tag
-                                                          if (window.snap) {
-                                                            // @ts-ignore
-                                                            window.snap.pay(
-                                                              result.payment
-                                                                .token,
-                                                              {
-                                                                onSuccess:
-                                                                  async function (
-                                                                    result: any
-                                                                  ) {
-                                                                    console.log(
-                                                                      "Payment success:",
-                                                                      result
-                                                                    );
-
-                                                                    toast.success(
-                                                                      "Payment successful!",
+                                            )}
+                                          <div
+                                            className={`rounded-lg shadow-sm ${
+                                              message.senderId ===
+                                              currentUser?.id
+                                                ? "bg-dark-blue text-white rounded-br-none self-end"
+                                                : "bg-white text-dark-gray rounded-bl-none"
+                                            } ${
+                                              message.messageType ===
+                                                "order_request" ||
+                                              message.messageType ===
+                                                "payment_request"
+                                                ? "p-0 overflow-hidden"
+                                                : "p-3"
+                                            }`}
+                                          >
+                                            {message.messageType ===
+                                            "order_request" ? (
+                                              <div className="p-3 bg-blue-50 border border-blue-200">
+                                                <div className="flex items-start gap-3">
+                                                  {message.orderData
+                                                    ?.foodImage && (
+                                                    <Image
+                                                      src={
+                                                        message.orderData
+                                                          .foodImage
+                                                      }
+                                                      alt={
+                                                        message.orderData
+                                                          .foodTitle
+                                                      }
+                                                      width={60}
+                                                      height={60}
+                                                      className="rounded object-cover"
+                                                    />
+                                                  )}
+                                                  <div className="flex-1">
+                                                    <p className="font-semibold text-sm text-gray-900">
+                                                      {
+                                                        message.orderData
+                                                          ?.foodTitle
+                                                      }
+                                                    </p>
+                                                    <p className="text-sm text-gray-700 font-medium">
+                                                      Rp{" "}
+                                                      {message.orderData?.price?.toLocaleString()}
+                                                    </p>
+                                                    <p className="text-xs text-gray-600 mt-1">
+                                                      Pickup:{" "}
+                                                      {
+                                                        message.orderData
+                                                          ?.pickupLocation
+                                                      }
+                                                    </p>
+                                                    <p className="text-xs text-gray-600">
+                                                      Time:{" "}
+                                                      {
+                                                        message.orderData
+                                                          ?.pickupTime
+                                                      }
+                                                    </p>
+                                                    {message.orderData
+                                                      ?.status === "pending" &&
+                                                      message.receiverId ===
+                                                        currentUser?.id && (
+                                                        <div className="flex gap-2 mt-2">
+                                                          <Button
+                                                            size="sm"
+                                                            onClick={async () => {
+                                                              try {
+                                                                await fetch(
+                                                                  `/api/messages/${message.id}/respond`,
+                                                                  {
+                                                                    method:
+                                                                      "POST",
+                                                                    headers: {
+                                                                      "Content-Type":
+                                                                        "application/json",
+                                                                    },
+                                                                    body: JSON.stringify(
                                                                       {
-                                                                        description:
-                                                                          "Redirecting to My Hub...",
+                                                                        action:
+                                                                          "accept",
                                                                       }
-                                                                    );
+                                                                    ),
+                                                                  }
+                                                                );
+                                                                toast.success(
+                                                                  "Order accepted!"
+                                                                );
+                                                                // Reload messages to show updated status
+                                                                await loadMessages(
+                                                                  message.conversationId
+                                                                );
+                                                              } catch (error) {
+                                                                toast.error(
+                                                                  "Failed to accept order"
+                                                                );
+                                                              }
+                                                            }}
+                                                            className="bg-green-600 hover:bg-green-700 text-white"
+                                                          >
+                                                            Accept
+                                                          </Button>
+                                                          <Button
+                                                            size="sm"
+                                                            variant="outline"
+                                                            onClick={async () => {
+                                                              try {
+                                                                await fetch(
+                                                                  `/api/messages/${message.id}/respond`,
+                                                                  {
+                                                                    method:
+                                                                      "POST",
+                                                                    headers: {
+                                                                      "Content-Type":
+                                                                        "application/json",
+                                                                    },
+                                                                    body: JSON.stringify(
+                                                                      {
+                                                                        action:
+                                                                          "reject",
+                                                                      }
+                                                                    ),
+                                                                  }
+                                                                );
+                                                                toast.success(
+                                                                  "Order declined"
+                                                                );
+                                                                // Reload messages to show updated status
+                                                                await loadMessages(
+                                                                  message.conversationId
+                                                                );
+                                                              } catch (error) {
+                                                                toast.error(
+                                                                  "Failed to decline order"
+                                                                );
+                                                              }
+                                                            }}
+                                                            className="border-red-600 text-red-600 hover:bg-red-50"
+                                                          >
+                                                            Decline
+                                                          </Button>
+                                                        </div>
+                                                      )}
+                                                    {message.orderData
+                                                      ?.status ===
+                                                      "accepted" && (
+                                                      <p className="text-xs text-green-600 font-medium mt-2">
+                                                        ✓ Accepted
+                                                      </p>
+                                                    )}
+                                                    {message.orderData
+                                                      ?.status ===
+                                                      "rejected" && (
+                                                      <p className="text-xs text-red-600 font-medium mt-2">
+                                                        ✗ Declined
+                                                      </p>
+                                                    )}
+                                                  </div>
+                                                </div>
+                                                <span className="text-xs mt-2 block text-gray-500">
+                                                  {formatMessageTime(
+                                                    message.createdAt
+                                                  )}
+                                                </span>
+                                              </div>
+                                            ) : message.messageType ===
+                                              "payment_request" ? (
+                                              <div className="p-3 bg-green-50 border border-green-200">
+                                                <p className="text-sm text-gray-900 font-medium mb-2">
+                                                  {message.content}
+                                                </p>
+                                                {message.orderData?.status ===
+                                                  "awaiting_payment" &&
+                                                  message.receiverId ===
+                                                    currentUser?.id && (
+                                                    <Button
+                                                      size="sm"
+                                                      onClick={async () => {
+                                                        try {
+                                                          const result =
+                                                            await paymentAPI.createPayment(
+                                                              {
+                                                                itemId:
+                                                                  message
+                                                                    .orderData
+                                                                    .foodId,
+                                                                itemType:
+                                                                  "food",
+                                                                amount:
+                                                                  message
+                                                                    .orderData
+                                                                    .price,
+                                                                itemTitle:
+                                                                  message
+                                                                    .orderData
+                                                                    .foodTitle,
+                                                              }
+                                                            );
 
-                                                                    // Update message orderData immediately
-                                                                    try {
-                                                                      await fetch(
-                                                                        `/api/messages/${message.id}`,
+                                                          if (
+                                                            result.success &&
+                                                            result.payment.token
+                                                          ) {
+                                                            // @ts-ignore - Midtrans Snap is loaded via script tag
+                                                            if (window.snap) {
+                                                              // @ts-ignore
+                                                              window.snap.pay(
+                                                                result.payment
+                                                                  .token,
+                                                                {
+                                                                  onSuccess:
+                                                                    async function (
+                                                                      result: any
+                                                                    ) {
+                                                                      console.log(
+                                                                        "Payment success:",
+                                                                        result
+                                                                      );
+
+                                                                      toast.success(
+                                                                        "Payment successful!",
                                                                         {
-                                                                          method:
-                                                                            "PATCH",
-                                                                          headers:
-                                                                            {
-                                                                              "Content-Type":
-                                                                                "application/json",
-                                                                            },
-                                                                          body: JSON.stringify(
-                                                                            {
-                                                                              orderData:
-                                                                                {
-                                                                                  ...message.orderData,
-                                                                                  status:
-                                                                                    "paid",
-                                                                                },
-                                                                            }
-                                                                          ),
+                                                                          description:
+                                                                            "Redirecting to My Hub...",
                                                                         }
                                                                       );
 
-                                                                      console.log(
-                                                                        "✅ Message updated, Pusher will sync UI"
-                                                                      );
-                                                                    } catch (error) {
-                                                                      console.error(
-                                                                        "Error updating message:",
-                                                                        error
-                                                                      );
-                                                                    }
+                                                                      // Update message orderData immediately
+                                                                      try {
+                                                                        await fetch(
+                                                                          `/api/messages/${message.id}`,
+                                                                          {
+                                                                            method:
+                                                                              "PATCH",
+                                                                            headers:
+                                                                              {
+                                                                                "Content-Type":
+                                                                                  "application/json",
+                                                                              },
+                                                                            body: JSON.stringify(
+                                                                              {
+                                                                                orderData:
+                                                                                  {
+                                                                                    ...message.orderData,
+                                                                                    status:
+                                                                                      "paid",
+                                                                                  },
+                                                                              }
+                                                                            ),
+                                                                          }
+                                                                        );
 
-                                                                    // Redirect to My Hub Purchases
-                                                                    setTimeout(
-                                                                      () => {
-                                                                        window.location.href =
-                                                                          "/dashboard?tab=my-hub&subTab=purchases";
-                                                                      },
-                                                                      1000
-                                                                    );
-                                                                  },
-                                                                onPending:
-                                                                  function (
-                                                                    result: any
-                                                                  ) {
-                                                                    console.log(
-                                                                      "Payment pending:",
-                                                                      result
-                                                                    );
-                                                                    toast.info(
-                                                                      "Payment pending",
-                                                                      {
-                                                                        description:
-                                                                          "Waiting for confirmation...",
+                                                                        console.log(
+                                                                          "✅ Message updated, Pusher will sync UI"
+                                                                        );
+                                                                      } catch (error) {
+                                                                        console.error(
+                                                                          "Error updating message:",
+                                                                          error
+                                                                        );
                                                                       }
-                                                                    );
-                                                                  },
-                                                                onError:
-                                                                  function (
-                                                                    result: any
-                                                                  ) {
-                                                                    console.log(
-                                                                      "Payment error:",
-                                                                      result
-                                                                    );
-                                                                    toast.error(
-                                                                      "Payment failed. Please try again."
-                                                                    );
-                                                                  },
-                                                                onClose:
-                                                                  function () {
-                                                                    console.log(
-                                                                      "Payment popup closed"
-                                                                    );
-                                                                  },
-                                                              }
-                                                            );
+
+                                                                      // Redirect to My Hub Purchases
+                                                                      setTimeout(
+                                                                        () => {
+                                                                          window.location.href =
+                                                                            "/dashboard?tab=my-hub&subTab=purchases";
+                                                                        },
+                                                                        1000
+                                                                      );
+                                                                    },
+                                                                  onPending:
+                                                                    function (
+                                                                      result: any
+                                                                    ) {
+                                                                      console.log(
+                                                                        "Payment pending:",
+                                                                        result
+                                                                      );
+                                                                      toast.info(
+                                                                        "Payment pending",
+                                                                        {
+                                                                          description:
+                                                                            "Waiting for confirmation...",
+                                                                        }
+                                                                      );
+                                                                    },
+                                                                  onError:
+                                                                    function (
+                                                                      result: any
+                                                                    ) {
+                                                                      console.log(
+                                                                        "Payment error:",
+                                                                        result
+                                                                      );
+                                                                      toast.error(
+                                                                        "Payment failed. Please try again."
+                                                                      );
+                                                                    },
+                                                                  onClose:
+                                                                    function () {
+                                                                      console.log(
+                                                                        "Payment popup closed"
+                                                                      );
+                                                                    },
+                                                                }
+                                                              );
+                                                            } else {
+                                                              toast.error(
+                                                                "Payment system not loaded. Please refresh the page."
+                                                              );
+                                                            }
                                                           } else {
                                                             toast.error(
-                                                              "Payment system not loaded. Please refresh the page."
+                                                              "Failed to create payment. Please try again."
                                                             );
                                                           }
-                                                        } else {
+                                                        } catch (error) {
+                                                          console.error(
+                                                            "Payment error:",
+                                                            error
+                                                          );
                                                           toast.error(
-                                                            "Failed to create payment. Please try again."
+                                                            "Failed to process payment"
                                                           );
                                                         }
-                                                      } catch (error) {
-                                                        console.error(
-                                                          "Payment error:",
-                                                          error
-                                                        );
-                                                        toast.error(
-                                                          "Failed to process payment"
-                                                        );
-                                                      }
-                                                    }}
-                                                    className="bg-green-600 hover:bg-green-700 text-white w-full"
-                                                  >
-                                                    Pay Now - Rp{" "}
-                                                    {message.orderData?.price?.toLocaleString()}
-                                                  </Button>
+                                                      }}
+                                                      className="bg-green-600 hover:bg-green-700 text-white w-full"
+                                                    >
+                                                      Pay Now - Rp{" "}
+                                                      {message.orderData?.price?.toLocaleString()}
+                                                    </Button>
+                                                  )}
+                                                {message.orderData?.status ===
+                                                  "paid" && (
+                                                  <div className="bg-green-100 border border-green-300 rounded p-2 text-center">
+                                                    <p className="text-sm text-green-700 font-medium">
+                                                      ✓ Payment Completed
+                                                    </p>
+                                                  </div>
                                                 )}
-                                              {message.orderData?.status ===
-                                                "paid" && (
-                                                <div className="bg-green-100 border border-green-300 rounded p-2 text-center">
-                                                  <p className="text-sm text-green-700 font-medium">
-                                                    ✓ Payment Completed
-                                                  </p>
-                                                </div>
-                                              )}
-                                              <span className="text-xs mt-2 block text-gray-500">
-                                                {new Date(
-                                                  message.createdAt
-                                                ).toLocaleTimeString([], {
-                                                  hour: "2-digit",
-                                                  minute: "2-digit",
-                                                })}
-                                              </span>
-                                            </div>
-                                          ) : (
-                                            <>
-                                              <p className="text-sm">
-                                                {message.content}
-                                              </p>
-                                              <span
-                                                className={`text-xs mt-1 block ${
-                                                  message.senderId ===
-                                                  currentUser?.id
-                                                    ? "text-blue-200"
-                                                    : "text-medium-gray"
-                                                }`}
-                                              >
-                                                {new Date(
-                                                  message.createdAt
-                                                ).toLocaleTimeString([], {
-                                                  hour: "2-digit",
-                                                  minute: "2-digit",
-                                                })}
-                                              </span>
-                                            </>
-                                          )}
+                                                <span className="text-xs mt-2 block text-gray-500">
+                                                  {formatMessageTime(
+                                                    message.createdAt
+                                                  )}
+                                                </span>
+                                              </div>
+                                            ) : (
+                                              <>
+                                                <p className="text-sm">
+                                                  {message.content}
+                                                </p>
+                                                <span
+                                                  className={`text-xs mt-1 block ${
+                                                    message.senderId ===
+                                                    currentUser?.id
+                                                      ? "text-blue-200"
+                                                      : "text-medium-gray"
+                                                  }`}
+                                                >
+                                                  {formatMessageTime(
+                                                    message.createdAt
+                                                  )}
+                                                </span>
+                                              </>
+                                            )}
+                                          </div>
                                         </div>
                                       </div>
+                                    ))
+                                  ) : (
+                                    <div className="text-center py-8">
+                                      <MessageCircle className="h-12 w-12 text-medium-gray mx-auto mb-4" />
+                                      <p className="text-medium-gray text-sm">
+                                        No messages yet. Start the conversation!
+                                      </p>
                                     </div>
-                                  ))
-                                ) : (
-                                  <div className="text-center py-8">
-                                    <MessageCircle className="h-12 w-12 text-medium-gray mx-auto mb-4" />
-                                    <p className="text-medium-gray text-sm">
-                                      No messages yet. Start the conversation!
-                                    </p>
-                                  </div>
-                                )}
-                                {/* Invisible div for auto-scroll */}
-                                <div ref={messagesEndRef} />
-                              </div>
+                                  )}
+                                  {/* Invisible div for auto-scroll */}
+                                  <div ref={messagesEndRef} />
+                                </div>
+                              )}
                             </div>
 
                             {/* Message Input */}
