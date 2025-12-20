@@ -225,7 +225,11 @@ function DashboardContent() {
     []
   );
   const [visibleItemsCount, setVisibleItemsCount] = useState(20);
+  const [visibleFoodCount, setVisibleFoodCount] = useState(20);
+  const [visibleEventCount, setVisibleEventCount] = useState(20);
   const loadMoreObserverRef = useRef<HTMLDivElement>(null);
+  const foodObserverRef = useRef<HTMLDivElement>(null);
+  const eventObserverRef = useRef<HTMLDivElement>(null);
 
   // Helper function to filter out items without files (untradable items)
   const filterTradableItems = (items: MarketplaceItem[]) => {
@@ -1106,15 +1110,15 @@ function DashboardContent() {
     }
   };
 
-  const handleFoodClick = (food: FoodItem) => {
+  const handleFoodClick = useCallback((food: FoodItem) => {
     setSelectedFood(food);
     setShowFoodDetailModal(true);
-  };
+  }, []);
 
-  const handleEventClick = (event: Event) => {
+  const handleEventClick = useCallback((event: Event) => {
     setSelectedEvent(event);
     setShowEventDetailModal(true);
-  };
+  }, []);
 
   const handleDeleteFood = async (foodId: string) => {
     try {
@@ -1695,7 +1699,32 @@ function DashboardContent() {
     return items;
   }, [marketplaceItems, selectedCategory, debouncedSearchQuery]);
 
-  // Progressive loading with Intersection Observer
+  // Memoize filtered food items
+  const filteredFoodItems = useMemo(() => {
+    if (!debouncedSearchQuery) return foodItems;
+
+    const query = debouncedSearchQuery.toLowerCase();
+    return foodItems.filter(
+      (item) =>
+        item.title.toLowerCase().includes(query) ||
+        item.description.toLowerCase().includes(query)
+    );
+  }, [foodItems, debouncedSearchQuery]);
+
+  // Memoize filtered events
+  const filteredEvents = useMemo(() => {
+    if (!debouncedSearchQuery) return events;
+
+    const query = debouncedSearchQuery.toLowerCase();
+    return events.filter(
+      (event) =>
+        event.title.toLowerCase().includes(query) ||
+        event.description.toLowerCase().includes(query) ||
+        event.location?.toLowerCase().includes(query)
+    );
+  }, [events, debouncedSearchQuery]);
+
+  // Progressive loading with Intersection Observer for marketplace
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -1723,10 +1752,74 @@ function DashboardContent() {
     };
   }, [visibleItemsCount, filteredItems.length]);
 
+  // Progressive loading for food items
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (
+          entries[0].isIntersecting &&
+          visibleFoodCount < filteredFoodItems.length
+        ) {
+          setVisibleFoodCount((prev) =>
+            Math.min(prev + 20, filteredFoodItems.length)
+          );
+        }
+      },
+      { threshold: 0.1, rootMargin: "200px" }
+    );
+
+    const currentRef = foodObserverRef.current;
+    if (currentRef) {
+      observer.observe(currentRef);
+    }
+
+    return () => {
+      if (currentRef) {
+        observer.unobserve(currentRef);
+      }
+    };
+  }, [visibleFoodCount, filteredFoodItems.length]);
+
+  // Progressive loading for events
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (
+          entries[0].isIntersecting &&
+          visibleEventCount < filteredEvents.length
+        ) {
+          setVisibleEventCount((prev) =>
+            Math.min(prev + 20, filteredEvents.length)
+          );
+        }
+      },
+      { threshold: 0.1, rootMargin: "200px" }
+    );
+
+    const currentRef = eventObserverRef.current;
+    if (currentRef) {
+      observer.observe(currentRef);
+    }
+
+    return () => {
+      if (currentRef) {
+        observer.unobserve(currentRef);
+      }
+    };
+  }, [visibleEventCount, filteredEvents.length]);
+
   // Reset visible count when filtered items change
   useEffect(() => {
     setVisibleItemsCount(20);
   }, [filteredItems]);
+
+  useEffect(() => {
+    setVisibleFoodCount(20);
+  }, [filteredFoodItems]);
+
+  useEffect(() => {
+    setVisibleEventCount(20);
+  }, [filteredEvents]);
 
   // Dynamic stats based on real data (memoized to prevent recalculation)
   const stats = useMemo(
@@ -2277,7 +2370,7 @@ function DashboardContent() {
                             : "grid-cols-1"
                         }`}
                       >
-                        {foodItems.length === 0 ? (
+                        {filteredFoodItems.length === 0 ? (
                           <Card className="col-span-full">
                             <CardContent className="flex flex-col items-center justify-center py-16">
                               <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mb-4">
@@ -2293,17 +2386,27 @@ function DashboardContent() {
                             </CardContent>
                           </Card>
                         ) : (
-                          foodItems.map((item) => (
-                            <FoodItemCard
-                              key={item.id}
-                              item={item}
-                              viewMode={viewMode as "grid" | "list"}
-                              onClick={() => handleFoodClick(item)}
-                              isOwner={
-                                session?.user?.email === item.seller?.email
-                              }
-                            />
-                          ))
+                          <>
+                            {filteredFoodItems
+                              .slice(0, visibleFoodCount)
+                              .map((item) => (
+                                <FoodItemCard
+                                  key={item.id}
+                                  item={item}
+                                  viewMode={viewMode as "grid" | "list"}
+                                  onClick={() => handleFoodClick(item)}
+                                  isOwner={
+                                    session?.user?.email === item.seller?.email
+                                  }
+                                />
+                              ))}
+                            {visibleFoodCount < filteredFoodItems.length && (
+                              <div
+                                ref={foodObserverRef}
+                                className="col-span-full h-10"
+                              />
+                            )}
+                          </>
                         )}
                       </div>
                     ) : contentMode === "event" ? (
@@ -2314,7 +2417,7 @@ function DashboardContent() {
                             : "grid-cols-1"
                         }`}
                       >
-                        {events.length === 0 ? (
+                        {filteredEvents.length === 0 ? (
                           <Card className="col-span-full">
                             <CardContent className="flex flex-col items-center justify-center py-16">
                               <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mb-4">
@@ -2329,17 +2432,27 @@ function DashboardContent() {
                             </CardContent>
                           </Card>
                         ) : (
-                          events.map((event) => (
-                            <EventCard
-                              key={event.id}
-                              event={event}
-                              onClick={() => handleEventClick(event)}
-                              isOwner={
-                                session?.user?.email ===
-                                event.organizerUser?.email
-                              }
-                            />
-                          ))
+                          <>
+                            {filteredEvents
+                              .slice(0, visibleEventCount)
+                              .map((event) => (
+                                <EventCard
+                                  key={event.id}
+                                  event={event}
+                                  onClick={() => handleEventClick(event)}
+                                  isOwner={
+                                    session?.user?.email ===
+                                    event.organizerUser?.email
+                                  }
+                                />
+                              ))}
+                            {visibleEventCount < filteredEvents.length && (
+                              <div
+                                ref={eventObserverRef}
+                                className="col-span-full h-10"
+                              />
+                            )}
+                          </>
                         )}
                       </div>
                     ) : (

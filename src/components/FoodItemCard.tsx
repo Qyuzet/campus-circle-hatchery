@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,20 +21,21 @@ interface FoodItemCardProps {
   isOwner?: boolean;
 }
 
-export function FoodItemCard({
+const FoodItemCardComponent = ({
   item,
   onClick,
   viewMode = "grid",
   isOwner = false,
-}: FoodItemCardProps) {
+}: FoodItemCardProps) => {
   const isListView = viewMode === "list";
 
   return (
     <Card
       onClick={onClick}
-      className={`cursor-pointer hover:shadow-lg transition-all group overflow-hidden ${
+      className={`cursor-pointer hover:shadow-lg transition-shadow group overflow-hidden ${
         isListView ? "flex flex-row" : ""
       }`}
+      style={{ contentVisibility: "auto" }}
     >
       <div
         className={`relative bg-secondary-200 overflow-hidden ${
@@ -160,4 +161,6 @@ export function FoodItemCard({
       )}
     </Card>
   );
-}
+};
+
+export const FoodItemCard = memo(FoodItemCardComponent);

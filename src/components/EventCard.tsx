@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo, useMemo } from "react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,18 +23,22 @@ interface EventCardProps {
   isOwner?: boolean;
 }
 
-export function EventCard({
+const EventCardComponent = ({
   event,
   onClick,
   onRegister,
   isRegistered,
   isOwner = false,
-}: EventCardProps) {
-  const startDate = new Date(event.startDate);
-  const endDate = new Date(event.endDate);
-  const isFull = event.maxParticipants
-    ? event.currentParticipants >= event.maxParticipants
-    : false;
+}: EventCardProps) => {
+  const startDate = useMemo(() => new Date(event.startDate), [event.startDate]);
+  const endDate = useMemo(() => new Date(event.endDate), [event.endDate]);
+  const isFull = useMemo(
+    () =>
+      event.maxParticipants
+        ? event.currentParticipants >= event.maxParticipants
+        : false,
+    [event.maxParticipants, event.currentParticipants]
+  );
 
   const getCategoryColor = (category: string) => {
     const colors: Record<string, string> = {
@@ -49,8 +53,9 @@ export function EventCard({
 
   return (
     <Card
-      className="cursor-pointer hover:shadow-lg transition-all group overflow-hidden"
+      className="cursor-pointer hover:shadow-lg transition-shadow group overflow-hidden"
       onClick={onClick}
+      style={{ contentVisibility: "auto" }}
     >
       <div className="relative h-32 md:h-48 bg-secondary-200 overflow-hidden">
         {event.bannerUrl || event.imageUrl ? (
@@ -178,4 +183,6 @@ export function EventCard({
       </CardFooter>
     </Card>
   );
-}
+};
+
+export const EventCard = memo(EventCardComponent);
