@@ -101,7 +101,12 @@ export default function FooterSection({
             ))}
           </FooterContent>
           <FooterBottom>
-            <div>{copyright}</div>
+            <div className="flex flex-col gap-1">
+              <div>{copyright}</div>
+              <div className="text-sm text-muted-foreground">
+                Part of PT. Etzal Group International
+              </div>
+            </div>
             <div className="flex items-center gap-4">
               {policies.map((policy, index) => (
                 <a key={index} href={policy.href}>
