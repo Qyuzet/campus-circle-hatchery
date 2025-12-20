@@ -3679,18 +3679,18 @@ function DashboardContent() {
                               </Table>
                             </div>
 
-                            <div className="md:hidden space-y-3">
+                            <div className="md:hidden space-y-2">
                               {allTransactions
                                 .filter((t) => t.type === "purchase")
                                 .map((order) => (
-                                  <Card key={order.id} className="p-3">
-                                    <div className="space-y-2">
+                                  <Card key={order.id} className="p-2">
+                                    <div className="space-y-1.5">
                                       <div className="flex items-start justify-between gap-2">
                                         <div className="flex-1 min-w-0">
-                                          <p className="font-medium text-sm line-clamp-1">
+                                          <p className="font-medium text-xs line-clamp-1">
                                             {order.itemTitle}
                                           </p>
-                                          <p className="text-xs text-muted-foreground">
+                                          <p className="text-[10px] text-muted-foreground">
                                             {order.itemType === "marketplace"
                                               ? "Study Material"
                                               : order.itemType === "food"
@@ -3707,7 +3707,7 @@ function DashboardContent() {
                                                 ? "secondary"
                                                 : "destructive"
                                             }
-                                            className="text-xs"
+                                            className="text-[10px] h-4 px-1.5"
                                           >
                                             {order.status}
                                           </Badge>
@@ -3717,23 +3717,19 @@ function DashboardContent() {
                                             )}
                                         </div>
                                       </div>
-                                      <div className="flex items-center justify-between text-xs">
+                                      <div className="flex items-center justify-between text-[10px]">
                                         <span className="text-muted-foreground">
                                           {new Date(
                                             order.createdAt
                                           ).toLocaleDateString("en-US", {
                                             month: "short",
                                             day: "numeric",
-                                            year: "numeric",
                                           })}
                                         </span>
-                                        <span className="font-semibold text-sm">
+                                        <span className="font-semibold text-xs">
                                           Rp {order.amount.toLocaleString()}
                                         </span>
                                       </div>
-                                      <p className="font-mono text-xs text-muted-foreground">
-                                        {order.orderId.substring(0, 16)}...
-                                      </p>
                                     </div>
                                   </Card>
                                 ))}
@@ -3876,7 +3872,7 @@ function DashboardContent() {
                               </Table>
                             </div>
 
-                            <div className="md:hidden space-y-3">
+                            <div className="md:hidden space-y-2">
                               {allTransactions
                                 .filter(
                                   (t) =>
@@ -3884,14 +3880,14 @@ function DashboardContent() {
                                     t.status === "COMPLETED"
                                 )
                                 .map((sale) => (
-                                  <Card key={sale.id} className="p-3">
-                                    <div className="space-y-2">
+                                  <Card key={sale.id} className="p-2">
+                                    <div className="space-y-1.5">
                                       <div className="flex items-start justify-between gap-2">
                                         <div className="flex-1 min-w-0">
-                                          <p className="font-medium text-sm line-clamp-1">
+                                          <p className="font-medium text-xs line-clamp-1">
                                             {sale.itemTitle}
                                           </p>
-                                          <p className="text-xs text-muted-foreground">
+                                          <p className="text-[10px] text-muted-foreground">
                                             {sale.itemType === "marketplace"
                                               ? "Study Material"
                                               : sale.itemType === "food"
@@ -3907,14 +3903,14 @@ function DashboardContent() {
                                               ? "secondary"
                                               : "destructive"
                                           }
-                                          className="text-xs flex-shrink-0"
+                                          className="text-[10px] h-4 px-1.5 flex-shrink-0"
                                         >
                                           {sale.status}
                                         </Badge>
                                       </div>
                                       <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                                          <span>
+                                        <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                                          <span className="truncate">
                                             {sale.buyer?.name || "Unknown"}
                                           </span>
                                           <span>•</span>
@@ -3927,7 +3923,7 @@ function DashboardContent() {
                                             })}
                                           </span>
                                         </div>
-                                        <span className="font-semibold text-sm">
+                                        <span className="font-semibold text-xs flex-shrink-0">
                                           Rp {sale.amount.toLocaleString()}
                                         </span>
                                       </div>
@@ -4026,7 +4022,7 @@ function DashboardContent() {
                             </Button>
                           </div>
                         ) : (
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+                          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4">
                             {allTransactions
                               .filter(
                                 (t) =>
@@ -4039,54 +4035,45 @@ function DashboardContent() {
                                   key={item.id}
                                   className="hover:shadow-lg transition-shadow"
                                 >
-                                  <CardHeader className="p-3 md:p-6">
-                                    <div className="flex items-start justify-between gap-2">
+                                  <CardHeader className="p-2 md:p-6">
+                                    <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-1 md:gap-2">
                                       <div className="flex-1 min-w-0">
-                                        <CardTitle className="text-sm md:text-lg line-clamp-2">
+                                        <CardTitle className="text-xs md:text-lg line-clamp-2">
                                           {item.itemTitle}
                                         </CardTitle>
-                                        <p className="text-xs md:text-sm text-muted-foreground mt-1">
+                                        <p className="text-[10px] md:text-sm text-muted-foreground mt-0.5 md:mt-1">
                                           {item.item?.category ||
                                             "Study Material"}
                                         </p>
                                       </div>
                                       <Badge
                                         variant="secondary"
-                                        className="text-xs flex-shrink-0"
+                                        className="text-[10px] md:text-xs h-4 md:h-5 px-1 md:px-2 flex-shrink-0 w-fit"
                                       >
                                         {item.item?.category || "Material"}
                                       </Badge>
                                     </div>
                                   </CardHeader>
-                                  <CardContent className="p-3 md:p-6 pt-0">
-                                    <p className="text-xs md:text-sm text-muted-foreground line-clamp-2 md:line-clamp-3">
+                                  <CardContent className="p-2 md:p-6 pt-0">
+                                    <p className="text-[10px] md:text-sm text-muted-foreground line-clamp-2 md:line-clamp-3">
                                       {item.item?.description ||
                                         "No description available"}
                                     </p>
-                                    <div className="mt-3 md:mt-4 space-y-1">
-                                      <div className="text-xs text-muted-foreground">
+                                    <div className="mt-2 md:mt-4 space-y-0.5 md:space-y-1">
+                                      <div className="text-[10px] md:text-xs text-muted-foreground">
                                         {new Date(
                                           item.createdAt
                                         ).toLocaleDateString("en-US", {
                                           month: "short",
                                           day: "numeric",
-                                          year: "numeric",
                                         })}
                                       </div>
-                                      {item.item?.fileName && (
-                                        <div className="text-xs text-muted-foreground flex items-center gap-1 truncate">
-                                          <FileText className="h-3 w-3 flex-shrink-0" />
-                                          <span className="truncate">
-                                            {item.item.fileName}
-                                          </span>
-                                        </div>
-                                      )}
                                     </div>
                                   </CardContent>
-                                  <CardFooter className="p-3 md:p-6 pt-0">
+                                  <CardFooter className="p-2 md:p-6 pt-0">
                                     <Button
                                       size="sm"
-                                      className="w-full text-xs md:text-sm h-8 md:h-9"
+                                      className="w-full text-[10px] md:text-sm h-7 md:h-9"
                                       onClick={async () => {
                                         if (item.item?.fileUrl) {
                                           try {
@@ -4106,8 +4093,11 @@ function DashboardContent() {
                                       }}
                                       disabled={!item.item?.fileUrl}
                                     >
-                                      <Download className="h-3 w-3 md:h-4 md:w-4 mr-1" />
-                                      Download
+                                      <Download className="h-3 w-3 md:h-4 md:w-4 mr-0.5 md:mr-1" />
+                                      <span className="hidden md:inline">
+                                        Download
+                                      </span>
+                                      <span className="md:hidden">Get</span>
                                     </Button>
                                   </CardFooter>
                                 </Card>
@@ -4141,7 +4131,7 @@ function DashboardContent() {
                             </Button>
                           </div>
                         ) : (
-                          <div className="grid gap-3 md:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                          <div className="grid gap-2 md:gap-6 grid-cols-2 md:grid-cols-2 lg:grid-cols-3">
                             {marketplaceItems
                               .filter(
                                 (item) => item.sellerId === currentUser?.id
@@ -4152,14 +4142,14 @@ function DashboardContent() {
                                   className="hover:shadow-lg transition-shadow"
                                 >
                                   {item.imageUrl && (
-                                    <div className="relative w-full h-32 md:h-48 bg-gray-100">
+                                    <div className="relative w-full h-24 md:h-48 bg-gray-100">
                                       <img
                                         src={item.imageUrl}
                                         alt={item.title}
                                         className="w-full h-full object-cover rounded-t-lg"
                                       />
                                       <Badge
-                                        className="absolute top-1 right-1 md:top-2 md:right-2 text-xs"
+                                        className="absolute top-1 right-1 md:top-2 md:right-2 text-[10px] md:text-xs h-4 md:h-5 px-1 md:px-2"
                                         variant={
                                           item.status === "available"
                                             ? "default"
@@ -4170,56 +4160,58 @@ function DashboardContent() {
                                       </Badge>
                                     </div>
                                   )}
-                                  <CardHeader className="p-3 md:p-6">
-                                    <div className="flex items-start justify-between gap-2">
+                                  <CardHeader className="p-2 md:p-6">
+                                    <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-1 md:gap-2">
                                       <div className="flex-1 min-w-0">
-                                        <CardTitle className="text-sm md:text-lg line-clamp-2">
+                                        <CardTitle className="text-xs md:text-lg line-clamp-2">
                                           {item.title}
                                         </CardTitle>
-                                        <p className="text-xs md:text-sm text-muted-foreground mt-1">
+                                        <p className="text-[10px] md:text-sm text-muted-foreground mt-0.5 md:mt-1">
                                           {item.category}
                                         </p>
                                       </div>
                                       {!item.imageUrl && (
                                         <Badge
                                           variant="secondary"
-                                          className="text-xs flex-shrink-0"
+                                          className="text-[10px] md:text-xs h-4 md:h-5 px-1 md:px-2 flex-shrink-0 w-fit"
                                         >
                                           {item.category}
                                         </Badge>
                                       )}
                                     </div>
                                   </CardHeader>
-                                  <CardContent className="p-3 md:p-6 pt-0">
-                                    <p className="text-xs md:text-sm text-muted-foreground line-clamp-2 md:line-clamp-3">
+                                  <CardContent className="p-2 md:p-6 pt-0">
+                                    <p className="text-[10px] md:text-sm text-muted-foreground line-clamp-2 md:line-clamp-3">
                                       {item.description}
                                     </p>
-                                    <div className="mt-3 md:mt-4 flex items-center justify-between">
-                                      <p className="text-sm md:text-lg font-bold text-dark-blue">
+                                    <div className="mt-2 md:mt-4 flex items-center justify-between">
+                                      <p className="text-xs md:text-lg font-bold text-dark-blue">
                                         Rp {item.price.toLocaleString()}
                                       </p>
-                                      <div className="text-xs text-muted-foreground">
-                                        {item.viewCount || 0} views
+                                      <div className="text-[10px] md:text-xs text-muted-foreground">
+                                        {item.viewCount || 0}
                                       </div>
                                     </div>
                                   </CardContent>
-                                  <CardFooter className="flex gap-2 p-3 md:p-6 pt-0">
+                                  <CardFooter className="flex gap-1 md:gap-2 p-2 md:p-6 pt-0">
                                     <Button
                                       size="sm"
                                       variant="outline"
-                                      className="flex-1 text-xs md:text-sm h-8 md:h-9"
+                                      className="flex-1 text-[10px] md:text-sm h-7 md:h-9 px-1 md:px-3"
                                       onClick={() => {
                                         setSelectedItem(item);
                                         setShowItemDetailModal(true);
                                       }}
                                     >
-                                      <Eye className="h-3 w-3 md:h-4 md:w-4 mr-1" />
-                                      View
+                                      <Eye className="h-3 w-3 md:h-4 md:w-4 mr-0.5 md:mr-1" />
+                                      <span className="hidden md:inline">
+                                        View
+                                      </span>
                                     </Button>
                                     <Button
                                       size="sm"
                                       variant="outline"
-                                      className="flex-1 text-xs md:text-sm h-8 md:h-9"
+                                      className="flex-1 text-[10px] md:text-sm h-7 md:h-9 px-1 md:px-3"
                                       onClick={() => {
                                         setSelectedItem(item);
                                         handleEditItem(item);
@@ -4257,31 +4249,31 @@ function DashboardContent() {
                             </Button>
                           </div>
                         ) : (
-                          <div className="space-y-3 md:space-y-4">
+                          <div className="grid grid-cols-1 md:grid-cols-1 gap-2 md:gap-4">
                             {myEventRegistrations.map((registration: any) => (
                               <Card
                                 key={registration.id}
                                 className="hover:shadow-lg transition-shadow"
                               >
-                                <CardHeader className="p-3 md:p-6">
+                                <CardHeader className="p-2 md:p-6">
                                   <div className="flex items-start justify-between gap-2">
                                     <div className="flex-1 min-w-0">
-                                      <CardTitle className="text-sm md:text-lg line-clamp-2">
+                                      <CardTitle className="text-xs md:text-lg line-clamp-2">
                                         {registration.event.title}
                                       </CardTitle>
-                                      <p className="text-xs md:text-sm text-muted-foreground mt-1">
+                                      <p className="text-[10px] md:text-sm text-muted-foreground mt-0.5 md:mt-1">
                                         {registration.event.category} •{" "}
                                         {registration.event.eventType}
                                       </p>
                                     </div>
-                                    <div className="flex flex-col items-end gap-1 md:gap-2 flex-shrink-0">
+                                    <div className="flex flex-col items-end gap-0.5 md:gap-2 flex-shrink-0">
                                       <Badge
                                         variant={
                                           registration.paymentStatus === "paid"
                                             ? "default"
                                             : "secondary"
                                         }
-                                        className="text-xs"
+                                        className="text-[10px] md:text-xs h-4 md:h-5 px-1 md:px-2"
                                       >
                                         {registration.paymentStatus === "paid"
                                           ? "Paid"
@@ -4289,16 +4281,16 @@ function DashboardContent() {
                                       </Badge>
                                       <Badge
                                         variant="outline"
-                                        className="text-xs"
+                                        className="text-[10px] md:text-xs h-4 md:h-5 px-1 md:px-2"
                                       >
                                         {registration.status}
                                       </Badge>
                                     </div>
                                   </div>
                                 </CardHeader>
-                                <CardContent className="p-3 md:p-6 pt-0">
-                                  <div className="space-y-1.5 md:space-y-2 text-xs md:text-sm">
-                                    <div className="flex items-center gap-2 text-muted-foreground">
+                                <CardContent className="p-2 md:p-6 pt-0">
+                                  <div className="space-y-1 md:space-y-2 text-[10px] md:text-sm">
+                                    <div className="flex items-center gap-1 md:gap-2 text-muted-foreground">
                                       <Calendar className="h-3 w-3 md:h-4 md:w-4 flex-shrink-0" />
                                       <span className="truncate">
                                         {new Date(
@@ -4306,29 +4298,20 @@ function DashboardContent() {
                                         ).toLocaleDateString("en-US", {
                                           month: "short",
                                           day: "numeric",
-                                          year: "numeric",
                                           hour: "2-digit",
                                           minute: "2-digit",
                                         })}
                                       </span>
                                     </div>
-                                    <div className="flex items-center gap-2 text-muted-foreground">
+                                    <div className="flex items-center gap-1 md:gap-2 text-muted-foreground">
                                       <MapPin className="h-3 w-3 md:h-4 md:w-4 flex-shrink-0" />
                                       <span className="truncate">
                                         {registration.event.location}
                                       </span>
                                     </div>
-                                    <div className="flex items-center gap-2 text-muted-foreground">
-                                      <User className="h-3 w-3 md:h-4 md:w-4 flex-shrink-0" />
-                                      <span className="truncate">
-                                        {registration.event.organizerUser
-                                          ?.name ||
-                                          registration.event.organizer}
-                                      </span>
-                                    </div>
                                     {registration.event.price > 0 && (
-                                      <div className="flex items-center gap-2 font-semibold text-dark-blue mt-2">
-                                        <span>
+                                      <div className="flex items-center gap-1 md:gap-2 font-semibold text-dark-blue">
+                                        <span className="text-xs md:text-sm">
                                           Rp{" "}
                                           {registration.event.price.toLocaleString()}
                                         </span>
@@ -4336,17 +4319,17 @@ function DashboardContent() {
                                     )}
                                   </div>
                                 </CardContent>
-                                <CardFooter className="flex gap-2 p-3 md:p-6 pt-0">
+                                <CardFooter className="flex gap-1 md:gap-2 p-2 md:p-6 pt-0">
                                   <Button
                                     size="sm"
                                     variant="outline"
-                                    className="flex-1 text-xs md:text-sm h-8 md:h-9"
+                                    className="flex-1 text-[10px] md:text-sm h-7 md:h-9 px-1 md:px-3"
                                     onClick={() => {
                                       setSelectedEvent(registration.event);
                                       setShowEventDetailModal(true);
                                     }}
                                   >
-                                    <Eye className="h-3 w-3 md:h-4 md:w-4 mr-1" />
+                                    <Eye className="h-3 w-3 md:h-4 md:w-4 mr-0.5 md:mr-1" />
                                     <span className="hidden md:inline">
                                       View Details
                                     </span>
@@ -4357,7 +4340,7 @@ function DashboardContent() {
                                     registration.paymentStatus === "paid" && (
                                       <Button
                                         size="sm"
-                                        className="flex-1 text-xs md:text-sm h-8 md:h-9"
+                                        className="flex-1 text-[10px] md:text-sm h-7 md:h-9 px-1 md:px-3"
                                         onClick={() => {
                                           window.open(
                                             registration.event.meetingLink,
@@ -4365,7 +4348,7 @@ function DashboardContent() {
                                           );
                                         }}
                                       >
-                                        <ExternalLink className="h-3 w-3 md:h-4 md:w-4 mr-1" />
+                                        <ExternalLink className="h-3 w-3 md:h-4 md:w-4 mr-0.5 md:mr-1" />
                                         <span className="hidden md:inline">
                                           Join Meeting
                                         </span>
