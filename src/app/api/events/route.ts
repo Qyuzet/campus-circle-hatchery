@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 
+export const revalidate = 30;
+
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
@@ -12,6 +14,9 @@ export async function GET(request: NextRequest) {
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
     const isFeatured = searchParams.get("isFeatured");
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "50");
+    const skip = (page - 1) * limit;
 
     const where: any = {
       isPublished: true,
@@ -51,35 +56,55 @@ export async function GET(request: NextRequest) {
       where.endDate = { lte: new Date(endDate) };
     }
 
-    const events = await prisma.event.findMany({
-      where,
-      include: {
-        organizerUser: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            avatarUrl: true,
+    const [events, total] = await Promise.all([
+      prisma.event.findMany({
+        where,
+        include: {
+          organizerUser: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              avatarUrl: true,
+            },
+          },
+          participants: {
+            select: {
+              id: true,
+              status: true,
+            },
+          },
+          reviews: {
+            select: {
+              rating: true,
+            },
           },
         },
-        participants: {
-          select: {
-            id: true,
-            status: true,
-          },
+        orderBy: {
+          startDate: "asc",
         },
-        reviews: {
-          select: {
-            rating: true,
-          },
-        },
-      },
-      orderBy: {
-        startDate: "asc",
+        take: limit,
+        skip: skip,
+      }),
+      prisma.event.count({ where }),
+    ]);
+
+    const response = NextResponse.json({
+      items: events,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
       },
     });
 
-    return NextResponse.json(events);
+    response.headers.set(
+      "Cache-Control",
+      "public, s-maxage=30, stale-while-revalidate=60"
+    );
+
+    return response;
   } catch (error) {
     console.error("Error fetching events:", error);
     return NextResponse.json(

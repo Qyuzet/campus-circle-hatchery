@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
+export const revalidate = 30;
+
 // GET /api/marketplace - List all marketplace items with filters
 export async function GET(request: NextRequest) {
   try {
@@ -12,10 +14,12 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get("search");
     const status = searchParams.get("status") || "available";
     const sellerId = searchParams.get("sellerId");
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "50");
+    const skip = (page - 1) * limit;
 
     const where: any = {
       status,
-      // Only show items with files (tradable items)
       fileUrl: {
         not: null,
       },
@@ -44,25 +48,45 @@ export async function GET(request: NextRequest) {
       ];
     }
 
-    const items = await prisma.marketplaceItem.findMany({
-      where,
-      include: {
-        seller: {
-          select: {
-            id: true,
-            name: true,
-            studentId: true,
-            rating: true,
-            totalSales: true,
+    const [items, total] = await Promise.all([
+      prisma.marketplaceItem.findMany({
+        where,
+        include: {
+          seller: {
+            select: {
+              id: true,
+              name: true,
+              studentId: true,
+              rating: true,
+              totalSales: true,
+            },
           },
         },
-      },
-      orderBy: {
-        createdAt: "desc",
+        orderBy: {
+          createdAt: "desc",
+        },
+        take: limit,
+        skip: skip,
+      }),
+      prisma.marketplaceItem.count({ where }),
+    ]);
+
+    const response = NextResponse.json({
+      items,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
       },
     });
 
-    return NextResponse.json(items);
+    response.headers.set(
+      "Cache-Control",
+      "public, s-maxage=30, stale-while-revalidate=60"
+    );
+
+    return response;
   } catch (error) {
     console.error("Error fetching marketplace items:", error);
     return NextResponse.json(

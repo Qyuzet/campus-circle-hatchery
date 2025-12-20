@@ -83,6 +83,8 @@ export const marketplaceAPI = {
     search?: string;
     status?: string;
     sellerId?: string;
+    page?: number;
+    limit?: number;
   }) {
     const params = new URLSearchParams();
     if (filters?.category) params.append("category", filters.category);
@@ -90,10 +92,15 @@ export const marketplaceAPI = {
     if (filters?.search) params.append("search", filters.search);
     if (filters?.status) params.append("status", filters.status);
     if (filters?.sellerId) params.append("sellerId", filters.sellerId);
+    if (filters?.page) params.append("page", filters.page.toString());
+    if (filters?.limit) params.append("limit", filters.limit.toString());
 
-    const response = await fetch(`/api/marketplace?${params.toString()}`);
+    const response = await fetch(`/api/marketplace?${params.toString()}`, {
+      next: { revalidate: 30 },
+    });
     if (!response.ok) throw new Error("Failed to fetch marketplace items");
-    return response.json();
+    const data = await response.json();
+    return data.items || data;
   },
 
   // Get single marketplace item
@@ -708,6 +715,8 @@ export const foodAPI = {
     isVegetarian?: boolean;
     search?: string;
     status?: string;
+    page?: number;
+    limit?: number;
   }) {
     const params = new URLSearchParams();
     if (filters?.category) params.append("category", filters.category);
@@ -720,10 +729,15 @@ export const foodAPI = {
       params.append("isVegetarian", String(filters.isVegetarian));
     if (filters?.search) params.append("search", filters.search);
     if (filters?.status) params.append("status", filters.status);
+    if (filters?.page) params.append("page", filters.page.toString());
+    if (filters?.limit) params.append("limit", filters.limit.toString());
 
-    const response = await fetch(`/api/food?${params.toString()}`);
+    const response = await fetch(`/api/food?${params.toString()}`, {
+      next: { revalidate: 30 },
+    });
     if (!response.ok) throw new Error("Failed to fetch food items");
-    return response.json();
+    const data = await response.json();
+    return data.items || data;
   },
 
   async getFoodItem(id: string) {
@@ -818,6 +832,8 @@ export const eventAPI = {
     startDate?: string;
     endDate?: string;
     isFeatured?: boolean;
+    page?: number;
+    limit?: number;
   }) {
     const params = new URLSearchParams();
     if (filters?.category) params.append("category", filters.category);
@@ -828,10 +844,15 @@ export const eventAPI = {
     if (filters?.endDate) params.append("endDate", filters.endDate);
     if (filters?.isFeatured !== undefined)
       params.append("isFeatured", String(filters.isFeatured));
+    if (filters?.page) params.append("page", filters.page.toString());
+    if (filters?.limit) params.append("limit", filters.limit.toString());
 
-    const response = await fetch(`/api/events?${params.toString()}`);
+    const response = await fetch(`/api/events?${params.toString()}`, {
+      next: { revalidate: 30 },
+    });
     if (!response.ok) throw new Error("Failed to fetch events");
-    return response.json();
+    const data = await response.json();
+    return data.items || data;
   },
 
   async getEvent(id: string) {

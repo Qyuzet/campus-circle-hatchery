@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 
+export const revalidate = 30;
+
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
@@ -12,6 +14,9 @@ export async function GET(request: NextRequest) {
     const isVegetarian = searchParams.get("isVegetarian");
     const search = searchParams.get("search");
     const status = searchParams.get("status") || "available";
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "50");
+    const skip = (page - 1) * limit;
 
     const where: any = {
       status,
@@ -44,30 +49,50 @@ export async function GET(request: NextRequest) {
       ];
     }
 
-    const foodItems = await prisma.foodItem.findMany({
-      where,
-      include: {
-        seller: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            avatarUrl: true,
-            rating: true,
+    const [foodItems, total] = await Promise.all([
+      prisma.foodItem.findMany({
+        where,
+        include: {
+          seller: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              avatarUrl: true,
+              rating: true,
+            },
+          },
+          reviews: {
+            select: {
+              rating: true,
+            },
           },
         },
-        reviews: {
-          select: {
-            rating: true,
-          },
+        orderBy: {
+          createdAt: "desc",
         },
-      },
-      orderBy: {
-        createdAt: "desc",
+        take: limit,
+        skip: skip,
+      }),
+      prisma.foodItem.count({ where }),
+    ]);
+
+    const response = NextResponse.json({
+      items: foodItems,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
       },
     });
 
-    return NextResponse.json(foodItems);
+    response.headers.set(
+      "Cache-Control",
+      "public, s-maxage=30, stale-while-revalidate=60"
+    );
+
+    return response;
   } catch (error) {
     console.error("Error fetching food items:", error);
     return NextResponse.json(
