@@ -3545,26 +3545,26 @@ function DashboardContent() {
                       </div>
                     )}
 
-                    <div className="grid grid-cols-3 gap-3 mb-6">
-                      <Card className="p-4">
-                        <div className="flex items-center justify-between mb-1">
-                          <Package className="h-4 w-4 text-muted-foreground" />
+                    <div className="grid grid-cols-3 gap-2 md:gap-3 mb-4 md:mb-6">
+                      <Card className="p-2 md:p-4">
+                        <div className="flex items-center justify-between mb-0.5 md:mb-1">
+                          <Package className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
                         </div>
-                        <div className="text-2xl font-bold">
+                        <div className="text-lg md:text-2xl font-bold">
                           {
                             allTransactions.filter((t) => t.type === "purchase")
                               .length
                           }
                         </div>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-[10px] md:text-xs text-muted-foreground">
                           Total Orders
                         </p>
                       </Card>
-                      <Card className="p-4">
-                        <div className="flex items-center justify-between mb-1">
-                          <Download className="h-4 w-4 text-muted-foreground" />
+                      <Card className="p-2 md:p-4">
+                        <div className="flex items-center justify-between mb-0.5 md:mb-1">
+                          <Download className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
                         </div>
-                        <div className="text-2xl font-bold">
+                        <div className="text-lg md:text-2xl font-bold">
                           {
                             allTransactions.filter(
                               (t) =>
@@ -3573,15 +3573,15 @@ function DashboardContent() {
                             ).length
                           }
                         </div>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-[10px] md:text-xs text-muted-foreground">
                           Completed
                         </p>
                       </Card>
-                      <Card className="p-4">
-                        <div className="flex items-center justify-between mb-1">
-                          <DollarSign className="h-4 w-4 text-muted-foreground" />
+                      <Card className="p-2 md:p-4">
+                        <div className="flex items-center justify-between mb-0.5 md:mb-1">
+                          <DollarSign className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
                         </div>
-                        <div className="text-xl font-bold truncate">
+                        <div className="text-sm md:text-xl font-bold truncate">
                           Rp
                           {allTransactions
                             .filter(
@@ -3592,7 +3592,7 @@ function DashboardContent() {
                             .reduce((sum, t) => sum + t.amount, 0)
                             .toLocaleString()}
                         </div>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-[10px] md:text-xs text-muted-foreground">
                           Total Spent
                         </p>
                       </Card>
@@ -3741,12 +3741,12 @@ function DashboardContent() {
                   </TabsContent>
 
                   <TabsContent value="sales" className="space-y-4 mt-6">
-                    <div className="grid grid-cols-3 gap-3 mb-6">
-                      <Card className="p-4">
-                        <div className="flex items-center justify-between mb-1">
-                          <DollarSign className="h-4 w-4 text-muted-foreground" />
+                    <div className="grid grid-cols-3 gap-2 md:gap-3 mb-4 md:mb-6">
+                      <Card className="p-2 md:p-4">
+                        <div className="flex items-center justify-between mb-0.5 md:mb-1">
+                          <DollarSign className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
                         </div>
-                        <div className="text-2xl font-bold">
+                        <div className="text-lg md:text-2xl font-bold">
                           {
                             allTransactions.filter(
                               (t) =>
@@ -3754,15 +3754,15 @@ function DashboardContent() {
                             ).length
                           }
                         </div>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-[10px] md:text-xs text-muted-foreground">
                           Total Sales
                         </p>
                       </Card>
-                      <Card className="p-4">
-                        <div className="flex items-center justify-between mb-1">
-                          <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                      <Card className="p-2 md:p-4">
+                        <div className="flex items-center justify-between mb-0.5 md:mb-1">
+                          <TrendingUp className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
                         </div>
-                        <div className="text-xl font-bold truncate">
+                        <div className="text-sm md:text-xl font-bold truncate">
                           Rp
                           {allTransactions
                             .filter(
@@ -3772,20 +3772,24 @@ function DashboardContent() {
                             .reduce((sum, t) => sum + t.amount, 0)
                             .toLocaleString()}
                         </div>
-                        <p className="text-xs text-muted-foreground">Revenue</p>
+                        <p className="text-[10px] md:text-xs text-muted-foreground">
+                          Revenue
+                        </p>
                       </Card>
-                      <Card className="p-4">
-                        <div className="flex items-center justify-between mb-1">
-                          <Package className="h-4 w-4 text-muted-foreground" />
+                      <Card className="p-2 md:p-4">
+                        <div className="flex items-center justify-between mb-0.5 md:mb-1">
+                          <Package className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
                         </div>
-                        <div className="text-2xl font-bold">
+                        <div className="text-lg md:text-2xl font-bold">
                           {
                             allTransactions.filter(
                               (t) => t.type === "sale" && t.status === "PENDING"
                             ).length
                           }
                         </div>
-                        <p className="text-xs text-muted-foreground">Pending</p>
+                        <p className="text-[10px] md:text-xs text-muted-foreground">
+                          Pending
+                        </p>
                       </Card>
                     </div>
 
@@ -4547,15 +4551,15 @@ function DashboardContent() {
                         Analytics & Insights
                       </h2>
 
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                      <div className="grid grid-cols-3 md:grid-cols-3 gap-2 md:gap-4 mb-4 md:mb-6">
                         <Card>
-                          <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium text-muted-foreground">
+                          <CardHeader className="pb-1 md:pb-2 p-2 md:p-6">
+                            <CardTitle className="text-[10px] md:text-sm font-medium text-muted-foreground">
                               Total Sales
                             </CardTitle>
                           </CardHeader>
-                          <CardContent>
-                            <div className="text-2xl font-bold">
+                          <CardContent className="p-2 md:p-6 pt-0">
+                            <div className="text-lg md:text-2xl font-bold">
                               {
                                 allTransactions.filter(
                                   (t) =>
@@ -4564,20 +4568,20 @@ function DashboardContent() {
                                 ).length
                               }
                             </div>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              Completed orders
+                            <p className="text-[10px] md:text-xs text-muted-foreground mt-0.5 md:mt-1">
+                              Completed
                             </p>
                           </CardContent>
                         </Card>
 
                         <Card>
-                          <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium text-muted-foreground">
-                              Total Revenue
+                          <CardHeader className="pb-1 md:pb-2 p-2 md:p-6">
+                            <CardTitle className="text-[10px] md:text-sm font-medium text-muted-foreground">
+                              Revenue
                             </CardTitle>
                           </CardHeader>
-                          <CardContent>
-                            <div className="text-2xl font-bold">
+                          <CardContent className="p-2 md:p-6 pt-0">
+                            <div className="text-sm md:text-2xl font-bold truncate">
                               Rp{" "}
                               {allTransactions
                                 .filter(
@@ -4588,20 +4592,20 @@ function DashboardContent() {
                                 .reduce((sum, t) => sum + t.amount, 0)
                                 .toLocaleString()}
                             </div>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              Before platform fee
+                            <p className="text-[10px] md:text-xs text-muted-foreground mt-0.5 md:mt-1">
+                              Before fee
                             </p>
                           </CardContent>
                         </Card>
 
                         <Card>
-                          <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium text-muted-foreground">
-                              Active Listings
+                          <CardHeader className="pb-1 md:pb-2 p-2 md:p-6">
+                            <CardTitle className="text-[10px] md:text-sm font-medium text-muted-foreground">
+                              Listings
                             </CardTitle>
                           </CardHeader>
-                          <CardContent>
-                            <div className="text-2xl font-bold">
+                          <CardContent className="p-2 md:p-6 pt-0">
+                            <div className="text-lg md:text-2xl font-bold">
                               {
                                 marketplaceItems.filter(
                                   (item) =>
@@ -4610,8 +4614,8 @@ function DashboardContent() {
                                 ).length
                               }
                             </div>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              Currently listed
+                            <p className="text-[10px] md:text-xs text-muted-foreground mt-0.5 md:mt-1">
+                              Active
                             </p>
                           </CardContent>
                         </Card>
@@ -4767,16 +4771,16 @@ function DashboardContent() {
                 ) : (
                   <>
                     {/* Overview Stats */}
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-3 gap-2 md:gap-3">
                       <Card className="col-span-1">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                          <CardTitle className="text-xs font-medium">
-                            Total Revenue (Gross)
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 md:pb-2 p-2 md:p-6">
+                          <CardTitle className="text-[10px] md:text-xs font-medium">
+                            Revenue
                           </CardTitle>
-                          <DollarSign className="h-4 w-4 text-muted-foreground" />
+                          <DollarSign className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
                         </CardHeader>
-                        <CardContent>
-                          <div className="text-xl font-bold">
+                        <CardContent className="p-2 md:p-6 pt-0">
+                          <div className="text-sm md:text-xl font-bold truncate">
                             Rp
                             {allTransactions
                               .filter(
@@ -4786,29 +4790,27 @@ function DashboardContent() {
                               .reduce((sum, t) => sum + t.amount, 0)
                               .toLocaleString()}
                           </div>
-                          <p className="text-xs text-muted-foreground">
-                            From{" "}
+                          <p className="text-[10px] md:text-xs text-muted-foreground">
                             {
                               allTransactions.filter(
                                 (t) =>
                                   t.type === "sale" && t.status === "COMPLETED"
                               ).length
                             }{" "}
-                            sales • Net: Rp{" "}
-                            {(userStats?.totalEarnings || 0).toLocaleString()}
+                            sales
                           </p>
                         </CardContent>
                       </Card>
 
                       <Card className="col-span-1">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                          <CardTitle className="text-xs font-medium">
-                            Total Spent
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 md:pb-2 p-2 md:p-6">
+                          <CardTitle className="text-[10px] md:text-xs font-medium">
+                            Spent
                           </CardTitle>
-                          <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+                          <ShoppingCart className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
                         </CardHeader>
-                        <CardContent>
-                          <div className="text-xl font-bold">
+                        <CardContent className="p-2 md:p-6 pt-0">
+                          <div className="text-sm md:text-xl font-bold truncate">
                             Rp
                             {allTransactions
                               .filter(
@@ -4819,8 +4821,7 @@ function DashboardContent() {
                               .reduce((sum, t) => sum + t.amount, 0)
                               .toLocaleString()}
                           </div>
-                          <p className="text-xs text-muted-foreground">
-                            From{" "}
+                          <p className="text-[10px] md:text-xs text-muted-foreground">
                             {
                               allTransactions.filter(
                                 (t) =>
@@ -4834,14 +4835,14 @@ function DashboardContent() {
                       </Card>
 
                       <Card className="col-span-1">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                          <CardTitle className="text-xs font-medium">
-                            Active Listings
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 md:pb-2 p-2 md:p-6">
+                          <CardTitle className="text-[10px] md:text-xs font-medium">
+                            Listings
                           </CardTitle>
-                          <BookOpen className="h-4 w-4 text-muted-foreground" />
+                          <BookOpen className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
                         </CardHeader>
-                        <CardContent>
-                          <div className="text-xl font-bold">
+                        <CardContent className="p-2 md:p-6 pt-0">
+                          <div className="text-lg md:text-xl font-bold">
                             {
                               marketplaceItems.filter(
                                 (item) =>
@@ -4850,7 +4851,7 @@ function DashboardContent() {
                               ).length
                             }
                           </div>
-                          <p className="text-xs text-muted-foreground">
+                          <p className="text-[10px] md:text-xs text-muted-foreground">
                             Of{" "}
                             {
                               marketplaceItems.filter(
@@ -5012,15 +5013,15 @@ function DashboardContent() {
                         Analytics & Insights
                       </h2>
 
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                      <div className="grid grid-cols-3 md:grid-cols-3 gap-2 md:gap-4 mb-4 md:mb-6">
                         <Card>
-                          <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium text-muted-foreground">
+                          <CardHeader className="pb-1 md:pb-2 p-2 md:p-6">
+                            <CardTitle className="text-[10px] md:text-sm font-medium text-muted-foreground">
                               Total Sales
                             </CardTitle>
                           </CardHeader>
-                          <CardContent>
-                            <div className="text-2xl font-bold">
+                          <CardContent className="p-2 md:p-6 pt-0">
+                            <div className="text-lg md:text-2xl font-bold">
                               {
                                 allTransactions.filter(
                                   (t) =>
@@ -5029,20 +5030,20 @@ function DashboardContent() {
                                 ).length
                               }
                             </div>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              Completed orders
+                            <p className="text-[10px] md:text-xs text-muted-foreground mt-0.5 md:mt-1">
+                              Completed
                             </p>
                           </CardContent>
                         </Card>
 
                         <Card>
-                          <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium text-muted-foreground">
-                              Total Revenue
+                          <CardHeader className="pb-1 md:pb-2 p-2 md:p-6">
+                            <CardTitle className="text-[10px] md:text-sm font-medium text-muted-foreground">
+                              Revenue
                             </CardTitle>
                           </CardHeader>
-                          <CardContent>
-                            <div className="text-2xl font-bold">
+                          <CardContent className="p-2 md:p-6 pt-0">
+                            <div className="text-sm md:text-2xl font-bold truncate">
                               Rp{" "}
                               {allTransactions
                                 .filter(
@@ -5053,28 +5054,28 @@ function DashboardContent() {
                                 .reduce((sum, t) => sum + t.amount, 0)
                                 .toLocaleString()}
                             </div>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              Before platform fee
+                            <p className="text-[10px] md:text-xs text-muted-foreground mt-0.5 md:mt-1">
+                              Before fee
                             </p>
                           </CardContent>
                         </Card>
 
                         <Card>
-                          <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium text-muted-foreground">
-                              Active Listings
+                          <CardHeader className="pb-1 md:pb-2 p-2 md:p-6">
+                            <CardTitle className="text-[10px] md:text-sm font-medium text-muted-foreground">
+                              Listings
                             </CardTitle>
                           </CardHeader>
-                          <CardContent>
-                            <div className="text-2xl font-bold">
+                          <CardContent className="p-2 md:p-6 pt-0">
+                            <div className="text-lg md:text-2xl font-bold">
                               {
                                 marketplaceItems.filter(
                                   (item) => item.sellerId === currentUser?.id
                                 ).length
                               }
                             </div>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              Items for sale
+                            <p className="text-[10px] md:text-xs text-muted-foreground mt-0.5 md:mt-1">
+                              For sale
                             </p>
                           </CardContent>
                         </Card>
