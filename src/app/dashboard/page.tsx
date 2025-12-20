@@ -5218,29 +5218,21 @@ function DashboardContent() {
       {/* Food Detail Modal */}
       {showFoodDetailModal && selectedFood && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            {!isEditingFood && (
-              <div className="relative">
-                {selectedFood.imageUrl && (
-                  <div className="relative h-64 w-full">
-                    <Image
-                      src={selectedFood.imageUrl}
-                      alt={selectedFood.title}
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                )}
-                <button
-                  onClick={() => setShowFoodDetailModal(false)}
-                  className="absolute top-4 right-4 bg-white/90 hover:bg-white p-2 rounded-full"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-            )}
+          <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+            <button
+              onClick={() => setShowFoodDetailModal(false)}
+              className="absolute top-4 right-4 z-10 bg-white/90 hover:bg-white p-1.5 rounded-full shadow-md"
+            >
+              <X className="h-4 w-4" />
+            </button>
 
-            <div className={isEditingFood ? "p-3" : "p-6"}>
+            <div
+              className={
+                isEditingFood
+                  ? "p-3 overflow-y-auto"
+                  : "flex flex-row overflow-y-auto"
+              }
+            >
               {isEditingFood ? (
                 <div>
                   <div className="flex justify-between items-center mb-4">
@@ -5264,180 +5256,215 @@ function DashboardContent() {
                 </div>
               ) : (
                 <>
-                  <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <h2 className="text-2xl font-bold mb-2">
-                        {selectedFood.title}
-                      </h2>
-                      <div className="flex items-center gap-2 mb-2">
-                        <Badge variant="secondary" className="text-lg">
-                          Rp {selectedFood.price.toLocaleString()}
-                        </Badge>
-                        <Badge>{selectedFood.category}</Badge>
-                        <Badge variant="outline">{selectedFood.foodType}</Badge>
-                      </div>
+                  {selectedFood.imageUrl && (
+                    <div className="relative w-2/5 bg-gray-100 flex-shrink-0">
+                      <Image
+                        src={selectedFood.imageUrl}
+                        alt={selectedFood.title}
+                        fill
+                        className="object-cover"
+                      />
                     </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div>
-                      <h3 className="font-semibold mb-2">Description</h3>
-                      <p className="text-muted-foreground">
-                        {selectedFood.description}
-                      </p>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
+                  )}
+                  <div className="flex-1 p-4">
+                    <div className="flex items-start justify-between mb-3">
                       <div>
-                        <h3 className="font-semibold mb-1">Pickup Location</h3>
-                        <p className="text-sm text-muted-foreground flex items-center gap-1">
-                          <MapPin className="h-4 w-4" />
-                          {selectedFood.pickupLocation}
-                        </p>
-                      </div>
-                      <div>
-                        <h3 className="font-semibold mb-1">Pickup Time</h3>
-                        <p className="text-sm text-muted-foreground flex items-center gap-1">
-                          <Clock className="h-4 w-4" />
-                          {selectedFood.pickupTime}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div>
-                      <h3 className="font-semibold mb-2">Quantity Available</h3>
-                      <p className="text-sm text-muted-foreground">
-                        {selectedFood.quantity} {selectedFood.unit}
-                      </p>
-                    </div>
-
-                    {(selectedFood.isHalal ||
-                      selectedFood.isVegan ||
-                      selectedFood.isVegetarian) && (
-                      <div>
-                        <h3 className="font-semibold mb-2">
-                          Dietary Information
-                        </h3>
-                        <div className="flex gap-2">
-                          {selectedFood.isHalal && (
-                            <Badge variant="outline">Halal</Badge>
-                          )}
-                          {selectedFood.isVegan && (
-                            <Badge variant="outline">Vegan</Badge>
-                          )}
-                          {selectedFood.isVegetarian && (
-                            <Badge variant="outline">Vegetarian</Badge>
-                          )}
+                        <h2 className="text-xl font-bold mb-1">
+                          {selectedFood.title}
+                        </h2>
+                        <div className="flex items-center gap-2 mb-1">
+                          <Badge variant="secondary">
+                            Rp {selectedFood.price.toLocaleString()}
+                          </Badge>
+                          <Badge className="text-xs">
+                            {selectedFood.category}
+                          </Badge>
+                          <Badge variant="outline" className="text-xs">
+                            {selectedFood.foodType}
+                          </Badge>
                         </div>
                       </div>
-                    )}
+                    </div>
 
-                    {selectedFood.allergens &&
-                      selectedFood.allergens.length > 0 && (
+                    <div className="space-y-2.5">
+                      <div>
+                        <h3 className="font-semibold text-sm mb-1">
+                          Description
+                        </h3>
+                        <p className="text-sm text-muted-foreground line-clamp-2">
+                          {selectedFood.description}
+                        </p>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <h3 className="font-semibold mb-2">Allergens</h3>
-                          <p className="text-sm text-orange-600">
-                            {selectedFood.allergens.join(", ")}
+                          <h3 className="font-semibold text-sm mb-0.5">
+                            Pickup Location
+                          </h3>
+                          <p className="text-xs text-muted-foreground flex items-center gap-1">
+                            <MapPin className="h-3 w-3" />
+                            {selectedFood.pickupLocation}
+                          </p>
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-sm mb-0.5">
+                            Pickup Time
+                          </h3>
+                          <p className="text-xs text-muted-foreground flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            {selectedFood.pickupTime}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <h3 className="font-semibold text-sm mb-0.5">
+                            Quantity
+                          </h3>
+                          <p className="text-xs text-muted-foreground">
+                            {selectedFood.quantity} {selectedFood.unit}
+                          </p>
+                        </div>
+                        {(selectedFood.isHalal ||
+                          selectedFood.isVegan ||
+                          selectedFood.isVegetarian) && (
+                          <div>
+                            <h3 className="font-semibold text-sm mb-0.5">
+                              Dietary
+                            </h3>
+                            <div className="flex gap-1 flex-wrap">
+                              {selectedFood.isHalal && (
+                                <Badge variant="outline" className="text-xs">
+                                  Halal
+                                </Badge>
+                              )}
+                              {selectedFood.isVegan && (
+                                <Badge variant="outline" className="text-xs">
+                                  Vegan
+                                </Badge>
+                              )}
+                              {selectedFood.isVegetarian && (
+                                <Badge variant="outline" className="text-xs">
+                                  Vegetarian
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {selectedFood.allergens &&
+                        selectedFood.allergens.length > 0 && (
+                          <div>
+                            <h3 className="font-semibold text-sm mb-0.5">
+                              Allergens
+                            </h3>
+                            <p className="text-xs text-orange-600">
+                              {selectedFood.allergens.join(", ")}
+                            </p>
+                          </div>
+                        )}
+
+                      {selectedFood.ingredients && (
+                        <div>
+                          <h3 className="font-semibold text-sm mb-0.5">
+                            Ingredients
+                          </h3>
+                          <p className="text-xs text-muted-foreground line-clamp-2">
+                            {selectedFood.ingredients}
                           </p>
                         </div>
                       )}
 
-                    {selectedFood.ingredients && (
-                      <div>
-                        <h3 className="font-semibold mb-2">Ingredients</h3>
-                        <p className="text-sm text-muted-foreground">
-                          {selectedFood.ingredients}
-                        </p>
-                      </div>
-                    )}
-
-                    <div className="flex gap-2 pt-4">
-                      {session?.user?.email === selectedFood.seller?.email ? (
-                        isEditingFood ? (
+                      <div className="flex gap-2 pt-2">
+                        {session?.user?.email === selectedFood.seller?.email ? (
+                          isEditingFood ? (
+                            <>
+                              <Button
+                                variant="outline"
+                                className="flex-1"
+                                onClick={handleCancelEditFood}
+                                disabled={isSavingFood}
+                              >
+                                Cancel
+                              </Button>
+                              <Button
+                                className="flex-1"
+                                onClick={handleSaveEditFood}
+                                disabled={isSavingFood}
+                              >
+                                {isSavingFood ? "Saving..." : "Save Changes"}
+                              </Button>
+                            </>
+                          ) : (
+                            <>
+                              <Button
+                                variant="outline"
+                                className="flex-1"
+                                onClick={handleEditFood}
+                              >
+                                Edit
+                              </Button>
+                              <Button
+                                variant="destructive"
+                                onClick={() => {
+                                  if (
+                                    confirm(
+                                      "Are you sure you want to delete this food item?"
+                                    )
+                                  ) {
+                                    handleDeleteFood(selectedFood.id);
+                                  }
+                                }}
+                                className="flex-1"
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete
+                              </Button>
+                            </>
+                          )
+                        ) : selectedFood.status === "available" ? (
                           <>
                             <Button
                               variant="outline"
-                              className="flex-1"
-                              onClick={handleCancelEditFood}
-                              disabled={isSavingFood}
-                            >
-                              Cancel
-                            </Button>
-                            <Button
-                              className="flex-1"
-                              onClick={handleSaveEditFood}
-                              disabled={isSavingFood}
-                            >
-                              {isSavingFood ? "Saving..." : "Save Changes"}
-                            </Button>
-                          </>
-                        ) : (
-                          <>
-                            <Button
-                              variant="outline"
-                              className="flex-1"
-                              onClick={handleEditFood}
-                            >
-                              Edit
-                            </Button>
-                            <Button
-                              variant="destructive"
                               onClick={() => {
-                                if (
-                                  confirm(
-                                    "Are you sure you want to delete this food item?"
-                                  )
-                                ) {
-                                  handleDeleteFood(selectedFood.id);
-                                }
+                                setShowFoodDetailModal(false);
+                                handleCreateConversation(
+                                  selectedFood.sellerId,
+                                  selectedFood.seller?.name || "Seller"
+                                );
                               }}
                               className="flex-1"
                             >
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Delete
+                              <MessageCircle className="h-4 w-4 mr-2" />
+                              Message Seller
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                handleSendFoodOrderRequest(selectedFood)
+                              }
+                              className="flex-1"
+                            >
+                              <ShoppingCart className="h-4 w-4 mr-2" />
+                              Order Now
                             </Button>
                           </>
-                        )
-                      ) : selectedFood.status === "available" ? (
-                        <>
-                          <Button
-                            variant="outline"
-                            onClick={() => {
-                              setShowFoodDetailModal(false);
-                              handleCreateConversation(
-                                selectedFood.sellerId,
-                                selectedFood.seller?.name || "Seller"
-                              );
-                            }}
-                            className="flex-1"
-                          >
-                            <MessageCircle className="h-4 w-4 mr-2" />
-                            Message Seller
-                          </Button>
-                          <Button
-                            onClick={() =>
-                              handleSendFoodOrderRequest(selectedFood)
-                            }
-                            className="flex-1"
-                          >
-                            <ShoppingCart className="h-4 w-4 mr-2" />
-                            Order Now
-                          </Button>
-                        </>
-                      ) : (
-                        <div className="flex-1 bg-gray-100 text-gray-500 px-4 py-2 rounded-md text-center font-medium">
-                          Sold Out
-                        </div>
-                      )}
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          setShowFoodDetailModal(false);
-                          setIsEditingFood(false);
-                        }}
-                      >
-                        Close
-                      </Button>
+                        ) : (
+                          <div className="flex-1 bg-gray-100 text-gray-500 px-4 py-2 rounded-md text-center font-medium">
+                            Sold Out
+                          </div>
+                        )}
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setShowFoodDetailModal(false);
+                            setIsEditingFood(false);
+                          }}
+                        >
+                          Close
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </>
@@ -5450,31 +5477,21 @@ function DashboardContent() {
       {/* Event Detail Modal */}
       {showEventDetailModal && selectedEvent && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            {!isEditingEvent && (
-              <div className="relative">
-                {(selectedEvent.bannerUrl || selectedEvent.imageUrl) && (
-                  <div className="relative h-64 w-full">
-                    <Image
-                      src={
-                        selectedEvent.bannerUrl || selectedEvent.imageUrl || ""
-                      }
-                      alt={selectedEvent.title}
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                )}
-                <button
-                  onClick={() => setShowEventDetailModal(false)}
-                  className="absolute top-4 right-4 bg-white/90 hover:bg-white p-2 rounded-full"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-            )}
+          <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+            <button
+              onClick={() => setShowEventDetailModal(false)}
+              className="absolute top-4 right-4 z-10 bg-white/90 hover:bg-white p-1.5 rounded-full shadow-md"
+            >
+              <X className="h-4 w-4" />
+            </button>
 
-            <div className={isEditingEvent ? "p-3" : "p-6"}>
+            <div
+              className={
+                isEditingEvent
+                  ? "p-3 overflow-y-auto"
+                  : "flex flex-row overflow-y-auto"
+              }
+            >
               {isEditingEvent ? (
                 <div>
                   <div className="flex justify-between items-center mb-4">
@@ -5498,219 +5515,246 @@ function DashboardContent() {
                 </div>
               ) : (
                 <>
-                  <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <h2 className="text-2xl font-bold mb-2">
-                        {selectedEvent.title}
-                      </h2>
-                      <div className="flex items-center gap-2 mb-2">
-                        <Badge>{selectedEvent.category}</Badge>
-                        <Badge variant="outline">
-                          {selectedEvent.eventType}
-                        </Badge>
-                        {selectedEvent.isFeatured && (
-                          <Badge className="bg-yellow-500">Featured</Badge>
-                        )}
-                      </div>
+                  {(selectedEvent.bannerUrl || selectedEvent.imageUrl) && (
+                    <div className="relative w-2/5 bg-gray-100 flex-shrink-0">
+                      <Image
+                        src={
+                          selectedEvent.bannerUrl ||
+                          selectedEvent.imageUrl ||
+                          ""
+                        }
+                        alt={selectedEvent.title}
+                        fill
+                        className="object-contain"
+                      />
                     </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div>
-                      <h3 className="font-semibold mb-2">Description</h3>
-                      <p className="text-muted-foreground">
-                        {selectedEvent.description}
-                      </p>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
+                  )}
+                  <div className="flex-1 p-4">
+                    <div className="flex items-start justify-between mb-3">
                       <div>
-                        <h3 className="font-semibold mb-1">Start Date</h3>
-                        <p className="text-sm text-muted-foreground flex items-center gap-1">
-                          <Calendar className="h-4 w-4" />
-                          {format(
-                            new Date(selectedEvent.startDate),
-                            "MMM dd, yyyy HH:mm"
-                          )}
-                        </p>
-                      </div>
-                      <div>
-                        <h3 className="font-semibold mb-1">End Date</h3>
-                        <p className="text-sm text-muted-foreground flex items-center gap-1">
-                          <Calendar className="h-4 w-4" />
-                          {format(
-                            new Date(selectedEvent.endDate),
-                            "MMM dd, yyyy HH:mm"
-                          )}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div>
-                      <h3 className="font-semibold mb-1">Location</h3>
-                      <p className="text-sm text-muted-foreground flex items-center gap-1">
-                        <MapPin className="h-4 w-4" />
-                        {selectedEvent.isOnline
-                          ? "Online Event"
-                          : selectedEvent.location}
-                      </p>
-                      {selectedEvent.venue && (
-                        <p className="text-sm text-muted-foreground mt-1">
-                          Venue: {selectedEvent.venue}
-                        </p>
-                      )}
-                    </div>
-
-                    <div>
-                      <h3 className="font-semibold mb-1">Participants</h3>
-                      <p className="text-sm text-muted-foreground flex items-center gap-1">
-                        <Users className="h-4 w-4" />
-                        {selectedEvent.currentParticipants}
-                        {selectedEvent.maxParticipants
-                          ? ` / ${selectedEvent.maxParticipants}`
-                          : ""}{" "}
-                        registered
-                      </p>
-                    </div>
-
-                    {selectedEvent.price > 0 && (
-                      <div>
-                        <h3 className="font-semibold mb-1">Price</h3>
-                        <p className="text-sm text-muted-foreground">
-                          Rp {selectedEvent.price.toLocaleString()}
-                        </p>
-                      </div>
-                    )}
-
-                    {selectedEvent.organizer && (
-                      <div>
-                        <h3 className="font-semibold mb-1">Organizer</h3>
-                        <p className="text-sm text-muted-foreground">
-                          {selectedEvent.organizer}
-                        </p>
-                      </div>
-                    )}
-
-                    {selectedEvent.tags && selectedEvent.tags.length > 0 && (
-                      <div>
-                        <h3 className="font-semibold mb-2">Tags</h3>
-                        <div className="flex flex-wrap gap-2">
-                          {selectedEvent.tags.map((tag, index) => (
-                            <Badge key={index} variant="outline">
-                              {tag}
+                        <h2 className="text-xl font-bold mb-1">
+                          {selectedEvent.title}
+                        </h2>
+                        <div className="flex items-center gap-2 mb-1">
+                          <Badge className="text-xs">
+                            {selectedEvent.category}
+                          </Badge>
+                          <Badge variant="outline" className="text-xs">
+                            {selectedEvent.eventType}
+                          </Badge>
+                          {selectedEvent.isFeatured && (
+                            <Badge className="bg-yellow-500 text-xs">
+                              Featured
                             </Badge>
-                          ))}
+                          )}
+                          {selectedEvent.price > 0 && (
+                            <Badge variant="secondary" className="text-xs">
+                              Rp {selectedEvent.price.toLocaleString()}
+                            </Badge>
+                          )}
                         </div>
                       </div>
-                    )}
+                    </div>
 
-                    <div className="flex gap-2 pt-4">
-                      {session?.user?.email ===
-                      selectedEvent.organizerUser?.email ? (
-                        isEditingEvent ? (
-                          <>
-                            <Button
-                              variant="outline"
-                              className="flex-1"
-                              onClick={handleCancelEditEvent}
-                              disabled={isSavingEvent}
-                            >
-                              Cancel
-                            </Button>
-                            <Button
-                              className="flex-1"
-                              onClick={handleSaveEditEvent}
-                              disabled={isSavingEvent}
-                            >
-                              {isSavingEvent ? "Saving..." : "Save Changes"}
-                            </Button>
-                          </>
+                    <div className="space-y-2.5">
+                      <div>
+                        <h3 className="font-semibold text-sm mb-1">
+                          Description
+                        </h3>
+                        <p className="text-sm text-muted-foreground line-clamp-2">
+                          {selectedEvent.description}
+                        </p>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <h3 className="font-semibold text-sm mb-0.5">
+                            Start Date
+                          </h3>
+                          <p className="text-xs text-muted-foreground flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            {format(
+                              new Date(selectedEvent.startDate),
+                              "MMM dd, HH:mm"
+                            )}
+                          </p>
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-sm mb-0.5">
+                            End Date
+                          </h3>
+                          <p className="text-xs text-muted-foreground flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            {format(
+                              new Date(selectedEvent.endDate),
+                              "MMM dd, HH:mm"
+                            )}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <h3 className="font-semibold text-sm mb-0.5">
+                            Location
+                          </h3>
+                          <p className="text-xs text-muted-foreground flex items-center gap-1">
+                            <MapPin className="h-3 w-3" />
+                            {selectedEvent.isOnline
+                              ? "Online"
+                              : selectedEvent.location}
+                          </p>
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-sm mb-0.5">
+                            Participants
+                          </h3>
+                          <p className="text-xs text-muted-foreground flex items-center gap-1">
+                            <Users className="h-3 w-3" />
+                            {selectedEvent.currentParticipants}
+                            {selectedEvent.maxParticipants
+                              ? ` / ${selectedEvent.maxParticipants}`
+                              : ""}
+                          </p>
+                        </div>
+                      </div>
+
+                      {selectedEvent.organizer && (
+                        <div>
+                          <h3 className="font-semibold text-sm mb-0.5">
+                            Organizer
+                          </h3>
+                          <p className="text-xs text-muted-foreground">
+                            {selectedEvent.organizer}
+                          </p>
+                        </div>
+                      )}
+
+                      {selectedEvent.tags && selectedEvent.tags.length > 0 && (
+                        <div>
+                          <h3 className="font-semibold text-sm mb-1">Tags</h3>
+                          <div className="flex flex-wrap gap-1">
+                            {selectedEvent.tags.map((tag, index) => (
+                              <Badge
+                                key={index}
+                                variant="outline"
+                                className="text-xs"
+                              >
+                                {tag}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="flex gap-2 pt-2">
+                        {session?.user?.email ===
+                        selectedEvent.organizerUser?.email ? (
+                          isEditingEvent ? (
+                            <>
+                              <Button
+                                variant="outline"
+                                className="flex-1"
+                                onClick={handleCancelEditEvent}
+                                disabled={isSavingEvent}
+                              >
+                                Cancel
+                              </Button>
+                              <Button
+                                className="flex-1"
+                                onClick={handleSaveEditEvent}
+                                disabled={isSavingEvent}
+                              >
+                                {isSavingEvent ? "Saving..." : "Save Changes"}
+                              </Button>
+                            </>
+                          ) : (
+                            <>
+                              <Button
+                                variant="outline"
+                                className="flex-1"
+                                onClick={handleEditEvent}
+                              >
+                                Edit
+                              </Button>
+                              <Button
+                                variant="destructive"
+                                onClick={() => {
+                                  if (
+                                    confirm(
+                                      "Are you sure you want to delete this event?"
+                                    )
+                                  ) {
+                                    handleDeleteEvent(selectedEvent.id);
+                                  }
+                                }}
+                                className="flex-1"
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete
+                              </Button>
+                            </>
+                          )
+                        ) : myEventRegistrations.some(
+                            (reg) => reg.eventId === selectedEvent.id
+                          ) ? (
+                          <div className="flex-1 bg-green-100 text-green-700 px-4 py-2 rounded-md text-center font-medium">
+                            Already Registered
+                          </div>
+                        ) : selectedEvent.maxParticipants &&
+                          selectedEvent.currentParticipants >=
+                            selectedEvent.maxParticipants ? (
+                          <div className="flex-1 bg-gray-100 text-gray-500 px-4 py-2 rounded-md text-center font-medium">
+                            Event Full
+                          </div>
                         ) : (
                           <>
                             <Button
                               variant="outline"
+                              onClick={() => {
+                                setShowEventDetailModal(false);
+                                handleCreateConversation(
+                                  selectedEvent.organizerId,
+                                  selectedEvent.organizer || "Organizer"
+                                );
+                              }}
                               className="flex-1"
-                              onClick={handleEditEvent}
                             >
-                              Edit
+                              <MessageCircle className="h-4 w-4 mr-2" />
+                              Message Organizer
                             </Button>
                             <Button
-                              variant="destructive"
                               onClick={() => {
-                                if (
-                                  confirm(
-                                    "Are you sure you want to delete this event?"
-                                  )
-                                ) {
-                                  handleDeleteEvent(selectedEvent.id);
+                                if (selectedEvent.price > 0) {
+                                  setPaymentItem({
+                                    id: selectedEvent.id,
+                                    title: selectedEvent.title,
+                                    price: selectedEvent.price,
+                                    type: "event",
+                                  });
+                                  setShowPaymentModal(true);
+                                  setShowEventDetailModal(false);
+                                } else {
+                                  handleRegisterEvent(selectedEvent.id);
                                 }
                               }}
                               className="flex-1"
                             >
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Delete
+                              <Calendar className="h-4 w-4 mr-2" />
+                              Register
                             </Button>
                           </>
-                        )
-                      ) : myEventRegistrations.some(
-                          (reg) => reg.eventId === selectedEvent.id
-                        ) ? (
-                        <div className="flex-1 bg-green-100 text-green-700 px-4 py-2 rounded-md text-center font-medium">
-                          Already Registered
-                        </div>
-                      ) : selectedEvent.maxParticipants &&
-                        selectedEvent.currentParticipants >=
-                          selectedEvent.maxParticipants ? (
-                        <div className="flex-1 bg-gray-100 text-gray-500 px-4 py-2 rounded-md text-center font-medium">
-                          Event Full
-                        </div>
-                      ) : (
-                        <>
-                          <Button
-                            variant="outline"
-                            onClick={() => {
-                              setShowEventDetailModal(false);
-                              handleCreateConversation(
-                                selectedEvent.organizerId,
-                                selectedEvent.organizer || "Organizer"
-                              );
-                            }}
-                            className="flex-1"
-                          >
-                            <MessageCircle className="h-4 w-4 mr-2" />
-                            Message Organizer
-                          </Button>
-                          <Button
-                            onClick={() => {
-                              if (selectedEvent.price > 0) {
-                                setPaymentItem({
-                                  id: selectedEvent.id,
-                                  title: selectedEvent.title,
-                                  price: selectedEvent.price,
-                                  type: "event",
-                                });
-                                setShowPaymentModal(true);
-                                setShowEventDetailModal(false);
-                              } else {
-                                handleRegisterEvent(selectedEvent.id);
-                              }
-                            }}
-                            className="flex-1"
-                          >
-                            <Calendar className="h-4 w-4 mr-2" />
-                            Register
-                          </Button>
-                        </>
-                      )}
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          setShowEventDetailModal(false);
-                          setIsEditingEvent(false);
-                        }}
-                      >
-                        Close
-                      </Button>
+                        )}
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setShowEventDetailModal(false);
+                            setIsEditingEvent(false);
+                          }}
+                        >
+                          Close
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </>
