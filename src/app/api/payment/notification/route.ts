@@ -77,38 +77,68 @@ export async function POST(request: NextRequest) {
           where: { id: transaction.itemId },
           data: { status: "sold" },
         });
+      }
 
-        // Update seller stats
-        const item = transaction.item;
-        if (item) {
-          // Calculate platform fee (5% commission)
-          const platformFee = Math.floor(transaction.amount * 0.05);
-          const sellerEarnings = transaction.amount - platformFee;
+      // Handle food order creation
+      if (transaction.itemType === "food" && transaction.foodItemId) {
+        const foodItem = await prisma.foodItem.findUnique({
+          where: { id: transaction.foodItemId },
+        });
 
-          await prisma.userStats.upsert({
-            where: { userId: item.sellerId },
-            update: {
-              itemsSold: { increment: 1 },
-              totalEarnings: { increment: sellerEarnings },
-              // Add to pending balance (3-day holding period)
-              pendingBalance: { increment: sellerEarnings },
+        if (foodItem) {
+          const quantity = 1;
+          const totalPrice = transaction.amount;
+
+          await prisma.foodOrder.create({
+            data: {
+              foodItemId: foodItem.id,
+              buyerId: transaction.buyerId,
+              quantity: quantity,
+              totalPrice: totalPrice,
+              pickupTime: foodItem.pickupTime,
+              status: "confirmed",
             },
-            create: {
-              userId: item.sellerId,
-              itemsSold: 1,
-              totalEarnings: sellerEarnings,
-              pendingBalance: sellerEarnings,
-              availableBalance: 0,
-              withdrawnBalance: 0,
-              itemsBought: 0,
-              totalSpent: 0,
-              messagesCount: 0,
-              tutoringSessions: 0,
-              reviewsGiven: 0,
-              reviewsReceived: 0,
+          });
+
+          await prisma.foodItem.update({
+            where: { id: foodItem.id },
+            data: {
+              quantity: { decrement: quantity },
+              status: foodItem.quantity - quantity <= 0 ? "sold" : "available",
             },
           });
         }
+      }
+
+      // Update seller stats for ALL transaction types (marketplace, food, events, tutoring)
+      if (transaction.sellerId) {
+        // Calculate platform fee (5% commission)
+        const platformFee = Math.floor(transaction.amount * 0.05);
+        const sellerEarnings = transaction.amount - platformFee;
+
+        await prisma.userStats.upsert({
+          where: { userId: transaction.sellerId },
+          update: {
+            itemsSold: { increment: 1 },
+            totalEarnings: { increment: sellerEarnings },
+            // Add to pending balance (3-day holding period)
+            pendingBalance: { increment: sellerEarnings },
+          },
+          create: {
+            userId: transaction.sellerId,
+            itemsSold: 1,
+            totalEarnings: sellerEarnings,
+            pendingBalance: sellerEarnings,
+            availableBalance: 0,
+            withdrawnBalance: 0,
+            itemsBought: 0,
+            totalSpent: 0,
+            messagesCount: 0,
+            tutoringSessions: 0,
+            reviewsGiven: 0,
+            reviewsReceived: 0,
+          },
+        });
       }
 
       // Update buyer stats
@@ -135,10 +165,10 @@ export async function POST(request: NextRequest) {
       });
 
       // Create notification for seller
-      if (transaction.item) {
+      if (transaction.sellerId) {
         await prisma.notification.create({
           data: {
-            userId: transaction.item.sellerId,
+            userId: transaction.sellerId,
             type: "sale",
             title: "Item Sold!",
             message: `Your item "${
@@ -153,8 +183,16 @@ export async function POST(request: NextRequest) {
         data: {
           userId: transaction.buyerId,
           type: "purchase",
-          title: "🎉 Payment Successful!",
-          message: `Your purchase of "${transaction.itemTitle}" has been confirmed. Access it from your Library.`,
+          title: "Payment Successful!",
+          message: `Your purchase of "${
+            transaction.itemTitle
+          }" has been confirmed. ${
+            transaction.itemType === "marketplace"
+              ? "Access it from your Library."
+              : transaction.itemType === "food"
+              ? "Your order is confirmed!"
+              : ""
+          }`,
         },
       });
     }

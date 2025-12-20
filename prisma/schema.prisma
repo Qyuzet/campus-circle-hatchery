@@ -1,6 +1,3 @@
-// CampusCircle Prisma Schema
-// Database: Neon PostgreSQL
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,86 +8,76 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-// ============================================
-// USER MODEL
-// ============================================
 model User {
-  id              String   @id @default(cuid())
-  studentId       String   @unique
-  email           String   @unique
-  name            String
-  faculty         String
-  major           String
-  year            Int
-  bio             String?
-  avatarUrl       String?
-  rating          Float    @default(0)
-  totalSales      Int      @default(0)
-  totalPurchases  Int      @default(0)
-  isVerified      Boolean  @default(false)
-  role            String   @default("user") // "user" | "admin"
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  // Relations
-  marketplaceItems     MarketplaceItem[]
-  sentMessages         Message[]           @relation("SentMessages")
-  receivedMessages     Message[]           @relation("ReceivedMessages")
-  conversationsAsUser1 Conversation[]      @relation("User1Conversations")
-  conversationsAsUser2 Conversation[]      @relation("User2Conversations")
-  tutoringSessions     TutoringSession[]   @relation("TutorSessions")
-  studentSessions      TutoringSession[]   @relation("StudentSessions")
-  reviews              Review[]            @relation("ReviewAuthor")
-  receivedReviews      Review[]            @relation("ReviewTarget")
-  notifications        Notification[]
-  transactions         Transaction[]
-  userStats            UserStats?
-  withdrawals          Withdrawal[]
-  createdGroups        Group[]             @relation("CreatedGroups")
-  groupMemberships     GroupMember[]       @relation("GroupMemberships")
-  sentGroupMessages    GroupMessage[]      @relation("SentGroupMessages")
-  wishlistItems        WishlistItem[]
+  id                   String             @id @default(cuid())
+  studentId            String             @unique
+  email                String             @unique
+  name                 String
+  faculty              String
+  major                String
+  year                 Int
+  bio                  String?
+  avatarUrl            String?
+  rating               Float              @default(0)
+  totalSales           Int                @default(0)
+  totalPurchases       Int                @default(0)
+  isVerified           Boolean            @default(false)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  role                 String             @default("user")
+  conversationsAsUser1 Conversation[]     @relation("User1Conversations")
+  conversationsAsUser2 Conversation[]     @relation("User2Conversations")
+  organizedEvents      Event[]            @relation("EventOrganizer")
+  eventParticipations  EventParticipant[]
+  eventReviews         EventReview[]
   foodItems            FoodItem[]
   foodOrders           FoodOrder[]
   foodReviews          FoodReview[]
-  organizedEvents      Event[]             @relation("EventOrganizer")
-  eventParticipations  EventParticipant[]
-  eventReviews         EventReview[]
+  createdGroups        Group[]            @relation("CreatedGroups")
+  groupMemberships     GroupMember[]      @relation("GroupMemberships")
+  sentGroupMessages    GroupMessage[]     @relation("SentGroupMessages")
+  marketplaceItems     MarketplaceItem[]
+  receivedMessages     Message[]          @relation("ReceivedMessages")
+  sentMessages         Message[]          @relation("SentMessages")
+  notifications        Notification[]
+  reviews              Review[]           @relation("ReviewAuthor")
+  receivedReviews      Review[]           @relation("ReviewTarget")
+  buyerTransactions    Transaction[]      @relation("BuyerTransactions")
+  sellerTransactions   Transaction[]      @relation("SellerTransactions")
+  studentSessions      TutoringSession[]  @relation("StudentSessions")
+  tutoringSessions     TutoringSession[]  @relation("TutorSessions")
+  userStats            UserStats?
+  wishlistItems        WishlistItem[]
+  withdrawals          Withdrawal[]
 
   @@index([studentId])
   @@index([email])
 }
 
-// ============================================
-// MARKETPLACE MODEL
-// ============================================
 model MarketplaceItem {
-  id          String   @id @default(cuid())
-  title       String
-  description String
-  price       Int
-  category    String
-  course      String
-  faculty     String
-  condition   String?  @default("Good") // New, Like New, Good, Fair
-  imageUrl    String?
-  fileUrl     String?
-  fileName    String?  // Original file name
-  fileSize    Int?     // File size in bytes
-  fileType    String?  // MIME type
-  thumbnailUrl String? // Thumbnail image for PDF/document previews
-  status      String   @default("available") // available, sold, pending
-  rating      Float    @default(0)
-  reviewCount Int      @default(0)
-  viewCount   Int      @default(0)
-  downloadCount Int    @default(0) // Track downloads
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Relations
-  sellerId String
-  seller   User   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
-
+  id            String         @id @default(cuid())
+  title         String
+  description   String
+  price         Int
+  category      String
+  course        String
+  faculty       String
+  imageUrl      String?
+  fileUrl       String?
+  status        String         @default("available")
+  rating        Float          @default(0)
+  reviewCount   Int            @default(0)
+  viewCount     Int            @default(0)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  sellerId      String
+  condition     String?        @default("Good")
+  downloadCount Int            @default(0)
+  fileName      String?
+  fileSize      Int?
+  fileType      String?
+  thumbnailUrl  String?
+  seller        User           @relation(fields: [sellerId], references: [id], onDelete: Cascade)
   reviews       Review[]
   transactions  Transaction[]
   wishlistItems WishlistItem[]
@@ -102,23 +89,17 @@ model MarketplaceItem {
   @@index([createdAt])
 }
 
-// ============================================
-// MESSAGING MODELS
-// ============================================
 model Conversation {
-  id              String   @id @default(cuid())
+  id              String    @id @default(cuid())
   lastMessage     String?
-  lastMessageTime DateTime @default(now())
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  // Relations
-  user1Id String
-  user2Id String
-  user1   User   @relation("User1Conversations", fields: [user1Id], references: [id], onDelete: Cascade)
-  user2   User   @relation("User2Conversations", fields: [user2Id], references: [id], onDelete: Cascade)
-
-  messages Message[]
+  lastMessageTime DateTime  @default(now())
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  user1Id         String
+  user2Id         String
+  user1           User      @relation("User1Conversations", fields: [user1Id], references: [id], onDelete: Cascade)
+  user2           User      @relation("User2Conversations", fields: [user2Id], references: [id], onDelete: Cascade)
+  messages        Message[]
 
   @@unique([user1Id, user2Id])
   @@index([user1Id])
@@ -126,20 +107,18 @@ model Conversation {
 }
 
 model Message {
-  id          String   @id @default(cuid())
-  content     String
-  isRead      Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  messageType String   @default("text")
-  orderData   Json?
-
-  // Relations
+  id             String       @id @default(cuid())
+  content        String
+  isRead         Boolean      @default(false)
+  createdAt      DateTime     @default(now())
   senderId       String
   receiverId     String
   conversationId String
-  sender         User         @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
-  receiver       User         @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+  messageType    String       @default("text")
+  orderData      Json?
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  receiver       User         @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+  sender         User         @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
 
   @@index([senderId])
   @@index([receiverId])
@@ -147,37 +126,30 @@ model Message {
   @@index([createdAt])
 }
 
-// ============================================
-// GROUP MESSAGING MODELS
-// ============================================
 model Group {
-  id          String   @id @default(cuid())
+  id          String         @id @default(cuid())
   name        String
   description String?
   avatarUrl   String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Relations
-  creatorId String
-  creator   User          @relation("CreatedGroups", fields: [creatorId], references: [id], onDelete: Cascade)
-  members   GroupMember[]
-  messages  GroupMessage[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  creatorId   String
+  creator     User           @relation("CreatedGroups", fields: [creatorId], references: [id], onDelete: Cascade)
+  members     GroupMember[]
+  messages    GroupMessage[]
 
   @@index([creatorId])
   @@index([createdAt])
 }
 
 model GroupMember {
-  id        String   @id @default(cuid())
-  role      String   @default("member") // "admin" or "member"
-  joinedAt  DateTime @default(now())
-
-  // Relations
-  groupId String
-  userId  String
-  group   Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  user    User   @relation("GroupMemberships", fields: [userId], references: [id], onDelete: Cascade)
+  id       String   @id @default(cuid())
+  role     String   @default("member")
+  joinedAt DateTime @default(now())
+  groupId  String
+  userId   String
+  group    Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user     User     @relation("GroupMemberships", fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([groupId, userId])
   @@index([groupId])
@@ -188,38 +160,31 @@ model GroupMessage {
   id        String   @id @default(cuid())
   content   String
   createdAt DateTime @default(now())
-
-  // Relations
-  groupId  String
-  senderId String
-  group    Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  sender   User   @relation("SentGroupMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  groupId   String
+  senderId  String
+  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  sender    User     @relation("SentGroupMessages", fields: [senderId], references: [id], onDelete: Cascade)
 
   @@index([groupId])
   @@index([senderId])
   @@index([createdAt])
 }
 
-// ============================================
-// TUTORING MODEL
-// ============================================
 model TutoringSession {
   id          String   @id @default(cuid())
   subject     String
   course      String
   description String
   price       Int
-  duration    Int // in minutes
-  status      String   @default("pending") // pending, confirmed, completed, cancelled
+  duration    Int
+  status      String   @default("pending")
   scheduledAt DateTime
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-
-  // Relations
   tutorId     String
   studentId   String
-  tutor       User   @relation("TutorSessions", fields: [tutorId], references: [id], onDelete: Cascade)
-  student     User   @relation("StudentSessions", fields: [studentId], references: [id], onDelete: Cascade)
+  student     User     @relation("StudentSessions", fields: [studentId], references: [id], onDelete: Cascade)
+  tutor       User     @relation("TutorSessions", fields: [tutorId], references: [id], onDelete: Cascade)
 
   @@index([tutorId])
   @@index([studentId])
@@ -227,210 +192,163 @@ model TutoringSession {
   @@index([scheduledAt])
 }
 
-// ============================================
-// REVIEW MODEL
-// ============================================
 model Review {
-  id        String   @id @default(cuid())
-  rating    Int // 1-5
+  id        String           @id @default(cuid())
+  rating    Int
   comment   String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  authorId String
-  targetId String // can be user or item
-  itemId   String?
-  author   User            @relation("ReviewAuthor", fields: [authorId], references: [id], onDelete: Cascade)
-  target   User            @relation("ReviewTarget", fields: [targetId], references: [id], onDelete: Cascade)
-  item     MarketplaceItem? @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  authorId  String
+  targetId  String
+  itemId    String?
+  author    User             @relation("ReviewAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  item      MarketplaceItem? @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  target    User             @relation("ReviewTarget", fields: [targetId], references: [id], onDelete: Cascade)
 
   @@index([authorId])
   @@index([targetId])
   @@index([itemId])
 }
 
-// ============================================
-// NOTIFICATION MODEL
-// ============================================
 model Notification {
   id        String   @id @default(cuid())
-  type      String // message, sale, purchase, review, session
+  type      String
   title     String
   message   String
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
-
-  // Relations
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([isRead])
   @@index([createdAt])
 }
 
-// ============================================
-// TRANSACTION MODEL
-// ============================================
 model Transaction {
-  id              String   @id @default(cuid())
-  orderId         String   @unique // Midtrans order ID
+  id              String           @id @default(cuid())
   amount          Int
-  status          String   @default("PENDING") // PENDING, COMPLETED, FAILED, CANCELLED, EXPIRED
+  status          String           @default("PENDING")
   paymentMethod   String?
-  paymentProvider String?  @default("midtrans")
-
-  // Midtrans specific fields
-  snapToken       String?  // Snap payment token
-  snapUrl         String?  // Snap payment URL
-  transactionId   String?  // Midtrans transaction ID
-  fraudStatus     String?  // Fraud detection status
-
-  // Item details
-  itemType        String   // "marketplace" or "tutoring"
+  paymentProvider String?          @default("midtrans")
+  transactionId   String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  buyerId         String
+  itemId          String?
+  fraudStatus     String?
   itemTitle       String
-
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  expiresAt       DateTime? // Payment expiry time (default 15 minutes from creation)
-
-  // Relations
-  buyerId String
-  itemId  String?  // Optional for tutoring sessions
-  buyer   User             @relation(fields: [buyerId], references: [id], onDelete: Cascade)
-  item    MarketplaceItem? @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  itemType        String
+  orderId         String           @unique
+  snapToken       String?
+  snapUrl         String?
+  expiresAt       DateTime?
+  sellerId        String?
+  foodItemId      String?
+  buyer           User             @relation("BuyerTransactions", fields: [buyerId], references: [id], onDelete: Cascade)
+  foodItem        FoodItem?        @relation(fields: [foodItemId], references: [id], onDelete: Cascade)
+  item            MarketplaceItem? @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  seller          User?            @relation("SellerTransactions", fields: [sellerId], references: [id], onDelete: Cascade)
 
   @@index([buyerId])
+  @@index([sellerId])
   @@index([itemId])
+  @@index([foodItemId])
   @@index([status])
   @@index([orderId])
   @@index([createdAt])
 }
 
-// ============================================
-// USER STATS MODEL
-// ============================================
 model UserStats {
-  id               String   @id @default(cuid())
-  itemsSold        Int      @default(0)
-  itemsBought      Int      @default(0)
-  totalEarnings    Int      @default(0) // Total earned from all sales
-  totalSpent       Int      @default(0)
-
-  // Withdrawal tracking
-  availableBalance Int      @default(0) // Money available to withdraw
-  pendingBalance   Int      @default(0) // Money in holding period
-  withdrawnBalance Int      @default(0) // Total already withdrawn
-
-  // Saved payment method (optional)
-  savedPaymentMethod String? // e.g., "GOPAY", "BANK"
-  savedAccountNumber String? // GoPay number or Bank account number
-  savedAccountName   String? // Account holder name
-  savedBankName      String? // Bank name (only for BANK method)
-
-  messagesCount    Int      @default(0)
-  tutoringSessions Int      @default(0)
-  reviewsGiven     Int      @default(0)
-  reviewsReceived  Int      @default(0)
-  updatedAt        DateTime @updatedAt
-
-  // Relations
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                 String   @id @default(cuid())
+  itemsSold          Int      @default(0)
+  itemsBought        Int      @default(0)
+  totalEarnings      Int      @default(0)
+  totalSpent         Int      @default(0)
+  messagesCount      Int      @default(0)
+  tutoringSessions   Int      @default(0)
+  reviewsGiven       Int      @default(0)
+  reviewsReceived    Int      @default(0)
+  updatedAt          DateTime @updatedAt
+  userId             String   @unique
+  availableBalance   Int      @default(0)
+  pendingBalance     Int      @default(0)
+  savedAccountName   String?
+  savedAccountNumber String?
+  savedBankName      String?
+  savedPaymentMethod String?
+  withdrawnBalance   Int      @default(0)
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
 
-// ============================================
-// WITHDRAWAL MODEL
-// ============================================
 model Withdrawal {
-  id              String   @id @default(cuid())
-  amount          Int      // Amount to withdraw
-  status          String   @default("PENDING") // PENDING, APPROVED, PROCESSING, COMPLETED, REJECTED, FAILED
-
-  // Payment method details
-  paymentMethod   String   @default("GOPAY") // "GOPAY", "BANK", etc.
-  accountNumber   String   // GoPay number or Bank account number
-  accountName     String   // Account holder name
-  bankName        String?  // Bank name (only for BANK method)
-
-  // Processing details
-  processedBy     String?  // Admin user ID who processed
+  id              String    @id @default(cuid())
+  amount          Int
+  status          String    @default("PENDING")
+  paymentMethod   String    @default("GOPAY")
+  accountNumber   String
+  accountName     String
+  bankName        String?
+  processedBy     String?
   processedAt     DateTime?
   rejectionReason String?
-
-  // Midtrans Iris details (for future automation)
-  irisReferenceNo String?  // Iris disbursement reference
-  irisStatus      String?  // Iris transaction status
-
-  // Metadata
+  irisReferenceNo String?
+  irisStatus      String?
   notes           String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  // Relations
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([status])
   @@index([createdAt])
 }
 
-// ============================================
-// WISHLIST MODEL
-// ============================================
 model WishlistItem {
-  id        String   @id @default(cuid())
-  createdAt DateTime @default(now())
-
-  // Relations
-  userId String
-  itemId String
-  user   User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  item   MarketplaceItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  id        String          @id @default(cuid())
+  createdAt DateTime        @default(now())
+  userId    String
+  itemId    String
+  item      MarketplaceItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, itemId])
   @@index([userId])
   @@index([itemId])
 }
 
-// ============================================
-// FOOD MARKETPLACE MODELS
-// ============================================
 model FoodItem {
-  id              String   @id @default(cuid())
-  title           String
-  description     String
-  price           Int
-  category        String   // Snacks, Meals, Drinks, Desserts
-  foodType        String   // Homemade, Restaurant, Packaged
-  quantity        Int      @default(1)
-  unit            String   // pieces, servings, grams
-  imageUrl        String?
-  allergens       String[] // Nuts, Dairy, Gluten, etc.
-  ingredients     String?
-  expiryDate      DateTime?
-  pickupLocation  String
-  pickupTime      String   // Available pickup times
-  isHalal         Boolean  @default(false)
-  isVegan         Boolean  @default(false)
-  isVegetarian    Boolean  @default(false)
-  status          String   @default("available") // available, sold, expired
-  rating          Float    @default(0)
-  reviewCount     Int      @default(0)
-  viewCount       Int      @default(0)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  // Relations
-  sellerId String
-  seller   User   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
-
-  orders  FoodOrder[]
-  reviews FoodReview[]
+  id             String        @id @default(cuid())
+  title          String
+  description    String
+  price          Int
+  category       String
+  foodType       String
+  quantity       Int           @default(1)
+  unit           String
+  imageUrl       String?
+  allergens      String[]
+  ingredients    String?
+  expiryDate     DateTime?
+  pickupLocation String
+  pickupTime     String
+  isHalal        Boolean       @default(false)
+  isVegan        Boolean       @default(false)
+  isVegetarian   Boolean       @default(false)
+  status         String        @default("available")
+  rating         Float         @default(0)
+  reviewCount    Int           @default(0)
+  viewCount      Int           @default(0)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  sellerId       String
+  seller         User          @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  orders         FoodOrder[]
+  reviews        FoodReview[]
+  transactions   Transaction[]
 
   @@index([sellerId])
   @@index([category])
@@ -439,19 +357,17 @@ model FoodItem {
 }
 
 model FoodOrder {
-  id          String   @id @default(cuid())
-  quantity    Int
-  totalPrice  Int
-  pickupTime  String
-  status      String   @default("pending") // pending, confirmed, picked_up, cancelled
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Relations
+  id         String   @id @default(cuid())
+  quantity   Int
+  totalPrice Int
+  pickupTime String
+  status     String   @default("pending")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
   foodItemId String
   buyerId    String
-  foodItem   FoodItem @relation(fields: [foodItemId], references: [id], onDelete: Cascade)
   buyer      User     @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+  foodItem   FoodItem @relation(fields: [foodItemId], references: [id], onDelete: Cascade)
 
   @@index([foodItemId])
   @@index([buyerId])
@@ -460,12 +376,10 @@ model FoodOrder {
 }
 
 model FoodReview {
-  id        String   @id @default(cuid())
-  rating    Int      // 1-5
-  comment   String?
-  createdAt DateTime @default(now())
-
-  // Relations
+  id         String   @id @default(cuid())
+  rating     Int
+  comment    String?
+  createdAt  DateTime @default(now())
   foodItemId String
   userId     String
   foodItem   FoodItem @relation(fields: [foodItemId], references: [id], onDelete: Cascade)
@@ -475,46 +389,40 @@ model FoodReview {
   @@index([userId])
 }
 
-// ============================================
-// EVENT MODELS
-// ============================================
 model Event {
-  id                   String    @id @default(cuid())
+  id                   String             @id @default(cuid())
   title                String
   description          String
-  category             String    // Academic, Social, Sports, Workshop, Competition
-  eventType            String    // Free, Paid, Registration Required
-  price                Int       @default(0)
+  category             String
+  eventType            String
+  price                Int                @default(0)
   imageUrl             String?
   bannerUrl            String?
   location             String
-  venue                String?   // Room number, building
-  isOnline             Boolean   @default(false)
+  venue                String?
+  isOnline             Boolean            @default(false)
   meetingLink          String?
   startDate            DateTime
   endDate              DateTime
   registrationDeadline DateTime?
   maxParticipants      Int?
-  currentParticipants  Int       @default(0)
-  tags                 String[]  // networking, free-food, certificate, etc.
-  requirements         String?   // Prerequisites or requirements
-  organizer            String    // Club name or individual
+  currentParticipants  Int                @default(0)
+  tags                 String[]
+  requirements         String?
+  organizer            String
   contactEmail         String?
   contactPhone         String?
-  status               String    @default("upcoming") // upcoming, ongoing, completed, cancelled
-  isPublished          Boolean   @default(false)
-  isFeatured           Boolean   @default(false)
-  viewCount            Int       @default(0)
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime  @updatedAt
-
-  // Relations
-  organizerId  String
-  organizerUser User              @relation("EventOrganizer", fields: [organizerId], references: [id], onDelete: Cascade)
-
-  participants EventParticipant[]
-  reviews      EventReview[]
-  updates      EventUpdate[]
+  status               String             @default("upcoming")
+  isPublished          Boolean            @default(false)
+  isFeatured           Boolean            @default(false)
+  viewCount            Int                @default(0)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  organizerId          String
+  organizerUser        User               @relation("EventOrganizer", fields: [organizerId], references: [id], onDelete: Cascade)
+  participants         EventParticipant[]
+  reviews              EventReview[]
+  updates              EventUpdate[]
 
   @@index([organizerId])
   @@index([category])
@@ -525,17 +433,15 @@ model Event {
 
 model EventParticipant {
   id            String    @id @default(cuid())
-  status        String    @default("registered") // registered, attended, cancelled
+  status        String    @default("registered")
   registeredAt  DateTime  @default(now())
   attendedAt    DateTime?
-  paymentStatus String?   @default("pending") // pending, paid, refunded
+  paymentStatus String?   @default("pending")
   transactionId String?
-
-  // Relations
-  eventId String
-  userId  String
-  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  eventId       String
+  userId        String
+  event         Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([eventId, userId])
   @@index([eventId])
@@ -545,15 +451,13 @@ model EventParticipant {
 
 model EventReview {
   id        String   @id @default(cuid())
-  rating    Int      // 1-5
+  rating    Int
   comment   String?
   createdAt DateTime @default(now())
-
-  // Relations
-  eventId String
-  userId  String
-  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  eventId   String
+  userId    String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([eventId])
   @@index([userId])
@@ -564,10 +468,8 @@ model EventUpdate {
   title     String
   message   String
   createdAt DateTime @default(now())
-
-  // Relations
-  eventId String
-  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
   @@index([eventId])
   @@index([createdAt])

@@ -39,6 +39,15 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   BookOpen,
   Users,
@@ -69,6 +78,8 @@ import {
   Sparkles,
   Loader2,
   MapPin,
+  Folders,
+  Download,
 } from "lucide-react";
 import {
   marketplaceAPI,
@@ -106,6 +117,7 @@ function DashboardContent() {
   };
 
   const [activeTab, setActiveTab] = useState("discovery");
+  const [myHubTab, setMyHubTab] = useState("purchases");
   const [viewMode, setViewMode] = useState("grid");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
@@ -259,17 +271,7 @@ function DashboardContent() {
   // Handle URL tab parameter
   useEffect(() => {
     const tab = searchParams.get("tab");
-    if (
-      tab &&
-      [
-        "discovery",
-        "messages",
-        "tutoring",
-        "orders",
-        "insights",
-        "wallet",
-      ].includes(tab)
-    ) {
+    if (tab && ["discovery", "my-hub", "messages", "wallet"].includes(tab)) {
       setActiveTab(tab);
     }
   }, [searchParams]);
@@ -503,8 +505,7 @@ function DashboardContent() {
           setTutoringSessions(sessions);
           break;
 
-        case "orders":
-        case "insights":
+        case "my-hub":
           const [sales, purchases] = await Promise.all([
             transactionsAPI.getTransactions({
               type: "sales",
@@ -527,20 +528,42 @@ function DashboardContent() {
           );
           setAllTransactions(allTrans);
 
-          // Also load marketplace items for insights
-          if (tab === "insights") {
-            const marketplaceData = await marketplaceAPI.getItems();
-            setMarketplaceItems(filterTradableItems(marketplaceData));
-          }
+          // Also load marketplace items for My Hub Listings tab
+          const marketplaceData = await marketplaceAPI.getItems();
+          setMarketplaceItems(filterTradableItems(marketplaceData));
           break;
 
         case "wallet":
-          const [withdrawalData, statsData] = await Promise.all([
-            withdrawalsAPI.getWithdrawals({}),
-            statsAPI.getUserStats(),
-          ]);
+          const [withdrawalData, statsData, walletSales, walletPurchases] =
+            await Promise.all([
+              withdrawalsAPI.getWithdrawals({}),
+              statsAPI.getUserStats(),
+              transactionsAPI.getTransactions({
+                type: "sales",
+              }),
+              transactionsAPI.getTransactions({
+                type: "purchases",
+              }),
+            ]);
           setWithdrawals(withdrawalData);
           setUserStats(statsData);
+
+          // Set transaction data for analytics in wallet
+          setSalesTransactions(
+            walletSales.filter((t: any) => t.status === "COMPLETED")
+          );
+          const walletAllTrans = [
+            ...walletSales.map((t: any) => ({ ...t, type: "sale" })),
+            ...walletPurchases.map((t: any) => ({ ...t, type: "purchase" })),
+          ].sort(
+            (a: any, b: any) =>
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
+          setAllTransactions(walletAllTrans);
+
+          // Load marketplace items for analytics
+          const walletMarketplaceData = await marketplaceAPI.getItems();
+          setMarketplaceItems(filterTradableItems(walletMarketplaceData));
 
           // Auto-sync balances if totalEarnings is 0 but user has transactions
           if (statsData && statsData.totalEarnings === 0) {
@@ -1616,18 +1639,15 @@ function DashboardContent() {
                   <ShoppingCart className="h-5 w-5" />
                 </button>
                 <button
-                  onClick={() => router.push("/orders")}
-                  className="flex flex-col items-center p-2 text-medium-gray hover:text-dark-blue transition-colors"
-                  title="Orders"
+                  onClick={() => setActiveTab("my-hub")}
+                  className={`flex flex-col items-center p-2 transition-colors ${
+                    activeTab === "my-hub"
+                      ? "text-dark-blue"
+                      : "text-medium-gray hover:text-dark-blue"
+                  }`}
+                  title="My Hub"
                 >
-                  <Package className="h-5 w-5" />
-                </button>
-                <button
-                  onClick={() => router.push("/library")}
-                  className="flex flex-col items-center p-2 text-medium-gray hover:text-dark-blue transition-colors"
-                  title="Library"
-                >
-                  <Library className="h-5 w-5" />
+                  <Folders className="h-5 w-5" />
                 </button>
                 <button
                   onClick={() => setActiveTab("messages")}
@@ -1656,17 +1676,6 @@ function DashboardContent() {
                 >
                   <Wallet className="h-5 w-5" />
                 </button>
-                <button
-                  onClick={() => setActiveTab("insights")}
-                  className={`flex flex-col items-center p-2 transition-colors ${
-                    activeTab === "insights"
-                      ? "text-dark-blue"
-                      : "text-medium-gray hover:text-dark-blue"
-                  }`}
-                  title="Analytics"
-                >
-                  <TrendingUp className="h-5 w-5" />
-                </button>
               </div>
             </div>
           </div>
@@ -1688,19 +1697,15 @@ function DashboardContent() {
                 </button>
 
                 <button
-                  onClick={() => router.push("/orders")}
-                  className="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors text-medium-gray hover:bg-secondary-100"
+                  onClick={() => setActiveTab("my-hub")}
+                  className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                    activeTab === "my-hub"
+                      ? "bg-primary-100 text-dark-blue"
+                      : "text-medium-gray hover:bg-secondary-100"
+                  }`}
                 >
-                  <Package className="mr-3 h-5 w-5" />
-                  Orders
-                </button>
-
-                <button
-                  onClick={() => router.push("/library")}
-                  className="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors text-medium-gray hover:bg-secondary-100"
-                >
-                  <Library className="mr-3 h-5 w-5" />
-                  Library
+                  <Folders className="mr-3 h-5 w-5" />
+                  My Hub
                 </button>
 
                 <button
@@ -1731,18 +1736,6 @@ function DashboardContent() {
                 >
                   <Wallet className="mr-3 h-5 w-5" />
                   Wallet
-                </button>
-
-                <button
-                  onClick={() => setActiveTab("insights")}
-                  className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                    activeTab === "insights"
-                      ? "bg-primary-100 text-dark-blue"
-                      : "text-medium-gray hover:bg-secondary-100"
-                  }`}
-                >
-                  <TrendingUp className="mr-3 h-5 w-5" />
-                  Analytics
                 </button>
               </nav>
 
@@ -2288,243 +2281,6 @@ function DashboardContent() {
                       </div>
                     )}
                   </>
-                )}
-              </div>
-            )}
-
-            {activeTab === "sales" && (
-              <div>
-                <h1 className="text-2xl font-bold text-dark-gray mb-6">
-                  Sales Dashboard
-                </h1>
-
-                {/* Sales Stats */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                  <div className="bg-white rounded-lg shadow p-6 border border-light-gray">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-medium-gray mb-1">
-                          Total Sales
-                        </p>
-                        <p className="text-2xl font-bold text-dark-gray">
-                          {salesTransactions.length}
-                        </p>
-                      </div>
-                      <div className="bg-green-100 p-3 rounded-full">
-                        <ShoppingCart className="h-6 w-6 text-green-600" />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-white rounded-lg shadow p-6 border border-light-gray">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-medium-gray mb-1">
-                          Total Revenue
-                        </p>
-                        <p className="text-2xl font-bold text-dark-gray">
-                          Rp{" "}
-                          {salesTransactions
-                            .reduce((sum, t) => sum + t.amount, 0)
-                            .toLocaleString()}
-                        </p>
-                      </div>
-                      <div className="bg-blue-100 p-3 rounded-full">
-                        <DollarSign className="h-6 w-6 text-blue-600" />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-white rounded-lg shadow p-6 border border-light-gray">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-medium-gray mb-1">
-                          Average Sale
-                        </p>
-                        <p className="text-2xl font-bold text-dark-gray">
-                          Rp{" "}
-                          {salesTransactions.length > 0
-                            ? Math.round(
-                                salesTransactions.reduce(
-                                  (sum, t) => sum + t.amount,
-                                  0
-                                ) / salesTransactions.length
-                              ).toLocaleString()
-                            : "0"}
-                        </p>
-                      </div>
-                      <div className="bg-purple-100 p-3 rounded-full">
-                        <TrendingUp className="h-6 w-6 text-purple-600" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Sales Transactions Table */}
-                {salesTransactions.length > 0 ? (
-                  <div className="bg-white rounded-lg shadow border border-light-gray overflow-hidden">
-                    <div className="overflow-x-auto">
-                      <table className="w-full">
-                        <thead className="bg-gray-50 border-b border-light-gray">
-                          <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-medium-gray uppercase tracking-wider">
-                              Order ID
-                            </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-medium-gray uppercase tracking-wider">
-                              Item
-                            </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-medium-gray uppercase tracking-wider">
-                              Buyer
-                            </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-medium-gray uppercase tracking-wider">
-                              Amount
-                            </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-medium-gray uppercase tracking-wider">
-                              Payment Method
-                            </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-medium-gray uppercase tracking-wider">
-                              Date
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-light-gray">
-                          {salesTransactions.map((transaction) => (
-                            <tr
-                              key={transaction.id}
-                              className="hover:bg-gray-50"
-                            >
-                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-dark-gray">
-                                {transaction.orderId.substring(0, 12)}...
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-gray">
-                                {transaction.itemTitle}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-gray">
-                                {transaction.buyer?.name || "Unknown"}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">
-                                Rp {transaction.amount.toLocaleString()}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-gray">
-                                {transaction.paymentMethod || "N/A"}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-medium-gray">
-                                {new Date(
-                                  transaction.createdAt
-                                ).toLocaleDateString()}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="bg-white rounded-lg shadow p-8 text-center border border-light-gray">
-                    <TrendingUp className="h-12 w-12 text-medium-gray mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-dark-gray mb-2">
-                      No sales yet
-                    </h3>
-                    <p className="text-medium-gray mb-4">
-                      Start selling your study materials to see your sales here!
-                    </p>
-                    <button
-                      onClick={handleAddItemClick}
-                      className="bg-dark-blue text-white px-4 py-2 rounded-md hover:bg-primary-800 transition-colors"
-                    >
-                      Add Your First Item
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {activeTab === "my-items" && (
-              <div>
-                <h1 className="text-2xl font-bold text-dark-gray mb-6">
-                  My Items
-                </h1>
-                {marketplaceItems.filter(
-                  (item) => item.sellerId === currentUser?.id
-                ).length > 0 ? (
-                  <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-                    {marketplaceItems
-                      .filter((item) => item.sellerId === currentUser?.id)
-                      .map((item) => (
-                        <div
-                          key={item.id}
-                          className="bg-white rounded-lg shadow hover:shadow-md transition-shadow border border-light-gray"
-                        >
-                          <div className="aspect-w-16 aspect-h-9 bg-secondary-200 rounded-t-lg">
-                            <div className="w-full h-48 bg-gradient-to-br from-primary-100 to-primary-200 rounded-t-lg flex items-center justify-center">
-                              <BookOpen className="h-12 w-12 text-dark-blue" />
-                            </div>
-                          </div>
-                          <div className="p-4">
-                            <div className="flex justify-between items-start mb-2">
-                              <span className="inline-block bg-primary-100 text-dark-blue text-xs px-2 py-1 rounded-full">
-                                {item.category}
-                              </span>
-                              <span
-                                className={`text-xs px-2 py-1 rounded-full ${
-                                  item.status === "available"
-                                    ? "bg-green-100 text-green-800"
-                                    : item.status === "sold"
-                                    ? "bg-gray-100 text-gray-800"
-                                    : "bg-yellow-100 text-yellow-800"
-                                }`}
-                              >
-                                {item.status}
-                              </span>
-                            </div>
-                            <h3 className="font-semibold text-dark-gray mb-1">
-                              {item.title}
-                            </h3>
-                            <p className="text-sm text-medium-gray mb-2 line-clamp-2">
-                              {item.description}
-                            </p>
-                            <p className="text-xs text-medium-gray mb-3">
-                              Course: {item.course}
-                            </p>
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <p className="text-lg font-bold text-dark-blue">
-                                  Rp {item.price.toLocaleString()}
-                                </p>
-                                <div className="flex items-center text-sm text-medium-gray">
-                                  <Star className="h-3 w-3 text-yellow-400 mr-1" />
-                                  {item.rating} ({item.reviews})
-                                </div>
-                              </div>
-                              <div className="flex gap-2">
-                                <button
-                                  onClick={() => handleDeleteItem(item.id)}
-                                  className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 transition-colors"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                  </div>
-                ) : (
-                  <div className="bg-white rounded-lg shadow p-8 text-center border border-light-gray">
-                    <BookOpen className="h-12 w-12 text-medium-gray mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-dark-gray mb-2">
-                      No items yet
-                    </h3>
-                    <p className="text-medium-gray mb-4">
-                      Start selling your study materials to earn money!
-                    </p>
-                    <button
-                      onClick={handleAddItemClick}
-                      className="bg-dark-blue text-white px-4 py-2 rounded-md hover:bg-primary-800 transition-colors"
-                    >
-                      Add Your First Item
-                    </button>
-                  </div>
                 )}
               </div>
             )}
@@ -3379,119 +3135,570 @@ function DashboardContent() {
               </div>
             )}
 
-            {activeTab === "academic-support" && (
-              <div>
-                <h1 className="text-2xl font-bold text-dark-gray mb-6">
-                  Academic Support Sessions
-                </h1>
-                {tutoringSessions.length > 0 ? (
-                  <div className="space-y-4">
-                    {tutoringSessions.map((session) => (
-                      <div
-                        key={session.id}
-                        className="bg-white rounded-lg shadow border border-light-gray p-4 sm:p-6"
-                      >
-                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
-                          <div className="flex-1">
-                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-3">
-                              <h3 className="text-lg font-semibold text-dark-gray">
-                                {session.subject}
-                              </h3>
-                              <span
-                                className={`px-3 py-1 rounded-full text-sm font-medium ${
-                                  session.status === "pending"
-                                    ? "bg-yellow-100 text-yellow-800"
-                                    : session.status === "confirmed"
-                                    ? "bg-green-100 text-green-800"
-                                    : session.status === "completed"
-                                    ? "bg-blue-100 text-blue-800"
-                                    : "bg-red-100 text-red-800"
-                                }`}
-                              >
-                                {session.status}
-                              </span>
-                            </div>
-                            <p className="text-medium-gray mb-2">
-                              {session.description}
-                            </p>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                              <div className="flex items-center text-medium-gray">
-                                <Calendar className="h-4 w-4 mr-2" />
-                                {new Date(
-                                  session.scheduledAt
-                                ).toLocaleDateString()}
-                              </div>
-                              <div className="flex items-center text-medium-gray">
-                                <Clock className="h-4 w-4 mr-2" />
-                                {session.duration} minutes
-                              </div>
-                              <div className="flex items-center text-medium-gray">
-                                <DollarSign className="h-4 w-4 mr-2" />
-                                Rp {session.price.toLocaleString()}
-                              </div>
-                              <div className="flex items-center text-medium-gray">
-                                <BookOpen className="h-4 w-4 mr-2" />
-                                {session.course}
-                              </div>
-                            </div>
-                            <div className="mt-3 text-sm text-medium-gray">
-                              <p>Tutor: {session.tutorName}</p>
-                              <p>Student: {session.studentName}</p>
-                            </div>
-                          </div>
-                          <div className="flex gap-2 ml-4">
-                            {session.tutorId === currentUser?.id && (
-                              <button
-                                onClick={() =>
-                                  handleDeleteTutoringSession(session.id)
-                                }
-                                className="bg-red-600 text-white px-3 py-2 rounded-lg hover:bg-red-700 transition-colors"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </button>
-                            )}
-                            <button
-                              onClick={() =>
-                                handleCreateConversation(
-                                  session.tutorId === currentUser?.id
-                                    ? session.studentId
-                                    : session.tutorId,
-                                  session.tutorId === currentUser?.id
-                                    ? session.studentName
-                                    : session.tutorName
-                                )
-                              }
-                              className="bg-soft-blue text-white px-3 py-2 rounded-lg hover:bg-blue-600 transition-colors"
-                            >
-                              <MessageCircle className="h-4 w-4" />
-                            </button>
-                          </div>
+            {activeTab === "my-hub" && (
+              <div className="space-y-6">
+                <div>
+                  <h1 className="text-2xl font-bold text-dark-gray">My Hub</h1>
+                  <p className="text-sm text-medium-gray mt-1">
+                    Manage your purchases, sales, library, and listings
+                  </p>
+                </div>
+
+                <Tabs value={myHubTab} onValueChange={setMyHubTab}>
+                  <TabsList className="grid w-full grid-cols-4">
+                    <TabsTrigger value="purchases">Purchases</TabsTrigger>
+                    <TabsTrigger value="sales">Sales</TabsTrigger>
+                    <TabsTrigger value="library">Library</TabsTrigger>
+                    <TabsTrigger value="listings">Listings</TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="purchases" className="space-y-4 mt-6">
+                    <div className="grid grid-cols-3 gap-3 mb-6">
+                      <Card className="p-4">
+                        <div className="flex items-center justify-between mb-1">
+                          <Package className="h-4 w-4 text-muted-foreground" />
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="bg-white rounded-lg shadow p-8 text-center border border-light-gray">
-                    <Users className="h-12 w-12 text-medium-gray mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-dark-gray mb-2">
-                      No tutoring sessions
-                    </h3>
-                    <p className="text-medium-gray mb-4">
-                      Offer your expertise or find a tutor!
-                    </p>
-                    <div className="flex justify-center space-x-4">
-                      <button
-                        onClick={handleAddTutoringClick}
-                        className="bg-campus-green text-white px-4 py-2 rounded-md hover:bg-success-700 transition-colors"
-                      >
-                        Offer Tutoring
-                      </button>
-                      <button className="border border-dark-blue text-dark-blue px-4 py-2 rounded-md hover:bg-primary-50 transition-colors">
-                        Find a Tutor
-                      </button>
+                        <div className="text-2xl font-bold">
+                          {
+                            allTransactions.filter((t) => t.type === "purchase")
+                              .length
+                          }
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Total Orders
+                        </p>
+                      </Card>
+                      <Card className="p-4">
+                        <div className="flex items-center justify-between mb-1">
+                          <Download className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                        <div className="text-2xl font-bold">
+                          {
+                            allTransactions.filter(
+                              (t) =>
+                                t.type === "purchase" &&
+                                t.status === "COMPLETED"
+                            ).length
+                          }
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Completed
+                        </p>
+                      </Card>
+                      <Card className="p-4">
+                        <div className="flex items-center justify-between mb-1">
+                          <DollarSign className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                        <div className="text-xl font-bold truncate">
+                          Rp
+                          {allTransactions
+                            .filter(
+                              (t) =>
+                                t.type === "purchase" &&
+                                t.status === "COMPLETED"
+                            )
+                            .reduce((sum, t) => sum + t.amount, 0)
+                            .toLocaleString()}
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Total Spent
+                        </p>
+                      </Card>
                     </div>
-                  </div>
-                )}
+
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Purchase History</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        {allTransactions.filter((t) => t.type === "purchase")
+                          .length === 0 ? (
+                          <div className="flex flex-col items-center justify-center py-12">
+                            <Package className="h-12 w-12 text-muted-foreground mb-4" />
+                            <p className="text-muted-foreground">
+                              No purchases yet
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="overflow-x-auto">
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead>Order ID</TableHead>
+                                  <TableHead>Item</TableHead>
+                                  <TableHead>Date</TableHead>
+                                  <TableHead>Amount</TableHead>
+                                  <TableHead>Status</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {allTransactions
+                                  .filter((t) => t.type === "purchase")
+                                  .map((order) => (
+                                    <TableRow key={order.id}>
+                                      <TableCell className="font-mono text-sm">
+                                        {order.orderId.substring(0, 12)}...
+                                      </TableCell>
+                                      <TableCell>
+                                        <div>
+                                          <p className="font-medium">
+                                            {order.itemTitle}
+                                          </p>
+                                          <p className="text-sm text-muted-foreground">
+                                            {order.itemType === "marketplace"
+                                              ? "Study Material"
+                                              : order.itemType === "food"
+                                              ? "Food"
+                                              : "Event"}
+                                          </p>
+                                        </div>
+                                      </TableCell>
+                                      <TableCell className="text-sm text-muted-foreground">
+                                        {new Date(
+                                          order.createdAt
+                                        ).toLocaleDateString()}
+                                      </TableCell>
+                                      <TableCell className="font-semibold">
+                                        Rp {order.amount.toLocaleString()}
+                                      </TableCell>
+                                      <TableCell>
+                                        <Badge
+                                          variant={
+                                            order.status === "COMPLETED"
+                                              ? "default"
+                                              : order.status === "PENDING"
+                                              ? "secondary"
+                                              : "destructive"
+                                          }
+                                        >
+                                          {order.status}
+                                        </Badge>
+                                      </TableCell>
+                                    </TableRow>
+                                  ))}
+                              </TableBody>
+                            </Table>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+
+                  <TabsContent value="sales" className="space-y-4 mt-6">
+                    <div className="grid grid-cols-3 gap-3 mb-6">
+                      <Card className="p-4">
+                        <div className="flex items-center justify-between mb-1">
+                          <DollarSign className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                        <div className="text-2xl font-bold">
+                          {
+                            allTransactions.filter(
+                              (t) =>
+                                t.type === "sale" && t.status === "COMPLETED"
+                            ).length
+                          }
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Total Sales
+                        </p>
+                      </Card>
+                      <Card className="p-4">
+                        <div className="flex items-center justify-between mb-1">
+                          <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                        <div className="text-xl font-bold truncate">
+                          Rp
+                          {allTransactions
+                            .filter(
+                              (t) =>
+                                t.type === "sale" && t.status === "COMPLETED"
+                            )
+                            .reduce((sum, t) => sum + t.amount, 0)
+                            .toLocaleString()}
+                        </div>
+                        <p className="text-xs text-muted-foreground">Revenue</p>
+                      </Card>
+                      <Card className="p-4">
+                        <div className="flex items-center justify-between mb-1">
+                          <Package className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                        <div className="text-2xl font-bold">
+                          {
+                            allTransactions.filter(
+                              (t) => t.type === "sale" && t.status === "PENDING"
+                            ).length
+                          }
+                        </div>
+                        <p className="text-xs text-muted-foreground">Pending</p>
+                      </Card>
+                    </div>
+
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Sales History</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        {allTransactions.filter((t) => t.type === "sale")
+                          .length === 0 ? (
+                          <div className="flex flex-col items-center justify-center py-12">
+                            <DollarSign className="h-12 w-12 text-muted-foreground mb-4" />
+                            <p className="text-muted-foreground">
+                              No sales yet
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="overflow-x-auto">
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead>Order ID</TableHead>
+                                  <TableHead>Item</TableHead>
+                                  <TableHead>Buyer</TableHead>
+                                  <TableHead>Date</TableHead>
+                                  <TableHead>Amount</TableHead>
+                                  <TableHead>Status</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {allTransactions
+                                  .filter(
+                                    (t) =>
+                                      t.type === "sale" &&
+                                      t.status === "COMPLETED"
+                                  )
+                                  .map((sale) => (
+                                    <TableRow key={sale.id}>
+                                      <TableCell className="font-mono text-sm">
+                                        {sale.orderId.substring(0, 12)}...
+                                      </TableCell>
+                                      <TableCell>
+                                        <div>
+                                          <p className="font-medium">
+                                            {sale.itemTitle}
+                                          </p>
+                                          <p className="text-sm text-muted-foreground">
+                                            {sale.itemType === "marketplace"
+                                              ? "Study Material"
+                                              : sale.itemType === "food"
+                                              ? "Food"
+                                              : "Event"}
+                                          </p>
+                                        </div>
+                                      </TableCell>
+                                      <TableCell className="text-sm">
+                                        {sale.buyer?.name || "Unknown"}
+                                      </TableCell>
+                                      <TableCell className="text-sm text-muted-foreground">
+                                        {new Date(
+                                          sale.createdAt
+                                        ).toLocaleDateString()}
+                                      </TableCell>
+                                      <TableCell className="font-semibold">
+                                        Rp {sale.amount.toLocaleString()}
+                                      </TableCell>
+                                      <TableCell>
+                                        <Badge
+                                          variant={
+                                            sale.status === "COMPLETED"
+                                              ? "default"
+                                              : sale.status === "PENDING"
+                                              ? "secondary"
+                                              : "destructive"
+                                          }
+                                        >
+                                          {sale.status}
+                                        </Badge>
+                                      </TableCell>
+                                    </TableRow>
+                                  ))}
+                              </TableBody>
+                            </Table>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+
+                  <TabsContent value="library" className="space-y-4 mt-6">
+                    <div className="grid grid-cols-3 gap-3 mb-6">
+                      <Card className="p-4">
+                        <div className="flex items-center justify-between mb-1">
+                          <BookOpen className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                        <div className="text-2xl font-bold">
+                          {
+                            allTransactions.filter(
+                              (t) =>
+                                t.type === "purchase" &&
+                                t.status === "COMPLETED" &&
+                                t.itemType === "marketplace"
+                            ).length
+                          }
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Total Items
+                        </p>
+                      </Card>
+                      <Card className="p-4">
+                        <div className="flex items-center justify-between mb-1">
+                          <FileText className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                        <div className="text-2xl font-bold">
+                          {
+                            allTransactions.filter(
+                              (t) =>
+                                t.type === "purchase" &&
+                                t.status === "COMPLETED" &&
+                                t.itemType === "marketplace" &&
+                                t.item?.category === "Notes"
+                            ).length
+                          }
+                        </div>
+                        <p className="text-xs text-muted-foreground">Notes</p>
+                      </Card>
+                      <Card className="p-4">
+                        <div className="flex items-center justify-between mb-1">
+                          <BookOpen className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                        <div className="text-2xl font-bold">
+                          {
+                            allTransactions.filter(
+                              (t) =>
+                                t.type === "purchase" &&
+                                t.status === "COMPLETED" &&
+                                t.itemType === "marketplace" &&
+                                t.item?.category === "Book"
+                            ).length
+                          }
+                        </div>
+                        <p className="text-xs text-muted-foreground">Books</p>
+                      </Card>
+                    </div>
+
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>My Library</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        {allTransactions.filter(
+                          (t) =>
+                            t.type === "purchase" &&
+                            t.status === "COMPLETED" &&
+                            t.itemType === "marketplace"
+                        ).length === 0 ? (
+                          <div className="flex flex-col items-center justify-center py-12">
+                            <BookOpen className="h-16 w-16 text-muted-foreground mb-4" />
+                            <h3 className="text-lg font-semibold text-dark-gray mb-2">
+                              No items in your library
+                            </h3>
+                            <p className="text-muted-foreground mb-4">
+                              Start purchasing study materials to build your
+                              library
+                            </p>
+                            <Button onClick={() => setActiveTab("discovery")}>
+                              Browse Marketplace
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {allTransactions
+                              .filter(
+                                (t) =>
+                                  t.type === "purchase" &&
+                                  t.status === "COMPLETED" &&
+                                  t.itemType === "marketplace"
+                              )
+                              .map((item) => (
+                                <Card
+                                  key={item.id}
+                                  className="hover:shadow-lg transition-shadow"
+                                >
+                                  <CardHeader>
+                                    <div className="flex items-start justify-between">
+                                      <div className="flex-1">
+                                        <CardTitle className="text-lg line-clamp-2">
+                                          {item.itemTitle}
+                                        </CardTitle>
+                                        <p className="text-sm text-muted-foreground mt-1">
+                                          {item.item?.category ||
+                                            "Study Material"}
+                                        </p>
+                                      </div>
+                                      <Badge variant="secondary">
+                                        {item.item?.category || "Material"}
+                                      </Badge>
+                                    </div>
+                                  </CardHeader>
+                                  <CardContent>
+                                    <p className="text-sm text-muted-foreground line-clamp-3">
+                                      {item.item?.description ||
+                                        "No description available"}
+                                    </p>
+                                    <div className="mt-4 space-y-1">
+                                      <div className="text-xs text-muted-foreground">
+                                        Purchased on{" "}
+                                        {new Date(
+                                          item.createdAt
+                                        ).toLocaleDateString()}
+                                      </div>
+                                      {item.item?.fileName && (
+                                        <div className="text-xs text-muted-foreground flex items-center gap-1">
+                                          <FileText className="h-3 w-3" />
+                                          {item.item.fileName}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </CardContent>
+                                  <CardFooter>
+                                    <Button
+                                      size="sm"
+                                      className="w-full"
+                                      onClick={async () => {
+                                        if (item.item?.fileUrl) {
+                                          try {
+                                            await fileAPI.downloadFile(
+                                              item.itemId,
+                                              item.item.fileUrl,
+                                              item.item.fileName ||
+                                                item.itemTitle
+                                            );
+                                            toast.success("Download started!");
+                                          } catch (error) {
+                                            toast.error("Download failed");
+                                          }
+                                        } else {
+                                          toast.error("No file available");
+                                        }
+                                      }}
+                                      disabled={!item.item?.fileUrl}
+                                    >
+                                      <Download className="h-4 w-4 mr-1" />
+                                      Download
+                                    </Button>
+                                  </CardFooter>
+                                </Card>
+                              ))}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+
+                  <TabsContent value="listings" className="space-y-4 mt-6">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>My Listings</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        {marketplaceItems.filter(
+                          (item) => item.sellerId === currentUser?.id
+                        ).length === 0 ? (
+                          <div className="flex flex-col items-center justify-center py-12">
+                            <Package className="h-12 w-12 text-muted-foreground mb-4" />
+                            <p className="text-muted-foreground">
+                              No listings yet
+                            </p>
+                            <Button
+                              onClick={() => setShowAddItemModal(true)}
+                              className="mt-4"
+                            >
+                              <Plus className="h-4 w-4 mr-2" />
+                              Add Item
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                            {marketplaceItems
+                              .filter(
+                                (item) => item.sellerId === currentUser?.id
+                              )
+                              .map((item) => (
+                                <Card
+                                  key={item.id}
+                                  className="hover:shadow-lg transition-shadow"
+                                >
+                                  {item.imageUrl && (
+                                    <div className="relative w-full h-48 bg-gray-100">
+                                      <img
+                                        src={item.imageUrl}
+                                        alt={item.title}
+                                        className="w-full h-full object-cover rounded-t-lg"
+                                      />
+                                      <Badge
+                                        className="absolute top-2 right-2"
+                                        variant={
+                                          item.status === "available"
+                                            ? "default"
+                                            : "secondary"
+                                        }
+                                      >
+                                        {item.status}
+                                      </Badge>
+                                    </div>
+                                  )}
+                                  <CardHeader>
+                                    <div className="flex items-start justify-between">
+                                      <div className="flex-1">
+                                        <CardTitle className="text-lg line-clamp-2">
+                                          {item.title}
+                                        </CardTitle>
+                                        <p className="text-sm text-muted-foreground mt-1">
+                                          {item.category}
+                                        </p>
+                                      </div>
+                                      {!item.imageUrl && (
+                                        <Badge variant="secondary">
+                                          {item.category}
+                                        </Badge>
+                                      )}
+                                    </div>
+                                  </CardHeader>
+                                  <CardContent>
+                                    <p className="text-sm text-muted-foreground line-clamp-3">
+                                      {item.description}
+                                    </p>
+                                    <div className="mt-4 flex items-center justify-between">
+                                      <p className="text-lg font-bold text-dark-blue">
+                                        Rp {item.price.toLocaleString()}
+                                      </p>
+                                      <div className="text-xs text-muted-foreground">
+                                        {item.viewCount || 0} views
+                                      </div>
+                                    </div>
+                                  </CardContent>
+                                  <CardFooter className="flex gap-2">
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="flex-1"
+                                      onClick={() => {
+                                        setSelectedItem(item);
+                                        setShowItemDetailModal(true);
+                                      }}
+                                    >
+                                      <Eye className="h-4 w-4 mr-1" />
+                                      View
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="flex-1"
+                                      onClick={() => {
+                                        setSelectedItem(item);
+                                        handleEditItem(item);
+                                      }}
+                                    >
+                                      Edit
+                                    </Button>
+                                  </CardFooter>
+                                </Card>
+                              ))}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                </Tabs>
               </div>
             )}
 
@@ -3668,12 +3875,194 @@ function DashboardContent() {
                         </div>
                       </Card>
                     </div>
+
+                    {/* Analytics & Insights Section */}
+                    <div className="mt-6 pt-6 border-t border-gray-200">
+                      <h2 className="text-lg font-semibold text-dark-gray mb-4">
+                        Analytics & Insights
+                      </h2>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <Card>
+                          <CardHeader className="pb-2">
+                            <CardTitle className="text-sm font-medium text-muted-foreground">
+                              Total Sales
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="text-2xl font-bold">
+                              {
+                                allTransactions.filter(
+                                  (t) =>
+                                    t.type === "sale" &&
+                                    t.status === "COMPLETED"
+                                ).length
+                              }
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Completed orders
+                            </p>
+                          </CardContent>
+                        </Card>
+
+                        <Card>
+                          <CardHeader className="pb-2">
+                            <CardTitle className="text-sm font-medium text-muted-foreground">
+                              Total Revenue
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="text-2xl font-bold">
+                              Rp{" "}
+                              {allTransactions
+                                .filter(
+                                  (t) =>
+                                    t.type === "sale" &&
+                                    t.status === "COMPLETED"
+                                )
+                                .reduce((sum, t) => sum + t.amount, 0)
+                                .toLocaleString()}
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Before platform fee
+                            </p>
+                          </CardContent>
+                        </Card>
+
+                        <Card>
+                          <CardHeader className="pb-2">
+                            <CardTitle className="text-sm font-medium text-muted-foreground">
+                              Active Listings
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="text-2xl font-bold">
+                              {
+                                marketplaceItems.filter(
+                                  (item) =>
+                                    item.sellerId === currentUser?.id &&
+                                    item.status === "available"
+                                ).length
+                              }
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Currently listed
+                            </p>
+                          </CardContent>
+                        </Card>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <Card>
+                          <CardHeader>
+                            <CardTitle>Sales by Category</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="space-y-3">
+                              {["Study Material", "Food", "Event"].map(
+                                (category) => {
+                                  const categoryType =
+                                    category === "Study Material"
+                                      ? "marketplace"
+                                      : category.toLowerCase();
+                                  const count = allTransactions.filter(
+                                    (t) =>
+                                      t.type === "sale" &&
+                                      t.status === "COMPLETED" &&
+                                      t.itemType === categoryType
+                                  ).length;
+                                  const total = allTransactions.filter(
+                                    (t) =>
+                                      t.type === "sale" &&
+                                      t.status === "COMPLETED"
+                                  ).length;
+                                  const percentage =
+                                    total > 0
+                                      ? Math.round((count / total) * 100)
+                                      : 0;
+
+                                  return (
+                                    <div key={category}>
+                                      <div className="flex items-center justify-between mb-1">
+                                        <span className="text-sm font-medium">
+                                          {category}
+                                        </span>
+                                        <span className="text-sm text-muted-foreground">
+                                          {count} ({percentage}%)
+                                        </span>
+                                      </div>
+                                      <div className="w-full bg-gray-200 rounded-full h-2">
+                                        <div
+                                          className="bg-dark-blue h-2 rounded-full"
+                                          style={{ width: `${percentage}%` }}
+                                        ></div>
+                                      </div>
+                                    </div>
+                                  );
+                                }
+                              )}
+                            </div>
+                          </CardContent>
+                        </Card>
+
+                        <Card>
+                          <CardHeader>
+                            <CardTitle>Recent Activity</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="space-y-3">
+                              {allTransactions
+                                .filter((t) => t.type === "sale")
+                                .slice(0, 5)
+                                .map((transaction) => (
+                                  <div
+                                    key={transaction.id}
+                                    className="flex items-center justify-between pb-3 border-b border-border last:border-0 last:pb-0"
+                                  >
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-sm font-medium line-clamp-1">
+                                        {transaction.itemTitle}
+                                      </p>
+                                      <p className="text-xs text-muted-foreground">
+                                        {new Date(
+                                          transaction.createdAt
+                                        ).toLocaleDateString()}
+                                      </p>
+                                    </div>
+                                    <div className="text-right ml-2">
+                                      <p className="text-sm font-semibold">
+                                        Rp {transaction.amount.toLocaleString()}
+                                      </p>
+                                      <Badge
+                                        variant={
+                                          transaction.status === "COMPLETED"
+                                            ? "default"
+                                            : "secondary"
+                                        }
+                                        className="text-xs"
+                                      >
+                                        {transaction.status}
+                                      </Badge>
+                                    </div>
+                                  </div>
+                                ))}
+                              {allTransactions.filter((t) => t.type === "sale")
+                                .length === 0 && (
+                                <div className="text-center py-6 text-sm text-muted-foreground">
+                                  No sales yet
+                                </div>
+                              )}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </div>
+                    </div>
                   </>
                 )}
               </div>
             )}
 
-            {activeTab === "insights" && (
+            {activeTab === "insights-old-removed" && (
               <div className="space-y-4">
                 {/* Header with Refresh Button */}
                 <div className="flex items-center justify-between">
@@ -3951,6 +4340,185 @@ function DashboardContent() {
                           </div>
                         </CardContent>
                       </Card>
+                    </div>
+
+                    <div className="mt-6 pt-6 border-t border-gray-200">
+                      <h2 className="text-lg font-semibold text-dark-gray mb-4">
+                        Analytics & Insights
+                      </h2>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <Card>
+                          <CardHeader className="pb-2">
+                            <CardTitle className="text-sm font-medium text-muted-foreground">
+                              Total Sales
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="text-2xl font-bold">
+                              {
+                                allTransactions.filter(
+                                  (t) =>
+                                    t.type === "sale" &&
+                                    t.status === "COMPLETED"
+                                ).length
+                              }
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Completed orders
+                            </p>
+                          </CardContent>
+                        </Card>
+
+                        <Card>
+                          <CardHeader className="pb-2">
+                            <CardTitle className="text-sm font-medium text-muted-foreground">
+                              Total Revenue
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="text-2xl font-bold">
+                              Rp{" "}
+                              {allTransactions
+                                .filter(
+                                  (t) =>
+                                    t.type === "sale" &&
+                                    t.status === "COMPLETED"
+                                )
+                                .reduce((sum, t) => sum + t.amount, 0)
+                                .toLocaleString()}
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Before platform fee
+                            </p>
+                          </CardContent>
+                        </Card>
+
+                        <Card>
+                          <CardHeader className="pb-2">
+                            <CardTitle className="text-sm font-medium text-muted-foreground">
+                              Active Listings
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="text-2xl font-bold">
+                              {
+                                marketplaceItems.filter(
+                                  (item) => item.sellerId === currentUser?.id
+                                ).length
+                              }
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Items for sale
+                            </p>
+                          </CardContent>
+                        </Card>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <Card>
+                          <CardHeader>
+                            <CardTitle>Sales by Category</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="space-y-3">
+                              {["Study Material", "Food", "Event"].map(
+                                (category) => {
+                                  const categoryType =
+                                    category === "Study Material"
+                                      ? "marketplace"
+                                      : category.toLowerCase();
+                                  const count = allTransactions.filter(
+                                    (t) =>
+                                      t.type === "sale" &&
+                                      t.status === "COMPLETED" &&
+                                      t.itemType === categoryType
+                                  ).length;
+                                  const total = allTransactions.filter(
+                                    (t) =>
+                                      t.type === "sale" &&
+                                      t.status === "COMPLETED"
+                                  ).length;
+                                  const percentage =
+                                    total > 0
+                                      ? Math.round((count / total) * 100)
+                                      : 0;
+
+                                  return (
+                                    <div key={category}>
+                                      <div className="flex items-center justify-between mb-1">
+                                        <span className="text-sm font-medium">
+                                          {category}
+                                        </span>
+                                        <span className="text-sm text-muted-foreground">
+                                          {count} ({percentage}%)
+                                        </span>
+                                      </div>
+                                      <div className="w-full bg-gray-200 rounded-full h-2">
+                                        <div
+                                          className="bg-dark-blue h-2 rounded-full"
+                                          style={{ width: `${percentage}%` }}
+                                        ></div>
+                                      </div>
+                                    </div>
+                                  );
+                                }
+                              )}
+                            </div>
+                          </CardContent>
+                        </Card>
+
+                        <Card>
+                          <CardHeader>
+                            <CardTitle>Recent Activity</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="space-y-3">
+                              {allTransactions
+                                .filter((t) => t.type === "sale")
+                                .slice(0, 5)
+                                .map((transaction) => (
+                                  <div
+                                    key={transaction.id}
+                                    className="flex items-center justify-between pb-3 border-b border-border last:border-0 last:pb-0"
+                                  >
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-sm font-medium line-clamp-1">
+                                        {transaction.itemTitle}
+                                      </p>
+                                      <p className="text-xs text-muted-foreground">
+                                        {new Date(
+                                          transaction.createdAt
+                                        ).toLocaleDateString()}
+                                      </p>
+                                    </div>
+                                    <div className="text-right ml-2">
+                                      <p className="text-sm font-semibold">
+                                        Rp {transaction.amount.toLocaleString()}
+                                      </p>
+                                      <Badge
+                                        variant={
+                                          transaction.status === "COMPLETED"
+                                            ? "default"
+                                            : "secondary"
+                                        }
+                                        className="text-xs"
+                                      >
+                                        {transaction.status}
+                                      </Badge>
+                                    </div>
+                                  </div>
+                                ))}
+                              {allTransactions.filter((t) => t.type === "sale")
+                                .length === 0 && (
+                                <div className="text-center py-6 text-sm text-muted-foreground">
+                                  No sales yet
+                                </div>
+                              )}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </div>
                     </div>
                   </>
                 )}

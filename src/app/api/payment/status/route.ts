@@ -153,6 +153,53 @@ export async function GET(request: NextRequest) {
         });
 
         console.log("Transaction updated to:", newStatus);
+
+        // Handle food order creation when payment is completed
+        if (
+          newStatus === "COMPLETED" &&
+          transaction.itemType === "food" &&
+          transaction.foodItemId
+        ) {
+          const existingOrder = await prisma.foodOrder.findFirst({
+            where: {
+              foodItemId: transaction.foodItemId,
+              buyerId: transaction.buyerId,
+            },
+          });
+
+          if (!existingOrder) {
+            const foodItem = await prisma.foodItem.findUnique({
+              where: { id: transaction.foodItemId },
+            });
+
+            if (foodItem) {
+              const quantity = 1;
+              const totalPrice = transaction.amount;
+
+              await prisma.foodOrder.create({
+                data: {
+                  foodItemId: foodItem.id,
+                  buyerId: transaction.buyerId,
+                  quantity: quantity,
+                  totalPrice: totalPrice,
+                  pickupTime: foodItem.pickupTime,
+                  status: "confirmed",
+                },
+              });
+
+              await prisma.foodItem.update({
+                where: { id: foodItem.id },
+                data: {
+                  quantity: { decrement: quantity },
+                  status:
+                    foodItem.quantity - quantity <= 0 ? "sold" : "available",
+                },
+              });
+
+              console.log("Food order created for transaction:", orderId);
+            }
+          }
+        }
       }
 
       return NextResponse.json({

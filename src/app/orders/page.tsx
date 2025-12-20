@@ -99,14 +99,26 @@ export default function OrdersPage() {
             if (result.success && result.transaction.status !== order.status) {
               // Status changed! Show notification and reload
               if (result.transaction.status === "COMPLETED") {
-                toast.success("Payment confirmed! 🎉", {
-                  description: `Redirecting to Library...`,
-                  duration: 2000,
-                });
-                // Redirect to Library after 2 seconds
-                setTimeout(() => {
-                  router.push("/library");
-                }, 2000);
+                // Different redirect based on item type
+                if (order.itemType === "food") {
+                  toast.success("Payment confirmed! 🎉", {
+                    description: `Food order confirmed!`,
+                    duration: 2000,
+                  });
+                  // Reload to show updated status
+                  setTimeout(() => {
+                    loadPurchases();
+                  }, 1500);
+                } else {
+                  toast.success("Payment confirmed! 🎉", {
+                    description: `Redirecting to Library...`,
+                    duration: 2000,
+                  });
+                  // Redirect to Library after 2 seconds
+                  setTimeout(() => {
+                    router.push("/library");
+                  }, 2000);
+                }
               } else if (result.transaction.status === "EXPIRED") {
                 toast.error("Payment expired ⏰", {
                   description: "Payment time limit exceeded. Please try again.",
@@ -510,7 +522,7 @@ export default function OrdersPage() {
 function OrdersTable({ orders, router }: { orders: any[]; router: any }) {
   const [refreshingId, setRefreshingId] = useState<string | null>(null);
 
-  const handleRefreshStatus = async (orderId: string) => {
+  const handleRefreshStatus = async (orderId: string, itemType: string) => {
     try {
       setRefreshingId(orderId);
       toast.loading("Checking payment status...", { id: orderId });
@@ -522,15 +534,26 @@ function OrdersTable({ orders, router }: { orders: any[]; router: any }) {
         const newStatus = result.transaction.status;
 
         if (newStatus === "COMPLETED") {
-          toast.success("Payment confirmed! 🎉", {
-            id: orderId,
-            description: "Redirecting to Library...",
-            duration: 2000,
-          });
-          // Redirect to Library after 2 seconds
-          setTimeout(() => {
-            router.push("/library");
-          }, 2000);
+          // Different redirect based on item type
+          if (itemType === "food") {
+            toast.success("Payment confirmed! 🎉", {
+              id: orderId,
+              description: "Food order confirmed!",
+              duration: 2000,
+            });
+            // Reload page to show updated status
+            setTimeout(() => window.location.reload(), 1500);
+          } else {
+            toast.success("Payment confirmed! 🎉", {
+              id: orderId,
+              description: "Redirecting to Library...",
+              duration: 2000,
+            });
+            // Redirect to Library after 2 seconds
+            setTimeout(() => {
+              router.push("/library");
+            }, 2000);
+          }
         } else if (newStatus === "PENDING") {
           toast.info("Payment still pending", {
             id: orderId,
@@ -607,6 +630,8 @@ function OrdersTable({ orders, router }: { orders: any[]; router: any }) {
                       <p className="text-sm text-muted-foreground">
                         {order.itemType === "marketplace"
                           ? "Study Material"
+                          : order.itemType === "food"
+                          ? "Food Item"
                           : "Tutoring Session"}
                       </p>
                     </div>
@@ -656,7 +681,9 @@ function OrdersTable({ orders, router }: { orders: any[]; router: any }) {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => handleRefreshStatus(order.orderId)}
+                        onClick={() =>
+                          handleRefreshStatus(order.orderId, order.itemType)
+                        }
                         disabled={refreshingId === order.orderId}
                       >
                         <RefreshCw

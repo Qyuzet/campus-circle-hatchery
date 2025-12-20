@@ -23,15 +23,10 @@ export async function GET(request: NextRequest) {
     if (type === "purchases") {
       where.buyerId = session.user.id;
     } else if (type === "sales") {
-      where.item = {
-        sellerId: session.user.id,
-      };
+      where.sellerId = session.user.id;
     } else {
       // Get both purchases and sales
-      where.OR = [
-        { buyerId: session.user.id },
-        { item: { sellerId: session.user.id } },
-      ];
+      where.OR = [{ buyerId: session.user.id }, { sellerId: session.user.id }];
     }
 
     if (status) {
@@ -90,4 +85,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-

@@ -35,6 +35,8 @@ export async function POST(request: NextRequest) {
 
     // Verify item exists and get details
     let item: any = null;
+    let sellerId: string | null = null;
+
     if (itemType === "marketplace") {
       item = await prisma.marketplaceItem.findUnique({
         where: { id: itemId },
@@ -63,6 +65,8 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
       }
+
+      sellerId = item.sellerId;
     } else if (itemType === "tutoring") {
       item = await prisma.tutoringSession.findUnique({
         where: { id: itemId },
@@ -91,6 +95,8 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
       }
+
+      sellerId = item.tutorId;
     } else if (itemType === "food") {
       item = await prisma.foodItem.findUnique({
         where: { id: itemId },
@@ -119,6 +125,8 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
       }
+
+      sellerId = item.sellerId;
     }
 
     // Generate unique order ID
@@ -185,8 +193,10 @@ export async function POST(request: NextRequest) {
         itemType,
         itemTitle,
         buyerId: session.user.id,
+        sellerId,
         itemId: itemType === "marketplace" ? itemId : null,
-        expiresAt, // Set payment expiry time
+        foodItemId: itemType === "food" ? itemId : null,
+        expiresAt,
       },
     });
 

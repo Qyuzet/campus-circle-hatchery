@@ -52,30 +52,19 @@ export default function PaymentModal({
               onSuccess?.();
               onClose();
 
-              // Different flow for food items vs study materials
-              if (item.type === "food") {
-                // For food: stay in chat, don't redirect
-                // The chat will show confirmation message
-              } else {
-                // For marketplace/tutoring: redirect to Orders page which will auto-sync and redirect to Library
-                setTimeout(() => {
-                  router.push("/orders");
-                }, 1000);
-              }
+              // Redirect to Orders page for all item types to trigger auto-sync
+              setTimeout(() => {
+                router.push("/orders");
+              }, 1000);
             },
             onPending: function (result: any) {
               console.log("Payment pending:", result);
               onClose();
 
-              // Different flow for food items vs study materials
-              if (item.type === "food") {
-                // For food: stay in chat
-              } else {
-                // For marketplace/tutoring: redirect to Orders page to track payment status
-                setTimeout(() => {
-                  router.push("/orders");
-                }, 500);
-              }
+              // Redirect to Orders page to track payment status
+              setTimeout(() => {
+                router.push("/orders");
+              }, 500);
             },
             onError: function (result: any) {
               console.log("Payment error:", result);
@@ -86,15 +75,10 @@ export default function PaymentModal({
               console.log("Payment popup closed");
               setIsProcessing(false);
 
-              // Different flow for food items vs study materials
-              if (item.type === "food") {
-                // For food: stay in chat
-              } else {
-                // For marketplace/tutoring: redirect to Orders page to check status
-                setTimeout(() => {
-                  router.push("/orders");
-                }, 500);
-              }
+              // Redirect to Orders page to check status
+              setTimeout(() => {
+                router.push("/orders");
+              }, 500);
             },
           });
         } else {
