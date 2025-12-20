@@ -49,6 +49,16 @@ export async function GET(request: NextRequest) {
           },
           take: 1,
         },
+        _count: {
+          select: {
+            messages: {
+              where: {
+                receiverId: user.id,
+                isRead: false,
+              },
+            },
+          },
+        },
       },
       orderBy: {
         lastMessageTime: "desc",
@@ -56,28 +66,19 @@ export async function GET(request: NextRequest) {
     });
 
     // Transform conversations to include other user info and unread count
-    const transformedConversations = await Promise.all(
-      conversations.map(async (conv) => {
-        const otherUser = conv.user1Id === user.id ? conv.user2 : conv.user1;
-        const unreadCount = await prisma.message.count({
-          where: {
-            conversationId: conv.id,
-            receiverId: user.id,
-            isRead: false,
-          },
-        });
+    const transformedConversations = conversations.map((conv) => {
+      const otherUser = conv.user1Id === user.id ? conv.user2 : conv.user1;
 
-        return {
-          id: conv.id,
-          otherUserId: otherUser.id,
-          otherUserName: otherUser.name,
-          otherUserAvatar: otherUser.avatarUrl,
-          lastMessage: conv.lastMessage,
-          lastMessageTime: conv.lastMessageTime,
-          unreadCount,
-        };
-      })
-    );
+      return {
+        id: conv.id,
+        otherUserId: otherUser.id,
+        otherUserName: otherUser.name,
+        otherUserAvatar: otherUser.avatarUrl,
+        lastMessage: conv.lastMessage,
+        lastMessageTime: conv.lastMessageTime,
+        unreadCount: conv._count.messages,
+      };
+    });
 
     return NextResponse.json(transformedConversations);
   } catch (error) {
