@@ -335,10 +335,58 @@ function DashboardContent() {
               ) {
                 if (result.transaction.status === "COMPLETED") {
                   if (order.itemType === "food") {
-                    toast.success("Payment confirmed!", {
-                      description: "Food order confirmed!",
-                      duration: 2000,
-                    });
+                    // Update the message orderData status
+                    let messageUpdated = false;
+                    try {
+                      const foodItemId = result.transaction.foodItemId;
+                      if (foodItemId) {
+                        // Find the payment_request message with this food item
+                        const allConversations =
+                          await conversationsAPI.getConversations();
+                        for (const convo of allConversations) {
+                          const msgs = await messagesAPI.getMessages(convo.id);
+                          const paymentMessage = msgs.find(
+                            (m: any) =>
+                              m.messageType === "payment_request" &&
+                              m.orderData?.foodId === foodItemId &&
+                              m.orderData?.status === "awaiting_payment"
+                          );
+
+                          if (paymentMessage) {
+                            // Update message orderData
+                            await fetch(`/api/messages/${paymentMessage.id}`, {
+                              method: "PATCH",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({
+                                orderData: {
+                                  ...paymentMessage.orderData,
+                                  status: "paid",
+                                },
+                              }),
+                            });
+
+                            messageUpdated = true;
+
+                            // Reload messages if user is in this conversation
+                            if (selectedConversation === convo.id) {
+                              await loadMessages(convo.id);
+                            }
+                            break;
+                          }
+                        }
+                      }
+                    } catch (error) {
+                      console.error("Error updating message status:", error);
+                    }
+
+                    // Only show toast if message was actually updated (not already paid)
+                    if (messageUpdated) {
+                      toast.success("Payment confirmed!", {
+                        description: "Food order confirmed!",
+                        duration: 2000,
+                      });
+                    }
+
                     setTimeout(async () => {
                       await loadTabData("my-hub");
                     }, 1500);
@@ -2959,19 +3007,45 @@ function DashboardContent() {
                                                                       "Payment successful!",
                                                                       {
                                                                         description:
-                                                                          "Redirecting to Orders page...",
+                                                                          "Order confirmed!",
                                                                       }
                                                                     );
 
-                                                                    // Redirect to Orders page to trigger auto-sync
-                                                                    setTimeout(
-                                                                      () => {
-                                                                        router.push(
-                                                                          "/orders"
-                                                                        );
-                                                                      },
-                                                                      1000
-                                                                    );
+                                                                    // Update message orderData immediately
+                                                                    try {
+                                                                      await fetch(
+                                                                        `/api/messages/${message.id}`,
+                                                                        {
+                                                                          method:
+                                                                            "PATCH",
+                                                                          headers:
+                                                                            {
+                                                                              "Content-Type":
+                                                                                "application/json",
+                                                                            },
+                                                                          body: JSON.stringify(
+                                                                            {
+                                                                              orderData:
+                                                                                {
+                                                                                  ...message.orderData,
+                                                                                  status:
+                                                                                    "paid",
+                                                                                },
+                                                                            }
+                                                                          ),
+                                                                        }
+                                                                      );
+
+                                                                      // Pusher will automatically update the UI via the existing listener
+                                                                      console.log(
+                                                                        "✅ Message updated, Pusher will sync UI"
+                                                                      );
+                                                                    } catch (error) {
+                                                                      console.error(
+                                                                        "Error updating message:",
+                                                                        error
+                                                                      );
+                                                                    }
                                                                   },
                                                                 onPending:
                                                                   function (
@@ -2985,18 +3059,8 @@ function DashboardContent() {
                                                                       "Payment pending",
                                                                       {
                                                                         description:
-                                                                          "Redirecting to Orders page...",
+                                                                          "Waiting for confirmation...",
                                                                       }
-                                                                    );
-
-                                                                    // Redirect to Orders page to track payment status
-                                                                    setTimeout(
-                                                                      () => {
-                                                                        router.push(
-                                                                          "/orders"
-                                                                        );
-                                                                      },
-                                                                      500
                                                                     );
                                                                   },
                                                                 onError:
@@ -3015,16 +3079,6 @@ function DashboardContent() {
                                                                   function () {
                                                                     console.log(
                                                                       "Payment popup closed"
-                                                                    );
-
-                                                                    // Redirect to Orders page to check status
-                                                                    setTimeout(
-                                                                      () => {
-                                                                        router.push(
-                                                                          "/orders"
-                                                                        );
-                                                                      },
-                                                                      500
                                                                     );
                                                                   },
                                                               }

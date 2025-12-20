@@ -168,10 +168,12 @@ function PaymentSuccessContent() {
             <ArrowRight className="ml-2 h-5 w-5" />
           </button>
           <button
-            onClick={() => router.push("/orders")}
+            onClick={() =>
+              router.push("/dashboard?tab=my-hub&subTab=purchases")
+            }
             className="w-full border border-gray-300 text-dark-gray py-3 px-4 rounded-lg hover:bg-gray-50 transition-colors font-medium"
           >
-            View Orders
+            View Purchases
           </button>
         </div>
 
