@@ -11,6 +11,7 @@ import {
 } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useDebounce } from "@/hooks/useDebounce";
 import { format } from "date-fns";
 import {
   pusherClient,
@@ -130,6 +131,7 @@ function DashboardContent() {
   const [myHubTab, setMyHubTab] = useState("purchases");
   const [viewMode, setViewMode] = useState("grid");
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [isSyncingPayment, setIsSyncingPayment] = useState(false);
   const [pendingOrdersCount, setPendingOrdersCount] = useState(0);
@@ -863,21 +865,9 @@ function DashboardContent() {
   };
 
   // Handler functions (memoized to prevent recreation on every render)
-  const handleSearch = useCallback(
-    async (query: string) => {
-      setSearchQuery(query);
-      try {
-        const items = await marketplaceAPI.getItems({
-          search: query,
-          category: selectedCategory !== "All" ? selectedCategory : undefined,
-        });
-        setMarketplaceItems(filterTradableItems(items));
-      } catch (error) {
-        console.error("Error searching items:", error);
-      }
-    },
-    [selectedCategory]
-  );
+  const handleSearch = useCallback((query: string) => {
+    setSearchQuery(query);
+  }, []);
 
   const handleCategoryFilter = async (category: string) => {
     setSelectedCategory(category);
@@ -1692,8 +1682,8 @@ function DashboardContent() {
       items = items.filter((item) => item.category === selectedCategory);
     }
 
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
+    if (debouncedSearchQuery) {
+      const query = debouncedSearchQuery.toLowerCase();
       items = items.filter(
         (item) =>
           item.title.toLowerCase().includes(query) ||
@@ -1703,7 +1693,7 @@ function DashboardContent() {
     }
 
     return items;
-  }, [marketplaceItems, selectedCategory, searchQuery]);
+  }, [marketplaceItems, selectedCategory, debouncedSearchQuery]);
 
   // Progressive loading with Intersection Observer
   useEffect(() => {
@@ -2386,9 +2376,10 @@ function DashboardContent() {
                                 <Card
                                   key={item.id}
                                   onClick={() => handleItemClick(item)}
-                                  className={`cursor-pointer hover:shadow-lg transition-all group overflow-hidden ${
+                                  className={`cursor-pointer hover:shadow-lg transition-shadow group overflow-hidden ${
                                     viewMode === "list" ? "flex flex-row" : ""
                                   }`}
+                                  style={{ contentVisibility: "auto" }}
                                 >
                                   {/* Image Section - Show File Preview */}
                                   <div
