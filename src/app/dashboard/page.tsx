@@ -118,13 +118,13 @@ function DashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Helper function to format price with K for thousands
-  const formatPrice = (price: number) => {
+  // Helper function to format price with K for thousands (memoized)
+  const formatPrice = useCallback((price: number) => {
     if (price >= 1000) {
       return `${(price / 1000).toFixed(price % 1000 === 0 ? 0 : 1)}K`;
     }
     return price.toString();
-  };
+  }, []);
 
   const [activeTab, setActiveTab] = useState("discovery");
   const [myHubTab, setMyHubTab] = useState("purchases");
@@ -708,39 +708,6 @@ function DashboardContent() {
       };
     }
   }, [currentUser, status]);
-
-  // Progressive loading with Intersection Observer
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (
-          entries[0].isIntersecting &&
-          visibleItemsCount < marketplaceItems.length
-        ) {
-          setVisibleItemsCount((prev) =>
-            Math.min(prev + 20, marketplaceItems.length)
-          );
-        }
-      },
-      { threshold: 0.1, rootMargin: "200px" }
-    );
-
-    const currentRef = loadMoreObserverRef.current;
-    if (currentRef) {
-      observer.observe(currentRef);
-    }
-
-    return () => {
-      if (currentRef) {
-        observer.unobserve(currentRef);
-      }
-    };
-  }, [visibleItemsCount, marketplaceItems.length]);
-
-  // Reset visible count when items change
-  useEffect(() => {
-    setVisibleItemsCount(20);
-  }, [marketplaceItems]);
 
   // Load only essential data on mount (notifications, stats, current user)
   const loadEssentialData = async () => {
@@ -1738,6 +1705,39 @@ function DashboardContent() {
     return items;
   }, [marketplaceItems, selectedCategory, searchQuery]);
 
+  // Progressive loading with Intersection Observer
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (
+          entries[0].isIntersecting &&
+          visibleItemsCount < filteredItems.length
+        ) {
+          setVisibleItemsCount((prev) =>
+            Math.min(prev + 20, filteredItems.length)
+          );
+        }
+      },
+      { threshold: 0.1, rootMargin: "200px" }
+    );
+
+    const currentRef = loadMoreObserverRef.current;
+    if (currentRef) {
+      observer.observe(currentRef);
+    }
+
+    return () => {
+      if (currentRef) {
+        observer.unobserve(currentRef);
+      }
+    };
+  }, [visibleItemsCount, filteredItems.length]);
+
+  // Reset visible count when filtered items change
+  useEffect(() => {
+    setVisibleItemsCount(20);
+  }, [filteredItems]);
+
   // Dynamic stats based on real data (memoized to prevent recalculation)
   const stats = useMemo(
     () => [
@@ -2360,7 +2360,7 @@ function DashboardContent() {
                             : "grid-cols-1"
                         }`}
                       >
-                        {marketplaceItems.length === 0 ? (
+                        {filteredItems.length === 0 ? (
                           <Card className="col-span-full">
                             <CardContent className="flex flex-col items-center justify-center py-12">
                               <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
@@ -2380,7 +2380,7 @@ function DashboardContent() {
                           </Card>
                         ) : (
                           <>
-                            {marketplaceItems
+                            {filteredItems
                               .slice(0, visibleItemsCount)
                               .map((item) => (
                                 <Card
@@ -2659,7 +2659,7 @@ function DashboardContent() {
                                   </div>
                                 </Card>
                               ))}
-                            {visibleItemsCount < marketplaceItems.length && (
+                            {visibleItemsCount < filteredItems.length && (
                               <div
                                 ref={loadMoreObserverRef}
                                 className="col-span-full flex justify-center py-8"

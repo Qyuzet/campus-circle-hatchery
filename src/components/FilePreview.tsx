@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, memo } from "react";
 import { FileText, File, Image as ImageIcon } from "lucide-react";
 
 interface FilePreviewProps {
@@ -13,7 +13,7 @@ interface FilePreviewProps {
   thumbnailUrl?: string;
 }
 
-export default function FilePreview({
+const FilePreviewComponent = ({
   fileUrl,
   fileType,
   fileName,
@@ -21,7 +21,7 @@ export default function FilePreview({
   title,
   compact = false,
   thumbnailUrl,
-}: FilePreviewProps) {
+}: FilePreviewProps) => {
   const [imageError, setImageError] = useState(false);
   const fileExtension = fileName?.split(".").pop()?.toUpperCase() || "FILE";
 
@@ -274,4 +274,7 @@ export default function FilePreview({
       )}
     </div>
   );
-}
+};
+
+const FilePreview = memo(FilePreviewComponent);
+export default FilePreview;
