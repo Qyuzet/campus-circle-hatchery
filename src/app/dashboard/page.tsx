@@ -224,9 +224,9 @@ function DashboardContent() {
   const [marketplaceItems, setMarketplaceItems] = useState<MarketplaceItem[]>(
     []
   );
-  const [visibleItemsCount, setVisibleItemsCount] = useState(20);
-  const [visibleFoodCount, setVisibleFoodCount] = useState(20);
-  const [visibleEventCount, setVisibleEventCount] = useState(20);
+  const [visibleItemsCount, setVisibleItemsCount] = useState(12);
+  const [visibleFoodCount, setVisibleFoodCount] = useState(12);
+  const [visibleEventCount, setVisibleEventCount] = useState(12);
   const loadMoreObserverRef = useRef<HTMLDivElement>(null);
   const foodObserverRef = useRef<HTMLDivElement>(null);
   const eventObserverRef = useRef<HTMLDivElement>(null);
@@ -1120,6 +1120,17 @@ function DashboardContent() {
     setShowEventDetailModal(true);
   }, []);
 
+  const handleItemClickMemoized = useCallback((item: MarketplaceItem) => {
+    handleItemClick(item);
+  }, []);
+
+  const handleToggleWishlistMemoized = useCallback(
+    (itemId: string, e: React.MouseEvent) => {
+      handleToggleWishlist(itemId, e);
+    },
+    []
+  );
+
   const handleDeleteFood = async (foodId: string) => {
     try {
       await foodAPI.deleteFoodItem(foodId);
@@ -1733,7 +1744,7 @@ function DashboardContent() {
           visibleItemsCount < filteredItems.length
         ) {
           setVisibleItemsCount((prev) =>
-            Math.min(prev + 20, filteredItems.length)
+            Math.min(prev + 12, filteredItems.length)
           );
         }
       },
@@ -1761,7 +1772,7 @@ function DashboardContent() {
           visibleFoodCount < filteredFoodItems.length
         ) {
           setVisibleFoodCount((prev) =>
-            Math.min(prev + 20, filteredFoodItems.length)
+            Math.min(prev + 12, filteredFoodItems.length)
           );
         }
       },
@@ -1789,7 +1800,7 @@ function DashboardContent() {
           visibleEventCount < filteredEvents.length
         ) {
           setVisibleEventCount((prev) =>
-            Math.min(prev + 20, filteredEvents.length)
+            Math.min(prev + 12, filteredEvents.length)
           );
         }
       },
@@ -1810,15 +1821,15 @@ function DashboardContent() {
 
   // Reset visible count when filtered items change
   useEffect(() => {
-    setVisibleItemsCount(20);
+    setVisibleItemsCount(12);
   }, [filteredItems]);
 
   useEffect(() => {
-    setVisibleFoodCount(20);
+    setVisibleFoodCount(12);
   }, [filteredFoodItems]);
 
   useEffect(() => {
-    setVisibleEventCount(20);
+    setVisibleEventCount(12);
   }, [filteredEvents]);
 
   // Dynamic stats based on real data (memoized to prevent recalculation)
@@ -2488,7 +2499,7 @@ function DashboardContent() {
                               .map((item) => (
                                 <Card
                                   key={item.id}
-                                  onClick={() => handleItemClick(item)}
+                                  onClick={() => handleItemClickMemoized(item)}
                                   className={`cursor-pointer hover:shadow-lg transition-shadow group overflow-hidden ${
                                     viewMode === "list" ? "flex flex-row" : ""
                                   }`}
@@ -2515,9 +2526,12 @@ function DashboardContent() {
                                     {viewMode === "grid" && (
                                       <button
                                         onClick={(e) =>
-                                          handleToggleWishlist(item.id, e)
+                                          handleToggleWishlistMemoized(
+                                            item.id,
+                                            e
+                                          )
                                         }
-                                        className={`absolute top-1 right-1 sm:top-2 sm:right-2 lg:top-1.5 lg:right-1.5 bg-white/90 backdrop-blur-sm p-1 sm:p-1.5 lg:p-1 rounded-full transition-all shadow-sm z-10 ${
+                                        className={`absolute top-1 right-1 sm:top-2 sm:right-2 lg:top-1.5 lg:right-1.5 bg-white/95 p-1 sm:p-1.5 lg:p-1 rounded-full transition-colors shadow-sm z-10 ${
                                           wishlistItemIds.has(item.id)
                                             ? "text-red-500 hover:text-red-600"
                                             : "text-gray-600 hover:text-red-500"
@@ -2580,7 +2594,7 @@ function DashboardContent() {
                                                     {item.rating}
                                                   </span>
                                                 </div>
-                                                <p className="text-xs font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent flex-shrink-0">
+                                                <p className="text-xs font-bold text-blue-600 flex-shrink-0">
                                                   Rp {formatPrice(item.price)}
                                                 </p>
                                               </div>
@@ -2614,7 +2628,7 @@ function DashboardContent() {
                                             {/* Price and Rating */}
                                             <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between pt-1 sm:pt-1.5 lg:pt-1 border-t gap-0.5 sm:gap-0">
                                               <div className="flex items-center justify-between sm:block">
-                                                <p className="text-sm sm:text-lg lg:text-base font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent leading-tight">
+                                                <p className="text-sm sm:text-lg lg:text-base font-bold text-blue-600 leading-tight">
                                                   <span className="sm:hidden">
                                                     Rp {formatPrice(item.price)}
                                                   </span>
