@@ -52,7 +52,7 @@ export function EventCard({
       className="cursor-pointer hover:shadow-lg transition-all group overflow-hidden"
       onClick={onClick}
     >
-      <div className="relative h-48 bg-secondary-200 overflow-hidden">
+      <div className="relative h-32 md:h-48 bg-secondary-200 overflow-hidden">
         {event.bannerUrl || event.imageUrl ? (
           <Image
             src={event.bannerUrl || event.imageUrl || ""}
@@ -62,76 +62,94 @@ export function EventCard({
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-purple-100">
-            <Calendar className="h-16 w-16 text-purple-400" />
+            <Calendar className="h-10 w-10 md:h-16 md:w-16 text-purple-400" />
           </div>
         )}
         {event.isFeatured && (
-          <Badge className="absolute top-2 right-2 bg-yellow-500">
+          <Badge className="absolute top-1 right-1 md:top-2 md:right-2 bg-yellow-500 text-[9px] md:text-xs h-4 md:h-5 px-1 md:px-2">
             Featured
           </Badge>
         )}
         {isFull && (
-          <Badge variant="destructive" className="absolute top-2 left-2">
+          <Badge
+            variant="destructive"
+            className="absolute top-1 left-1 md:top-2 md:left-2 text-[9px] md:text-xs h-4 md:h-5 px-1 md:px-2"
+          >
             Full
           </Badge>
         )}
         {isOwner && (
-          <Badge className="absolute bottom-2 left-2 bg-blue-600 text-white">
-            <Edit className="h-3 w-3 mr-1" />
+          <Badge className="absolute bottom-1 left-1 md:bottom-2 md:left-2 bg-blue-600 text-white text-[9px] md:text-xs h-4 md:h-5 px-1 md:px-2">
+            <Edit className="h-2.5 w-2.5 md:h-3 md:w-3 mr-0.5 md:mr-1" />
             My Event
           </Badge>
         )}
       </div>
 
-      <CardContent className="p-4">
-        <div className="flex items-start justify-between gap-2 mb-2">
-          <h3 className="font-bold text-lg line-clamp-2">{event.title}</h3>
-          <Badge className={getCategoryColor(event.category)}>
+      <CardContent className="p-2 md:p-4">
+        <div className="flex items-start justify-between gap-1 md:gap-2 mb-1 md:mb-2">
+          <h3 className="font-bold text-xs md:text-lg line-clamp-2">
+            {event.title}
+          </h3>
+          <Badge
+            className={`${getCategoryColor(
+              event.category
+            )} text-[9px] md:text-xs h-4 md:h-5 px-1 md:px-2 flex-shrink-0`}
+          >
             {event.category}
           </Badge>
         </div>
 
-        <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+        <p className="text-[10px] md:text-sm text-muted-foreground line-clamp-2 mb-1.5 md:mb-3">
           {event.description}
         </p>
 
-        <div className="space-y-2 text-sm">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Calendar className="h-4 w-4 shrink-0" />
+        <div className="space-y-1 md:space-y-2 text-[10px] md:text-sm">
+          <div className="flex items-center gap-1 md:gap-2 text-muted-foreground">
+            <Calendar className="h-2.5 w-2.5 md:h-4 md:w-4 shrink-0" />
             <span className="line-clamp-1">
               {format(startDate, "MMM dd, yyyy")} at{" "}
               {format(startDate, "HH:mm")}
             </span>
           </div>
 
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <MapPin className="h-4 w-4 shrink-0" />
+          <div className="flex items-center gap-1 md:gap-2 text-muted-foreground">
+            <MapPin className="h-2.5 w-2.5 md:h-4 md:w-4 shrink-0" />
             <span className="line-clamp-1">
               {event.isOnline ? "Online Event" : event.location}
             </span>
           </div>
 
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Users className="h-4 w-4 shrink-0" />
+          <div className="flex items-center gap-1 md:gap-2 text-muted-foreground">
+            <Users className="h-2.5 w-2.5 md:h-4 md:w-4 shrink-0" />
             <span>
               {event.currentParticipants}
               {event.maxParticipants ? ` / ${event.maxParticipants}` : ""}{" "}
-              participants
+              <span className="hidden md:inline">participants</span>
             </span>
           </div>
 
           {event.price > 0 && (
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <DollarSign className="h-4 w-4 shrink-0" />
-              <span>Rp {event.price.toLocaleString()}</span>
+            <div className="flex items-center gap-1 md:gap-2 text-muted-foreground">
+              <DollarSign className="h-2.5 w-2.5 md:h-4 md:w-4 shrink-0" />
+              <span>
+                Rp{" "}
+                {event.price >= 1000
+                  ? `${(event.price / 1000).toFixed(0)}K`
+                  : event.price.toLocaleString()}
+              </span>
             </div>
           )}
         </div>
 
         {event.tags && event.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1 mt-3">
+          <div className="flex flex-wrap gap-0.5 md:gap-1 mt-1.5 md:mt-3">
             {event.tags.slice(0, 3).map((tag, index) => (
-              <Badge key={index} variant="outline" className="text-xs">
+              <Badge
+                key={index}
+                variant="outline"
+                className="text-[9px] md:text-xs h-4 md:h-5 px-1 md:px-2"
+              >
                 {tag}
               </Badge>
             ))}
@@ -139,8 +157,8 @@ export function EventCard({
         )}
       </CardContent>
 
-      <CardFooter className="p-4 pt-0 flex items-center justify-between">
-        <div className="text-xs text-muted-foreground">
+      <CardFooter className="p-2 md:p-4 pt-0 flex items-center justify-between">
+        <div className="text-[10px] md:text-xs text-muted-foreground truncate">
           by {event.organizer}
         </div>
         {onRegister && (
@@ -152,6 +170,7 @@ export function EventCard({
             }}
             disabled={isFull || isRegistered}
             variant={isRegistered ? "outline" : "default"}
+            className="text-[10px] md:text-sm h-7 md:h-9 px-2 md:px-3"
           >
             {isRegistered ? "Registered" : isFull ? "Full" : "Register"}
           </Button>
