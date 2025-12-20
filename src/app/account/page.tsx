@@ -24,7 +24,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import { statsAPI, notificationsAPI, userAPI } from "@/lib/api";
 import { Textarea } from "@/components/ui/textarea";
 import { toast, Toaster } from "sonner";
@@ -139,35 +138,42 @@ export default function AccountPage() {
     <div className="min-h-screen bg-secondary-50">
       <Toaster position="top-center" richColors />
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-light-gray sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <h1 className="text-xl sm:text-2xl font-bold text-dark-gray">
-                CampusCircle
-              </h1>
-            </div>
+      <header className="sticky top-0 z-50 bg-white shadow-sm border-b border-light-gray">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-4">
+            <button
+              onClick={() => router.push("/")}
+              className="flex items-center hover:opacity-80 transition-opacity"
+            >
+              <img
+                src="/campus-circle-logo.png"
+                alt="CampusCircle Logo"
+                className="h-12 sm:h-14 w-auto"
+              />
+            </button>
+
             <div className="flex items-center space-x-2 sm:space-x-4">
-              <button className="relative p-2 text-medium-gray hover:text-dark-gray transition-colors">
+              <button
+                className="relative p-2 text-medium-gray hover:text-dark-gray transition-colors"
+                onClick={() => router.push("/dashboard")}
+              >
                 <Bell className="h-5 w-5 sm:h-6 sm:w-6" />
                 {unreadCount > 0 && (
-                  <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                    {unreadCount}
-                  </span>
+                  <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-500"></span>
                 )}
               </button>
+
               <button
                 onClick={() => router.push("/account")}
-                className="flex items-center space-x-2"
+                className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
               >
                 {session?.user?.image ? (
                   <Image
-                    src={session?.user?.image || ""}
-                    alt={session?.user?.name || "User"}
+                    src={session.user.image}
+                    alt={session.user.name || "User"}
                     width={32}
                     height={32}
                     className="w-6 h-6 sm:w-8 sm:h-8 rounded-full"
-                    unoptimized
                   />
                 ) : (
                   <div className="w-6 h-6 sm:w-8 sm:h-8 bg-dark-blue rounded-full flex items-center justify-center">
@@ -183,50 +189,57 @@ export default function AccountPage() {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4">
-        {/* Mobile Navigation */}
-        <div className="lg:hidden mb-4">
-          <div className="bg-white rounded-lg shadow p-2">
-            <div className="flex justify-around items-center">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 pb-28 lg:pb-6">
+        {/* Mobile Navigation - Floating Bottom Bar */}
+        <div className="lg:hidden fixed bottom-4 left-4 right-4 z-50">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md mx-auto">
+            <div className="flex justify-around items-center px-2 py-3">
               <button
                 onClick={() => router.push("/dashboard")}
-                className="p-2 text-medium-gray hover:text-dark-blue transition-colors"
-                title="Marketplace"
+                className="flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all"
+                title="Market"
               >
-                <ShoppingCart className="h-5 w-5" />
+                <ShoppingCart className="h-5 w-5 text-medium-gray" />
+                <span className="text-xs text-medium-gray">Market</span>
               </button>
               <button
                 onClick={() => router.push("/orders")}
-                className="p-2 text-medium-gray hover:text-dark-blue transition-colors"
+                className="flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all"
                 title="Orders"
               >
-                <Package className="h-5 w-5" />
+                <Package className="h-5 w-5 text-medium-gray" />
+                <span className="text-xs text-medium-gray">Orders</span>
               </button>
               <button
                 onClick={() => router.push("/library")}
-                className="p-2 text-medium-gray hover:text-dark-blue transition-colors"
+                className="flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all"
                 title="Library"
               >
-                <Library className="h-5 w-5" />
+                <Library className="h-5 w-5 text-medium-gray" />
+                <span className="text-xs text-medium-gray">Library</span>
               </button>
               <button
                 onClick={() => router.push("/dashboard?tab=messages")}
-                className="p-2 text-medium-gray hover:text-dark-blue transition-colors relative"
+                className="flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all relative"
                 title="Messages"
               >
-                <MessageCircle className="h-5 w-5" />
+                <MessageCircle className="h-5 w-5 text-medium-gray" />
+                <span className="text-xs text-medium-gray">Messages</span>
                 {unreadCount > 0 && (
-                  <span className="absolute top-1 right-1 bg-green-status text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                  <span className="absolute top-1 right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
                     {unreadCount}
                   </span>
                 )}
               </button>
               <button
-                onClick={() => router.push("/dashboard?tab=insights")}
-                className="p-2 text-medium-gray hover:text-dark-blue transition-colors"
-                title="Analytics"
+                onClick={() => router.push("/account")}
+                className="flex flex-col items-center gap-1 px-3 py-2 rounded-xl bg-blue-50 transition-all"
+                title="Account"
               >
-                <TrendingUp className="h-5 w-5" />
+                <User className="h-5 w-5 text-dark-blue" />
+                <span className="text-xs text-dark-blue font-medium">
+                  Account
+                </span>
               </button>
             </div>
           </div>
@@ -291,14 +304,16 @@ export default function AccountPage() {
           </div>
 
           {/* Main Content */}
-          <div className="flex-1 space-y-4">
+          <div className="flex-1 space-y-3 sm:space-y-4">
             {/* Profile Card */}
             <Card>
-              <CardHeader>
-                <CardTitle className="text-2xl">My Account</CardTitle>
+              <CardHeader className="pb-3 sm:pb-6">
+                <CardTitle className="text-lg sm:text-2xl">
+                  My Account
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
                   {/* Avatar */}
                   <div className="flex-shrink-0">
                     {session?.user?.image ? (
@@ -307,18 +322,18 @@ export default function AccountPage() {
                         alt={session?.user?.name || "User"}
                         width={96}
                         height={96}
-                        className="w-24 h-24 rounded-full border-4 border-primary-100"
+                        className="w-16 h-16 sm:w-24 sm:h-24 rounded-full border-2 sm:border-4 border-primary-100"
                         unoptimized
                       />
                     ) : (
-                      <div className="w-24 h-24 bg-dark-blue rounded-full flex items-center justify-center border-4 border-primary-100">
-                        <User className="h-12 w-12 text-white" />
+                      <div className="w-16 h-16 sm:w-24 sm:h-24 bg-dark-blue rounded-full flex items-center justify-center border-2 sm:border-4 border-primary-100">
+                        <User className="h-8 w-8 sm:h-12 sm:w-12 text-white" />
                       </div>
                     )}
                   </div>
 
                   {/* User Info */}
-                  <div className="flex-1 text-center sm:text-left">
+                  <div className="flex-1 text-center sm:text-left w-full">
                     {isEditing ? (
                       <div className="space-y-3">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -505,41 +520,43 @@ export default function AccountPage() {
                     ) : (
                       <>
                         <div className="flex items-center justify-center sm:justify-start gap-2 mb-2">
-                          <h2 className="text-2xl font-bold text-dark-gray">
+                          <h2 className="text-xl sm:text-2xl font-bold text-dark-gray">
                             {userProfile?.name || "User"}
                           </h2>
                           <button
                             onClick={() => setIsEditing(true)}
                             className="p-1 hover:bg-secondary-100 rounded transition-colors"
                           >
-                            <Edit className="h-4 w-4 text-medium-gray" />
+                            <Edit className="h-3 w-3 sm:h-4 sm:w-4 text-medium-gray" />
                           </button>
                         </div>
-                        <div className="space-y-2 text-sm text-medium-gray">
+                        <div className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm text-medium-gray">
                           <div className="flex items-center justify-center sm:justify-start gap-2">
-                            <Mail className="h-4 w-4" />
-                            <span>{userProfile?.email}</span>
+                            <Mail className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                            <span className="truncate">
+                              {userProfile?.email}
+                            </span>
                           </div>
                           <div className="flex items-center justify-center sm:justify-start gap-2">
-                            <User className="h-4 w-4" />
+                            <User className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                             <span>
                               {userProfile?.studentId || "No Student ID"}
                             </span>
                           </div>
                           <div className="flex items-center justify-center sm:justify-start gap-2">
-                            <Calendar className="h-4 w-4" />
-                            <span>
+                            <Calendar className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                            <span className="truncate">
                               {userProfile?.faculty || "No Faculty"} -{" "}
                               {userProfile?.major || "No Major"}
                             </span>
                           </div>
                           <div className="flex items-center justify-center sm:justify-start gap-2">
-                            <TrendingUp className="h-4 w-4" />
+                            <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                             <span>Year {userProfile?.year || "N/A"}</span>
                           </div>
                           {userProfile?.bio && (
-                            <div className="mt-3 pt-3 border-t border-gray-200">
-                              <p className="text-sm text-gray-700 italic">
+                            <div className="mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-gray-200">
+                              <p className="text-xs sm:text-sm text-gray-700 italic">
                                 {userProfile.bio}
                               </p>
                             </div>
@@ -553,46 +570,52 @@ export default function AccountPage() {
             </Card>
 
             {/* Stats Grid */}
-            <div className="flex overflow-x-auto gap-3 pb-2 -mx-3 px-3 md:mx-0 md:px-0 md:grid md:grid-cols-4 md:overflow-visible">
-              <Card className="flex-shrink-0 w-[calc(25vw-20px)] min-w-[100px] max-w-[140px] md:w-auto md:max-w-none">
-                <CardContent className="pt-6">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+              <Card>
+                <CardContent className="pt-4 sm:pt-6 pb-4 sm:pb-6">
                   <div className="text-center">
-                    <p className="text-2xl font-bold text-dark-gray">
+                    <p className="text-xl sm:text-2xl font-bold text-dark-gray">
                       {userStats?.itemsSold || 0}
                     </p>
-                    <p className="text-sm text-muted-foreground">Items Sold</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                      Items Sold
+                    </p>
                   </div>
                 </CardContent>
               </Card>
-              <Card className="flex-shrink-0 w-[calc(25vw-20px)] min-w-[100px] max-w-[140px] md:w-auto md:max-w-none">
-                <CardContent className="pt-6">
+              <Card>
+                <CardContent className="pt-4 sm:pt-6 pb-4 sm:pb-6">
                   <div className="text-center">
-                    <p className="text-2xl font-bold text-dark-gray">
+                    <p className="text-xl sm:text-2xl font-bold text-dark-gray">
                       {userStats?.itemsBought || 0}
                     </p>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                       Items Bought
                     </p>
                   </div>
                 </CardContent>
               </Card>
-              <Card className="flex-shrink-0 w-[calc(25vw-20px)] min-w-[100px] max-w-[140px] md:w-auto md:max-w-none">
-                <CardContent className="pt-6">
+              <Card>
+                <CardContent className="pt-4 sm:pt-6 pb-4 sm:pb-6">
                   <div className="text-center">
-                    <p className="text-2xl font-bold text-dark-gray">
+                    <p className="text-xl sm:text-2xl font-bold text-dark-gray">
                       {userStats?.messagesCount || 0}
                     </p>
-                    <p className="text-sm text-muted-foreground">Messages</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                      Messages
+                    </p>
                   </div>
                 </CardContent>
               </Card>
-              <Card className="flex-shrink-0 w-[calc(25vw-20px)] min-w-[100px] max-w-[140px] md:w-auto md:max-w-none">
-                <CardContent className="pt-6">
+              <Card>
+                <CardContent className="pt-4 sm:pt-6 pb-4 sm:pb-6">
                   <div className="text-center">
-                    <p className="text-2xl font-bold text-dark-gray">
+                    <p className="text-xl sm:text-2xl font-bold text-dark-gray">
                       {userStats?.averageRating?.toFixed(1) || "5.0"}
                     </p>
-                    <p className="text-sm text-muted-foreground">Rating</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                      Rating
+                    </p>
                   </div>
                 </CardContent>
               </Card>
@@ -600,13 +623,16 @@ export default function AccountPage() {
 
             {/* Actions */}
             <Card>
-              <CardHeader>
-                <CardTitle>Account Actions</CardTitle>
+              <CardHeader className="pb-3 sm:pb-6">
+                <CardTitle className="text-base sm:text-lg">
+                  Account Actions
+                </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-2 sm:space-y-3">
                 <Button
                   variant="outline"
-                  className="w-full justify-start"
+                  className="w-full justify-start text-sm"
+                  size="sm"
                   onClick={() => router.push("/orders")}
                 >
                   <Package className="mr-2 h-4 w-4" />
@@ -614,7 +640,8 @@ export default function AccountPage() {
                 </Button>
                 <Button
                   variant="outline"
-                  className="w-full justify-start"
+                  className="w-full justify-start text-sm"
+                  size="sm"
                   onClick={() => router.push("/library")}
                 >
                   <Library className="mr-2 h-4 w-4" />
@@ -622,7 +649,8 @@ export default function AccountPage() {
                 </Button>
                 <Button
                   variant="destructive"
-                  className="w-full justify-start"
+                  className="w-full justify-start text-sm"
+                  size="sm"
                   onClick={handleLogout}
                 >
                   <LogOut className="mr-2 h-4 w-4" />
