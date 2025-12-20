@@ -3612,31 +3612,85 @@ function DashboardContent() {
                             </p>
                           </div>
                         ) : (
-                          <div className="overflow-x-auto">
-                            <Table>
-                              <TableHeader>
-                                <TableRow>
-                                  <TableHead>Order ID</TableHead>
-                                  <TableHead>Item</TableHead>
-                                  <TableHead>Date</TableHead>
-                                  <TableHead>Amount</TableHead>
-                                  <TableHead>Status</TableHead>
-                                </TableRow>
-                              </TableHeader>
-                              <TableBody>
-                                {allTransactions
-                                  .filter((t) => t.type === "purchase")
-                                  .map((order) => (
-                                    <TableRow key={order.id}>
-                                      <TableCell className="font-mono text-sm">
-                                        {order.orderId.substring(0, 12)}...
-                                      </TableCell>
-                                      <TableCell>
-                                        <div>
-                                          <p className="font-medium">
+                          <>
+                            <div className="hidden md:block overflow-x-auto">
+                              <Table>
+                                <TableHeader>
+                                  <TableRow>
+                                    <TableHead>Order ID</TableHead>
+                                    <TableHead>Item</TableHead>
+                                    <TableHead>Date</TableHead>
+                                    <TableHead>Amount</TableHead>
+                                    <TableHead>Status</TableHead>
+                                  </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                  {allTransactions
+                                    .filter((t) => t.type === "purchase")
+                                    .map((order) => (
+                                      <TableRow key={order.id}>
+                                        <TableCell className="font-mono text-sm">
+                                          {order.orderId.substring(0, 12)}...
+                                        </TableCell>
+                                        <TableCell>
+                                          <div>
+                                            <p className="font-medium">
+                                              {order.itemTitle}
+                                            </p>
+                                            <p className="text-sm text-muted-foreground">
+                                              {order.itemType === "marketplace"
+                                                ? "Study Material"
+                                                : order.itemType === "food"
+                                                ? "Food"
+                                                : "Event"}
+                                            </p>
+                                          </div>
+                                        </TableCell>
+                                        <TableCell className="text-sm text-muted-foreground">
+                                          {new Date(
+                                            order.createdAt
+                                          ).toLocaleDateString()}
+                                        </TableCell>
+                                        <TableCell className="font-semibold">
+                                          Rp {order.amount.toLocaleString()}
+                                        </TableCell>
+                                        <TableCell>
+                                          <div className="flex items-center gap-2">
+                                            <Badge
+                                              variant={
+                                                order.status === "COMPLETED"
+                                                  ? "default"
+                                                  : order.status === "PENDING"
+                                                  ? "secondary"
+                                                  : "destructive"
+                                              }
+                                            >
+                                              {order.status}
+                                            </Badge>
+                                            {isSyncingPayment &&
+                                              order.status === "PENDING" && (
+                                                <RefreshCw className="h-3 w-3 text-blue-600 animate-spin" />
+                                              )}
+                                          </div>
+                                        </TableCell>
+                                      </TableRow>
+                                    ))}
+                                </TableBody>
+                              </Table>
+                            </div>
+
+                            <div className="md:hidden space-y-3">
+                              {allTransactions
+                                .filter((t) => t.type === "purchase")
+                                .map((order) => (
+                                  <Card key={order.id} className="p-3">
+                                    <div className="space-y-2">
+                                      <div className="flex items-start justify-between gap-2">
+                                        <div className="flex-1 min-w-0">
+                                          <p className="font-medium text-sm line-clamp-1">
                                             {order.itemTitle}
                                           </p>
-                                          <p className="text-sm text-muted-foreground">
+                                          <p className="text-xs text-muted-foreground">
                                             {order.itemType === "marketplace"
                                               ? "Study Material"
                                               : order.itemType === "food"
@@ -3644,17 +3698,7 @@ function DashboardContent() {
                                               : "Event"}
                                           </p>
                                         </div>
-                                      </TableCell>
-                                      <TableCell className="text-sm text-muted-foreground">
-                                        {new Date(
-                                          order.createdAt
-                                        ).toLocaleDateString()}
-                                      </TableCell>
-                                      <TableCell className="font-semibold">
-                                        Rp {order.amount.toLocaleString()}
-                                      </TableCell>
-                                      <TableCell>
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex items-center gap-1 flex-shrink-0">
                                           <Badge
                                             variant={
                                               order.status === "COMPLETED"
@@ -3663,6 +3707,7 @@ function DashboardContent() {
                                                 ? "secondary"
                                                 : "destructive"
                                             }
+                                            className="text-xs"
                                           >
                                             {order.status}
                                           </Badge>
@@ -3671,12 +3716,29 @@ function DashboardContent() {
                                               <RefreshCw className="h-3 w-3 text-blue-600 animate-spin" />
                                             )}
                                         </div>
-                                      </TableCell>
-                                    </TableRow>
-                                  ))}
-                              </TableBody>
-                            </Table>
-                          </div>
+                                      </div>
+                                      <div className="flex items-center justify-between text-xs">
+                                        <span className="text-muted-foreground">
+                                          {new Date(
+                                            order.createdAt
+                                          ).toLocaleDateString("en-US", {
+                                            month: "short",
+                                            day: "numeric",
+                                            year: "numeric",
+                                          })}
+                                        </span>
+                                        <span className="font-semibold text-sm">
+                                          Rp {order.amount.toLocaleString()}
+                                        </span>
+                                      </div>
+                                      <p className="font-mono text-xs text-muted-foreground">
+                                        {order.orderId.substring(0, 16)}...
+                                      </p>
+                                    </div>
+                                  </Card>
+                                ))}
+                            </div>
+                          </>
                         )}
                       </CardContent>
                     </Card>
@@ -3745,36 +3807,91 @@ function DashboardContent() {
                             </p>
                           </div>
                         ) : (
-                          <div className="overflow-x-auto">
-                            <Table>
-                              <TableHeader>
-                                <TableRow>
-                                  <TableHead>Order ID</TableHead>
-                                  <TableHead>Item</TableHead>
-                                  <TableHead>Buyer</TableHead>
-                                  <TableHead>Date</TableHead>
-                                  <TableHead>Amount</TableHead>
-                                  <TableHead>Status</TableHead>
-                                </TableRow>
-                              </TableHeader>
-                              <TableBody>
-                                {allTransactions
-                                  .filter(
-                                    (t) =>
-                                      t.type === "sale" &&
-                                      t.status === "COMPLETED"
-                                  )
-                                  .map((sale) => (
-                                    <TableRow key={sale.id}>
-                                      <TableCell className="font-mono text-sm">
-                                        {sale.orderId.substring(0, 12)}...
-                                      </TableCell>
-                                      <TableCell>
-                                        <div>
-                                          <p className="font-medium">
+                          <>
+                            <div className="hidden md:block overflow-x-auto">
+                              <Table>
+                                <TableHeader>
+                                  <TableRow>
+                                    <TableHead>Order ID</TableHead>
+                                    <TableHead>Item</TableHead>
+                                    <TableHead>Buyer</TableHead>
+                                    <TableHead>Date</TableHead>
+                                    <TableHead>Amount</TableHead>
+                                    <TableHead>Status</TableHead>
+                                  </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                  {allTransactions
+                                    .filter(
+                                      (t) =>
+                                        t.type === "sale" &&
+                                        t.status === "COMPLETED"
+                                    )
+                                    .map((sale) => (
+                                      <TableRow key={sale.id}>
+                                        <TableCell className="font-mono text-sm">
+                                          {sale.orderId.substring(0, 12)}...
+                                        </TableCell>
+                                        <TableCell>
+                                          <div>
+                                            <p className="font-medium">
+                                              {sale.itemTitle}
+                                            </p>
+                                            <p className="text-sm text-muted-foreground">
+                                              {sale.itemType === "marketplace"
+                                                ? "Study Material"
+                                                : sale.itemType === "food"
+                                                ? "Food"
+                                                : "Event"}
+                                            </p>
+                                          </div>
+                                        </TableCell>
+                                        <TableCell className="text-sm">
+                                          {sale.buyer?.name || "Unknown"}
+                                        </TableCell>
+                                        <TableCell className="text-sm text-muted-foreground">
+                                          {new Date(
+                                            sale.createdAt
+                                          ).toLocaleDateString()}
+                                        </TableCell>
+                                        <TableCell className="font-semibold">
+                                          Rp {sale.amount.toLocaleString()}
+                                        </TableCell>
+                                        <TableCell>
+                                          <Badge
+                                            variant={
+                                              sale.status === "COMPLETED"
+                                                ? "default"
+                                                : sale.status === "PENDING"
+                                                ? "secondary"
+                                                : "destructive"
+                                            }
+                                          >
+                                            {sale.status}
+                                          </Badge>
+                                        </TableCell>
+                                      </TableRow>
+                                    ))}
+                                </TableBody>
+                              </Table>
+                            </div>
+
+                            <div className="md:hidden space-y-3">
+                              {allTransactions
+                                .filter(
+                                  (t) =>
+                                    t.type === "sale" &&
+                                    t.status === "COMPLETED"
+                                )
+                                .map((sale) => (
+                                  <Card key={sale.id} className="p-3">
+                                    <div className="space-y-2">
+                                      <div className="flex items-start justify-between gap-2">
+                                        <div className="flex-1 min-w-0">
+                                          <p className="font-medium text-sm line-clamp-1">
                                             {sale.itemTitle}
                                           </p>
-                                          <p className="text-sm text-muted-foreground">
+                                          <p className="text-xs text-muted-foreground">
                                             {sale.itemType === "marketplace"
                                               ? "Study Material"
                                               : sale.itemType === "food"
@@ -3782,19 +3899,6 @@ function DashboardContent() {
                                               : "Event"}
                                           </p>
                                         </div>
-                                      </TableCell>
-                                      <TableCell className="text-sm">
-                                        {sale.buyer?.name || "Unknown"}
-                                      </TableCell>
-                                      <TableCell className="text-sm text-muted-foreground">
-                                        {new Date(
-                                          sale.createdAt
-                                        ).toLocaleDateString()}
-                                      </TableCell>
-                                      <TableCell className="font-semibold">
-                                        Rp {sale.amount.toLocaleString()}
-                                      </TableCell>
-                                      <TableCell>
                                         <Badge
                                           variant={
                                             sale.status === "COMPLETED"
@@ -3803,27 +3907,47 @@ function DashboardContent() {
                                               ? "secondary"
                                               : "destructive"
                                           }
+                                          className="text-xs flex-shrink-0"
                                         >
                                           {sale.status}
                                         </Badge>
-                                      </TableCell>
-                                    </TableRow>
-                                  ))}
-                              </TableBody>
-                            </Table>
-                          </div>
+                                      </div>
+                                      <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                          <span>
+                                            {sale.buyer?.name || "Unknown"}
+                                          </span>
+                                          <span>•</span>
+                                          <span>
+                                            {new Date(
+                                              sale.createdAt
+                                            ).toLocaleDateString("en-US", {
+                                              month: "short",
+                                              day: "numeric",
+                                            })}
+                                          </span>
+                                        </div>
+                                        <span className="font-semibold text-sm">
+                                          Rp {sale.amount.toLocaleString()}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </Card>
+                                ))}
+                            </div>
+                          </>
                         )}
                       </CardContent>
                     </Card>
                   </TabsContent>
 
                   <TabsContent value="library" className="space-y-4 mt-6">
-                    <div className="grid grid-cols-3 gap-3 mb-6">
-                      <Card className="p-4">
+                    <div className="grid grid-cols-3 gap-2 md:gap-3 mb-4 md:mb-6">
+                      <Card className="p-2 md:p-4">
                         <div className="flex items-center justify-between mb-1">
-                          <BookOpen className="h-4 w-4 text-muted-foreground" />
+                          <BookOpen className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
                         </div>
-                        <div className="text-2xl font-bold">
+                        <div className="text-lg md:text-2xl font-bold">
                           {
                             allTransactions.filter(
                               (t) =>
@@ -3833,15 +3957,15 @@ function DashboardContent() {
                             ).length
                           }
                         </div>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-[10px] md:text-xs text-muted-foreground">
                           Total Items
                         </p>
                       </Card>
-                      <Card className="p-4">
+                      <Card className="p-2 md:p-4">
                         <div className="flex items-center justify-between mb-1">
-                          <FileText className="h-4 w-4 text-muted-foreground" />
+                          <FileText className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
                         </div>
-                        <div className="text-2xl font-bold">
+                        <div className="text-lg md:text-2xl font-bold">
                           {
                             allTransactions.filter(
                               (t) =>
@@ -3852,13 +3976,15 @@ function DashboardContent() {
                             ).length
                           }
                         </div>
-                        <p className="text-xs text-muted-foreground">Notes</p>
+                        <p className="text-[10px] md:text-xs text-muted-foreground">
+                          Notes
+                        </p>
                       </Card>
-                      <Card className="p-4">
+                      <Card className="p-2 md:p-4">
                         <div className="flex items-center justify-between mb-1">
-                          <BookOpen className="h-4 w-4 text-muted-foreground" />
+                          <BookOpen className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
                         </div>
-                        <div className="text-2xl font-bold">
+                        <div className="text-lg md:text-2xl font-bold">
                           {
                             allTransactions.filter(
                               (t) =>
@@ -3869,7 +3995,9 @@ function DashboardContent() {
                             ).length
                           }
                         </div>
-                        <p className="text-xs text-muted-foreground">Books</p>
+                        <p className="text-[10px] md:text-xs text-muted-foreground">
+                          Books
+                        </p>
                       </Card>
                     </div>
 
@@ -3898,7 +4026,7 @@ function DashboardContent() {
                             </Button>
                           </div>
                         ) : (
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
                             {allTransactions
                               .filter(
                                 (t) =>
@@ -3911,46 +4039,54 @@ function DashboardContent() {
                                   key={item.id}
                                   className="hover:shadow-lg transition-shadow"
                                 >
-                                  <CardHeader>
-                                    <div className="flex items-start justify-between">
-                                      <div className="flex-1">
-                                        <CardTitle className="text-lg line-clamp-2">
+                                  <CardHeader className="p-3 md:p-6">
+                                    <div className="flex items-start justify-between gap-2">
+                                      <div className="flex-1 min-w-0">
+                                        <CardTitle className="text-sm md:text-lg line-clamp-2">
                                           {item.itemTitle}
                                         </CardTitle>
-                                        <p className="text-sm text-muted-foreground mt-1">
+                                        <p className="text-xs md:text-sm text-muted-foreground mt-1">
                                           {item.item?.category ||
                                             "Study Material"}
                                         </p>
                                       </div>
-                                      <Badge variant="secondary">
+                                      <Badge
+                                        variant="secondary"
+                                        className="text-xs flex-shrink-0"
+                                      >
                                         {item.item?.category || "Material"}
                                       </Badge>
                                     </div>
                                   </CardHeader>
-                                  <CardContent>
-                                    <p className="text-sm text-muted-foreground line-clamp-3">
+                                  <CardContent className="p-3 md:p-6 pt-0">
+                                    <p className="text-xs md:text-sm text-muted-foreground line-clamp-2 md:line-clamp-3">
                                       {item.item?.description ||
                                         "No description available"}
                                     </p>
-                                    <div className="mt-4 space-y-1">
+                                    <div className="mt-3 md:mt-4 space-y-1">
                                       <div className="text-xs text-muted-foreground">
-                                        Purchased on{" "}
                                         {new Date(
                                           item.createdAt
-                                        ).toLocaleDateString()}
+                                        ).toLocaleDateString("en-US", {
+                                          month: "short",
+                                          day: "numeric",
+                                          year: "numeric",
+                                        })}
                                       </div>
                                       {item.item?.fileName && (
-                                        <div className="text-xs text-muted-foreground flex items-center gap-1">
-                                          <FileText className="h-3 w-3" />
-                                          {item.item.fileName}
+                                        <div className="text-xs text-muted-foreground flex items-center gap-1 truncate">
+                                          <FileText className="h-3 w-3 flex-shrink-0" />
+                                          <span className="truncate">
+                                            {item.item.fileName}
+                                          </span>
                                         </div>
                                       )}
                                     </div>
                                   </CardContent>
-                                  <CardFooter>
+                                  <CardFooter className="p-3 md:p-6 pt-0">
                                     <Button
                                       size="sm"
-                                      className="w-full"
+                                      className="w-full text-xs md:text-sm h-8 md:h-9"
                                       onClick={async () => {
                                         if (item.item?.fileUrl) {
                                           try {
@@ -3970,7 +4106,7 @@ function DashboardContent() {
                                       }}
                                       disabled={!item.item?.fileUrl}
                                     >
-                                      <Download className="h-4 w-4 mr-1" />
+                                      <Download className="h-3 w-3 md:h-4 md:w-4 mr-1" />
                                       Download
                                     </Button>
                                   </CardFooter>
@@ -4005,7 +4141,7 @@ function DashboardContent() {
                             </Button>
                           </div>
                         ) : (
-                          <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                          <div className="grid gap-3 md:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
                             {marketplaceItems
                               .filter(
                                 (item) => item.sellerId === currentUser?.id
@@ -4016,14 +4152,14 @@ function DashboardContent() {
                                   className="hover:shadow-lg transition-shadow"
                                 >
                                   {item.imageUrl && (
-                                    <div className="relative w-full h-48 bg-gray-100">
+                                    <div className="relative w-full h-32 md:h-48 bg-gray-100">
                                       <img
                                         src={item.imageUrl}
                                         alt={item.title}
                                         className="w-full h-full object-cover rounded-t-lg"
                                       />
                                       <Badge
-                                        className="absolute top-2 right-2"
+                                        className="absolute top-1 right-1 md:top-2 md:right-2 text-xs"
                                         variant={
                                           item.status === "available"
                                             ? "default"
@@ -4034,29 +4170,32 @@ function DashboardContent() {
                                       </Badge>
                                     </div>
                                   )}
-                                  <CardHeader>
-                                    <div className="flex items-start justify-between">
-                                      <div className="flex-1">
-                                        <CardTitle className="text-lg line-clamp-2">
+                                  <CardHeader className="p-3 md:p-6">
+                                    <div className="flex items-start justify-between gap-2">
+                                      <div className="flex-1 min-w-0">
+                                        <CardTitle className="text-sm md:text-lg line-clamp-2">
                                           {item.title}
                                         </CardTitle>
-                                        <p className="text-sm text-muted-foreground mt-1">
+                                        <p className="text-xs md:text-sm text-muted-foreground mt-1">
                                           {item.category}
                                         </p>
                                       </div>
                                       {!item.imageUrl && (
-                                        <Badge variant="secondary">
+                                        <Badge
+                                          variant="secondary"
+                                          className="text-xs flex-shrink-0"
+                                        >
                                           {item.category}
                                         </Badge>
                                       )}
                                     </div>
                                   </CardHeader>
-                                  <CardContent>
-                                    <p className="text-sm text-muted-foreground line-clamp-3">
+                                  <CardContent className="p-3 md:p-6 pt-0">
+                                    <p className="text-xs md:text-sm text-muted-foreground line-clamp-2 md:line-clamp-3">
                                       {item.description}
                                     </p>
-                                    <div className="mt-4 flex items-center justify-between">
-                                      <p className="text-lg font-bold text-dark-blue">
+                                    <div className="mt-3 md:mt-4 flex items-center justify-between">
+                                      <p className="text-sm md:text-lg font-bold text-dark-blue">
                                         Rp {item.price.toLocaleString()}
                                       </p>
                                       <div className="text-xs text-muted-foreground">
@@ -4064,23 +4203,23 @@ function DashboardContent() {
                                       </div>
                                     </div>
                                   </CardContent>
-                                  <CardFooter className="flex gap-2">
+                                  <CardFooter className="flex gap-2 p-3 md:p-6 pt-0">
                                     <Button
                                       size="sm"
                                       variant="outline"
-                                      className="flex-1"
+                                      className="flex-1 text-xs md:text-sm h-8 md:h-9"
                                       onClick={() => {
                                         setSelectedItem(item);
                                         setShowItemDetailModal(true);
                                       }}
                                     >
-                                      <Eye className="h-4 w-4 mr-1" />
+                                      <Eye className="h-3 w-3 md:h-4 md:w-4 mr-1" />
                                       View
                                     </Button>
                                     <Button
                                       size="sm"
                                       variant="outline"
-                                      className="flex-1"
+                                      className="flex-1 text-xs md:text-sm h-8 md:h-9"
                                       onClick={() => {
                                         setSelectedItem(item);
                                         handleEditItem(item);
@@ -4118,66 +4257,70 @@ function DashboardContent() {
                             </Button>
                           </div>
                         ) : (
-                          <div className="space-y-4">
+                          <div className="space-y-3 md:space-y-4">
                             {myEventRegistrations.map((registration: any) => (
                               <Card
                                 key={registration.id}
                                 className="hover:shadow-lg transition-shadow"
                               >
-                                <CardHeader>
-                                  <div className="flex items-start justify-between">
-                                    <div className="flex-1">
-                                      <CardTitle className="text-lg">
+                                <CardHeader className="p-3 md:p-6">
+                                  <div className="flex items-start justify-between gap-2">
+                                    <div className="flex-1 min-w-0">
+                                      <CardTitle className="text-sm md:text-lg line-clamp-2">
                                         {registration.event.title}
                                       </CardTitle>
-                                      <p className="text-sm text-muted-foreground mt-1">
+                                      <p className="text-xs md:text-sm text-muted-foreground mt-1">
                                         {registration.event.category} •{" "}
                                         {registration.event.eventType}
                                       </p>
                                     </div>
-                                    <div className="flex flex-col items-end gap-2">
+                                    <div className="flex flex-col items-end gap-1 md:gap-2 flex-shrink-0">
                                       <Badge
                                         variant={
                                           registration.paymentStatus === "paid"
                                             ? "default"
                                             : "secondary"
                                         }
+                                        className="text-xs"
                                       >
                                         {registration.paymentStatus === "paid"
                                           ? "Paid"
-                                          : "Pending Payment"}
+                                          : "Pending"}
                                       </Badge>
-                                      <Badge variant="outline">
+                                      <Badge
+                                        variant="outline"
+                                        className="text-xs"
+                                      >
                                         {registration.status}
                                       </Badge>
                                     </div>
                                   </div>
                                 </CardHeader>
-                                <CardContent>
-                                  <div className="space-y-2 text-sm">
+                                <CardContent className="p-3 md:p-6 pt-0">
+                                  <div className="space-y-1.5 md:space-y-2 text-xs md:text-sm">
                                     <div className="flex items-center gap-2 text-muted-foreground">
-                                      <Calendar className="h-4 w-4" />
-                                      <span>
+                                      <Calendar className="h-3 w-3 md:h-4 md:w-4 flex-shrink-0" />
+                                      <span className="truncate">
                                         {new Date(
                                           registration.event.startDate
                                         ).toLocaleDateString("en-US", {
-                                          weekday: "short",
-                                          year: "numeric",
                                           month: "short",
                                           day: "numeric",
+                                          year: "numeric",
                                           hour: "2-digit",
                                           minute: "2-digit",
                                         })}
                                       </span>
                                     </div>
                                     <div className="flex items-center gap-2 text-muted-foreground">
-                                      <MapPin className="h-4 w-4" />
-                                      <span>{registration.event.location}</span>
+                                      <MapPin className="h-3 w-3 md:h-4 md:w-4 flex-shrink-0" />
+                                      <span className="truncate">
+                                        {registration.event.location}
+                                      </span>
                                     </div>
                                     <div className="flex items-center gap-2 text-muted-foreground">
-                                      <User className="h-4 w-4" />
-                                      <span>
-                                        Organized by{" "}
+                                      <User className="h-3 w-3 md:h-4 md:w-4 flex-shrink-0" />
+                                      <span className="truncate">
                                         {registration.event.organizerUser
                                           ?.name ||
                                           registration.event.organizer}
@@ -4193,25 +4336,28 @@ function DashboardContent() {
                                     )}
                                   </div>
                                 </CardContent>
-                                <CardFooter className="flex gap-2">
+                                <CardFooter className="flex gap-2 p-3 md:p-6 pt-0">
                                   <Button
                                     size="sm"
                                     variant="outline"
-                                    className="flex-1"
+                                    className="flex-1 text-xs md:text-sm h-8 md:h-9"
                                     onClick={() => {
                                       setSelectedEvent(registration.event);
                                       setShowEventDetailModal(true);
                                     }}
                                   >
-                                    <Eye className="h-4 w-4 mr-1" />
-                                    View Details
+                                    <Eye className="h-3 w-3 md:h-4 md:w-4 mr-1" />
+                                    <span className="hidden md:inline">
+                                      View Details
+                                    </span>
+                                    <span className="md:hidden">View</span>
                                   </Button>
                                   {registration.event.isOnline &&
                                     registration.event.meetingLink &&
                                     registration.paymentStatus === "paid" && (
                                       <Button
                                         size="sm"
-                                        className="flex-1"
+                                        className="flex-1 text-xs md:text-sm h-8 md:h-9"
                                         onClick={() => {
                                           window.open(
                                             registration.event.meetingLink,
@@ -4219,8 +4365,11 @@ function DashboardContent() {
                                           );
                                         }}
                                       >
-                                        <ExternalLink className="h-4 w-4 mr-1" />
-                                        Join Meeting
+                                        <ExternalLink className="h-3 w-3 md:h-4 md:w-4 mr-1" />
+                                        <span className="hidden md:inline">
+                                          Join Meeting
+                                        </span>
+                                        <span className="md:hidden">Join</span>
                                       </Button>
                                     )}
                                 </CardFooter>
