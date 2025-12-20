@@ -348,7 +348,7 @@ export const statsAPI = {
 export const paymentAPI = {
   async createPayment(data: {
     itemId: string;
-    itemType: "marketplace" | "tutoring" | "food";
+    itemType: "marketplace" | "tutoring" | "food" | "event";
     amount: number;
     itemTitle: string;
   }) {
