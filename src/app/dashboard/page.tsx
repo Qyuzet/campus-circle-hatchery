@@ -1,6 +1,14 @@
 "use client";
 
-import { useState, useEffect, useRef, Suspense } from "react";
+import {
+  useState,
+  useEffect,
+  useRef,
+  Suspense,
+  useMemo,
+  useCallback,
+  memo,
+} from "react";
 import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { format } from "date-fns";
@@ -887,19 +895,22 @@ function DashboardContent() {
     }
   };
 
-  // Handler functions
-  const handleSearch = async (query: string) => {
-    setSearchQuery(query);
-    try {
-      const items = await marketplaceAPI.getItems({
-        search: query,
-        category: selectedCategory !== "All" ? selectedCategory : undefined,
-      });
-      setMarketplaceItems(filterTradableItems(items));
-    } catch (error) {
-      console.error("Error searching items:", error);
-    }
-  };
+  // Handler functions (memoized to prevent recreation on every render)
+  const handleSearch = useCallback(
+    async (query: string) => {
+      setSearchQuery(query);
+      try {
+        const items = await marketplaceAPI.getItems({
+          search: query,
+          category: selectedCategory !== "All" ? selectedCategory : undefined,
+        });
+        setMarketplaceItems(filterTradableItems(items));
+      } catch (error) {
+        console.error("Error searching items:", error);
+      }
+    },
+    [selectedCategory]
+  );
 
   const handleCategoryFilter = async (category: string) => {
     setSelectedCategory(category);
@@ -1398,32 +1409,35 @@ function DashboardContent() {
     }
   };
 
-  const handleToggleWishlist = async (itemId: string, e?: React.MouseEvent) => {
-    if (e) {
-      e.stopPropagation();
-    }
+  const handleToggleWishlist = useCallback(
+    async (itemId: string, e?: React.MouseEvent) => {
+      if (e) {
+        e.stopPropagation();
+      }
 
-    try {
-      const result = await wishlistAPI.toggleWishlist(itemId);
+      try {
+        const result = await wishlistAPI.toggleWishlist(itemId);
 
-      setWishlistItemIds((prev) => {
-        const newSet = new Set(prev);
-        if (result.wishlisted) {
-          newSet.add(itemId);
-          toast.success("Added to wishlist!");
-        } else {
-          newSet.delete(itemId);
-          toast.success("Removed from wishlist!");
-        }
-        return newSet;
-      });
+        setWishlistItemIds((prev) => {
+          const newSet = new Set(prev);
+          if (result.wishlisted) {
+            newSet.add(itemId);
+            toast.success("Added to wishlist!");
+          } else {
+            newSet.delete(itemId);
+            toast.success("Removed from wishlist!");
+          }
+          return newSet;
+        });
 
-      await loadWishlist();
-    } catch (error) {
-      console.error("Error toggling wishlist:", error);
-      toast.error("Failed to update wishlist");
-    }
-  };
+        await loadWishlist();
+      } catch (error) {
+        console.error("Error toggling wishlist:", error);
+        toast.error("Failed to update wishlist");
+      }
+    },
+    []
+  );
 
   const loadWishlist = async () => {
     try {
@@ -1593,7 +1607,7 @@ function DashboardContent() {
     }
   };
 
-  const handleItemClick = async (item: MarketplaceItem) => {
+  const handleItemClick = useCallback(async (item: MarketplaceItem) => {
     setSelectedItem(item);
     setShowItemDetailModal(true);
 
@@ -1604,7 +1618,7 @@ function DashboardContent() {
       console.error("Error checking purchase:", error);
       setHasPurchasedItem(false);
     }
-  };
+  }, []);
 
   const handleBuyItem = async (item: MarketplaceItem) => {
     if (hasPurchasedItem) {
@@ -1684,41 +1698,76 @@ function DashboardContent() {
     }
   };
 
-  // Dynamic stats based on real data
-  const stats = [
-    {
-      label: "Items Sold",
-      value: marketplaceItems
-        .filter(
-          (item) => item.sellerId === currentUser?.id && item.status === "sold"
-        )
-        .length.toString(),
-      icon: ShoppingCart,
-      color: "bg-dark-blue",
-    },
-    {
-      label: "Items Bought",
-      value: (userStats.itemsBought || 0).toString(),
-      icon: BookOpen,
-      color: "bg-campus-green",
-    },
-    {
-      label: "Messages",
-      value: conversations.length.toString(),
-      icon: MessageCircle,
-      color: "bg-soft-blue",
-    },
-    {
-      label: "Rating",
-      value: "5.0",
-      icon: Star,
-      color: "bg-light-blue",
-    },
-  ];
+  // Memoize user's marketplace items
+  const userMarketplaceItems = useMemo(
+    () => marketplaceItems.filter((item) => item.sellerId === currentUser?.id),
+    [marketplaceItems, currentUser?.id]
+  );
 
-  // Get filtered marketplace items
-  const filteredItems =
-    searchQuery || selectedCategory ? marketplaceItems : marketplaceItems;
+  // Memoize sold items count
+  const soldItemsCount = useMemo(
+    () => userMarketplaceItems.filter((item) => item.status === "sold").length,
+    [userMarketplaceItems]
+  );
+
+  // Memoize available items count
+  const availableItemsCount = useMemo(
+    () =>
+      userMarketplaceItems.filter((item) => item.status === "available").length,
+    [userMarketplaceItems]
+  );
+
+  // Memoize filtered marketplace items to prevent recalculation on every render
+  const filteredItems = useMemo(() => {
+    let items = marketplaceItems;
+
+    if (selectedCategory && selectedCategory !== "All") {
+      items = items.filter((item) => item.category === selectedCategory);
+    }
+
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      items = items.filter(
+        (item) =>
+          item.title.toLowerCase().includes(query) ||
+          item.description.toLowerCase().includes(query) ||
+          item.course?.toLowerCase().includes(query)
+      );
+    }
+
+    return items;
+  }, [marketplaceItems, selectedCategory, searchQuery]);
+
+  // Dynamic stats based on real data (memoized to prevent recalculation)
+  const stats = useMemo(
+    () => [
+      {
+        label: "Items Sold",
+        value: soldItemsCount.toString(),
+        icon: ShoppingCart,
+        color: "bg-dark-blue",
+      },
+      {
+        label: "Items Bought",
+        value: (userStats.itemsBought || 0).toString(),
+        icon: BookOpen,
+        color: "bg-campus-green",
+      },
+      {
+        label: "Messages",
+        value: conversations.length.toString(),
+        icon: MessageCircle,
+        color: "bg-soft-blue",
+      },
+      {
+        label: "Rating",
+        value: "5.0",
+        icon: Star,
+        color: "bg-light-blue",
+      },
+    ],
+    [soldItemsCount, userStats.itemsBought, conversations.length]
+  );
 
   // Show loading state only for initial auth check
   if (status === "loading") {
