@@ -114,9 +114,9 @@ export default function OrdersPage() {
                     description: `Redirecting to Library...`,
                     duration: 2000,
                   });
-                  // Redirect to Library after 2 seconds
+                  // Redirect to My Hub Library tab after 2 seconds
                   setTimeout(() => {
-                    router.push("/library");
+                    router.push("/dashboard?tab=my-hub&subTab=library");
                   }, 2000);
                 }
               } else if (result.transaction.status === "EXPIRED") {
@@ -549,9 +549,9 @@ function OrdersTable({ orders, router }: { orders: any[]; router: any }) {
               description: "Redirecting to Library...",
               duration: 2000,
             });
-            // Redirect to Library after 2 seconds
+            // Redirect to My Hub Library tab after 2 seconds
             setTimeout(() => {
-              router.push("/library");
+              router.push("/dashboard?tab=my-hub&subTab=library");
             }, 2000);
           }
         } else if (newStatus === "PENDING") {

@@ -52,18 +52,18 @@ export default function PaymentModal({
               onSuccess?.();
               onClose();
 
-              // Redirect to Orders page for all item types to trigger auto-sync
+              // Redirect to My Hub Purchases tab to see updated status
               setTimeout(() => {
-                router.push("/orders");
+                router.push("/dashboard?tab=my-hub&subTab=purchases");
               }, 1000);
             },
             onPending: function (result: any) {
               console.log("Payment pending:", result);
               onClose();
 
-              // Redirect to Orders page to track payment status
+              // Redirect to My Hub Purchases tab to track payment status
               setTimeout(() => {
-                router.push("/orders");
+                router.push("/dashboard?tab=my-hub&subTab=purchases");
               }, 500);
             },
             onError: function (result: any) {
@@ -75,9 +75,9 @@ export default function PaymentModal({
               console.log("Payment popup closed");
               setIsProcessing(false);
 
-              // Redirect to Orders page to check status
+              // Redirect to My Hub Purchases tab to check status
               setTimeout(() => {
-                router.push("/orders");
+                router.push("/dashboard?tab=my-hub&subTab=purchases");
               }, 500);
             },
           });

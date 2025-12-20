@@ -27,7 +27,7 @@ function PaymentSuccessContent() {
       }, 1000);
       return () => clearTimeout(timer);
     } else {
-      router.push("/library");
+      router.push("/dashboard?tab=my-hub&subTab=library");
     }
   }, [countdown, router]);
 
@@ -161,7 +161,7 @@ function PaymentSuccessContent() {
         {/* Action Buttons */}
         <div className="space-y-3">
           <button
-            onClick={() => router.push("/library")}
+            onClick={() => router.push("/dashboard?tab=my-hub&subTab=library")}
             className="w-full bg-dark-blue text-white py-3 px-4 rounded-lg hover:bg-opacity-90 transition-colors font-medium flex items-center justify-center"
           >
             Go to Library Now

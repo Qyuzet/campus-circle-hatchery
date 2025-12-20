@@ -271,8 +271,19 @@ function DashboardContent() {
   // Handle URL tab parameter
   useEffect(() => {
     const tab = searchParams.get("tab");
+    const subTab = searchParams.get("subTab");
+
     if (tab && ["discovery", "my-hub", "messages", "wallet"].includes(tab)) {
       setActiveTab(tab);
+    }
+
+    // Handle My Hub sub-tab parameter
+    if (
+      tab === "my-hub" &&
+      subTab &&
+      ["purchases", "sales", "library", "listings"].includes(subTab)
+    ) {
+      setMyHubTab(subTab);
     }
   }, [searchParams]);
 
@@ -292,6 +303,86 @@ function DashboardContent() {
       loadTabData(activeTab);
     }
   }, [activeTab, status]);
+
+  // Auto-sync payment status when on My Hub Purchases tab (like legacy Orders page)
+  useEffect(() => {
+    if (
+      activeTab === "my-hub" &&
+      myHubTab === "purchases" &&
+      status === "authenticated"
+    ) {
+      const checkPendingPayments = async () => {
+        try {
+          const transactions = await transactionsAPI.getTransactions(
+            { type: "purchases" },
+            false
+          );
+
+          const pendingOrders = transactions.filter(
+            (t: any) => t.status === "PENDING"
+          );
+
+          for (const order of pendingOrders) {
+            try {
+              const response = await fetch(
+                `/api/payment/status?orderId=${order.orderId}`
+              );
+              const result = await response.json();
+
+              if (
+                result.success &&
+                result.transaction.status !== order.status
+              ) {
+                if (result.transaction.status === "COMPLETED") {
+                  if (order.itemType === "food") {
+                    toast.success("Payment confirmed!", {
+                      description: "Food order confirmed!",
+                      duration: 2000,
+                    });
+                    setTimeout(async () => {
+                      await loadTabData("my-hub");
+                    }, 1500);
+                  } else {
+                    toast.success("Payment confirmed!", {
+                      description: "Redirecting to Library...",
+                      duration: 2000,
+                    });
+                    setTimeout(() => {
+                      router.push("/dashboard?tab=my-hub&subTab=library");
+                    }, 2000);
+                  }
+                } else if (result.transaction.status === "EXPIRED") {
+                  toast.error("Payment expired", {
+                    description:
+                      "Payment time limit exceeded. Please try again.",
+                    duration: 3000,
+                  });
+                  setTimeout(async () => {
+                    await loadTabData("my-hub");
+                  }, 1500);
+                }
+              }
+            } catch (error) {
+              console.error(
+                `Error checking status for ${order.orderId}:`,
+                error
+              );
+            }
+          }
+        } catch (error) {
+          console.error("Error checking pending payments:", error);
+        }
+      };
+
+      const interval = setInterval(async () => {
+        await checkPendingPayments();
+      }, 5000);
+
+      checkPendingPayments();
+
+      return () => clearInterval(interval);
+    }
+  }, [activeTab, myHubTab, status, router]);
 
   // Close notifications dropdown when clicking outside
   useEffect(() => {
