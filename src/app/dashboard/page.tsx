@@ -535,19 +535,24 @@ function DashboardContent() {
       channel.bind("new-message", (newMessage: any) => {
         console.log("✅ Real-time message received:", newMessage);
         setMessages((prevMessages) => {
+          // Remove optimistic message if it exists (sent by current user)
+          const withoutOptimistic = prevMessages.filter(
+            (msg) => !msg.id.startsWith("temp-")
+          );
+
           // Check if message already exists (update scenario)
-          const existingIndex = prevMessages.findIndex(
+          const existingIndex = withoutOptimistic.findIndex(
             (msg) => msg.id === newMessage.id
           );
           if (existingIndex !== -1) {
             console.log("🔄 Updating existing message:", newMessage.id);
             // Update the existing message
-            const updatedMessages = [...prevMessages];
+            const updatedMessages = [...withoutOptimistic];
             updatedMessages[existingIndex] = newMessage;
             return updatedMessages;
           }
           console.log("➕ Adding new message to chat:", newMessage.id);
-          return [...prevMessages, newMessage];
+          return [...withoutOptimistic, newMessage];
         });
 
         // Update conversation list with latest message
@@ -601,16 +606,21 @@ function DashboardContent() {
       channel.bind("new-group-message", (newMessage: any) => {
         console.log("✅ Real-time group message received:", newMessage);
         setGroupMessages((prevMessages) => {
+          // Remove optimistic message if it exists (sent by current user)
+          const withoutOptimistic = prevMessages.filter(
+            (msg) => !msg.id.startsWith("temp-")
+          );
+
           // Avoid duplicates
-          if (prevMessages.some((msg) => msg.id === newMessage.id)) {
+          if (withoutOptimistic.some((msg) => msg.id === newMessage.id)) {
             console.log(
               "⚠️ Duplicate group message detected, skipping:",
               newMessage.id
             );
-            return prevMessages;
+            return withoutOptimistic;
           }
           console.log("➕ Adding new group message to chat:", newMessage.id);
-          return [...prevMessages, newMessage];
+          return [...withoutOptimistic, newMessage];
         });
 
         // Update group list with latest message
@@ -1513,12 +1523,44 @@ function DashboardContent() {
 
     try {
       setIsSendingMessage(true);
-      await groupsAPI.sendMessage(groupId, content.trim());
+
+      // Optimistic update: Add message immediately to UI
+      const optimisticMessage = {
+        id: `temp-${Date.now()}`,
+        groupId,
+        senderId: currentUser?.id || "",
+        content: content.trim(),
+        messageType: "text",
+        createdAt: new Date().toISOString(),
+        sender: {
+          id: currentUser?.id || "",
+          name: currentUser?.name || "",
+          avatarUrl: currentUser?.avatarUrl || null,
+        },
+      };
+
+      setGroupMessages((prev) => [...prev, optimisticMessage]);
+
+      // Clear input immediately for instant feedback
       setMessageText("");
-      await loadGroupMessages(groupId);
+
+      // Send message to server (Pusher will handle real-time sync)
+      await groupsAPI.sendMessage(groupId, content.trim());
+
+      // Scroll to bottom
+      setTimeout(() => {
+        if (messagesEndRef.current) {
+          messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+        }
+      }, 100);
     } catch (error) {
       console.error("Error sending group message:", error);
       toast.error("Failed to send message");
+
+      // Remove optimistic message on error
+      setGroupMessages((prev) =>
+        prev.filter((msg) => !msg.id.startsWith("temp-"))
+      );
     } finally {
       setIsSendingMessage(false);
     }
@@ -1530,19 +1572,45 @@ function DashboardContent() {
     try {
       setIsSendingMessage(true);
 
-      // Send message
-      await messagesAPI.sendMessage(conversationId, content.trim());
+      // Optimistic update: Add message immediately to UI
+      const optimisticMessage = {
+        id: `temp-${Date.now()}`,
+        conversationId,
+        senderId: currentUser?.id || "",
+        receiverId: "",
+        content: content.trim(),
+        messageType: "text",
+        isRead: false,
+        createdAt: new Date().toISOString(),
+        sender: {
+          id: currentUser?.id || "",
+          name: currentUser?.name || "",
+          avatarUrl: currentUser?.avatarUrl || null,
+        },
+      };
 
-      // Clear input and close modal immediately for better UX
+      setMessages((prev) => [...prev, optimisticMessage]);
+
+      // Clear input immediately for instant feedback
       setMessageText("");
       setShowMessageModal(false);
       setMessageContextItem(null);
 
-      // Reload only messages (optimistic update)
-      await loadMessages(conversationId);
+      // Send message to server (Pusher will handle real-time sync)
+      await messagesAPI.sendMessage(conversationId, content.trim());
+
+      // Scroll to bottom
+      setTimeout(() => {
+        if (messagesEndRef.current) {
+          messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+        }
+      }, 100);
     } catch (error) {
       console.error("Error sending message:", error);
       toast.error("Failed to send message. Please try again.");
+
+      // Remove optimistic message on error
+      setMessages((prev) => prev.filter((msg) => !msg.id.startsWith("temp-")));
     } finally {
       setIsSendingMessage(false);
     }
