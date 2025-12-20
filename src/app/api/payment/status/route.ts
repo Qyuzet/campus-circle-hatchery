@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
     // Verify user has access to this transaction
     if (
       transaction.buyerId !== session.user.id &&
-      transaction.item?.sellerId !== session.user.id
+      transaction.sellerId !== session.user.id
     ) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }

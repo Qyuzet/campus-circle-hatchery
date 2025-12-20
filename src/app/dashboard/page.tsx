@@ -2864,75 +2864,23 @@ function DashboardContent() {
                                                                       result
                                                                     );
 
-                                                                    try {
-                                                                      // Update the payment request message status
-                                                                      const updateResponse =
-                                                                        await fetch(
-                                                                          `/api/messages/${message.id}`,
-                                                                          {
-                                                                            method:
-                                                                              "PATCH",
-                                                                            headers:
-                                                                              {
-                                                                                "Content-Type":
-                                                                                  "application/json",
-                                                                              },
-                                                                            body: JSON.stringify(
-                                                                              {
-                                                                                orderData:
-                                                                                  {
-                                                                                    ...message.orderData,
-                                                                                    status:
-                                                                                      "paid",
-                                                                                  },
-                                                                              }
-                                                                            ),
-                                                                          }
-                                                                        );
-
-                                                                      if (
-                                                                        !updateResponse.ok
-                                                                      ) {
-                                                                        console.error(
-                                                                          "Failed to update message status"
-                                                                        );
+                                                                    toast.success(
+                                                                      "Payment successful!",
+                                                                      {
+                                                                        description:
+                                                                          "Redirecting to Orders page...",
                                                                       }
+                                                                    );
 
-                                                                      // Send confirmation message in chat
-                                                                      await messagesAPI.sendMessage(
-                                                                        message.conversationId,
-                                                                        `Payment completed! Order confirmed for ${message.orderData.foodTitle}. The seller will prepare your order for pickup.`,
-                                                                        "text"
-                                                                      );
-
-                                                                      // Reload messages to show updated status
-                                                                      await loadMessages(
-                                                                        message.conversationId
-                                                                      );
-
-                                                                      // Reload food items
-                                                                      const foodData =
-                                                                        await foodAPI.getFoodItems();
-                                                                      setFoodItems(
-                                                                        foodData
-                                                                      );
-
-                                                                      toast.success(
-                                                                        "Payment successful!",
-                                                                        {
-                                                                          description:
-                                                                            "Order confirmed! Check your chat for details.",
-                                                                        }
-                                                                      );
-                                                                    } catch (error) {
-                                                                      console.error(
-                                                                        "Error in payment success handler:",
-                                                                        error
-                                                                      );
-                                                                      toast.error(
-                                                                        "Payment successful but failed to update status. Please refresh."
-                                                                      );
-                                                                    }
+                                                                    // Redirect to Orders page to trigger auto-sync
+                                                                    setTimeout(
+                                                                      () => {
+                                                                        router.push(
+                                                                          "/orders"
+                                                                        );
+                                                                      },
+                                                                      1000
+                                                                    );
                                                                   },
                                                                 onPending:
                                                                   function (
@@ -2946,8 +2894,18 @@ function DashboardContent() {
                                                                       "Payment pending",
                                                                       {
                                                                         description:
-                                                                          "Waiting for payment confirmation.",
+                                                                          "Redirecting to Orders page...",
                                                                       }
+                                                                    );
+
+                                                                    // Redirect to Orders page to track payment status
+                                                                    setTimeout(
+                                                                      () => {
+                                                                        router.push(
+                                                                          "/orders"
+                                                                        );
+                                                                      },
+                                                                      500
                                                                     );
                                                                   },
                                                                 onError:
@@ -2966,6 +2924,16 @@ function DashboardContent() {
                                                                   function () {
                                                                     console.log(
                                                                       "Payment popup closed"
+                                                                    );
+
+                                                                    // Redirect to Orders page to check status
+                                                                    setTimeout(
+                                                                      () => {
+                                                                        router.push(
+                                                                          "/orders"
+                                                                        );
+                                                                      },
+                                                                      500
                                                                     );
                                                                   },
                                                               }
