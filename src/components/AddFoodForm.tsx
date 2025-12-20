@@ -204,13 +204,13 @@ export function AddFoodForm({ onSubmit, onCancel }: AddFoodFormProps) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="space-y-3 max-h-[75vh] overflow-y-auto px-1"
+      className="space-y-2.5 max-h-[75vh] overflow-y-auto px-1"
     >
       <div>
-        <Label>Food Image</Label>
-        <div className="mt-2">
+        <Label className="text-sm">Food Image</Label>
+        <div className="mt-1.5">
           {imagePreview ? (
-            <div className="relative w-full h-40">
+            <div className="relative w-full h-28">
               <img
                 src={imagePreview}
                 alt="Preview"
@@ -219,22 +219,21 @@ export function AddFoodForm({ onSubmit, onCancel }: AddFoodFormProps) {
               <button
                 type="button"
                 onClick={handleRemoveImage}
-                className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600"
+                className="absolute top-1.5 right-1.5 bg-red-500 text-white p-1 rounded-full hover:bg-red-600"
               >
-                <X className="h-4 w-4" />
+                <X className="h-3.5 w-3.5" />
               </button>
             </div>
           ) : (
-            <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-gray-400 transition-colors">
+            <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-gray-400 transition-colors">
               <div className="flex flex-col items-center justify-center">
-                <Upload className="h-8 w-8 text-gray-400 mb-2" />
-                <p className="text-sm text-gray-500">
+                <Upload className="h-6 w-6 text-gray-400 mb-1" />
+                <p className="text-xs text-gray-500">
                   Click to upload food image
                 </p>
-                <p className="text-xs text-gray-400 mt-1">PNG, JPG up to 5MB</p>
-                <p className="text-xs text-purple-600 mt-1 flex items-center gap-1">
+                <p className="text-xs text-purple-600 mt-0.5 flex items-center gap-1">
                   <Sparkles className="h-3 w-3" />
-                  AI will auto-fill form fields
+                  AI auto-fill
                 </p>
               </div>
               <input
@@ -249,17 +248,19 @@ export function AddFoodForm({ onSubmit, onCancel }: AddFoodFormProps) {
       </div>
 
       {isAnalyzing && (
-        <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 flex items-center gap-2">
-          <Loader2 className="h-4 w-4 animate-spin text-purple-600" />
-          <span className="text-sm text-purple-700">
+        <div className="bg-purple-50 border border-purple-200 rounded-lg p-2 flex items-center gap-2">
+          <Loader2 className="h-3.5 w-3.5 animate-spin text-purple-600" />
+          <span className="text-xs text-purple-700">
             AI is analyzing your image...
           </span>
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <Label htmlFor="title">Title *</Label>
+      <div className="grid grid-cols-3 gap-2.5">
+        <div className="col-span-2">
+          <Label htmlFor="title" className="text-sm">
+            Title *
+          </Label>
           <Input
             id="title"
             value={formData.title}
@@ -267,11 +268,14 @@ export function AddFoodForm({ onSubmit, onCancel }: AddFoodFormProps) {
               setFormData({ ...formData, title: e.target.value })
             }
             required
+            className="h-9"
           />
         </div>
 
         <div>
-          <Label htmlFor="price">Price (Rp) *</Label>
+          <Label htmlFor="price" className="text-sm">
+            Price (Rp) *
+          </Label>
           <Input
             id="price"
             type="number"
@@ -280,12 +284,15 @@ export function AddFoodForm({ onSubmit, onCancel }: AddFoodFormProps) {
               setFormData({ ...formData, price: e.target.value })
             }
             required
+            className="h-9"
           />
         </div>
       </div>
 
       <div>
-        <Label htmlFor="description">Description *</Label>
+        <Label htmlFor="description" className="text-sm">
+          Description *
+        </Label>
         <Textarea
           id="description"
           value={formData.description}
@@ -293,20 +300,23 @@ export function AddFoodForm({ onSubmit, onCancel }: AddFoodFormProps) {
             setFormData({ ...formData, description: e.target.value })
           }
           required
-          rows={2}
+          rows={1}
+          className="resize-none text-sm"
         />
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-4 gap-2.5">
         <div>
-          <Label htmlFor="category">Category *</Label>
+          <Label htmlFor="category" className="text-sm">
+            Category *
+          </Label>
           <select
             id="category"
             value={formData.category}
             onChange={(e) =>
               setFormData({ ...formData, category: e.target.value })
             }
-            className="w-full px-3 py-2 border rounded-md text-sm"
+            className="w-full h-9 px-2 py-1.5 border rounded-md text-sm"
             required
           >
             <option value="Snacks">Snacks</option>
@@ -317,14 +327,16 @@ export function AddFoodForm({ onSubmit, onCancel }: AddFoodFormProps) {
         </div>
 
         <div>
-          <Label htmlFor="foodType">Food Type *</Label>
+          <Label htmlFor="foodType" className="text-sm">
+            Type *
+          </Label>
           <select
             id="foodType"
             value={formData.foodType}
             onChange={(e) =>
               setFormData({ ...formData, foodType: e.target.value })
             }
-            className="w-full px-3 py-2 border rounded-md text-sm"
+            className="w-full h-9 px-2 py-1.5 border rounded-md text-sm"
             required
           >
             <option value="Homemade">Homemade</option>
@@ -334,7 +346,9 @@ export function AddFoodForm({ onSubmit, onCancel }: AddFoodFormProps) {
         </div>
 
         <div>
-          <Label htmlFor="quantity">Quantity *</Label>
+          <Label htmlFor="quantity" className="text-sm">
+            Qty *
+          </Label>
           <Input
             id="quantity"
             type="number"
@@ -343,26 +357,14 @@ export function AddFoodForm({ onSubmit, onCancel }: AddFoodFormProps) {
               setFormData({ ...formData, quantity: e.target.value })
             }
             required
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <Label htmlFor="pickupLocation">Pickup Location *</Label>
-          <Input
-            id="pickupLocation"
-            value={formData.pickupLocation}
-            onChange={(e) =>
-              setFormData({ ...formData, pickupLocation: e.target.value })
-            }
-            required
-            placeholder="e.g., Building A, Room 101"
+            className="h-9"
           />
         </div>
 
         <div>
-          <Label htmlFor="pickupTime">Pickup Time *</Label>
+          <Label htmlFor="pickupTime" className="text-sm">
+            Pickup Time *
+          </Label>
           <Select
             value={formData.pickupTime}
             onValueChange={(value) =>
@@ -370,12 +372,12 @@ export function AddFoodForm({ onSubmit, onCancel }: AddFoodFormProps) {
             }
             required
           >
-            <SelectTrigger>
-              <SelectValue placeholder="Select pickup time" />
+            <SelectTrigger className="h-9 text-sm">
+              <SelectValue placeholder="Time" />
             </SelectTrigger>
             <SelectContent>
               {pickupTimeOptions.map((time) => (
-                <SelectItem key={time} value={time}>
+                <SelectItem key={time} value={time} className="text-sm">
                   {time}
                 </SelectItem>
               ))}
@@ -384,31 +386,52 @@ export function AddFoodForm({ onSubmit, onCancel }: AddFoodFormProps) {
         </div>
       </div>
 
-      <div>
-        <Label htmlFor="ingredients">Ingredients (Optional)</Label>
-        <Textarea
-          id="ingredients"
-          value={formData.ingredients}
-          onChange={(e) =>
-            setFormData({ ...formData, ingredients: e.target.value })
-          }
-          rows={2}
-          placeholder="List main ingredients"
-        />
+      <div className="grid grid-cols-2 gap-2.5">
+        <div>
+          <Label htmlFor="pickupLocation" className="text-sm">
+            Pickup Location *
+          </Label>
+          <Input
+            id="pickupLocation"
+            value={formData.pickupLocation}
+            onChange={(e) =>
+              setFormData({ ...formData, pickupLocation: e.target.value })
+            }
+            required
+            placeholder="e.g., Building A, Room 101"
+            className="h-9"
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="ingredients" className="text-sm">
+            Ingredients
+          </Label>
+          <Input
+            id="ingredients"
+            value={formData.ingredients}
+            onChange={(e) =>
+              setFormData({ ...formData, ingredients: e.target.value })
+            }
+            placeholder="List main ingredients"
+            className="h-9"
+          />
+        </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-2.5">
         <div>
-          <Label>Allergens</Label>
-          <div className="grid grid-cols-2 gap-2 mt-2">
+          <Label className="text-sm">Allergens</Label>
+          <div className="grid grid-cols-2 gap-1.5 mt-1.5">
             {allergenOptions.map((allergen) => (
-              <div key={allergen} className="flex items-center space-x-2">
+              <div key={allergen} className="flex items-center space-x-1.5">
                 <Checkbox
                   id={allergen}
                   checked={formData.allergens.includes(allergen)}
                   onCheckedChange={() => toggleAllergen(allergen)}
+                  className="h-3.5 w-3.5"
                 />
-                <label htmlFor={allergen} className="text-sm cursor-pointer">
+                <label htmlFor={allergen} className="text-xs cursor-pointer">
                   {allergen}
                 </label>
               </div>
@@ -417,41 +440,44 @@ export function AddFoodForm({ onSubmit, onCancel }: AddFoodFormProps) {
         </div>
 
         <div>
-          <Label>Dietary Tags</Label>
-          <div className="space-y-2 mt-2">
-            <div className="flex items-center space-x-2">
+          <Label className="text-sm">Dietary Tags</Label>
+          <div className="grid grid-cols-2 gap-1.5 mt-1.5">
+            <div className="flex items-center space-x-1.5">
               <Checkbox
                 id="isHalal"
                 checked={formData.isHalal}
                 onCheckedChange={(checked) =>
                   setFormData({ ...formData, isHalal: checked as boolean })
                 }
+                className="h-3.5 w-3.5"
               />
-              <label htmlFor="isHalal" className="text-sm cursor-pointer">
+              <label htmlFor="isHalal" className="text-xs cursor-pointer">
                 Halal
               </label>
             </div>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-1.5">
               <Checkbox
                 id="isVegan"
                 checked={formData.isVegan}
                 onCheckedChange={(checked) =>
                   setFormData({ ...formData, isVegan: checked as boolean })
                 }
+                className="h-3.5 w-3.5"
               />
-              <label htmlFor="isVegan" className="text-sm cursor-pointer">
+              <label htmlFor="isVegan" className="text-xs cursor-pointer">
                 Vegan
               </label>
             </div>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-1.5 col-span-2">
               <Checkbox
                 id="isVegetarian"
                 checked={formData.isVegetarian}
                 onCheckedChange={(checked) =>
                   setFormData({ ...formData, isVegetarian: checked as boolean })
                 }
+                className="h-3.5 w-3.5"
               />
-              <label htmlFor="isVegetarian" className="text-sm cursor-pointer">
+              <label htmlFor="isVegetarian" className="text-xs cursor-pointer">
                 Vegetarian
               </label>
             </div>
@@ -459,18 +485,23 @@ export function AddFoodForm({ onSubmit, onCancel }: AddFoodFormProps) {
         </div>
       </div>
 
-      <div className="flex gap-2 pt-4 sticky bottom-0 bg-white pb-2">
-        <Button type="submit" className="flex-1" disabled={isUploading}>
+      <div className="flex gap-2 pt-3 sticky bottom-0 bg-white pb-2">
+        <Button type="submit" className="flex-1 h-9" disabled={isUploading}>
           {isUploading ? (
             <>
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin" />
               Uploading...
             </>
           ) : (
             "Add Food Item"
           )}
         </Button>
-        <Button type="button" variant="outline" onClick={onCancel}>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onCancel}
+          className="h-9"
+        >
           Cancel
         </Button>
       </div>

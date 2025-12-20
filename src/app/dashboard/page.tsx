@@ -5230,7 +5230,7 @@ function DashboardContent() {
               className={
                 isEditingFood
                   ? "p-3 overflow-y-auto"
-                  : "flex flex-row overflow-y-auto"
+                  : "flex flex-col md:flex-row overflow-y-auto"
               }
             >
               {isEditingFood ? (
@@ -5257,7 +5257,7 @@ function DashboardContent() {
               ) : (
                 <>
                   {selectedFood.imageUrl && (
-                    <div className="relative w-2/5 bg-gray-100 flex-shrink-0">
+                    <div className="relative w-full md:w-2/5 h-64 md:h-auto bg-gray-100 flex-shrink-0">
                       <Image
                         src={selectedFood.imageUrl}
                         alt={selectedFood.title}
@@ -5489,7 +5489,7 @@ function DashboardContent() {
               className={
                 isEditingEvent
                   ? "p-3 overflow-y-auto"
-                  : "flex flex-row overflow-y-auto"
+                  : "flex flex-col md:flex-row overflow-y-auto"
               }
             >
               {isEditingEvent ? (
@@ -5516,7 +5516,7 @@ function DashboardContent() {
               ) : (
                 <>
                   {(selectedEvent.bannerUrl || selectedEvent.imageUrl) && (
-                    <div className="relative w-2/5 bg-gray-100 flex-shrink-0">
+                    <div className="relative w-full md:w-2/5 h-64 md:h-auto bg-gray-100 flex-shrink-0">
                       <Image
                         src={
                           selectedEvent.bannerUrl ||

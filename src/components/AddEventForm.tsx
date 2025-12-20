@@ -195,13 +195,13 @@ export function AddEventForm({ onSubmit, onCancel }: AddEventFormProps) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="space-y-3 max-h-[75vh] overflow-y-auto px-1"
+      className="space-y-2.5 max-h-[75vh] overflow-y-auto px-1"
     >
       <div>
-        <Label>Event Banner</Label>
-        <div className="mt-2">
+        <Label className="text-sm">Event Banner</Label>
+        <div className="mt-1.5">
           {bannerPreview ? (
-            <div className="relative w-full h-40">
+            <div className="relative w-full h-28">
               <img
                 src={bannerPreview}
                 alt="Preview"
@@ -210,22 +210,21 @@ export function AddEventForm({ onSubmit, onCancel }: AddEventFormProps) {
               <button
                 type="button"
                 onClick={handleRemoveBanner}
-                className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600"
+                className="absolute top-1.5 right-1.5 bg-red-500 text-white p-1 rounded-full hover:bg-red-600"
               >
-                <X className="h-4 w-4" />
+                <X className="h-3.5 w-3.5" />
               </button>
             </div>
           ) : (
-            <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-gray-400 transition-colors">
+            <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-gray-400 transition-colors">
               <div className="flex flex-col items-center justify-center">
-                <Upload className="h-8 w-8 text-gray-400 mb-2" />
-                <p className="text-sm text-gray-500">
+                <Upload className="h-6 w-6 text-gray-400 mb-1" />
+                <p className="text-xs text-gray-500">
                   Click to upload event banner
                 </p>
-                <p className="text-xs text-gray-400 mt-1">PNG, JPG up to 5MB</p>
-                <p className="text-xs text-purple-600 mt-1 flex items-center gap-1">
+                <p className="text-xs text-purple-600 mt-0.5 flex items-center gap-1">
                   <Sparkles className="h-3 w-3" />
-                  AI will auto-fill form fields
+                  AI auto-fill
                 </p>
               </div>
               <input
@@ -240,17 +239,19 @@ export function AddEventForm({ onSubmit, onCancel }: AddEventFormProps) {
       </div>
 
       {isAnalyzing && (
-        <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 flex items-center gap-2">
-          <Loader2 className="h-4 w-4 animate-spin text-purple-600" />
-          <span className="text-sm text-purple-700">
+        <div className="bg-purple-50 border border-purple-200 rounded-lg p-2 flex items-center gap-2">
+          <Loader2 className="h-3.5 w-3.5 animate-spin text-purple-600" />
+          <span className="text-xs text-purple-700">
             AI is analyzing your image...
           </span>
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-2.5">
         <div>
-          <Label htmlFor="title">Event Title *</Label>
+          <Label htmlFor="title" className="text-sm">
+            Event Title *
+          </Label>
           <Input
             id="title"
             value={formData.title}
@@ -258,11 +259,14 @@ export function AddEventForm({ onSubmit, onCancel }: AddEventFormProps) {
               setFormData({ ...formData, title: e.target.value })
             }
             required
+            className="h-9"
           />
         </div>
 
         <div>
-          <Label htmlFor="organizer">Organizer *</Label>
+          <Label htmlFor="organizer" className="text-sm">
+            Organizer *
+          </Label>
           <Input
             id="organizer"
             value={formData.organizer}
@@ -271,12 +275,15 @@ export function AddEventForm({ onSubmit, onCancel }: AddEventFormProps) {
             }
             required
             placeholder="e.g., CS Club"
+            className="h-9"
           />
         </div>
       </div>
 
       <div>
-        <Label htmlFor="description">Description *</Label>
+        <Label htmlFor="description" className="text-sm">
+          Description *
+        </Label>
         <Textarea
           id="description"
           value={formData.description}
@@ -284,20 +291,23 @@ export function AddEventForm({ onSubmit, onCancel }: AddEventFormProps) {
             setFormData({ ...formData, description: e.target.value })
           }
           required
-          rows={2}
+          rows={1}
+          className="resize-none text-sm"
         />
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-3 gap-2.5">
         <div>
-          <Label htmlFor="category">Category *</Label>
+          <Label htmlFor="category" className="text-sm">
+            Category *
+          </Label>
           <select
             id="category"
             value={formData.category}
             onChange={(e) =>
               setFormData({ ...formData, category: e.target.value })
             }
-            className="w-full px-3 py-2 border rounded-md text-sm"
+            className="w-full h-9 px-2 py-1.5 border rounded-md text-sm"
             required
           >
             <option value="Academic">Academic</option>
@@ -309,25 +319,29 @@ export function AddEventForm({ onSubmit, onCancel }: AddEventFormProps) {
         </div>
 
         <div>
-          <Label htmlFor="eventType">Event Type *</Label>
+          <Label htmlFor="eventType" className="text-sm">
+            Type *
+          </Label>
           <select
             id="eventType"
             value={formData.eventType}
             onChange={(e) =>
               setFormData({ ...formData, eventType: e.target.value })
             }
-            className="w-full px-3 py-2 border rounded-md text-sm"
+            className="w-full h-9 px-2 py-1.5 border rounded-md text-sm"
             required
           >
             <option value="Free">Free</option>
             <option value="Paid">Paid</option>
-            <option value="Registration Required">Registration Required</option>
+            <option value="Registration Required">Registration</option>
           </select>
         </div>
 
         {formData.eventType === "Paid" && (
           <div>
-            <Label htmlFor="price">Price (Rp) *</Label>
+            <Label htmlFor="price" className="text-sm">
+              Price (Rp) *
+            </Label>
             <Input
               id="price"
               type="number"
@@ -336,14 +350,17 @@ export function AddEventForm({ onSubmit, onCancel }: AddEventFormProps) {
                 setFormData({ ...formData, price: e.target.value })
               }
               required
+              className="h-9"
             />
           </div>
         )}
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-3 gap-2.5">
         <div>
-          <Label htmlFor="startDate">Start Date *</Label>
+          <Label htmlFor="startDate" className="text-sm">
+            Start Date *
+          </Label>
           <Input
             id="startDate"
             type="datetime-local"
@@ -352,11 +369,14 @@ export function AddEventForm({ onSubmit, onCancel }: AddEventFormProps) {
               setFormData({ ...formData, startDate: e.target.value })
             }
             required
+            className="h-9 text-sm"
           />
         </div>
 
         <div>
-          <Label htmlFor="endDate">End Date *</Label>
+          <Label htmlFor="endDate" className="text-sm">
+            End Date *
+          </Label>
           <Input
             id="endDate"
             type="datetime-local"
@@ -365,11 +385,14 @@ export function AddEventForm({ onSubmit, onCancel }: AddEventFormProps) {
               setFormData({ ...formData, endDate: e.target.value })
             }
             required
+            className="h-9 text-sm"
           />
         </div>
 
         <div>
-          <Label htmlFor="registrationDeadline">Reg. Deadline</Label>
+          <Label htmlFor="registrationDeadline" className="text-sm">
+            Reg. Deadline
+          </Label>
           <Input
             id="registrationDeadline"
             type="datetime-local"
@@ -377,6 +400,7 @@ export function AddEventForm({ onSubmit, onCancel }: AddEventFormProps) {
             onChange={(e) =>
               setFormData({ ...formData, registrationDeadline: e.target.value })
             }
+            className="h-9 text-sm"
           />
         </div>
       </div>
@@ -388,15 +412,18 @@ export function AddEventForm({ onSubmit, onCancel }: AddEventFormProps) {
           onCheckedChange={(checked) =>
             setFormData({ ...formData, isOnline: checked as boolean })
           }
+          className="h-3.5 w-3.5"
         />
-        <label htmlFor="isOnline" className="text-sm cursor-pointer">
+        <label htmlFor="isOnline" className="text-xs cursor-pointer">
           This is an online event
         </label>
       </div>
 
       {formData.isOnline ? (
         <div>
-          <Label htmlFor="meetingLink">Meeting Link *</Label>
+          <Label htmlFor="meetingLink" className="text-sm">
+            Meeting Link *
+          </Label>
           <Input
             id="meetingLink"
             value={formData.meetingLink}
@@ -405,12 +432,15 @@ export function AddEventForm({ onSubmit, onCancel }: AddEventFormProps) {
             }
             required={formData.isOnline}
             placeholder="https://zoom.us/j/..."
+            className="h-9"
           />
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2.5">
           <div>
-            <Label htmlFor="location">Location *</Label>
+            <Label htmlFor="location" className="text-sm">
+              Location *
+            </Label>
             <Input
               id="location"
               value={formData.location}
@@ -419,11 +449,14 @@ export function AddEventForm({ onSubmit, onCancel }: AddEventFormProps) {
               }
               required={!formData.isOnline}
               placeholder="e.g., Main Campus"
+              className="h-9"
             />
           </div>
 
           <div>
-            <Label htmlFor="venue">Venue</Label>
+            <Label htmlFor="venue" className="text-sm">
+              Venue
+            </Label>
             <Input
               id="venue"
               value={formData.venue}
@@ -431,14 +464,17 @@ export function AddEventForm({ onSubmit, onCancel }: AddEventFormProps) {
                 setFormData({ ...formData, venue: e.target.value })
               }
               placeholder="e.g., Building A, Room 101"
+              className="h-9"
             />
           </div>
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-3 gap-2.5">
         <div>
-          <Label htmlFor="maxParticipants">Max Participants</Label>
+          <Label htmlFor="maxParticipants" className="text-sm">
+            Max Participants
+          </Label>
           <Input
             id="maxParticipants"
             type="number"
@@ -447,36 +483,44 @@ export function AddEventForm({ onSubmit, onCancel }: AddEventFormProps) {
               setFormData({ ...formData, maxParticipants: e.target.value })
             }
             placeholder="Unlimited"
+            className="h-9"
           />
         </div>
 
-        <div>
-          <Label htmlFor="tags">Tags</Label>
+        <div className="col-span-2">
+          <Label htmlFor="tags" className="text-sm">
+            Tags
+          </Label>
           <Input
             id="tags"
             value={formData.tags}
             onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
             placeholder="networking, free-food"
+            className="h-9"
           />
         </div>
       </div>
 
       <div>
-        <Label htmlFor="requirements">Requirements (Optional)</Label>
-        <Textarea
+        <Label htmlFor="requirements" className="text-sm">
+          Requirements
+        </Label>
+        <Input
           id="requirements"
           value={formData.requirements}
           onChange={(e) =>
             setFormData({ ...formData, requirements: e.target.value })
           }
-          rows={2}
           placeholder="Any prerequisites or requirements"
+          className="h-9"
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-2.5">
         <div>
-          <Label htmlFor="contactEmail">Contact Email</Label>
+          <Label htmlFor="contactEmail" className="text-sm">
+            Contact Email
+          </Label>
           <Input
             id="contactEmail"
             type="email"
@@ -484,17 +528,21 @@ export function AddEventForm({ onSubmit, onCancel }: AddEventFormProps) {
             onChange={(e) =>
               setFormData({ ...formData, contactEmail: e.target.value })
             }
+            className="h-9"
           />
         </div>
 
         <div>
-          <Label htmlFor="contactPhone">Contact Phone</Label>
+          <Label htmlFor="contactPhone" className="text-sm">
+            Contact Phone
+          </Label>
           <Input
             id="contactPhone"
             value={formData.contactPhone}
             onChange={(e) =>
               setFormData({ ...formData, contactPhone: e.target.value })
             }
+            className="h-9"
           />
         </div>
       </div>
@@ -506,24 +554,30 @@ export function AddEventForm({ onSubmit, onCancel }: AddEventFormProps) {
           onCheckedChange={(checked) =>
             setFormData({ ...formData, isPublished: checked as boolean })
           }
+          className="h-3.5 w-3.5"
         />
-        <label htmlFor="isPublished" className="text-sm cursor-pointer">
+        <label htmlFor="isPublished" className="text-xs cursor-pointer">
           Publish immediately
         </label>
       </div>
 
-      <div className="flex gap-2 pt-4 sticky bottom-0 bg-white pb-2">
-        <Button type="submit" className="flex-1" disabled={isUploading}>
+      <div className="flex gap-2 pt-3 sticky bottom-0 bg-white pb-2">
+        <Button type="submit" className="flex-1 h-9" disabled={isUploading}>
           {isUploading ? (
             <>
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin" />
               Uploading...
             </>
           ) : (
             "Create Event"
           )}
         </Button>
-        <Button type="button" variant="outline" onClick={onCancel}>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onCancel}
+          className="h-9"
+        >
           Cancel
         </Button>
       </div>
