@@ -178,6 +178,57 @@ export async function POST(request: NextRequest) {
         }
       }
 
+      // Handle event registration
+      if (transaction.itemType === "event" && transaction.eventId) {
+        const event = await prisma.event.findUnique({
+          where: { id: transaction.eventId },
+        });
+
+        if (event) {
+          // Create or update event participant
+          const existingParticipant = await prisma.eventParticipant.findUnique({
+            where: {
+              eventId_userId: {
+                eventId: transaction.eventId,
+                userId: transaction.buyerId,
+              },
+            },
+          });
+
+          if (existingParticipant) {
+            // Update existing participant payment status
+            await prisma.eventParticipant.update({
+              where: { id: existingParticipant.id },
+              data: {
+                paymentStatus: "paid",
+                transactionId: transaction.orderId,
+              },
+            });
+          } else {
+            // Create new participant
+            await prisma.eventParticipant.create({
+              data: {
+                eventId: transaction.eventId,
+                userId: transaction.buyerId,
+                paymentStatus: "paid",
+                transactionId: transaction.orderId,
+                status: "registered",
+              },
+            });
+
+            // Increment participant count
+            await prisma.event.update({
+              where: { id: transaction.eventId },
+              data: {
+                currentParticipants: { increment: 1 },
+              },
+            });
+          }
+
+          console.log("✅ Event registration completed via webhook");
+        }
+      }
+
       // Update seller stats for ALL transaction types (marketplace, food, events, tutoring)
       if (transaction.sellerId) {
         // Calculate platform fee (5% commission)

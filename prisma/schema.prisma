@@ -245,15 +245,18 @@ model Transaction {
   expiresAt       DateTime?
   sellerId        String?
   foodItemId      String?
+  eventId         String?
   buyer           User             @relation("BuyerTransactions", fields: [buyerId], references: [id], onDelete: Cascade)
   foodItem        FoodItem?        @relation(fields: [foodItemId], references: [id], onDelete: Cascade)
   item            MarketplaceItem? @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  event           Event?           @relation(fields: [eventId], references: [id], onDelete: Cascade)
   seller          User?            @relation("SellerTransactions", fields: [sellerId], references: [id], onDelete: Cascade)
 
   @@index([buyerId])
   @@index([sellerId])
   @@index([itemId])
   @@index([foodItemId])
+  @@index([eventId])
   @@index([status])
   @@index([orderId])
   @@index([createdAt])
@@ -423,6 +426,7 @@ model Event {
   participants         EventParticipant[]
   reviews              EventReview[]
   updates              EventUpdate[]
+  transactions         Transaction[]
 
   @@index([organizerId])
   @@index([category])

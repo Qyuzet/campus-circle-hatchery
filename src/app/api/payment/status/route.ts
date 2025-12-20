@@ -200,6 +200,59 @@ export async function GET(request: NextRequest) {
             }
           }
         }
+
+        // Handle event registration when payment is completed
+        if (
+          newStatus === "COMPLETED" &&
+          transaction.itemType === "event" &&
+          transaction.eventId
+        ) {
+          const existingParticipant = await prisma.eventParticipant.findUnique({
+            where: {
+              eventId_userId: {
+                eventId: transaction.eventId,
+                userId: transaction.buyerId,
+              },
+            },
+          });
+
+          if (
+            existingParticipant &&
+            existingParticipant.paymentStatus !== "paid"
+          ) {
+            await prisma.eventParticipant.update({
+              where: { id: existingParticipant.id },
+              data: {
+                paymentStatus: "paid",
+                transactionId: orderId,
+              },
+            });
+
+            console.log(
+              "Event participant payment updated for transaction:",
+              orderId
+            );
+          } else if (!existingParticipant) {
+            await prisma.eventParticipant.create({
+              data: {
+                eventId: transaction.eventId,
+                userId: transaction.buyerId,
+                paymentStatus: "paid",
+                transactionId: orderId,
+                status: "registered",
+              },
+            });
+
+            await prisma.event.update({
+              where: { id: transaction.eventId },
+              data: {
+                currentParticipants: { increment: 1 },
+              },
+            });
+
+            console.log("Event registration created for transaction:", orderId);
+          }
+        }
       }
 
       return NextResponse.json({

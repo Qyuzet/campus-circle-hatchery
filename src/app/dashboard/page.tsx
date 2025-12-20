@@ -81,6 +81,7 @@ import {
   MapPin,
   Folders,
   Download,
+  ExternalLink,
 } from "lucide-react";
 import {
   marketplaceAPI,
@@ -133,6 +134,7 @@ function DashboardContent() {
   const [showAddEventModal, setShowAddEventModal] = useState(false);
   const [foodItems, setFoodItems] = useState<FoodItem[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
+  const [myEventRegistrations, setMyEventRegistrations] = useState<any[]>([]);
   const [showFoodDetailModal, setShowFoodDetailModal] = useState(false);
   const [showEventDetailModal, setShowEventDetailModal] = useState(false);
   const [selectedFood, setSelectedFood] = useState<FoodItem | null>(null);
@@ -162,7 +164,7 @@ function DashboardContent() {
     id: string;
     title: string;
     price: number;
-    type: "marketplace" | "tutoring" | "food";
+    type: "marketplace" | "tutoring" | "food" | "event";
     conversationId?: string;
     messageId?: string;
   } | null>(null);
@@ -296,7 +298,7 @@ function DashboardContent() {
     if (
       tab === "my-hub" &&
       subTab &&
-      ["purchases", "sales", "library", "listings"].includes(subTab)
+      ["purchases", "sales", "library", "listings", "events"].includes(subTab)
     ) {
       setMyHubTab(subTab);
     }
@@ -679,6 +681,14 @@ function DashboardContent() {
           // Stop syncing animation
           setIsSyncingPayment(false);
           setPendingOrdersCount(0);
+
+          // Reload event registrations if this was an event payment
+          if (updatedTransaction.itemType === "event") {
+            eventAPI.getMyRegistrations().then((registrations) => {
+              setMyEventRegistrations(registrations);
+              console.log("✅ Event registrations reloaded after payment");
+            });
+          }
         }
       });
 
@@ -724,14 +734,17 @@ function DashboardContent() {
     try {
       switch (tab) {
         case "discovery":
-          const [items, foodData, eventData] = await Promise.all([
-            marketplaceAPI.getItems(),
-            foodAPI.getFoodItems(),
-            eventAPI.getEvents(),
-          ]);
+          const [items, foodData, eventData, myRegistrations] =
+            await Promise.all([
+              marketplaceAPI.getItems(),
+              foodAPI.getFoodItems(),
+              eventAPI.getEvents(),
+              eventAPI.getMyRegistrations(),
+            ]);
           setMarketplaceItems(filterTradableItems(items));
           setFoodItems(foodData);
           setEvents(eventData);
+          setMyEventRegistrations(myRegistrations);
           break;
 
         case "messages":
@@ -749,13 +762,14 @@ function DashboardContent() {
           break;
 
         case "my-hub":
-          const [sales, purchases] = await Promise.all([
+          const [sales, purchases, eventRegistrations] = await Promise.all([
             transactionsAPI.getTransactions({
               type: "sales",
             }),
             transactionsAPI.getTransactions({
               type: "purchases",
             }),
+            eventAPI.getMyRegistrations(),
           ]);
           setSalesTransactions(
             sales.filter((t: any) => t.status === "COMPLETED")
@@ -770,6 +784,7 @@ function DashboardContent() {
               new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
           );
           setAllTransactions(allTrans);
+          setMyEventRegistrations(eventRegistrations);
 
           // Also load marketplace items for My Hub Listings tab
           const marketplaceData = await marketplaceAPI.getItems();
@@ -1181,10 +1196,24 @@ function DashboardContent() {
         throw new Error(data.error || "Failed to register");
       }
 
-      toast.success("Registered for event successfully!");
+      toast.success("Registered for event successfully!", {
+        description: "Redirecting to My Hub...",
+      });
+
+      // Reload event data
       const eventData = await eventAPI.getEvents();
       setEvents(eventData);
+
+      // Reload event registrations
+      const eventRegistrations = await eventAPI.getMyRegistrations();
+      setMyEventRegistrations(eventRegistrations);
+
       setShowEventDetailModal(false);
+
+      // Redirect to My Hub Events tab
+      setTimeout(() => {
+        window.location.href = "/dashboard?tab=my-hub&subTab=events";
+      }, 1000);
     } catch (error: any) {
       console.error("Error registering for event:", error);
       toast.error(error.message || "Failed to register for event.");
@@ -1572,6 +1601,9 @@ function DashboardContent() {
 
       const eventData = await eventAPI.getEvents();
       setEvents(eventData);
+
+      const eventRegistrations = await eventAPI.getMyRegistrations();
+      setMyEventRegistrations(eventRegistrations);
 
       const stats = await statsAPI.getUserStats();
       setUserStats(stats);
@@ -3379,16 +3411,17 @@ function DashboardContent() {
                 <div>
                   <h1 className="text-2xl font-bold text-dark-gray">My Hub</h1>
                   <p className="text-sm text-medium-gray mt-1">
-                    Manage your purchases, sales, library, and listings
+                    Manage your purchases, sales, library, listings, and events
                   </p>
                 </div>
 
                 <Tabs value={myHubTab} onValueChange={setMyHubTab}>
-                  <TabsList className="grid w-full grid-cols-4">
+                  <TabsList className="grid w-full grid-cols-5">
                     <TabsTrigger value="purchases">Purchases</TabsTrigger>
                     <TabsTrigger value="sales">Sales</TabsTrigger>
                     <TabsTrigger value="library">Library</TabsTrigger>
                     <TabsTrigger value="listings">Listings</TabsTrigger>
+                    <TabsTrigger value="events">Events</TabsTrigger>
                   </TabsList>
 
                   <TabsContent value="purchases" className="space-y-4 mt-6">
@@ -3960,6 +3993,141 @@ function DashboardContent() {
                                   </CardFooter>
                                 </Card>
                               ))}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+
+                  <TabsContent value="events" className="space-y-4 mt-6">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>My Event Registrations</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        {myEventRegistrations.length === 0 ? (
+                          <div className="flex flex-col items-center justify-center py-12">
+                            <Calendar className="h-12 w-12 text-muted-foreground mb-4" />
+                            <p className="text-muted-foreground">
+                              No event registrations yet
+                            </p>
+                            <Button
+                              onClick={() => setActiveTab("discovery")}
+                              className="mt-4"
+                            >
+                              <Calendar className="h-4 w-4 mr-2" />
+                              Browse Events
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="space-y-4">
+                            {myEventRegistrations.map((registration: any) => (
+                              <Card
+                                key={registration.id}
+                                className="hover:shadow-lg transition-shadow"
+                              >
+                                <CardHeader>
+                                  <div className="flex items-start justify-between">
+                                    <div className="flex-1">
+                                      <CardTitle className="text-lg">
+                                        {registration.event.title}
+                                      </CardTitle>
+                                      <p className="text-sm text-muted-foreground mt-1">
+                                        {registration.event.category} •{" "}
+                                        {registration.event.eventType}
+                                      </p>
+                                    </div>
+                                    <div className="flex flex-col items-end gap-2">
+                                      <Badge
+                                        variant={
+                                          registration.paymentStatus === "paid"
+                                            ? "default"
+                                            : "secondary"
+                                        }
+                                      >
+                                        {registration.paymentStatus === "paid"
+                                          ? "Paid"
+                                          : "Pending Payment"}
+                                      </Badge>
+                                      <Badge variant="outline">
+                                        {registration.status}
+                                      </Badge>
+                                    </div>
+                                  </div>
+                                </CardHeader>
+                                <CardContent>
+                                  <div className="space-y-2 text-sm">
+                                    <div className="flex items-center gap-2 text-muted-foreground">
+                                      <Calendar className="h-4 w-4" />
+                                      <span>
+                                        {new Date(
+                                          registration.event.startDate
+                                        ).toLocaleDateString("en-US", {
+                                          weekday: "short",
+                                          year: "numeric",
+                                          month: "short",
+                                          day: "numeric",
+                                          hour: "2-digit",
+                                          minute: "2-digit",
+                                        })}
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-muted-foreground">
+                                      <MapPin className="h-4 w-4" />
+                                      <span>{registration.event.location}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-muted-foreground">
+                                      <User className="h-4 w-4" />
+                                      <span>
+                                        Organized by{" "}
+                                        {registration.event.organizerUser
+                                          ?.name ||
+                                          registration.event.organizer}
+                                      </span>
+                                    </div>
+                                    {registration.event.price > 0 && (
+                                      <div className="flex items-center gap-2 font-semibold text-dark-blue mt-2">
+                                        <span>
+                                          Rp{" "}
+                                          {registration.event.price.toLocaleString()}
+                                        </span>
+                                      </div>
+                                    )}
+                                  </div>
+                                </CardContent>
+                                <CardFooter className="flex gap-2">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="flex-1"
+                                    onClick={() => {
+                                      setSelectedEvent(registration.event);
+                                      setShowEventDetailModal(true);
+                                    }}
+                                  >
+                                    <Eye className="h-4 w-4 mr-1" />
+                                    View Details
+                                  </Button>
+                                  {registration.event.isOnline &&
+                                    registration.event.meetingLink &&
+                                    registration.paymentStatus === "paid" && (
+                                      <Button
+                                        size="sm"
+                                        className="flex-1"
+                                        onClick={() => {
+                                          window.open(
+                                            registration.event.meetingLink,
+                                            "_blank"
+                                          );
+                                        }}
+                                      >
+                                        <ExternalLink className="h-4 w-4 mr-1" />
+                                        Join Meeting
+                                      </Button>
+                                    )}
+                                </CardFooter>
+                              </Card>
+                            ))}
                           </div>
                         )}
                       </CardContent>
@@ -5484,6 +5652,12 @@ function DashboardContent() {
                             </Button>
                           </>
                         )
+                      ) : myEventRegistrations.some(
+                          (reg) => reg.eventId === selectedEvent.id
+                        ) ? (
+                        <div className="flex-1 bg-green-100 text-green-700 px-4 py-2 rounded-md text-center font-medium">
+                          Already Registered
+                        </div>
                       ) : selectedEvent.maxParticipants &&
                         selectedEvent.currentParticipants >=
                           selectedEvent.maxParticipants ? (
@@ -5513,7 +5687,7 @@ function DashboardContent() {
                                   id: selectedEvent.id,
                                   title: selectedEvent.title,
                                   price: selectedEvent.price,
-                                  type: "marketplace",
+                                  type: "event",
                                 });
                                 setShowPaymentModal(true);
                                 setShowEventDetailModal(false);

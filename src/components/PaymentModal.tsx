@@ -11,7 +11,7 @@ interface PaymentModalProps {
     id: string;
     title: string;
     price: number;
-    type: "marketplace" | "tutoring" | "food";
+    type: "marketplace" | "tutoring" | "food" | "event";
   };
   onSuccess?: () => void;
 }
@@ -52,18 +52,22 @@ export default function PaymentModal({
               onSuccess?.();
               onClose();
 
-              // Redirect to My Hub Purchases tab to see updated status
+              // Redirect based on item type
+              const redirectTab =
+                item.type === "event" ? "events" : "purchases";
               setTimeout(() => {
-                router.push("/dashboard?tab=my-hub&subTab=purchases");
+                window.location.href = `/dashboard?tab=my-hub&subTab=${redirectTab}`;
               }, 1000);
             },
             onPending: function (result: any) {
               console.log("Payment pending:", result);
               onClose();
 
-              // Redirect to My Hub Purchases tab to track payment status
+              // Redirect based on item type
+              const redirectTab =
+                item.type === "event" ? "events" : "purchases";
               setTimeout(() => {
-                router.push("/dashboard?tab=my-hub&subTab=purchases");
+                window.location.href = `/dashboard?tab=my-hub&subTab=${redirectTab}`;
               }, 500);
             },
             onError: function (result: any) {

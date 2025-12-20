@@ -18,18 +18,29 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { itemId, itemType, amount, itemTitle } = body;
+    const { itemId, itemType, amount: rawAmount, itemTitle } = body;
 
     // Validate required fields
-    if (!itemId || !itemType || !amount || !itemTitle) {
+    if (!itemId || !itemType || !rawAmount || !itemTitle) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
       );
     }
 
+    // Ensure amount is an integer (Midtrans requires integer for IDR)
+    const amount = Math.round(Number(rawAmount));
+
+    // Validate amount (minimum Rp 1)
+    if (amount < 1) {
+      return NextResponse.json(
+        { error: "Amount must be at least Rp 1" },
+        { status: 400 }
+      );
+    }
+
     // Validate item type
-    if (!["marketplace", "tutoring", "food"].includes(itemType)) {
+    if (!["marketplace", "tutoring", "food", "event"].includes(itemType)) {
       return NextResponse.json({ error: "Invalid item type" }, { status: 400 });
     }
 
@@ -127,6 +138,64 @@ export async function POST(request: NextRequest) {
       }
 
       sellerId = item.sellerId;
+    } else if (itemType === "event") {
+      const event = await prisma.event.findUnique({
+        where: { id: itemId },
+      });
+
+      if (!event) {
+        return NextResponse.json({ error: "Event not found" }, { status: 404 });
+      }
+
+      if (!event.isPublished) {
+        return NextResponse.json(
+          { error: "Event is not published yet" },
+          { status: 400 }
+        );
+      }
+
+      if (event.status === "completed" || event.status === "cancelled") {
+        return NextResponse.json(
+          { error: "Cannot register for this event" },
+          { status: 400 }
+        );
+      }
+
+      if (
+        event.registrationDeadline &&
+        new Date() > event.registrationDeadline
+      ) {
+        return NextResponse.json(
+          { error: "Registration deadline has passed" },
+          { status: 400 }
+        );
+      }
+
+      if (
+        event.maxParticipants &&
+        event.currentParticipants >= event.maxParticipants
+      ) {
+        return NextResponse.json({ error: "Event is full" }, { status: 400 });
+      }
+
+      const existingParticipant = await prisma.eventParticipant.findUnique({
+        where: {
+          eventId_userId: {
+            eventId: itemId,
+            userId: session.user.id,
+          },
+        },
+      });
+
+      if (existingParticipant) {
+        return NextResponse.json(
+          { error: "You are already registered for this event" },
+          { status: 400 }
+        );
+      }
+
+      sellerId = event.organizerId;
+      item = event;
     }
 
     // Generate unique order ID
@@ -142,6 +211,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Prepare Midtrans transaction parameters
+    // Midtrans has a 50 character limit for item names
+    const truncatedTitle =
+      itemTitle.length > 50 ? itemTitle.substring(0, 47) + "..." : itemTitle;
+
     const transactionParams: MidtransTransactionParams = {
       transaction_details: {
         order_id: orderId,
@@ -152,7 +225,7 @@ export async function POST(request: NextRequest) {
           id: itemId,
           price: amount,
           quantity: 1,
-          name: itemTitle,
+          name: truncatedTitle,
         },
       ],
       customer_details: {
@@ -196,6 +269,7 @@ export async function POST(request: NextRequest) {
         sellerId,
         itemId: itemType === "marketplace" ? itemId : null,
         foodItemId: itemType === "food" ? itemId : null,
+        eventId: itemType === "event" ? itemId : null,
         expiresAt,
       },
     });

@@ -889,4 +889,10 @@ export const eventAPI = {
     if (!response.ok) throw new Error("Failed to fetch my events");
     return response.json();
   },
+
+  async getMyRegistrations() {
+    const response = await fetch("/api/events/my-registrations");
+    if (!response.ok) throw new Error("Failed to fetch my registrations");
+    return response.json();
+  },
 };
