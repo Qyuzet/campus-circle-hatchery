@@ -85,3 +85,26 @@ export const triggerTypingIndicator = async (
     return { success: false, error };
   }
 };
+
+// Helper function to get user transaction channel name
+export const getUserTransactionChannel = (userId: string) => {
+  return `user-transactions-${userId}`;
+};
+
+// Helper function to trigger transaction update event
+export const triggerTransactionUpdate = async (
+  userId: string,
+  transaction: any
+) => {
+  try {
+    await pusherServer.trigger(
+      getUserTransactionChannel(userId),
+      "transaction-updated",
+      transaction
+    );
+    return { success: true };
+  } catch (error) {
+    console.error("Pusher transaction trigger error:", error);
+    return { success: false, error };
+  }
+};

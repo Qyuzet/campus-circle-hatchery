@@ -69,6 +69,11 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Trigger Pusher event for real-time transaction update
+    const { triggerTransactionUpdate } = await import("@/lib/pusher");
+    await triggerTransactionUpdate(transaction.buyerId, updatedTransaction);
+    console.log("✅ Pusher transaction update event sent to buyer");
+
     // Handle successful payment
     if (newStatus === "COMPLETED") {
       // Update marketplace item status if applicable
@@ -107,6 +112,69 @@ export async function POST(request: NextRequest) {
               status: foodItem.quantity - quantity <= 0 ? "sold" : "available",
             },
           });
+
+          // Update message orderData status to "paid"
+          // Find all payment_request messages and check orderData
+          const paymentMessages = await prisma.message.findMany({
+            where: {
+              messageType: "payment_request",
+            },
+          });
+
+          const matchingMessage = paymentMessages.find((msg) => {
+            const orderData = msg.orderData as any;
+            return (
+              orderData &&
+              orderData.foodId === foodItem.id &&
+              orderData.status === "awaiting_payment"
+            );
+          });
+
+          if (matchingMessage) {
+            const orderData = matchingMessage.orderData as any;
+            await prisma.message.update({
+              where: { id: matchingMessage.id },
+              data: {
+                orderData: {
+                  ...orderData,
+                  status: "paid",
+                },
+              },
+            });
+
+            // Trigger Pusher event to update UI in real-time
+            const { triggerNewMessage } = await import("@/lib/pusher");
+            const updatedMessage = await prisma.message.findUnique({
+              where: { id: matchingMessage.id },
+              include: {
+                sender: {
+                  select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    avatarUrl: true,
+                  },
+                },
+                receiver: {
+                  select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    avatarUrl: true,
+                  },
+                },
+              },
+            });
+
+            if (updatedMessage) {
+              await triggerNewMessage(
+                matchingMessage.conversationId,
+                updatedMessage
+              );
+            }
+
+            console.log("✅ Message updated via webhook, Pusher event sent");
+          }
         }
       }
 

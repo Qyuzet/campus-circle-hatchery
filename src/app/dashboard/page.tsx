@@ -8,6 +8,7 @@ import {
   pusherClient,
   getConversationChannel,
   getGroupChannel,
+  getUserTransactionChannel,
 } from "@/lib/pusher";
 import { playNotificationSound } from "@/lib/notification-sound";
 import {
@@ -121,6 +122,8 @@ function DashboardContent() {
   const [viewMode, setViewMode] = useState("grid");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
+  const [isSyncingPayment, setIsSyncingPayment] = useState(false);
+  const [pendingOrdersCount, setPendingOrdersCount] = useState(0);
   const [contentMode, setContentMode] = useState<"study" | "food" | "event">(
     "study"
   );
@@ -275,6 +278,18 @@ function DashboardContent() {
 
     if (tab && ["discovery", "my-hub", "messages", "wallet"].includes(tab)) {
       setActiveTab(tab);
+
+      // Load tab data if not already loaded OR force reload for purchases after payment
+      const shouldForceReload = tab === "my-hub" && subTab === "purchases";
+      if (
+        status === "authenticated" &&
+        (!loadedTabs[tab as keyof typeof loadedTabs] || shouldForceReload)
+      ) {
+        loadTabData(tab);
+      }
+
+      // Scroll to top when navigating via URL
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
     // Handle My Hub sub-tab parameter
@@ -285,7 +300,7 @@ function DashboardContent() {
     ) {
       setMyHubTab(subTab);
     }
-  }, [searchParams]);
+  }, [searchParams, status]);
 
   // Initialize essential data on component mount (notifications and stats only)
   useEffect(() => {
@@ -313,6 +328,8 @@ function DashboardContent() {
     ) {
       const checkPendingPayments = async () => {
         try {
+          setIsSyncingPayment(true);
+
           const transactions = await transactionsAPI.getTransactions(
             { type: "purchases" },
             false
@@ -321,6 +338,8 @@ function DashboardContent() {
           const pendingOrders = transactions.filter(
             (t: any) => t.status === "PENDING"
           );
+
+          setPendingOrdersCount(pendingOrders.length);
 
           for (const order of pendingOrders) {
             try {
@@ -419,16 +438,45 @@ function DashboardContent() {
           }
         } catch (error) {
           console.error("Error checking pending payments:", error);
+        } finally {
+          setIsSyncingPayment(false);
         }
       };
 
-      const interval = setInterval(async () => {
+      // Aggressive polling for first 30 seconds (for fresh payments)
+      // Then slower polling as backup
+      let checkCount = 0;
+      const maxFastChecks = 6; // 6 checks * 5 seconds = 30 seconds of fast polling
+
+      const runCheck = async () => {
         await checkPendingPayments();
+        checkCount++;
+      };
+
+      // Initial check after 500ms (let data load first)
+      const initialTimeout = setTimeout(() => {
+        runCheck();
+      }, 500);
+
+      // Fast polling for first 30 seconds (every 5 seconds)
+      const fastInterval = setInterval(async () => {
+        if (checkCount < maxFastChecks) {
+          await runCheck();
+        }
       }, 5000);
 
-      checkPendingPayments();
+      // Slower polling after 30 seconds (every 15 seconds)
+      const slowInterval = setInterval(async () => {
+        if (checkCount >= maxFastChecks) {
+          await runCheck();
+        }
+      }, 15000);
 
-      return () => clearInterval(interval);
+      return () => {
+        clearTimeout(initialTimeout);
+        clearInterval(fastInterval);
+        clearInterval(slowInterval);
+      };
     }
   }, [activeTab, myHubTab, status, router]);
 
@@ -584,6 +632,62 @@ function DashboardContent() {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages, groupMessages]);
+
+  // Subscribe to real-time transaction updates via Pusher
+  useEffect(() => {
+    if (currentUser?.id && status === "authenticated") {
+      const channelName = getUserTransactionChannel(currentUser.id);
+      console.log("🔌 Subscribing to transaction channel:", channelName);
+      const channel = pusherClient.subscribe(channelName);
+
+      channel.bind("transaction-updated", (updatedTransaction: any) => {
+        console.log(
+          "✅ Real-time transaction update received:",
+          updatedTransaction
+        );
+
+        // Update allTransactions state
+        setAllTransactions((prevTransactions) => {
+          const existingIndex = prevTransactions.findIndex(
+            (t) => t.id === updatedTransaction.id
+          );
+
+          if (existingIndex !== -1) {
+            // Update existing transaction
+            const updated = [...prevTransactions];
+            updated[existingIndex] = {
+              ...updated[existingIndex],
+              ...updatedTransaction,
+            };
+            return updated;
+          } else {
+            // Add new transaction (shouldn't happen, but just in case)
+            return [
+              { ...updatedTransaction, type: "purchase" },
+              ...prevTransactions,
+            ];
+          }
+        });
+
+        // Show toast notification if payment completed
+        if (updatedTransaction.status === "COMPLETED") {
+          toast.success("Payment confirmed!", {
+            description: `Your payment for ${updatedTransaction.itemTitle} has been confirmed.`,
+            duration: 3000,
+          });
+
+          // Stop syncing animation
+          setIsSyncingPayment(false);
+          setPendingOrdersCount(0);
+        }
+      });
+
+      return () => {
+        channel.unbind_all();
+        pusherClient.unsubscribe(channelName);
+      };
+    }
+  }, [currentUser, status]);
 
   // Load only essential data on mount (notifications, stats, current user)
   const loadEssentialData = async () => {
@@ -1289,6 +1393,13 @@ function DashboardContent() {
     try {
       const msgs = await messagesAPI.getMessages(conversationId);
       setMessages(msgs);
+
+      // Scroll to bottom after messages load
+      setTimeout(() => {
+        if (messagesEndRef.current) {
+          messagesEndRef.current.scrollIntoView({ behavior: "auto" });
+        }
+      }, 100);
     } catch (error) {
       console.error("Error loading messages:", error);
     }
@@ -1307,6 +1418,13 @@ function DashboardContent() {
     try {
       const msgs = await groupsAPI.getMessages(groupId);
       setGroupMessages(msgs);
+
+      // Scroll to bottom after messages load
+      setTimeout(() => {
+        if (messagesEndRef.current) {
+          messagesEndRef.current.scrollIntoView({ behavior: "auto" });
+        }
+      }, 100);
     } catch (error) {
       console.error("Error loading group messages:", error);
     }
@@ -3007,7 +3125,7 @@ function DashboardContent() {
                                                                       "Payment successful!",
                                                                       {
                                                                         description:
-                                                                          "Order confirmed!",
+                                                                          "Redirecting to My Hub...",
                                                                       }
                                                                     );
 
@@ -3036,7 +3154,6 @@ function DashboardContent() {
                                                                         }
                                                                       );
 
-                                                                      // Pusher will automatically update the UI via the existing listener
                                                                       console.log(
                                                                         "✅ Message updated, Pusher will sync UI"
                                                                       );
@@ -3046,6 +3163,15 @@ function DashboardContent() {
                                                                         error
                                                                       );
                                                                     }
+
+                                                                    // Redirect to My Hub Purchases
+                                                                    setTimeout(
+                                                                      () => {
+                                                                        window.location.href =
+                                                                          "/dashboard?tab=my-hub&subTab=purchases";
+                                                                      },
+                                                                      1000
+                                                                    );
                                                                   },
                                                                 onPending:
                                                                   function (
@@ -3266,6 +3392,28 @@ function DashboardContent() {
                   </TabsList>
 
                   <TabsContent value="purchases" className="space-y-4 mt-6">
+                    {isSyncingPayment && (
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4 animate-pulse">
+                        <div className="flex items-center gap-3">
+                          <RefreshCw className="h-4 w-4 text-blue-600 animate-spin" />
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-blue-900">
+                              Checking payment status...
+                            </p>
+                            <p className="text-xs text-blue-700">
+                              {pendingOrdersCount > 0
+                                ? `Verifying ${pendingOrdersCount} pending ${
+                                    pendingOrdersCount === 1
+                                      ? "order"
+                                      : "orders"
+                                  } with the payment gateway`
+                                : "Verifying your recent payment with the payment gateway"}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     <div className="grid grid-cols-3 gap-3 mb-6">
                       <Card className="p-4">
                         <div className="flex items-center justify-between mb-1">
@@ -3375,17 +3523,23 @@ function DashboardContent() {
                                         Rp {order.amount.toLocaleString()}
                                       </TableCell>
                                       <TableCell>
-                                        <Badge
-                                          variant={
-                                            order.status === "COMPLETED"
-                                              ? "default"
-                                              : order.status === "PENDING"
-                                              ? "secondary"
-                                              : "destructive"
-                                          }
-                                        >
-                                          {order.status}
-                                        </Badge>
+                                        <div className="flex items-center gap-2">
+                                          <Badge
+                                            variant={
+                                              order.status === "COMPLETED"
+                                                ? "default"
+                                                : order.status === "PENDING"
+                                                ? "secondary"
+                                                : "destructive"
+                                            }
+                                          >
+                                            {order.status}
+                                          </Badge>
+                                          {isSyncingPayment &&
+                                            order.status === "PENDING" && (
+                                              <RefreshCw className="h-3 w-3 text-blue-600 animate-spin" />
+                                            )}
+                                        </div>
                                       </TableCell>
                                     </TableRow>
                                   ))}
