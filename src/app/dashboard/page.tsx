@@ -214,6 +214,8 @@ function DashboardContent() {
   const [marketplaceItems, setMarketplaceItems] = useState<MarketplaceItem[]>(
     []
   );
+  const [visibleItemsCount, setVisibleItemsCount] = useState(20);
+  const loadMoreObserverRef = useRef<HTMLDivElement>(null);
 
   // Helper function to filter out items without files (untradable items)
   const filterTradableItems = (items: MarketplaceItem[]) => {
@@ -698,6 +700,39 @@ function DashboardContent() {
       };
     }
   }, [currentUser, status]);
+
+  // Progressive loading with Intersection Observer
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (
+          entries[0].isIntersecting &&
+          visibleItemsCount < marketplaceItems.length
+        ) {
+          setVisibleItemsCount((prev) =>
+            Math.min(prev + 20, marketplaceItems.length)
+          );
+        }
+      },
+      { threshold: 0.1, rootMargin: "200px" }
+    );
+
+    const currentRef = loadMoreObserverRef.current;
+    if (currentRef) {
+      observer.observe(currentRef);
+    }
+
+    return () => {
+      if (currentRef) {
+        observer.unobserve(currentRef);
+      }
+    };
+  }, [visibleItemsCount, marketplaceItems.length]);
+
+  // Reset visible count when items change
+  useEffect(() => {
+    setVisibleItemsCount(20);
+  }, [marketplaceItems]);
 
   // Load only essential data on mount (notifications, stats, current user)
   const loadEssentialData = async () => {
@@ -2295,277 +2330,300 @@ function DashboardContent() {
                             </CardContent>
                           </Card>
                         ) : (
-                          marketplaceItems.map((item) => (
-                            <Card
-                              key={item.id}
-                              onClick={() => handleItemClick(item)}
-                              className={`cursor-pointer hover:shadow-lg transition-all group overflow-hidden ${
-                                viewMode === "list" ? "flex flex-row" : ""
-                              }`}
-                            >
-                              {/* Image Section - Show File Preview */}
-                              <div
-                                className={`relative bg-secondary-200 overflow-hidden ${
-                                  viewMode === "list"
-                                    ? "w-12 h-12 flex-shrink-0 rounded-md"
-                                    : "aspect-square sm:aspect-video lg:aspect-[3/2]"
-                                }`}
-                              >
-                                <FilePreview
-                                  fileUrl={item.fileUrl}
-                                  fileType={item.fileType}
-                                  fileName={item.fileName}
-                                  category={item.category}
-                                  title={item.title}
-                                  compact={viewMode === "list"}
-                                  thumbnailUrl={item.thumbnailUrl}
-                                />
-                                {/* Favorite Button */}
-                                {viewMode === "grid" && (
-                                  <button
-                                    onClick={(e) =>
-                                      handleToggleWishlist(item.id, e)
-                                    }
-                                    className={`absolute top-1 right-1 sm:top-2 sm:right-2 lg:top-1.5 lg:right-1.5 bg-white/90 backdrop-blur-sm p-1 sm:p-1.5 lg:p-1 rounded-full transition-all shadow-sm z-10 ${
-                                      wishlistItemIds.has(item.id)
-                                        ? "text-red-500 hover:text-red-600"
-                                        : "text-gray-600 hover:text-red-500"
-                                    } hover:bg-white`}
-                                  >
-                                    <Heart
-                                      className={`h-3 w-3 sm:h-4 sm:w-4 lg:h-3 lg:w-3 ${
-                                        wishlistItemIds.has(item.id)
-                                          ? "fill-current"
-                                          : ""
-                                      }`}
-                                    />
-                                  </button>
-                                )}
-                              </div>
-
-                              {/* Content Section */}
-                              <div
-                                className={`flex ${
-                                  viewMode === "list"
-                                    ? "flex-row flex-1"
-                                    : "flex-col"
-                                }`}
-                              >
-                                <CardContent
-                                  className={`${
-                                    viewMode === "list"
-                                      ? "p-1.5 flex-1 flex items-center"
-                                      : "p-2 sm:p-3 lg:p-2.5 space-y-1.5 sm:space-y-2 lg:space-y-1.5"
+                          <>
+                            {marketplaceItems
+                              .slice(0, visibleItemsCount)
+                              .map((item) => (
+                                <Card
+                                  key={item.id}
+                                  onClick={() => handleItemClick(item)}
+                                  className={`cursor-pointer hover:shadow-lg transition-all group overflow-hidden ${
+                                    viewMode === "list" ? "flex flex-row" : ""
                                   }`}
                                 >
+                                  {/* Image Section - Show File Preview */}
                                   <div
-                                    className={
+                                    className={`relative bg-secondary-200 overflow-hidden ${
                                       viewMode === "list"
-                                        ? "flex-1 min-w-0"
-                                        : "space-y-3"
-                                    }
+                                        ? "w-12 h-12 flex-shrink-0 rounded-md"
+                                        : "aspect-square sm:aspect-video lg:aspect-[3/2]"
+                                    }`}
                                   >
-                                    {/* Category Badge and Title */}
-                                    <div className="flex items-start justify-between gap-2">
-                                      <div className="flex-1 min-w-0">
-                                        {viewMode === "list" ? (
-                                          <div className="flex items-center gap-1.5">
-                                            <Badge
-                                              variant="secondary"
-                                              className="text-[9px] px-1 py-0 flex-shrink-0"
-                                            >
-                                              {item.category}
-                                            </Badge>
-                                            <h3 className="font-bold text-xs line-clamp-1 text-gray-900 flex-1 min-w-0">
-                                              {item.title}
-                                            </h3>
-                                            <BookOpen className="h-2.5 w-2.5 text-gray-400 flex-shrink-0" />
-                                            <span className="text-[9px] text-gray-500 truncate max-w-[60px]">
-                                              {item.course}
-                                            </span>
-                                            <div className="flex items-center gap-0.5 flex-shrink-0">
-                                              <Star className="h-2.5 w-2.5 text-yellow-400 fill-yellow-400" />
-                                              <span className="text-[9px] font-medium text-gray-700">
-                                                {item.rating}
-                                              </span>
-                                            </div>
-                                            <p className="text-xs font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent flex-shrink-0">
-                                              Rp {formatPrice(item.price)}
-                                            </p>
-                                          </div>
-                                        ) : (
-                                          <h3 className="font-bold text-xs sm:text-base lg:text-sm line-clamp-1 text-gray-900 leading-tight">
-                                            {item.title}
-                                          </h3>
-                                        )}
-                                      </div>
-                                    </div>
-
-                                    {/* Description - Hidden on mobile grid view */}
-                                    {viewMode === "list" ? null : (
-                                      <p className="hidden sm:block text-xs lg:text-[11px] text-gray-600 line-clamp-2 lg:line-clamp-1 lg:min-h-0 min-h-[40px]">
-                                        {item.description}
-                                      </p>
-                                    )}
-
-                                    {/* Course Info */}
-                                    {viewMode === "list" ? null : (
-                                      <div className="flex items-center gap-0.5 sm:gap-1 lg:gap-0.5 text-[9px] sm:text-xs lg:text-[10px] text-gray-500">
-                                        <BookOpen className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 lg:h-2.5 lg:w-2.5" />
-                                        <span className="font-medium truncate">
-                                          {item.course}
-                                        </span>
-                                      </div>
-                                    )}
-
+                                    <FilePreview
+                                      fileUrl={item.fileUrl}
+                                      fileType={item.fileType}
+                                      fileName={item.fileName}
+                                      category={item.category}
+                                      title={item.title}
+                                      compact={viewMode === "list"}
+                                      thumbnailUrl={item.thumbnailUrl}
+                                    />
+                                    {/* Favorite Button */}
                                     {viewMode === "grid" && (
-                                      <>
-                                        {/* Price and Rating */}
-                                        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between pt-1 sm:pt-1.5 lg:pt-1 border-t gap-0.5 sm:gap-0">
-                                          <div className="flex items-center justify-between sm:block">
-                                            <p className="text-sm sm:text-lg lg:text-base font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent leading-tight">
-                                              <span className="sm:hidden">
-                                                Rp {formatPrice(item.price)}
-                                              </span>
-                                              <span className="hidden sm:inline">
-                                                Rp {item.price.toLocaleString()}
-                                              </span>
-                                            </p>
-                                            <div className="flex items-center gap-0.5 sm:gap-1 sm:mt-0.5 lg:mt-0">
-                                              <Star className="h-2.5 w-2.5 sm:h-3 sm:w-3 lg:h-2.5 lg:w-2.5 text-yellow-400 fill-yellow-400" />
-                                              <span className="text-[9px] sm:text-xs lg:text-[10px] font-medium text-gray-700">
-                                                {item.rating}
-                                              </span>
-                                              <span className="text-[9px] sm:text-xs lg:text-[10px] text-gray-500">
-                                                ({item.reviewCount || 0})
-                                              </span>
-                                            </div>
-                                          </div>
-                                          <div className="text-right hidden sm:block">
-                                            <p className="text-[10px] lg:text-[9px] text-gray-500">
-                                              by
-                                            </p>
-                                            <p className="text-xs lg:text-[10px] font-medium text-gray-700">
-                                              {typeof item.seller === "string"
-                                                ? `Student ${item.seller.slice(
-                                                    -9
-                                                  )}`
-                                                : item.seller?.name ||
-                                                  "Unknown"}
-                                            </p>
+                                      <button
+                                        onClick={(e) =>
+                                          handleToggleWishlist(item.id, e)
+                                        }
+                                        className={`absolute top-1 right-1 sm:top-2 sm:right-2 lg:top-1.5 lg:right-1.5 bg-white/90 backdrop-blur-sm p-1 sm:p-1.5 lg:p-1 rounded-full transition-all shadow-sm z-10 ${
+                                          wishlistItemIds.has(item.id)
+                                            ? "text-red-500 hover:text-red-600"
+                                            : "text-gray-600 hover:text-red-500"
+                                        } hover:bg-white`}
+                                      >
+                                        <Heart
+                                          className={`h-3 w-3 sm:h-4 sm:w-4 lg:h-3 lg:w-3 ${
+                                            wishlistItemIds.has(item.id)
+                                              ? "fill-current"
+                                              : ""
+                                          }`}
+                                        />
+                                      </button>
+                                    )}
+                                  </div>
+
+                                  {/* Content Section */}
+                                  <div
+                                    className={`flex ${
+                                      viewMode === "list"
+                                        ? "flex-row flex-1"
+                                        : "flex-col"
+                                    }`}
+                                  >
+                                    <CardContent
+                                      className={`${
+                                        viewMode === "list"
+                                          ? "p-1.5 flex-1 flex items-center"
+                                          : "p-2 sm:p-3 lg:p-2.5 space-y-1.5 sm:space-y-2 lg:space-y-1.5"
+                                      }`}
+                                    >
+                                      <div
+                                        className={
+                                          viewMode === "list"
+                                            ? "flex-1 min-w-0"
+                                            : "space-y-3"
+                                        }
+                                      >
+                                        {/* Category Badge and Title */}
+                                        <div className="flex items-start justify-between gap-2">
+                                          <div className="flex-1 min-w-0">
+                                            {viewMode === "list" ? (
+                                              <div className="flex items-center gap-1.5">
+                                                <Badge
+                                                  variant="secondary"
+                                                  className="text-[9px] px-1 py-0 flex-shrink-0"
+                                                >
+                                                  {item.category}
+                                                </Badge>
+                                                <h3 className="font-bold text-xs line-clamp-1 text-gray-900 flex-1 min-w-0">
+                                                  {item.title}
+                                                </h3>
+                                                <BookOpen className="h-2.5 w-2.5 text-gray-400 flex-shrink-0" />
+                                                <span className="text-[9px] text-gray-500 truncate max-w-[60px]">
+                                                  {item.course}
+                                                </span>
+                                                <div className="flex items-center gap-0.5 flex-shrink-0">
+                                                  <Star className="h-2.5 w-2.5 text-yellow-400 fill-yellow-400" />
+                                                  <span className="text-[9px] font-medium text-gray-700">
+                                                    {item.rating}
+                                                  </span>
+                                                </div>
+                                                <p className="text-xs font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent flex-shrink-0">
+                                                  Rp {formatPrice(item.price)}
+                                                </p>
+                                              </div>
+                                            ) : (
+                                              <h3 className="font-bold text-xs sm:text-base lg:text-sm line-clamp-1 text-gray-900 leading-tight">
+                                                {item.title}
+                                              </h3>
+                                            )}
                                           </div>
                                         </div>
-                                      </>
-                                    )}
-                                  </div>
-                                </CardContent>
 
-                                {/* Action Buttons */}
-                                {viewMode === "list" ? (
-                                  <div className="flex flex-col gap-1 p-1 justify-center border-l">
-                                    {item.sellerId === currentUser?.id ? (
-                                      <Button
-                                        variant="destructive"
-                                        size="sm"
-                                        className="h-6 w-6 p-0"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleDeleteItem(item.id);
-                                        }}
-                                      >
-                                        <Trash2 className="h-3 w-3" />
-                                      </Button>
+                                        {/* Description - Hidden on mobile grid view */}
+                                        {viewMode === "list" ? null : (
+                                          <p className="hidden sm:block text-xs lg:text-[11px] text-gray-600 line-clamp-2 lg:line-clamp-1 lg:min-h-0 min-h-[40px]">
+                                            {item.description}
+                                          </p>
+                                        )}
+
+                                        {/* Course Info */}
+                                        {viewMode === "list" ? null : (
+                                          <div className="flex items-center gap-0.5 sm:gap-1 lg:gap-0.5 text-[9px] sm:text-xs lg:text-[10px] text-gray-500">
+                                            <BookOpen className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 lg:h-2.5 lg:w-2.5" />
+                                            <span className="font-medium truncate">
+                                              {item.course}
+                                            </span>
+                                          </div>
+                                        )}
+
+                                        {viewMode === "grid" && (
+                                          <>
+                                            {/* Price and Rating */}
+                                            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between pt-1 sm:pt-1.5 lg:pt-1 border-t gap-0.5 sm:gap-0">
+                                              <div className="flex items-center justify-between sm:block">
+                                                <p className="text-sm sm:text-lg lg:text-base font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent leading-tight">
+                                                  <span className="sm:hidden">
+                                                    Rp {formatPrice(item.price)}
+                                                  </span>
+                                                  <span className="hidden sm:inline">
+                                                    Rp{" "}
+                                                    {item.price.toLocaleString()}
+                                                  </span>
+                                                </p>
+                                                <div className="flex items-center gap-0.5 sm:gap-1 sm:mt-0.5 lg:mt-0">
+                                                  <Star className="h-2.5 w-2.5 sm:h-3 sm:w-3 lg:h-2.5 lg:w-2.5 text-yellow-400 fill-yellow-400" />
+                                                  <span className="text-[9px] sm:text-xs lg:text-[10px] font-medium text-gray-700">
+                                                    {item.rating}
+                                                  </span>
+                                                  <span className="text-[9px] sm:text-xs lg:text-[10px] text-gray-500">
+                                                    ({item.reviewCount || 0})
+                                                  </span>
+                                                </div>
+                                              </div>
+                                              <div className="text-right hidden sm:block">
+                                                <p className="text-[10px] lg:text-[9px] text-gray-500">
+                                                  by
+                                                </p>
+                                                <p className="text-xs lg:text-[10px] font-medium text-gray-700">
+                                                  {typeof item.seller ===
+                                                  "string"
+                                                    ? `Student ${item.seller.slice(
+                                                        -9
+                                                      )}`
+                                                    : item.seller?.name ||
+                                                      "Unknown"}
+                                                </p>
+                                              </div>
+                                            </div>
+                                          </>
+                                        )}
+                                      </div>
+                                    </CardContent>
+
+                                    {/* Action Buttons */}
+                                    {viewMode === "list" ? (
+                                      <div className="flex flex-col gap-1 p-1 justify-center border-l">
+                                        {item.sellerId === currentUser?.id ? (
+                                          <Button
+                                            variant="destructive"
+                                            size="sm"
+                                            className="h-6 w-6 p-0"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleDeleteItem(item.id);
+                                            }}
+                                          >
+                                            <Trash2 className="h-3 w-3" />
+                                          </Button>
+                                        ) : (
+                                          <>
+                                            <Button
+                                              variant="outline"
+                                              size="sm"
+                                              className="h-6 w-6 p-0"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                setMessageContextItem(item);
+                                                handleCreateConversation(
+                                                  item.sellerId,
+                                                  typeof item.seller ===
+                                                    "string"
+                                                    ? item.seller
+                                                    : item.seller?.name ||
+                                                        "Unknown"
+                                                );
+                                              }}
+                                            >
+                                              <MessageCircle className="h-3 w-3" />
+                                            </Button>
+                                            <Button
+                                              size="sm"
+                                              className="h-6 w-6 p-0"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleBuyItem(item);
+                                              }}
+                                            >
+                                              <ShoppingCart className="h-3 w-3" />
+                                            </Button>
+                                          </>
+                                        )}
+                                      </div>
                                     ) : (
-                                      <>
-                                        <Button
-                                          variant="outline"
-                                          size="sm"
-                                          className="h-6 w-6 p-0"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            setMessageContextItem(item);
-                                            handleCreateConversation(
-                                              item.sellerId,
-                                              typeof item.seller === "string"
-                                                ? item.seller
-                                                : item.seller?.name || "Unknown"
-                                            );
-                                          }}
-                                        >
-                                          <MessageCircle className="h-3 w-3" />
-                                        </Button>
-                                        <Button
-                                          size="sm"
-                                          className="h-6 w-6 p-0"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleBuyItem(item);
-                                          }}
-                                        >
-                                          <ShoppingCart className="h-3 w-3" />
-                                        </Button>
-                                      </>
+                                      <CardFooter className="flex gap-1 sm:gap-2 p-2 sm:p-4 pt-0">
+                                        {item.sellerId === currentUser?.id ? (
+                                          <Button
+                                            variant="destructive"
+                                            size="sm"
+                                            className="w-full text-[9px] sm:text-xs lg:text-[10px] px-1.5 sm:px-3 lg:px-2 py-1 sm:py-1.5 lg:py-1 h-6 sm:h-8 lg:h-7"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleDeleteItem(item.id);
+                                            }}
+                                          >
+                                            <Trash2 className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 lg:h-3 lg:w-3 sm:mr-1 lg:mr-0.5" />
+                                            <span className="hidden sm:inline">
+                                              Delete
+                                            </span>
+                                          </Button>
+                                        ) : (
+                                          <>
+                                            <Button
+                                              variant="outline"
+                                              size="sm"
+                                              className="flex-1 text-[9px] sm:text-xs lg:text-[10px] px-1.5 sm:px-3 lg:px-2 py-1 sm:py-1.5 lg:py-1 h-6 sm:h-8 lg:h-7"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                setMessageContextItem(item);
+                                                handleCreateConversation(
+                                                  item.sellerId,
+                                                  typeof item.seller ===
+                                                    "string"
+                                                    ? item.seller
+                                                    : item.seller?.name ||
+                                                        "Unknown"
+                                                );
+                                              }}
+                                            >
+                                              <MessageCircle className="h-3 w-3 sm:h-3.5 sm:w-3.5 lg:h-3 lg:w-3 sm:mr-1 lg:mr-0.5" />
+                                              <span className="hidden sm:inline">
+                                                Message
+                                              </span>
+                                            </Button>
+                                            <Button
+                                              size="sm"
+                                              className="flex-1 text-[9px] sm:text-xs lg:text-[10px] px-1.5 sm:px-3 lg:px-2 py-1 sm:py-1.5 lg:py-1 h-6 sm:h-8 lg:h-7"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleBuyItem(item);
+                                              }}
+                                            >
+                                              <ShoppingCart className="h-3 w-3 sm:h-3.5 sm:w-3.5 lg:h-3 lg:w-3 sm:mr-1 lg:mr-0.5" />
+                                              <span className="hidden sm:inline">
+                                                Buy
+                                              </span>
+                                            </Button>
+                                          </>
+                                        )}
+                                      </CardFooter>
                                     )}
                                   </div>
-                                ) : (
-                                  <CardFooter className="flex gap-1 sm:gap-2 p-2 sm:p-4 pt-0">
-                                    {item.sellerId === currentUser?.id ? (
-                                      <Button
-                                        variant="destructive"
-                                        size="sm"
-                                        className="w-full text-[9px] sm:text-xs lg:text-[10px] px-1.5 sm:px-3 lg:px-2 py-1 sm:py-1.5 lg:py-1 h-6 sm:h-8 lg:h-7"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleDeleteItem(item.id);
-                                        }}
-                                      >
-                                        <Trash2 className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 lg:h-3 lg:w-3 sm:mr-1 lg:mr-0.5" />
-                                        <span className="hidden sm:inline">
-                                          Delete
-                                        </span>
-                                      </Button>
-                                    ) : (
-                                      <>
-                                        <Button
-                                          variant="outline"
-                                          size="sm"
-                                          className="flex-1 text-[9px] sm:text-xs lg:text-[10px] px-1.5 sm:px-3 lg:px-2 py-1 sm:py-1.5 lg:py-1 h-6 sm:h-8 lg:h-7"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            setMessageContextItem(item);
-                                            handleCreateConversation(
-                                              item.sellerId,
-                                              typeof item.seller === "string"
-                                                ? item.seller
-                                                : item.seller?.name || "Unknown"
-                                            );
-                                          }}
-                                        >
-                                          <MessageCircle className="h-3 w-3 sm:h-3.5 sm:w-3.5 lg:h-3 lg:w-3 sm:mr-1 lg:mr-0.5" />
-                                          <span className="hidden sm:inline">
-                                            Message
-                                          </span>
-                                        </Button>
-                                        <Button
-                                          size="sm"
-                                          className="flex-1 text-[9px] sm:text-xs lg:text-[10px] px-1.5 sm:px-3 lg:px-2 py-1 sm:py-1.5 lg:py-1 h-6 sm:h-8 lg:h-7"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleBuyItem(item);
-                                          }}
-                                        >
-                                          <ShoppingCart className="h-3 w-3 sm:h-3.5 sm:w-3.5 lg:h-3 lg:w-3 sm:mr-1 lg:mr-0.5" />
-                                          <span className="hidden sm:inline">
-                                            Buy
-                                          </span>
-                                        </Button>
-                                      </>
-                                    )}
-                                  </CardFooter>
-                                )}
+                                </Card>
+                              ))}
+                            {visibleItemsCount < marketplaceItems.length && (
+                              <div
+                                ref={loadMoreObserverRef}
+                                className="col-span-full flex justify-center py-8"
+                              >
+                                <div className="flex items-center gap-2 text-muted-foreground">
+                                  <div className="h-5 w-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                                  <span className="text-sm">
+                                    Loading more items...
+                                  </span>
+                                </div>
                               </div>
-                            </Card>
-                          ))
+                            )}
+                          </>
                         )}
                       </div>
                     )}
