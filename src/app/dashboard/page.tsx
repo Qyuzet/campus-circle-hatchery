@@ -4329,7 +4329,8 @@ function DashboardContent() {
                                       size="sm"
                                       variant="outline"
                                       className="flex-1 text-[10px] md:text-sm h-7 md:h-9 px-1 md:px-3"
-                                      onClick={() => {
+                                      onClick={(e) => {
+                                        e.stopPropagation();
                                         setSelectedItem(item);
                                         setShowItemDetailModal(true);
                                       }}
@@ -4343,9 +4344,11 @@ function DashboardContent() {
                                       size="sm"
                                       variant="outline"
                                       className="flex-1 text-[10px] md:text-sm h-7 md:h-9 px-1 md:px-3"
-                                      onClick={() => {
+                                      onClick={(e) => {
+                                        e.stopPropagation();
                                         setSelectedItem(item);
                                         handleEditItem(item);
+                                        setShowItemDetailModal(true);
                                       }}
                                     >
                                       Edit
