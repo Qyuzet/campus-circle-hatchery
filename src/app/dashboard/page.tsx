@@ -2174,61 +2174,64 @@ function DashboardContent() {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 pb-28 lg:pb-6">
         <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 lg:relative">
-          {/* Mobile Navigation */}
-          <div className="lg:hidden">
-            {/* Mobile Tab Navigation */}
-            <div className="bg-white rounded-lg shadow p-2 mb-4">
+          {/* Mobile Navigation - Floating Bottom Bar */}
+          <div className="lg:hidden fixed bottom-4 left-4 right-4 z-50">
+            <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 px-2 py-3 max-w-md mx-auto">
               <div className="flex justify-around items-center">
                 <button
                   onClick={() => setActiveTab("discovery")}
-                  className={`flex flex-col items-center p-2 transition-colors ${
+                  className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all ${
                     activeTab === "discovery"
-                      ? "text-dark-blue"
+                      ? "text-dark-blue bg-blue-50"
                       : "text-medium-gray hover:text-dark-blue"
                   }`}
                   title="Marketplace"
                 >
-                  <ShoppingCart className="h-5 w-5" />
+                  <ShoppingCart className="h-6 w-6" />
+                  <span className="text-xs font-medium">Market</span>
                 </button>
                 <button
                   onClick={() => setActiveTab("my-hub")}
-                  className={`flex flex-col items-center p-2 transition-colors ${
+                  className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all ${
                     activeTab === "my-hub"
-                      ? "text-dark-blue"
+                      ? "text-dark-blue bg-blue-50"
                       : "text-medium-gray hover:text-dark-blue"
                   }`}
                   title="My Hub"
                 >
-                  <Folders className="h-5 w-5" />
+                  <Folders className="h-6 w-6" />
+                  <span className="text-xs font-medium">My Hub</span>
                 </button>
                 <button
                   onClick={() => setActiveTab("messages")}
-                  className={`flex flex-col items-center p-2 transition-colors relative ${
+                  className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all relative ${
                     activeTab === "messages"
-                      ? "text-dark-blue"
+                      ? "text-dark-blue bg-blue-50"
                       : "text-medium-gray hover:text-dark-blue"
                   }`}
                   title="Messages"
                 >
-                  <MessageCircle className="h-5 w-5" />
+                  <MessageCircle className="h-6 w-6" />
+                  <span className="text-xs font-medium">Messages</span>
                   {userStats && userStats.messagesCount > 0 && (
-                    <span className="absolute top-1 right-1 bg-green-status text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                    <span className="absolute -top-1 -right-1 bg-green-status text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-semibold">
                       {userStats.messagesCount}
                     </span>
                   )}
                 </button>
                 <button
                   onClick={() => setActiveTab("wallet")}
-                  className={`flex flex-col items-center p-2 transition-colors ${
+                  className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all ${
                     activeTab === "wallet"
-                      ? "text-dark-blue"
+                      ? "text-dark-blue bg-blue-50"
                       : "text-medium-gray hover:text-dark-blue"
                   }`}
                   title="Wallet"
                 >
-                  <Wallet className="h-5 w-5" />
+                  <Wallet className="h-6 w-6" />
+                  <span className="text-xs font-medium">Wallet</span>
                 </button>
               </div>
             </div>
