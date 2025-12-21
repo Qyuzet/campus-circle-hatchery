@@ -333,10 +333,14 @@ function DashboardContent() {
     }
   }, [searchParams, status]);
 
-  // Initialize essential data on component mount (notifications and stats only)
+  // Initialize essential data on component mount (notifications, stats, and discovery tab)
   useEffect(() => {
     if (status === "authenticated") {
       loadEssentialData();
+      // Preload discovery tab data since it's the default tab
+      if (!loadedTabs.discovery) {
+        loadTabData("discovery");
+      }
     }
   }, [status]);
 
@@ -445,9 +449,6 @@ function DashboardContent() {
                       description: "Redirecting to Library...",
                       duration: 2000,
                     });
-                    setTimeout(() => {
-                      router.push("/dashboard?tab=my-hub&subTab=library");
-                    }, 2000);
                   }
                 } else if (result.transaction.status === "EXPIRED") {
                   toast.error("Payment expired", {
