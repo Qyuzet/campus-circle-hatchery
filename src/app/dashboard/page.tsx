@@ -1918,13 +1918,13 @@ function DashboardContent() {
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
-        if (
-          entries[0].isIntersecting &&
-          visibleItemsCount < filteredItems.length
-        ) {
-          setVisibleItemsCount((prev) =>
-            Math.min(prev + 12, filteredItems.length)
-          );
+        if (entries[0].isIntersecting) {
+          setVisibleItemsCount((prev) => {
+            if (prev < filteredItems.length) {
+              return Math.min(prev + 12, filteredItems.length);
+            }
+            return prev;
+          });
         }
       },
       { threshold: 0.1, rootMargin: "200px" }
@@ -1940,19 +1940,19 @@ function DashboardContent() {
         observer.unobserve(currentRef);
       }
     };
-  }, [visibleItemsCount, filteredItems.length]);
+  }, [filteredItems.length]);
 
   // Progressive loading for food items
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
-        if (
-          entries[0].isIntersecting &&
-          visibleFoodCount < filteredFoodItems.length
-        ) {
-          setVisibleFoodCount((prev) =>
-            Math.min(prev + 12, filteredFoodItems.length)
-          );
+        if (entries[0].isIntersecting) {
+          setVisibleFoodCount((prev) => {
+            if (prev < filteredFoodItems.length) {
+              return Math.min(prev + 12, filteredFoodItems.length);
+            }
+            return prev;
+          });
         }
       },
       { threshold: 0.1, rootMargin: "200px" }
@@ -1968,19 +1968,19 @@ function DashboardContent() {
         observer.unobserve(currentRef);
       }
     };
-  }, [visibleFoodCount, filteredFoodItems.length]);
+  }, [filteredFoodItems.length]);
 
   // Progressive loading for events
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
-        if (
-          entries[0].isIntersecting &&
-          visibleEventCount < filteredEvents.length
-        ) {
-          setVisibleEventCount((prev) =>
-            Math.min(prev + 12, filteredEvents.length)
-          );
+        if (entries[0].isIntersecting) {
+          setVisibleEventCount((prev) => {
+            if (prev < filteredEvents.length) {
+              return Math.min(prev + 12, filteredEvents.length);
+            }
+            return prev;
+          });
         }
       },
       { threshold: 0.1, rootMargin: "200px" }
@@ -1996,7 +1996,7 @@ function DashboardContent() {
         observer.unobserve(currentRef);
       }
     };
-  }, [visibleEventCount, filteredEvents.length]);
+  }, [filteredEvents.length]);
 
   // Reset visible count when filtered items change
   useEffect(() => {
