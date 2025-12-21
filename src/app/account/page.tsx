@@ -19,6 +19,9 @@ import {
   Edit,
   Save,
   X,
+  UserCircle,
+  Wallet,
+  Settings,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -34,6 +37,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function AccountPage() {
   const { data: session, status, update } = useSession();
@@ -163,27 +174,67 @@ export default function AccountPage() {
                 )}
               </button>
 
-              <button
-                onClick={() => router.push("/account")}
-                className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
-              >
-                {session?.user?.image ? (
-                  <Image
-                    src={session.user.image}
-                    alt={session.user.name || "User"}
-                    width={32}
-                    height={32}
-                    className="w-6 h-6 sm:w-8 sm:h-8 rounded-full"
-                  />
-                ) : (
-                  <div className="w-6 h-6 sm:w-8 sm:h-8 bg-dark-blue rounded-full flex items-center justify-center">
-                    <User className="h-3 w-3 sm:h-5 sm:w-5 text-white" />
-                  </div>
-                )}
-                <span className="text-xs sm:text-sm font-medium text-dark-gray hidden sm:block">
-                  {session?.user?.name || session?.user?.email || "User"}
-                </span>
-              </button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center space-x-2 hover:opacity-80 transition-opacity focus:outline-none">
+                    {session?.user?.image ? (
+                      <Image
+                        src={session.user.image}
+                        alt={session.user.name || "User"}
+                        width={32}
+                        height={32}
+                        className="w-6 h-6 sm:w-8 sm:h-8 rounded-full"
+                      />
+                    ) : (
+                      <div className="w-6 h-6 sm:w-8 sm:h-8 bg-dark-blue rounded-full flex items-center justify-center">
+                        <User className="h-3 w-3 sm:h-5 sm:w-5 text-white" />
+                      </div>
+                    )}
+                    <span className="text-xs sm:text-sm font-medium text-dark-gray hidden sm:block">
+                      {session?.user?.name || session?.user?.email || "User"}
+                    </span>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">
+                        {session?.user?.name || "User"}
+                      </p>
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {session?.user?.email}
+                      </p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => router.push("/account")}>
+                    <UserCircle className="mr-2 h-4 w-4" />
+                    <span>My Account</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => router.push("/orders")}>
+                    <Package className="mr-2 h-4 w-4" />
+                    <span>My Orders</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => router.push("/library")}>
+                    <Library className="mr-2 h-4 w-4" />
+                    <span>My Library</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => router.push("/dashboard?tab=wallet")}
+                  >
+                    <Wallet className="mr-2 h-4 w-4" />
+                    <span>My Wallet</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => signOut()}
+                    className="text-red-600 focus:text-red-600"
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Log out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </div>
