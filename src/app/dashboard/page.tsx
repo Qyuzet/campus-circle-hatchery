@@ -1181,6 +1181,20 @@ function DashboardContent() {
   };
 
   const handleSendFoodOrderRequest = async (foodItem: any) => {
+    if (!isProfileComplete()) {
+      setProfileFormData({
+        name: userProfile?.name || "",
+        studentId: userProfile?.studentId || "",
+        faculty:
+          userProfile?.faculty === "Unknown" ? "" : userProfile?.faculty || "",
+        major: userProfile?.major === "Unknown" ? "" : userProfile?.major || "",
+        year: userProfile?.year || 1,
+      });
+      setShowProfileCompleteModal(true);
+      toast.error("Please complete your profile before ordering food");
+      return;
+    }
+
     try {
       const conversation = await conversationsAPI.createConversation(
         foodItem.sellerId
@@ -1200,6 +1214,20 @@ function DashboardContent() {
   };
 
   const handleOrderFood = async (foodId: string, pickupTime: string) => {
+    if (!isProfileComplete()) {
+      setProfileFormData({
+        name: userProfile?.name || "",
+        studentId: userProfile?.studentId || "",
+        faculty:
+          userProfile?.faculty === "Unknown" ? "" : userProfile?.faculty || "",
+        major: userProfile?.major === "Unknown" ? "" : userProfile?.major || "",
+        year: userProfile?.year || 1,
+      });
+      setShowProfileCompleteModal(true);
+      toast.error("Please complete your profile before ordering food");
+      return;
+    }
+
     try {
       const response = await fetch("/api/food/orders", {
         method: "POST",
@@ -1227,6 +1255,20 @@ function DashboardContent() {
   };
 
   const handleRegisterEvent = async (eventId: string) => {
+    if (!isProfileComplete()) {
+      setProfileFormData({
+        name: userProfile?.name || "",
+        studentId: userProfile?.studentId || "",
+        faculty:
+          userProfile?.faculty === "Unknown" ? "" : userProfile?.faculty || "",
+        major: userProfile?.major === "Unknown" ? "" : userProfile?.major || "",
+        year: userProfile?.year || 1,
+      });
+      setShowProfileCompleteModal(true);
+      toast.error("Please complete your profile before registering for events");
+      return;
+    }
+
     try {
       const response = await fetch(`/api/events/${eventId}/register`, {
         method: "POST",
@@ -1680,6 +1722,20 @@ function DashboardContent() {
   }, []);
 
   const handleBuyItem = async (item: MarketplaceItem) => {
+    if (!isProfileComplete()) {
+      setProfileFormData({
+        name: userProfile?.name || "",
+        studentId: userProfile?.studentId || "",
+        faculty:
+          userProfile?.faculty === "Unknown" ? "" : userProfile?.faculty || "",
+        major: userProfile?.major === "Unknown" ? "" : userProfile?.major || "",
+        year: userProfile?.year || 1,
+      });
+      setShowProfileCompleteModal(true);
+      toast.error("Please complete your profile before purchasing items");
+      return;
+    }
+
     if (hasPurchasedItem) {
       setShowReorderConfirm(true);
     } else {
