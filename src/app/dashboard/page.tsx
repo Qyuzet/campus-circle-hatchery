@@ -1998,18 +1998,18 @@ function DashboardContent() {
     };
   }, [filteredEvents.length]);
 
-  // Reset visible count when filtered items change
+  // Reset visible count when filter criteria change (not when filtered results change)
   useEffect(() => {
     setVisibleItemsCount(12);
-  }, [filteredItems]);
+  }, [selectedCategory, debouncedSearchQuery]);
 
   useEffect(() => {
     setVisibleFoodCount(12);
-  }, [filteredFoodItems]);
+  }, [debouncedSearchQuery]);
 
   useEffect(() => {
     setVisibleEventCount(12);
-  }, [filteredEvents]);
+  }, [debouncedSearchQuery]);
 
   // Dynamic stats based on real data (memoized to prevent recalculation)
   const stats = useMemo(
