@@ -190,61 +190,6 @@ export default function AccountPage() {
       </header>
 
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 pb-28 lg:pb-6">
-        {/* Mobile Navigation - Floating Bottom Bar */}
-        <div className="lg:hidden fixed bottom-4 left-4 right-4 z-50">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md mx-auto">
-            <div className="flex justify-around items-center px-2 py-3">
-              <button
-                onClick={() => router.push("/dashboard")}
-                className="flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all"
-                title="Market"
-              >
-                <ShoppingCart className="h-5 w-5 text-medium-gray" />
-                <span className="text-xs text-medium-gray">Market</span>
-              </button>
-              <button
-                onClick={() => router.push("/orders")}
-                className="flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all"
-                title="Orders"
-              >
-                <Package className="h-5 w-5 text-medium-gray" />
-                <span className="text-xs text-medium-gray">Orders</span>
-              </button>
-              <button
-                onClick={() => router.push("/library")}
-                className="flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all"
-                title="Library"
-              >
-                <Library className="h-5 w-5 text-medium-gray" />
-                <span className="text-xs text-medium-gray">Library</span>
-              </button>
-              <button
-                onClick={() => router.push("/dashboard?tab=messages")}
-                className="flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all relative"
-                title="Messages"
-              >
-                <MessageCircle className="h-5 w-5 text-medium-gray" />
-                <span className="text-xs text-medium-gray">Messages</span>
-                {unreadCount > 0 && (
-                  <span className="absolute top-1 right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
-                    {unreadCount}
-                  </span>
-                )}
-              </button>
-              <button
-                onClick={() => router.push("/account")}
-                className="flex flex-col items-center gap-1 px-3 py-2 rounded-xl bg-blue-50 transition-all"
-                title="Account"
-              >
-                <User className="h-5 w-5 text-dark-blue" />
-                <span className="text-xs text-dark-blue font-medium">
-                  Account
-                </span>
-              </button>
-            </div>
-          </div>
-        </div>
-
         <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
           {/* Sidebar */}
           <div className="hidden lg:block lg:w-64 flex-shrink-0">
@@ -313,7 +258,7 @@ export default function AccountPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
+                <div className="flex flex-row items-start gap-4 sm:gap-6">
                   {/* Avatar */}
                   <div className="flex-shrink-0">
                     {session?.user?.image ? (
@@ -333,7 +278,7 @@ export default function AccountPage() {
                   </div>
 
                   {/* User Info */}
-                  <div className="flex-1 text-center sm:text-left w-full">
+                  <div className="flex-1 text-left w-full">
                     {isEditing ? (
                       <div className="space-y-3">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -519,7 +464,7 @@ export default function AccountPage() {
                       </div>
                     ) : (
                       <>
-                        <div className="flex items-center justify-center sm:justify-start gap-2 mb-2">
+                        <div className="flex items-center justify-start gap-2 mb-2">
                           <h2 className="text-xl sm:text-2xl font-bold text-dark-gray">
                             {userProfile?.name || "User"}
                           </h2>
@@ -531,26 +476,26 @@ export default function AccountPage() {
                           </button>
                         </div>
                         <div className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm text-medium-gray">
-                          <div className="flex items-center justify-center sm:justify-start gap-2">
+                          <div className="flex items-center justify-start gap-2">
                             <Mail className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                             <span className="truncate">
                               {userProfile?.email}
                             </span>
                           </div>
-                          <div className="flex items-center justify-center sm:justify-start gap-2">
+                          <div className="flex items-center justify-start gap-2">
                             <User className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                             <span>
                               {userProfile?.studentId || "No Student ID"}
                             </span>
                           </div>
-                          <div className="flex items-center justify-center sm:justify-start gap-2">
+                          <div className="flex items-center justify-start gap-2 min-w-0">
                             <Calendar className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                            <span className="truncate">
+                            <span className="truncate text-xs sm:text-sm">
                               {userProfile?.faculty || "No Faculty"} -{" "}
                               {userProfile?.major || "No Major"}
                             </span>
                           </div>
-                          <div className="flex items-center justify-center sm:justify-start gap-2">
+                          <div className="flex items-center justify-start gap-2">
                             <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                             <span>Year {userProfile?.year || "N/A"}</span>
                           </div>
