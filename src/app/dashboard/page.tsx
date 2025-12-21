@@ -224,6 +224,7 @@ function DashboardContent() {
   const [showWishlistModal, setShowWishlistModal] = useState(false);
   const [wishlistItems, setWishlistItems] = useState<any[]>([]);
   const [showCompressionModal, setShowCompressionModal] = useState(false);
+  const [showMobileSearch, setShowMobileSearch] = useState(false);
   const [compressionInfo, setCompressionInfo] = useState<{
     originalSize: number;
     compressedSize: number;
@@ -2063,8 +2064,9 @@ function DashboardContent() {
   return (
     <div className="min-h-screen bg-secondary-50">
       <Toaster position="top-center" richColors />
+
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white shadow-sm border-b border-light-gray">
+      <header className="sticky top-0 z-[60] bg-white shadow-sm border-b border-light-gray">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <button
@@ -2074,31 +2076,41 @@ function DashboardContent() {
               <img
                 src="/campus-circle-logo.png"
                 alt="CampusCircle Logo"
-                className="h-12 sm:h-14 w-auto"
+                className="h-10 sm:h-12 md:h-14 w-auto"
               />
             </button>
 
-            <div className="flex items-center space-x-2 sm:space-x-4">
-              {/* Search - Hidden on mobile, shown on larger screens */}
-              <div className="relative hidden md:block">
+            <div className="flex items-center space-x-1 sm:space-x-2 md:space-x-4">
+              {/* Search Icon for Mobile */}
+              <button
+                className="sm:hidden relative p-2 text-medium-gray hover:text-dark-gray transition-colors active:scale-95"
+                onClick={() => setShowMobileSearch(true)}
+                title="Search"
+                type="button"
+              >
+                <Search className="h-5 w-5" />
+              </button>
+
+              {/* Search Bar - Hidden on mobile, visible on tablet and above */}
+              <div className="relative hidden sm:block">
                 <Search className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-medium-gray" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => handleSearch(e.target.value)}
-                  placeholder="Search materials, courses..."
-                  className="pl-10 pr-4 py-2 border border-light-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-dark-blue focus:border-dark-blue w-48 lg:w-64 transition-colors"
+                  placeholder="Search..."
+                  className="pl-10 pr-4 py-2 border border-light-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-dark-blue focus:border-dark-blue w-40 md:w-48 lg:w-64 transition-colors text-sm"
                 />
               </div>
 
               <button
-                className="relative p-2 text-medium-gray hover:text-dark-gray transition-colors"
+                className="relative p-1.5 sm:p-2 text-medium-gray hover:text-dark-gray transition-colors"
                 onClick={() => setShowWishlistModal(true)}
                 title="Wishlist"
               >
                 <Heart className="h-5 w-5 sm:h-6 sm:w-6" />
                 {wishlistItemIds.size > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center text-[10px] sm:text-xs">
                     {wishlistItemIds.size}
                   </span>
                 )}
@@ -2106,7 +2118,7 @@ function DashboardContent() {
 
               <div className="relative">
                 <button
-                  className="relative p-2 text-medium-gray hover:text-dark-gray transition-colors"
+                  className="relative p-1.5 sm:p-2 text-medium-gray hover:text-dark-gray transition-colors"
                   onClick={() => setShowNotifications(!showNotifications)}
                 >
                   <Bell className="h-5 w-5 sm:h-6 sm:w-6" />
@@ -7601,6 +7613,33 @@ function DashboardContent() {
                   })}
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Mobile Search Bar Overlay */}
+      {showMobileSearch && (
+        <div className="fixed top-0 left-0 right-0 z-[70] sm:hidden">
+          <div className="bg-white shadow-lg border-b border-light-gray">
+            <div className="flex items-center gap-2 p-3">
+              <button
+                onClick={() => setShowMobileSearch(false)}
+                className="p-2 text-medium-gray hover:text-dark-gray transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+              <div className="relative flex-1">
+                <Search className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-medium-gray" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => handleSearch(e.target.value)}
+                  placeholder="Search items, food, events..."
+                  className="w-full pl-10 pr-4 py-2.5 border border-light-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-dark-blue focus:border-dark-blue transition-colors text-sm"
+                  autoFocus
+                />
+              </div>
             </div>
           </div>
         </div>

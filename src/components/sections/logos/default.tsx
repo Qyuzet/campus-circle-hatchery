@@ -25,9 +25,9 @@ export default function Logos({
       <Image
         src="/google-cloud.png"
         alt="Google Cloud"
-        width={120}
-        height={40}
-        className="h-10 w-auto object-contain"
+        width={100}
+        height={35}
+        className="h-8 w-auto object-contain"
       />
     </div>,
     <div key="gdg" className="flex flex-col items-center gap-2">
@@ -43,6 +43,33 @@ export default function Logos({
       <Image
         src="/aws.png"
         alt="AWS"
+        width={90}
+        height={30}
+        className="h-7 w-auto object-contain"
+      />
+    </div>,
+    <div key="nusacarbon" className="flex flex-col items-center gap-2">
+      <Image
+        src="/nusacarbon-icon-logo.png"
+        alt="NusaCarbon"
+        width={120}
+        height={40}
+        className="h-10 w-auto object-contain"
+      />
+    </div>,
+    <div key="robogals" className="flex flex-col items-center gap-2">
+      <Image
+        src="/robogals-logo.png"
+        alt="Robogals"
+        width={160}
+        height={55}
+        className="h-14 w-auto object-contain"
+      />
+    </div>,
+    <div key="binter" className="flex flex-col items-center gap-2">
+      <Image
+        src="/binter-logo-icon.png"
+        alt="Binter"
         width={120}
         height={40}
         className="h-10 w-auto object-contain"
