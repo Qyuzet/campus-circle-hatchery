@@ -713,8 +713,8 @@ function DashboardContent() {
         // Show toast notification if payment completed
         if (updatedTransaction.status === "COMPLETED") {
           toast.success("Payment confirmed!", {
-            description: `Your payment for ${updatedTransaction.itemTitle} has been confirmed.`,
-            duration: 3000,
+            description: `Your payment for ${updatedTransaction.itemTitle} has been confirmed. Redirecting to My Hub...`,
+            duration: 5000,
           });
 
           // Stop syncing animation
@@ -728,6 +728,17 @@ function DashboardContent() {
               console.log("✅ Event registrations reloaded after payment");
             });
           }
+
+          // Auto-redirect to My Hub > Purchases after 2 seconds
+          setTimeout(() => {
+            const redirectTab =
+              updatedTransaction.itemType === "event" ? "events" : "purchases";
+            setActiveTab("my-hub");
+            setMyHubTab(redirectTab);
+            console.log(
+              `✅ Auto-redirected to My Hub > ${redirectTab} after payment success`
+            );
+          }, 2000);
         }
       });
 

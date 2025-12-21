@@ -51,24 +51,10 @@ export default function PaymentModal({
               console.log("Payment success:", result);
               onSuccess?.();
               onClose();
-
-              // Redirect based on item type
-              const redirectTab =
-                item.type === "event" ? "events" : "purchases";
-              setTimeout(() => {
-                window.location.href = `/dashboard?tab=my-hub&subTab=${redirectTab}`;
-              }, 1000);
             },
             onPending: function (result: any) {
               console.log("Payment pending:", result);
               onClose();
-
-              // Redirect based on item type
-              const redirectTab =
-                item.type === "event" ? "events" : "purchases";
-              setTimeout(() => {
-                window.location.href = `/dashboard?tab=my-hub&subTab=${redirectTab}`;
-              }, 500);
             },
             onError: function (result: any) {
               console.log("Payment error:", result);
@@ -78,11 +64,7 @@ export default function PaymentModal({
             onClose: function () {
               console.log("Payment popup closed");
               setIsProcessing(false);
-
-              // Redirect to My Hub Purchases tab to check status
-              setTimeout(() => {
-                router.push("/dashboard?tab=my-hub&subTab=purchases");
-              }, 500);
+              onClose();
             },
           });
         } else {

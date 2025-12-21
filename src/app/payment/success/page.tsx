@@ -27,7 +27,7 @@ function PaymentSuccessContent() {
       }, 1000);
       return () => clearTimeout(timer);
     } else {
-      router.push("/dashboard?tab=my-hub&subTab=library");
+      router.push("/dashboard?tab=my-hub&subTab=purchases");
     }
   }, [countdown, router]);
 
@@ -128,7 +128,7 @@ function PaymentSuccessContent() {
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-semibold text-dark-gray mb-1">
-                Redirecting to Library...
+                Redirecting to My Purchases...
               </h3>
               <p className="text-sm text-medium-gray">
                 You'll be redirected in {countdown} second
@@ -161,19 +161,19 @@ function PaymentSuccessContent() {
         {/* Action Buttons */}
         <div className="space-y-3">
           <button
-            onClick={() => router.push("/dashboard?tab=my-hub&subTab=library")}
-            className="w-full bg-dark-blue text-white py-3 px-4 rounded-lg hover:bg-opacity-90 transition-colors font-medium flex items-center justify-center"
-          >
-            Go to Library Now
-            <ArrowRight className="ml-2 h-5 w-5" />
-          </button>
-          <button
             onClick={() =>
               router.push("/dashboard?tab=my-hub&subTab=purchases")
             }
+            className="w-full bg-dark-blue text-white py-3 px-4 rounded-lg hover:bg-opacity-90 transition-colors font-medium flex items-center justify-center"
+          >
+            View My Purchases
+            <ArrowRight className="ml-2 h-5 w-5" />
+          </button>
+          <button
+            onClick={() => router.push("/dashboard?tab=my-hub&subTab=library")}
             className="w-full border border-gray-300 text-dark-gray py-3 px-4 rounded-lg hover:bg-gray-50 transition-colors font-medium"
           >
-            View Purchases
+            Go to Library
           </button>
         </div>
 
