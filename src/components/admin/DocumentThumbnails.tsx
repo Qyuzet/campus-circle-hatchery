@@ -250,8 +250,8 @@ export default function DocumentThumbnails() {
           Document Thumbnail Generator
         </h2>
         <p className="text-sm text-gray-500 mt-1">
-          Generate thumbnails for PDFs and Word documents that don't have them
-          yet
+          Generate thumbnails for PDFs and Word documents that don&apos;t have
+          them yet
         </p>
       </div>
 

@@ -154,7 +154,7 @@ function PaymentPendingContent() {
             <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
             <div>
               <h3 className="font-semibold text-dark-gray mb-2">
-                What's happening?
+                What&apos;s happening?
               </h3>
               <ul className="text-sm text-medium-gray space-y-2">
                 <li className="flex items-start">
@@ -170,7 +170,7 @@ function PaymentPendingContent() {
                 <li className="flex items-start">
                   <span className="text-blue-600 mr-2">•</span>
                   <span>
-                    You'll receive a notification once payment is confirmed
+                    You&apos;ll receive a notification once payment is confirmed
                   </span>
                 </li>
               </ul>
@@ -224,7 +224,7 @@ function PaymentPendingContent() {
 
         {/* Footer Note */}
         <p className="text-xs text-center text-medium-gray mt-6">
-          You can safely close this page. We'll notify you when payment is
+          You can safely close this page. We&apos;ll notify you when payment is
           confirmed.
         </p>
       </div>

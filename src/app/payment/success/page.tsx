@@ -131,7 +131,7 @@ function PaymentSuccessContent() {
                 Redirecting to Dashboard...
               </h3>
               <p className="text-sm text-medium-gray">
-                You'll be redirected in {countdown} second
+                You&apos;ll be redirected in {countdown} second
                 {countdown !== 1 ? "s" : ""}
               </p>
             </div>
@@ -139,9 +139,11 @@ function PaymentSuccessContent() {
           </div>
         </div>
 
-        {/* What's Next */}
+        {/* What&apos;s Next */}
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-          <h3 className="font-semibold text-dark-gray mb-2">What's Next?</h3>
+          <h3 className="font-semibold text-dark-gray mb-2">
+            What&apos;s Next?
+          </h3>
           <ul className="text-sm text-medium-gray space-y-2">
             <li className="flex items-start">
               <span className="text-blue-600 mr-2">•</span>
@@ -150,7 +152,8 @@ function PaymentSuccessContent() {
             <li className="flex items-start">
               <span className="text-blue-600 mr-2">•</span>
               <span>
-                Once confirmed, you'll be redirected to Library automatically
+                Once confirmed, you&apos;ll be redirected to Library
+                automatically
               </span>
             </li>
             <li className="flex items-start">

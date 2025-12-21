@@ -52,7 +52,7 @@ function PaymentErrorContent() {
             Payment Failed
           </h1>
           <p className="text-medium-gray">
-            We couldn't process your payment. Please try again.
+            We couldn&apos;t process your payment. Please try again.
           </p>
         </div>
 

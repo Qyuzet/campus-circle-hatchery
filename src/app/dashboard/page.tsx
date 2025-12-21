@@ -2593,7 +2593,7 @@ function DashboardContent() {
                             )}
                             {searchQuery && (
                               <Badge variant="secondary" className="gap-1">
-                                Search: "{searchQuery}"
+                                Search: &quot;{searchQuery}&quot;
                                 <button
                                   onClick={() => setSearchQuery("")}
                                   className="ml-1 hover:text-destructive"
