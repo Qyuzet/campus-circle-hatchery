@@ -51,10 +51,20 @@ export default function PaymentModal({
               console.log("Payment success:", result);
               onSuccess?.();
               onClose();
+
+              // Redirect to My Hub > Purchases to wait for confirmation
+              setTimeout(() => {
+                router.push("/dashboard?tab=my-hub&subTab=purchases");
+              }, 500);
             },
             onPending: function (result: any) {
               console.log("Payment pending:", result);
               onClose();
+
+              // Redirect to My Hub > Purchases to wait for confirmation
+              setTimeout(() => {
+                router.push("/dashboard?tab=my-hub&subTab=purchases");
+              }, 500);
             },
             onError: function (result: any) {
               console.log("Payment error:", result);
@@ -65,6 +75,11 @@ export default function PaymentModal({
               console.log("Payment popup closed");
               setIsProcessing(false);
               onClose();
+
+              // Redirect to My Hub > Purchases to check status
+              setTimeout(() => {
+                router.push("/dashboard?tab=my-hub&subTab=purchases");
+              }, 500);
             },
           });
         } else {

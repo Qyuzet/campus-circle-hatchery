@@ -713,7 +713,7 @@ function DashboardContent() {
         // Show toast notification if payment completed
         if (updatedTransaction.status === "COMPLETED") {
           toast.success("Payment confirmed!", {
-            description: `Your payment for ${updatedTransaction.itemTitle} has been confirmed. Redirecting to My Hub...`,
+            description: `Your payment for ${updatedTransaction.itemTitle} has been confirmed. Redirecting to Library...`,
             duration: 5000,
           });
 
@@ -729,15 +729,29 @@ function DashboardContent() {
             });
           }
 
-          // Auto-redirect to My Hub > Purchases after 2 seconds
+          // Auto-redirect to Library after 2 seconds (for marketplace items)
+          // For events, redirect to events tab
           setTimeout(() => {
-            const redirectTab =
-              updatedTransaction.itemType === "event" ? "events" : "purchases";
-            setActiveTab("my-hub");
-            setMyHubTab(redirectTab);
-            console.log(
-              `✅ Auto-redirected to My Hub > ${redirectTab} after payment success`
-            );
+            if (updatedTransaction.itemType === "event") {
+              setActiveTab("my-hub");
+              setMyHubTab("events");
+              console.log(
+                "✅ Auto-redirected to My Hub > Events after payment success"
+              );
+            } else if (updatedTransaction.itemType === "marketplace") {
+              setActiveTab("my-hub");
+              setMyHubTab("library");
+              console.log(
+                "✅ Auto-redirected to My Hub > Library after payment success"
+              );
+            } else {
+              // For food orders, go to purchases
+              setActiveTab("my-hub");
+              setMyHubTab("purchases");
+              console.log(
+                "✅ Auto-redirected to My Hub > Purchases after payment success"
+              );
+            }
           }, 2000);
         }
       });

@@ -128,7 +128,7 @@ function PaymentSuccessContent() {
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-semibold text-dark-gray mb-1">
-                Redirecting to My Purchases...
+                Redirecting to Dashboard...
               </h3>
               <p className="text-sm text-medium-gray">
                 You'll be redirected in {countdown} second
@@ -145,15 +145,19 @@ function PaymentSuccessContent() {
           <ul className="text-sm text-medium-gray space-y-2">
             <li className="flex items-start">
               <span className="text-blue-600 mr-2">•</span>
-              <span>Access your purchased materials in Library</span>
+              <span>Wait for payment confirmation in My Purchases</span>
             </li>
             <li className="flex items-start">
               <span className="text-blue-600 mr-2">•</span>
-              <span>Download files anytime from your Library</span>
+              <span>
+                Once confirmed, you'll be redirected to Library automatically
+              </span>
             </li>
             <li className="flex items-start">
               <span className="text-blue-600 mr-2">•</span>
-              <span>Check Orders page for transaction history</span>
+              <span>
+                Download your purchased materials anytime from Library
+              </span>
             </li>
           </ul>
         </div>
