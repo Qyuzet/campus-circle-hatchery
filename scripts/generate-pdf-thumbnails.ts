@@ -318,7 +318,7 @@ async function generateThumbnailsForExistingPDFs() {
     console.log("\n=== Summary ===");
     console.log(`Total PDFs processed: ${pdfItems.length}`);
     console.log(`Successful: ${successCount}`);
-    console.log(`Failed: ${failCount}`);
+    console.log(`Failed: ${fai
   } catch (error: any) {
     console.error("Fatal error:", error);
   } finally {

@@ -3032,14 +3032,14 @@ function DashboardContent() {
                 ) : (
                   <>
                     {/* WhatsApp-style Messages Interface */}
-                    <div className="bg-white rounded-lg shadow border border-light-gray h-[500px] sm:h-[600px] flex flex-col sm:flex-row">
+                    <div className="bg-white rounded-lg shadow border border-light-gray h-[calc(100vh-12rem)] sm:h-[600px] flex flex-col sm:flex-row">
                       {/* Conversations/Groups List */}
                       <div
                         className={`${
                           selectedConversation || selectedGroup
                             ? "hidden sm:flex"
                             : "flex"
-                        } w-full sm:w-1/3 border-r border-light-gray flex-col`}
+                        } w-full sm:w-1/3 border-r border-light-gray flex-col min-h-0`}
                       >
                         {/* Header with Toggle */}
                         <div className="p-4 border-b border-light-gray bg-gray-50">
@@ -3091,7 +3091,7 @@ function DashboardContent() {
                         </div>
 
                         {/* Conversations or Groups List */}
-                        <div className="flex-1 overflow-y-auto">
+                        <div className="flex-1 overflow-y-auto min-h-0">
                           {messageViewMode === "conversations" ? (
                             // Conversations List
                             conversations.length > 0 ? (
