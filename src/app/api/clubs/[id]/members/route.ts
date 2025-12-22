@@ -30,10 +30,10 @@ export async function GET(
         user: {
           select: {
             id: true,
-            fullName: true,
+            name: true,
             email: true,
-            phoneNumber: true,
-            university: true,
+            studentId: true,
+            faculty: true,
             major: true,
           },
         },
@@ -50,4 +50,3 @@ export async function GET(
     );
   }
 }
-

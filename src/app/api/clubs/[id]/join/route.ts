@@ -21,11 +21,7 @@ export async function POST(
     }
 
     const isProfileComplete =
-      user.fullName &&
-      user.phoneNumber &&
-      user.address &&
-      user.university &&
-      user.major;
+      user.name && user.studentId && user.faculty && user.major;
 
     if (!isProfileComplete) {
       return NextResponse.json(

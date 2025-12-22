@@ -41,11 +41,11 @@ interface ClubMember {
   joinedAt: string;
   user: {
     id: string;
-    fullName: string | null;
+    name: string;
     email: string;
-    phoneNumber: string | null;
-    university: string | null;
-    major: string | null;
+    studentId: string;
+    faculty: string;
+    major: string;
   };
 }
 
@@ -118,7 +118,17 @@ export default function ClubsManagement() {
       if (response.ok) {
         toast.success("Club created successfully");
         setShowCreateModal(false);
-        setFormData({ name: "", description: "", logoUrl: "", category: "" });
+        setFormData({
+          name: "",
+          description: "",
+          logoUrl: "",
+          category: "",
+          memberCount: 0,
+          isOpenForRegistration: true,
+          registrationStartDate: "",
+          registrationEndDate: "",
+          registrationLink: "",
+        });
         loadClubs();
       } else {
         toast.error("Failed to create club");
@@ -141,7 +151,17 @@ export default function ClubsManagement() {
       if (response.ok) {
         toast.success("Club updated successfully");
         setEditingClub(null);
-        setFormData({ name: "", description: "", logoUrl: "", category: "" });
+        setFormData({
+          name: "",
+          description: "",
+          logoUrl: "",
+          category: "",
+          memberCount: 0,
+          isOpenForRegistration: true,
+          registrationStartDate: "",
+          registrationEndDate: "",
+          registrationLink: "",
+        });
         loadClubs();
       } else {
         toast.error("Failed to update club");
@@ -704,7 +724,7 @@ export default function ClubsManagement() {
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
                             <span className="text-sm font-medium text-gray-900">
-                              {index + 1}. {member.user.fullName || "No name"}
+                              {index + 1}. {member.user.name}
                             </span>
                             <Badge variant="secondary" className="text-xs">
                               {new Date(member.joinedAt).toLocaleDateString()}
@@ -716,16 +736,16 @@ export default function ClubsManagement() {
                               {member.user.email}
                             </div>
                             <div>
-                              <span className="font-medium">Phone:</span>{" "}
-                              {member.user.phoneNumber || "N/A"}
+                              <span className="font-medium">Student ID:</span>{" "}
+                              {member.user.studentId}
                             </div>
                             <div>
-                              <span className="font-medium">University:</span>{" "}
-                              {member.user.university || "N/A"}
+                              <span className="font-medium">Faculty:</span>{" "}
+                              {member.user.faculty}
                             </div>
                             <div>
                               <span className="font-medium">Major:</span>{" "}
-                              {member.user.major || "N/A"}
+                              {member.user.major}
                             </div>
                           </div>
                         </div>
