@@ -26,6 +26,7 @@ import ListingsManagement from "@/components/admin/ListingsManagement";
 import ConversationsMonitor from "@/components/admin/ConversationsMonitor";
 import WithdrawalManagement from "@/components/admin/WithdrawalManagement";
 import DocumentThumbnails from "@/components/admin/DocumentThumbnails";
+import ClubsManagement from "@/components/admin/ClubsManagement";
 
 type Section =
   | "dashboard"
@@ -34,7 +35,8 @@ type Section =
   | "listings"
   | "conversations"
   | "withdrawals"
-  | "thumbnails";
+  | "thumbnails"
+  | "clubs";
 
 export default function AdminPage() {
   const { data: session, status } = useSession();
@@ -93,6 +95,7 @@ export default function AdminPage() {
       name: "Conversations",
       icon: MessageSquare,
     },
+    { id: "clubs" as const, name: "Clubs", icon: Users },
     { id: "withdrawals" as const, name: "Withdrawals", icon: Wallet },
     { id: "thumbnails" as const, name: "Thumbnails", icon: FileImage },
   ];
@@ -203,6 +206,7 @@ export default function AdminPage() {
           {activeSection === "transactions" && <TransactionMonitor />}
           {activeSection === "listings" && <ListingsManagement />}
           {activeSection === "conversations" && <ConversationsMonitor />}
+          {activeSection === "clubs" && <ClubsManagement />}
           {activeSection === "withdrawals" && <WithdrawalManagement />}
           {activeSection === "thumbnails" && <DocumentThumbnails />}
         </main>

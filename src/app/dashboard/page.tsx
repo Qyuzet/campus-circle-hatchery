@@ -241,6 +241,12 @@ function DashboardContent() {
   const [isLoadingEvents, setIsLoadingEvents] = useState(false);
   const [isLoadingConversations, setIsLoadingConversations] = useState(false);
   const [isLoadingGroups, setIsLoadingGroups] = useState(false);
+  const [isLoadingClubs, setIsLoadingClubs] = useState(false);
+  const [clubs, setClubs] = useState<any[]>([]);
+  const [myClubs, setMyClubs] = useState<any[]>([]);
+  const [clubsSubTab, setClubsSubTab] = useState<"browse" | "my-clubs">(
+    "browse"
+  );
   const [visibleItemsCount, setVisibleItemsCount] = useState(12);
   const [visibleFoodCount, setVisibleFoodCount] = useState(12);
   const [visibleEventCount, setVisibleEventCount] = useState(12);
@@ -871,6 +877,24 @@ function DashboardContent() {
               console.error("Error loading groups:", error);
               setIsLoadingGroups(false);
             });
+          break;
+
+        case "clubs":
+          setIsLoadingClubs(true);
+          try {
+            const [clubsRes, myClubsRes] = await Promise.all([
+              fetch("/api/clubs"),
+              fetch("/api/clubs/my-clubs"),
+            ]);
+            const clubsData = await clubsRes.json();
+            const myClubsData = await myClubsRes.json();
+            setClubs(clubsData);
+            setMyClubs(myClubsData);
+          } catch (error) {
+            console.error("Error loading clubs:", error);
+          } finally {
+            setIsLoadingClubs(false);
+          }
           break;
 
         case "tutoring":
@@ -2156,6 +2180,27 @@ function DashboardContent() {
 
               <button
                 className="relative p-1.5 sm:p-2 text-medium-gray hover:text-dark-gray transition-colors"
+                onClick={() => setActiveTab("messages")}
+                title="Messages"
+              >
+                <MessageCircle className="h-5 w-5 sm:h-6 sm:w-6" />
+                {conversations.filter((c) => c.unreadCount > 0).length > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-campus-green text-white text-xs rounded-full h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center text-[10px] sm:text-xs font-semibold">
+                    {conversations.filter((c) => c.unreadCount > 0).length}
+                  </span>
+                )}
+              </button>
+
+              <button
+                className="relative p-1.5 sm:p-2 text-medium-gray hover:text-dark-gray transition-colors"
+                onClick={() => setActiveTab("wallet")}
+                title="Wallet"
+              >
+                <Wallet className="h-5 w-5 sm:h-6 sm:w-6" />
+              </button>
+
+              <button
+                className="relative p-1.5 sm:p-2 text-medium-gray hover:text-dark-gray transition-colors"
                 onClick={() => setShowWishlistModal(true)}
                 title="Wishlist"
               >
@@ -2389,6 +2434,18 @@ function DashboardContent() {
                   <span className="text-xs font-medium">Market</span>
                 </button>
                 <button
+                  onClick={() => setActiveTab("clubs")}
+                  className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all ${
+                    activeTab === "clubs"
+                      ? "text-dark-blue bg-blue-50"
+                      : "text-medium-gray hover:text-dark-blue"
+                  }`}
+                  title="Clubs"
+                >
+                  <Users className="h-6 w-6" />
+                  <span className="text-xs font-medium">Clubs</span>
+                </button>
+                <button
                   onClick={() => setActiveTab("my-hub")}
                   className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all ${
                     activeTab === "my-hub"
@@ -2399,35 +2456,6 @@ function DashboardContent() {
                 >
                   <Folders className="h-6 w-6" />
                   <span className="text-xs font-medium">My Hub</span>
-                </button>
-                <button
-                  onClick={() => setActiveTab("messages")}
-                  className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all relative ${
-                    activeTab === "messages"
-                      ? "text-dark-blue bg-blue-50"
-                      : "text-medium-gray hover:text-dark-blue"
-                  }`}
-                  title="Messages"
-                >
-                  <MessageCircle className="h-6 w-6" />
-                  <span className="text-xs font-medium">Messages</span>
-                  {userStats && userStats.messagesCount > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-green-status text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-semibold">
-                      {userStats.messagesCount}
-                    </span>
-                  )}
-                </button>
-                <button
-                  onClick={() => setActiveTab("wallet")}
-                  className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all ${
-                    activeTab === "wallet"
-                      ? "text-dark-blue bg-blue-50"
-                      : "text-medium-gray hover:text-dark-blue"
-                  }`}
-                  title="Wallet"
-                >
-                  <Wallet className="h-6 w-6" />
-                  <span className="text-xs font-medium">Wallet</span>
                 </button>
               </div>
             </div>
@@ -2450,6 +2478,18 @@ function DashboardContent() {
                 </button>
 
                 <button
+                  onClick={() => setActiveTab("clubs")}
+                  className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                    activeTab === "clubs"
+                      ? "bg-primary-100 text-dark-blue"
+                      : "text-medium-gray hover:bg-secondary-100"
+                  }`}
+                >
+                  <Users className="mr-3 h-5 w-5" />
+                  Clubs
+                </button>
+
+                <button
                   onClick={() => setActiveTab("my-hub")}
                   className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                     activeTab === "my-hub"
@@ -2459,36 +2499,6 @@ function DashboardContent() {
                 >
                   <Folders className="mr-3 h-5 w-5" />
                   My Hub
-                </button>
-
-                <button
-                  onClick={() => setActiveTab("messages")}
-                  className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                    activeTab === "messages"
-                      ? "bg-primary-100 text-dark-blue"
-                      : "text-medium-gray hover:bg-secondary-100"
-                  }`}
-                >
-                  <MessageCircle className="mr-3 h-5 w-5" />
-                  Messages
-                  {conversations.filter((c) => c.unreadCount > 0).length >
-                    0 && (
-                    <span className="ml-auto bg-green-status bg-opacity-10 text-green-status text-xs rounded-full px-2 py-1">
-                      {conversations.filter((c) => c.unreadCount > 0).length}
-                    </span>
-                  )}
-                </button>
-
-                <button
-                  onClick={() => setActiveTab("wallet")}
-                  className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                    activeTab === "wallet"
-                      ? "bg-primary-100 text-dark-blue"
-                      : "text-medium-gray hover:bg-secondary-100"
-                  }`}
-                >
-                  <Wallet className="mr-3 h-5 w-5" />
-                  Wallet
                 </button>
               </nav>
 
@@ -4823,6 +4833,277 @@ function DashboardContent() {
                     </Card>
                   </TabsContent>
                 </Tabs>
+              </div>
+            )}
+
+            {activeTab === "clubs" && (
+              <div className="space-y-6">
+                <div>
+                  <h1 className="text-2xl font-bold text-dark-gray">Clubs</h1>
+                  <p className="text-sm text-medium-gray mt-1">
+                    Join communities and connect with students who share your
+                    interests
+                  </p>
+                </div>
+
+                {/* Sub-tabs */}
+                <div className="flex gap-2 border-b border-light-gray">
+                  <button
+                    onClick={() => setClubsSubTab("browse")}
+                    className={`px-4 py-2 text-sm font-medium transition-colors ${
+                      clubsSubTab === "browse"
+                        ? "text-dark-blue border-b-2 border-dark-blue"
+                        : "text-medium-gray hover:text-dark-gray"
+                    }`}
+                  >
+                    Browse Clubs
+                  </button>
+                  <button
+                    onClick={() => setClubsSubTab("my-clubs")}
+                    className={`px-4 py-2 text-sm font-medium transition-colors ${
+                      clubsSubTab === "my-clubs"
+                        ? "text-dark-blue border-b-2 border-dark-blue"
+                        : "text-medium-gray hover:text-dark-gray"
+                    }`}
+                  >
+                    My Clubs
+                  </button>
+                </div>
+
+                {/* Browse Clubs */}
+                {clubsSubTab === "browse" && (
+                  <div>
+                    {isLoadingClubs ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {[1, 2, 3, 4, 5, 6].map((i) => (
+                          <Card key={i} className="animate-pulse">
+                            <CardHeader>
+                              <div className="flex items-center gap-3">
+                                <div className="w-12 h-12 bg-gray-200 rounded-full"></div>
+                                <div className="flex-1 space-y-2">
+                                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                                  <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                                </div>
+                              </div>
+                            </CardHeader>
+                            <CardContent>
+                              <div className="space-y-2">
+                                <div className="h-3 bg-gray-200 rounded"></div>
+                                <div className="h-3 bg-gray-200 rounded w-5/6"></div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    ) : clubs.length > 0 ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {clubs.map((club) => (
+                          <Card
+                            key={club.id}
+                            className="hover:shadow-lg transition-shadow"
+                          >
+                            <CardHeader>
+                              <div className="flex items-center gap-3">
+                                {club.logoUrl ? (
+                                  <Image
+                                    src={club.logoUrl}
+                                    alt={club.name}
+                                    width={48}
+                                    height={48}
+                                    className="w-12 h-12 rounded-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-12 h-12 bg-dark-blue rounded-full flex items-center justify-center">
+                                    <Users className="h-6 w-6 text-white" />
+                                  </div>
+                                )}
+                                <div className="flex-1">
+                                  <CardTitle className="text-base">
+                                    {club.name}
+                                  </CardTitle>
+                                  <Badge
+                                    variant="secondary"
+                                    className="text-xs mt-1"
+                                  >
+                                    {club.category}
+                                  </Badge>
+                                </div>
+                              </div>
+                            </CardHeader>
+                            <CardContent>
+                              <p className="text-sm text-medium-gray line-clamp-2 mb-3">
+                                {club.description}
+                              </p>
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs text-medium-gray">
+                                  {club.memberCount} members
+                                </span>
+                                <Button
+                                  size="sm"
+                                  onClick={async () => {
+                                    try {
+                                      const response = await fetch(
+                                        `/api/clubs/${club.id}/join`,
+                                        {
+                                          method: "POST",
+                                        }
+                                      );
+                                      if (response.ok) {
+                                        toast.success(
+                                          "Joined club successfully!"
+                                        );
+                                        const clubsRes = await fetch(
+                                          "/api/clubs"
+                                        );
+                                        const clubsData = await clubsRes.json();
+                                        setClubs(clubsData);
+                                        const myClubsRes = await fetch(
+                                          "/api/clubs/my-clubs"
+                                        );
+                                        const myClubsData =
+                                          await myClubsRes.json();
+                                        setMyClubs(myClubsData);
+                                      }
+                                    } catch (error) {
+                                      toast.error("Failed to join club");
+                                    }
+                                  }}
+                                >
+                                  Join
+                                </Button>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    ) : (
+                      <Card>
+                        <CardContent className="p-12 text-center">
+                          <Users className="h-12 w-12 text-medium-gray mx-auto mb-4" />
+                          <p className="text-medium-gray">
+                            No clubs available yet
+                          </p>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </div>
+                )}
+
+                {/* My Clubs */}
+                {clubsSubTab === "my-clubs" && (
+                  <div>
+                    {isLoadingClubs ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {[1, 2, 3].map((i) => (
+                          <Card key={i} className="animate-pulse">
+                            <CardHeader>
+                              <div className="flex items-center gap-3">
+                                <div className="w-12 h-12 bg-gray-200 rounded-full"></div>
+                                <div className="flex-1 space-y-2">
+                                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                                  <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                                </div>
+                              </div>
+                            </CardHeader>
+                          </Card>
+                        ))}
+                      </div>
+                    ) : myClubs.length > 0 ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {myClubs.map((club) => (
+                          <Card
+                            key={club.id}
+                            className="hover:shadow-lg transition-shadow"
+                          >
+                            <CardHeader>
+                              <div className="flex items-center gap-3">
+                                {club.logoUrl ? (
+                                  <Image
+                                    src={club.logoUrl}
+                                    alt={club.name}
+                                    width={48}
+                                    height={48}
+                                    className="w-12 h-12 rounded-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-12 h-12 bg-dark-blue rounded-full flex items-center justify-center">
+                                    <Users className="h-6 w-6 text-white" />
+                                  </div>
+                                )}
+                                <div className="flex-1">
+                                  <CardTitle className="text-base">
+                                    {club.name}
+                                  </CardTitle>
+                                  <Badge
+                                    variant="secondary"
+                                    className="text-xs mt-1"
+                                  >
+                                    {club.category}
+                                  </Badge>
+                                </div>
+                              </div>
+                            </CardHeader>
+                            <CardContent>
+                              <p className="text-sm text-medium-gray line-clamp-2 mb-3">
+                                {club.description}
+                              </p>
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs text-medium-gray">
+                                  {club.memberCount} members
+                                </span>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={async () => {
+                                    try {
+                                      const response = await fetch(
+                                        `/api/clubs/${club.id}/leave`,
+                                        {
+                                          method: "POST",
+                                        }
+                                      );
+                                      if (response.ok) {
+                                        toast.success(
+                                          "Left club successfully!"
+                                        );
+                                        const myClubsRes = await fetch(
+                                          "/api/clubs/my-clubs"
+                                        );
+                                        const myClubsData =
+                                          await myClubsRes.json();
+                                        setMyClubs(myClubsData);
+                                      }
+                                    } catch (error) {
+                                      toast.error("Failed to leave club");
+                                    }
+                                  }}
+                                >
+                                  Leave
+                                </Button>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    ) : (
+                      <Card>
+                        <CardContent className="p-12 text-center">
+                          <Users className="h-12 w-12 text-medium-gray mx-auto mb-4" />
+                          <p className="text-medium-gray mb-2">
+                            You have not joined any clubs yet
+                          </p>
+                          <Button
+                            onClick={() => setClubsSubTab("browse")}
+                            variant="outline"
+                            size="sm"
+                          >
+                            Browse Clubs
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </div>
+                )}
               </div>
             )}
 
