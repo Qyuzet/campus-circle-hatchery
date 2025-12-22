@@ -239,6 +239,8 @@ function DashboardContent() {
   const [isLoadingMarketplace, setIsLoadingMarketplace] = useState(false);
   const [isLoadingFood, setIsLoadingFood] = useState(false);
   const [isLoadingEvents, setIsLoadingEvents] = useState(false);
+  const [isLoadingConversations, setIsLoadingConversations] = useState(false);
+  const [isLoadingGroups, setIsLoadingGroups] = useState(false);
   const [visibleItemsCount, setVisibleItemsCount] = useState(12);
   const [visibleFoodCount, setVisibleFoodCount] = useState(12);
   const [visibleEventCount, setVisibleEventCount] = useState(12);
@@ -844,12 +846,31 @@ function DashboardContent() {
           break;
 
         case "messages":
-          const [convos, groupsData] = await Promise.all([
-            conversationsAPI.getConversations(),
-            groupsAPI.getGroups(),
-          ]);
-          setConversations(convos);
-          setGroups(groupsData);
+          // Progressive loading: load conversations first (most important), then groups
+          setIsLoadingConversations(true);
+          setIsLoadingGroups(true);
+
+          conversationsAPI
+            .getConversations()
+            .then((convos) => {
+              setConversations(convos);
+              setIsLoadingConversations(false);
+            })
+            .catch((error) => {
+              console.error("Error loading conversations:", error);
+              setIsLoadingConversations(false);
+            });
+
+          groupsAPI
+            .getGroups()
+            .then((groupsData) => {
+              setGroups(groupsData);
+              setIsLoadingGroups(false);
+            })
+            .catch((error) => {
+              console.error("Error loading groups:", error);
+              setIsLoadingGroups(false);
+            });
           break;
 
         case "tutoring":
@@ -3158,7 +3179,22 @@ function DashboardContent() {
                         <div className="flex-1 overflow-y-auto min-h-0">
                           {messageViewMode === "conversations" ? (
                             // Conversations List
-                            conversations.length > 0 ? (
+                            isLoadingConversations ? (
+                              <div className="p-4 space-y-3">
+                                {[1, 2, 3, 4, 5].map((i) => (
+                                  <div
+                                    key={i}
+                                    className="flex items-center gap-3 p-3 animate-pulse"
+                                  >
+                                    <div className="w-12 h-12 bg-gray-200 rounded-full flex-shrink-0"></div>
+                                    <div className="flex-1 space-y-2">
+                                      <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                                      <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : conversations.length > 0 ? (
                               conversations.map((conversation) => (
                                 <div
                                   key={conversation.id}
@@ -3221,7 +3257,22 @@ function DashboardContent() {
                               </div>
                             )
                           ) : // Groups List
-                          groups.length > 0 ? (
+                          isLoadingGroups ? (
+                            <div className="p-4 space-y-3">
+                              {[1, 2, 3, 4, 5].map((i) => (
+                                <div
+                                  key={i}
+                                  className="flex items-center gap-3 p-3 animate-pulse"
+                                >
+                                  <div className="w-12 h-12 bg-gray-200 rounded-full flex-shrink-0"></div>
+                                  <div className="flex-1 space-y-2">
+                                    <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                                    <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : groups.length > 0 ? (
                             groups.map((group) => (
                               <div
                                 key={group.id}
