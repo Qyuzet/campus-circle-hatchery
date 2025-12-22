@@ -4879,7 +4879,7 @@ function DashboardContent() {
                           <Card key={i} className="animate-pulse">
                             <CardHeader>
                               <div className="flex items-center gap-3">
-                                <div className="w-12 h-12 bg-gray-200 rounded-full"></div>
+                                <div className="w-16 h-12 bg-gray-200 rounded-lg"></div>
                                 <div className="flex-1 space-y-2">
                                   <div className="h-4 bg-gray-200 rounded w-3/4"></div>
                                   <div className="h-3 bg-gray-200 rounded w-1/2"></div>
@@ -4908,12 +4908,12 @@ function DashboardContent() {
                                   <Image
                                     src={club.logoUrl}
                                     alt={club.name}
-                                    width={48}
+                                    width={64}
                                     height={48}
-                                    className="w-12 h-12 rounded-full object-cover"
+                                    className="w-16 h-12 rounded-lg object-cover"
                                   />
                                 ) : (
-                                  <div className="w-12 h-12 bg-dark-blue rounded-full flex items-center justify-center">
+                                  <div className="w-16 h-12 bg-dark-blue rounded-lg flex items-center justify-center">
                                     <Users className="h-6 w-6 text-white" />
                                   </div>
                                 )}
@@ -4934,44 +4934,206 @@ function DashboardContent() {
                               <p className="text-sm text-medium-gray line-clamp-2 mb-3">
                                 {club.description}
                               </p>
-                              <div className="flex items-center justify-between">
-                                <span className="text-xs text-medium-gray">
-                                  {club.memberCount} members
-                                </span>
-                                <Button
-                                  size="sm"
-                                  onClick={async () => {
-                                    try {
-                                      const response = await fetch(
-                                        `/api/clubs/${club.id}/join`,
-                                        {
-                                          method: "POST",
-                                        }
-                                      );
-                                      if (response.ok) {
-                                        toast.success(
-                                          "Joined club successfully!"
-                                        );
-                                        const clubsRes = await fetch(
-                                          "/api/clubs"
-                                        );
-                                        const clubsData = await clubsRes.json();
-                                        setClubs(clubsData);
-                                        const myClubsRes = await fetch(
-                                          "/api/clubs/my-clubs"
-                                        );
-                                        const myClubsData =
-                                          await myClubsRes.json();
-                                        setMyClubs(myClubsData);
-                                      }
-                                    } catch (error) {
-                                      toast.error("Failed to join club");
-                                    }
-                                  }}
-                                >
-                                  Join
-                                </Button>
+                              <div className="space-y-2 mb-3">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs text-medium-gray">
+                                    {club.memberCount} members
+                                  </span>
+                                  <Badge
+                                    variant={(() => {
+                                      const now = new Date();
+                                      const startDate =
+                                        club.registrationStartDate
+                                          ? new Date(club.registrationStartDate)
+                                          : null;
+                                      const endDate = club.registrationEndDate
+                                        ? new Date(club.registrationEndDate)
+                                        : null;
+
+                                      if (!club.isOpenForRegistration)
+                                        return "secondary";
+                                      if (startDate && now < startDate)
+                                        return "secondary";
+                                      if (endDate && now > endDate)
+                                        return "secondary";
+                                      return "default";
+                                    })()}
+                                    className="text-xs"
+                                  >
+                                    {(() => {
+                                      const now = new Date();
+                                      const startDate =
+                                        club.registrationStartDate
+                                          ? new Date(club.registrationStartDate)
+                                          : null;
+                                      const endDate = club.registrationEndDate
+                                        ? new Date(club.registrationEndDate)
+                                        : null;
+
+                                      if (!club.isOpenForRegistration)
+                                        return "Closed";
+                                      if (startDate && now < startDate)
+                                        return "Not Yet Open";
+                                      if (endDate && now > endDate)
+                                        return "Closed";
+                                      return "Open";
+                                    })()}
+                                  </Badge>
+                                </div>
+                                {(() => {
+                                  const now = new Date();
+                                  const startDate = club.registrationStartDate
+                                    ? new Date(club.registrationStartDate)
+                                    : null;
+                                  const isNotYetOpen =
+                                    startDate && now < startDate;
+
+                                  if (isNotYetOpen) {
+                                    return (
+                                      <p className="text-xs text-amber-600 font-medium">
+                                        Opens on{" "}
+                                        {startDate.toLocaleDateString("en-US", {
+                                          month: "long",
+                                          year: "numeric",
+                                        })}
+                                      </p>
+                                    );
+                                  }
+                                  return null;
+                                })()}
+                                {club.registrationStartDate &&
+                                  club.registrationEndDate && (
+                                    <p className="text-xs text-medium-gray">
+                                      Registration:{" "}
+                                      {new Date(
+                                        club.registrationStartDate
+                                      ).toLocaleDateString()}{" "}
+                                      -{" "}
+                                      {new Date(
+                                        club.registrationEndDate
+                                      ).toLocaleDateString()}
+                                    </p>
+                                  )}
                               </div>
+                              <Button
+                                size="sm"
+                                className="w-full"
+                                disabled={(() => {
+                                  const now = new Date();
+                                  const startDate = club.registrationStartDate
+                                    ? new Date(club.registrationStartDate)
+                                    : null;
+                                  const endDate = club.registrationEndDate
+                                    ? new Date(club.registrationEndDate)
+                                    : null;
+
+                                  if (!club.isOpenForRegistration) return true;
+                                  if (startDate && now < startDate) return true;
+                                  if (endDate && now > endDate) return true;
+                                  return false;
+                                })()}
+                                onClick={async () => {
+                                  const now = new Date();
+                                  const startDate = club.registrationStartDate
+                                    ? new Date(club.registrationStartDate)
+                                    : null;
+                                  const endDate = club.registrationEndDate
+                                    ? new Date(club.registrationEndDate)
+                                    : null;
+
+                                  if (!club.isOpenForRegistration) {
+                                    toast.error(
+                                      "This club is not currently accepting new members"
+                                    );
+                                    return;
+                                  }
+
+                                  if (startDate && now < startDate) {
+                                    toast.error(
+                                      `Registration opens on ${startDate.toLocaleDateString(
+                                        "en-US",
+                                        {
+                                          month: "long",
+                                          year: "numeric",
+                                        }
+                                      )}`
+                                    );
+                                    return;
+                                  }
+
+                                  if (endDate && now > endDate) {
+                                    toast.error(
+                                      "Registration period has ended"
+                                    );
+                                    return;
+                                  }
+
+                                  if (!isProfileComplete) {
+                                    setProfileFormData({
+                                      name: userProfile?.fullName || "",
+                                      studentId: userProfile?.studentId || "",
+                                      faculty:
+                                        userProfile?.faculty === "Unknown"
+                                          ? ""
+                                          : userProfile?.faculty || "",
+                                      major:
+                                        userProfile?.major === "Unknown"
+                                          ? ""
+                                          : userProfile?.major || "",
+                                      year: userProfile?.year || 1,
+                                    });
+                                    setShowProfileCompleteModal(true);
+                                    toast.error(
+                                      "Please complete your profile before joining a club"
+                                    );
+                                    return;
+                                  }
+
+                                  try {
+                                    const response = await fetch(
+                                      `/api/clubs/${club.id}/join`,
+                                      {
+                                        method: "POST",
+                                      }
+                                    );
+
+                                    const data = await response.json();
+
+                                    if (response.ok) {
+                                      toast.success("Registered successfully!");
+
+                                      if (club.registrationLink) {
+                                        window.open(
+                                          club.registrationLink,
+                                          "_blank"
+                                        );
+                                      }
+
+                                      const clubsRes = await fetch(
+                                        "/api/clubs"
+                                      );
+                                      const clubsData = await clubsRes.json();
+                                      setClubs(clubsData);
+                                      const myClubsRes = await fetch(
+                                        "/api/clubs/my-clubs"
+                                      );
+                                      const myClubsData =
+                                        await myClubsRes.json();
+                                      setMyClubs(myClubsData);
+                                    } else {
+                                      toast.error(
+                                        data.error || "Failed to join club"
+                                      );
+                                    }
+                                  } catch (error) {
+                                    toast.error("Failed to join club");
+                                  }
+                                }}
+                              >
+                                {club.isOpenForRegistration
+                                  ? "Register"
+                                  : "Registration Closed"}
+                              </Button>
                             </CardContent>
                           </Card>
                         ))}
@@ -4998,7 +5160,7 @@ function DashboardContent() {
                           <Card key={i} className="animate-pulse">
                             <CardHeader>
                               <div className="flex items-center gap-3">
-                                <div className="w-12 h-12 bg-gray-200 rounded-full"></div>
+                                <div className="w-16 h-12 bg-gray-200 rounded-lg"></div>
                                 <div className="flex-1 space-y-2">
                                   <div className="h-4 bg-gray-200 rounded w-3/4"></div>
                                   <div className="h-3 bg-gray-200 rounded w-1/2"></div>
@@ -5021,12 +5183,12 @@ function DashboardContent() {
                                   <Image
                                     src={club.logoUrl}
                                     alt={club.name}
-                                    width={48}
+                                    width={64}
                                     height={48}
-                                    className="w-12 h-12 rounded-full object-cover"
+                                    className="w-16 h-12 rounded-lg object-cover"
                                   />
                                 ) : (
-                                  <div className="w-12 h-12 bg-dark-blue rounded-full flex items-center justify-center">
+                                  <div className="w-16 h-12 bg-dark-blue rounded-lg flex items-center justify-center">
                                     <Users className="h-6 w-6 text-white" />
                                   </div>
                                 )}
@@ -5047,40 +5209,66 @@ function DashboardContent() {
                               <p className="text-sm text-medium-gray line-clamp-2 mb-3">
                                 {club.description}
                               </p>
-                              <div className="flex items-center justify-between">
-                                <span className="text-xs text-medium-gray">
-                                  {club.memberCount} members
-                                </span>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={async () => {
-                                    try {
-                                      const response = await fetch(
-                                        `/api/clubs/${club.id}/leave`,
-                                        {
-                                          method: "POST",
-                                        }
-                                      );
-                                      if (response.ok) {
-                                        toast.success(
-                                          "Left club successfully!"
-                                        );
-                                        const myClubsRes = await fetch(
-                                          "/api/clubs/my-clubs"
-                                        );
-                                        const myClubsData =
-                                          await myClubsRes.json();
-                                        setMyClubs(myClubsData);
-                                      }
-                                    } catch (error) {
-                                      toast.error("Failed to leave club");
+                              <div className="space-y-2 mb-3">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs text-medium-gray">
+                                    {club.memberCount} members
+                                  </span>
+                                  <Badge
+                                    variant={
+                                      club.isOpenForRegistration
+                                        ? "default"
+                                        : "secondary"
                                     }
-                                  }}
-                                >
-                                  Leave
-                                </Button>
+                                    className="text-xs"
+                                  >
+                                    {club.isOpenForRegistration
+                                      ? "Open"
+                                      : "Closed"}
+                                  </Badge>
+                                </div>
+                                {club.registrationStartDate &&
+                                  club.registrationEndDate && (
+                                    <p className="text-xs text-medium-gray">
+                                      Registration:{" "}
+                                      {new Date(
+                                        club.registrationStartDate
+                                      ).toLocaleDateString()}{" "}
+                                      -{" "}
+                                      {new Date(
+                                        club.registrationEndDate
+                                      ).toLocaleDateString()}
+                                    </p>
+                                  )}
                               </div>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="w-full"
+                                onClick={async () => {
+                                  try {
+                                    const response = await fetch(
+                                      `/api/clubs/${club.id}/leave`,
+                                      {
+                                        method: "POST",
+                                      }
+                                    );
+                                    if (response.ok) {
+                                      toast.success("Left club successfully!");
+                                      const myClubsRes = await fetch(
+                                        "/api/clubs/my-clubs"
+                                      );
+                                      const myClubsData =
+                                        await myClubsRes.json();
+                                      setMyClubs(myClubsData);
+                                    }
+                                  } catch (error) {
+                                    toast.error("Failed to leave club");
+                                  }
+                                }}
+                              >
+                                Leave
+                              </Button>
                             </CardContent>
                           </Card>
                         ))}

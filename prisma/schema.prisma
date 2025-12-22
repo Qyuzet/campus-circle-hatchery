@@ -481,18 +481,23 @@ model EventUpdate {
 }
 
 model Club {
-  id          String       @id @default(cuid())
-  name        String
-  description String
-  logoUrl     String?
-  category    String
-  memberCount Int          @default(0)
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  members     ClubMember[]
+  id                    String       @id @default(cuid())
+  name                  String
+  description           String
+  logoUrl               String?
+  category              String
+  memberCount           Int          @default(0)
+  isOpenForRegistration Boolean      @default(true)
+  registrationStartDate DateTime?
+  registrationEndDate   DateTime?
+  registrationLink      String?
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
+  members               ClubMember[]
 
   @@index([category])
   @@index([createdAt])
+  @@index([isOpenForRegistration])
 }
 
 model ClubMember {

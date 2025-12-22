@@ -29,6 +29,10 @@ export async function GET(request: NextRequest) {
       logoUrl: club.logoUrl,
       category: club.category,
       memberCount: club._count.members,
+      isOpenForRegistration: club.isOpenForRegistration,
+      registrationStartDate: club.registrationStartDate,
+      registrationEndDate: club.registrationEndDate,
+      registrationLink: club.registrationLink,
       createdAt: club.createdAt,
       updatedAt: club.updatedAt,
     }));
@@ -62,7 +66,17 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, description, logoUrl, category } = body;
+    const {
+      name,
+      description,
+      logoUrl,
+      category,
+      memberCount,
+      isOpenForRegistration,
+      registrationStartDate,
+      registrationEndDate,
+      registrationLink,
+    } = body;
 
     if (!name || !description || !category) {
       return NextResponse.json(
@@ -77,6 +91,16 @@ export async function POST(request: NextRequest) {
         description,
         logoUrl: logoUrl || null,
         category,
+        memberCount: memberCount || 0,
+        isOpenForRegistration:
+          isOpenForRegistration !== undefined ? isOpenForRegistration : true,
+        registrationStartDate: registrationStartDate
+          ? new Date(registrationStartDate)
+          : null,
+        registrationEndDate: registrationEndDate
+          ? new Date(registrationEndDate)
+          : null,
+        registrationLink: registrationLink || null,
       },
     });
 

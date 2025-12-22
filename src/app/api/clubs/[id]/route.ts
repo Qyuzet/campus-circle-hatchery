@@ -34,6 +34,10 @@ export async function GET(
       logoUrl: club.logoUrl,
       category: club.category,
       memberCount: club._count.members,
+      isOpenForRegistration: club.isOpenForRegistration,
+      registrationStartDate: club.registrationStartDate,
+      registrationEndDate: club.registrationEndDate,
+      registrationLink: club.registrationLink,
       createdAt: club.createdAt,
       updatedAt: club.updatedAt,
     };
@@ -70,7 +74,17 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { name, description, logoUrl, category } = body;
+    const {
+      name,
+      description,
+      logoUrl,
+      category,
+      memberCount,
+      isOpenForRegistration,
+      registrationStartDate,
+      registrationEndDate,
+      registrationLink,
+    } = body;
 
     const club = await prisma.club.update({
       where: { id: params.id },
@@ -79,6 +93,19 @@ export async function PUT(
         ...(description && { description }),
         ...(logoUrl !== undefined && { logoUrl }),
         ...(category && { category }),
+        ...(memberCount !== undefined && { memberCount }),
+        ...(isOpenForRegistration !== undefined && { isOpenForRegistration }),
+        ...(registrationStartDate !== undefined && {
+          registrationStartDate: registrationStartDate
+            ? new Date(registrationStartDate)
+            : null,
+        }),
+        ...(registrationEndDate !== undefined && {
+          registrationEndDate: registrationEndDate
+            ? new Date(registrationEndDate)
+            : null,
+        }),
+        ...(registrationLink !== undefined && { registrationLink }),
       },
     });
 
