@@ -236,6 +236,9 @@ function DashboardContent() {
   const [marketplaceItems, setMarketplaceItems] = useState<MarketplaceItem[]>(
     []
   );
+  const [isLoadingMarketplace, setIsLoadingMarketplace] = useState(false);
+  const [isLoadingFood, setIsLoadingFood] = useState(false);
+  const [isLoadingEvents, setIsLoadingEvents] = useState(false);
   const [visibleItemsCount, setVisibleItemsCount] = useState(12);
   const [visibleFoodCount, setVisibleFoodCount] = useState(12);
   const [visibleEventCount, setVisibleEventCount] = useState(12);
@@ -801,17 +804,39 @@ function DashboardContent() {
       switch (tab) {
         case "discovery":
           // Progressive loading: load and show items as they arrive
-          marketplaceAPI.getItems().then((items) => {
-            setMarketplaceItems(filterTradableItems(items));
-          });
+          setIsLoadingMarketplace(true);
+          setIsLoadingFood(true);
+          setIsLoadingEvents(true);
 
-          foodAPI.getFoodItems().then((foodData) => {
-            setFoodItems(foodData);
-          });
+          marketplaceAPI
+            .getItems()
+            .then((items) => {
+              setMarketplaceItems(filterTradableItems(items));
+              setIsLoadingMarketplace(false);
+            })
+            .catch(() => {
+              setIsLoadingMarketplace(false);
+            });
 
-          eventAPI.getEvents().then((eventData) => {
-            setEvents(eventData);
-          });
+          foodAPI
+            .getFoodItems()
+            .then((foodData) => {
+              setFoodItems(foodData);
+              setIsLoadingFood(false);
+            })
+            .catch(() => {
+              setIsLoadingFood(false);
+            });
+
+          eventAPI
+            .getEvents()
+            .then((eventData) => {
+              setEvents(eventData);
+              setIsLoadingEvents(false);
+            })
+            .catch(() => {
+              setIsLoadingEvents(false);
+            });
 
           eventAPI.getMyRegistrations().then((myRegistrations) => {
             setMyEventRegistrations(myRegistrations);
@@ -2596,7 +2621,20 @@ function DashboardContent() {
                           : "grid-cols-1"
                       }`}
                     >
-                      {filteredFoodItems.length === 0 ? (
+                      {isLoadingFood ? (
+                        <div className="col-span-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                          {[1, 2, 3, 4, 5, 6].map((i) => (
+                            <Card key={i} className="animate-pulse">
+                              <div className="h-48 bg-gray-200 rounded-t-lg"></div>
+                              <CardContent className="p-4 space-y-3">
+                                <div className="h-6 bg-gray-200 rounded w-3/4"></div>
+                                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                                <div className="h-4 bg-gray-200 rounded w-full"></div>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      ) : filteredFoodItems.length === 0 ? (
                         <Card className="col-span-full">
                           <CardContent className="flex flex-col items-center justify-center py-16">
                             <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mb-4">
@@ -2643,7 +2681,20 @@ function DashboardContent() {
                           : "grid-cols-1"
                       }`}
                     >
-                      {filteredEvents.length === 0 ? (
+                      {isLoadingEvents ? (
+                        <div className="col-span-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                          {[1, 2, 3, 4, 5, 6].map((i) => (
+                            <Card key={i} className="animate-pulse">
+                              <div className="h-48 bg-gray-200 rounded-t-lg"></div>
+                              <CardContent className="p-4 space-y-3">
+                                <div className="h-6 bg-gray-200 rounded w-3/4"></div>
+                                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                                <div className="h-4 bg-gray-200 rounded w-full"></div>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      ) : filteredEvents.length === 0 ? (
                         <Card className="col-span-full">
                           <CardContent className="flex flex-col items-center justify-center py-16">
                             <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mb-4">
@@ -2689,7 +2740,20 @@ function DashboardContent() {
                           : "grid-cols-1"
                       }`}
                     >
-                      {filteredItems.length === 0 ? (
+                      {isLoadingMarketplace ? (
+                        <div className="col-span-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                          {[1, 2, 3, 4, 5, 6].map((i) => (
+                            <Card key={i} className="animate-pulse">
+                              <div className="h-48 bg-gray-200 rounded-t-lg"></div>
+                              <CardContent className="p-4 space-y-3">
+                                <div className="h-6 bg-gray-200 rounded w-3/4"></div>
+                                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                                <div className="h-4 bg-gray-200 rounded w-full"></div>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      ) : filteredItems.length === 0 ? (
                         <Card className="col-span-full">
                           <CardContent className="flex flex-col items-center justify-center py-12">
                             <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
