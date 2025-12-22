@@ -33,6 +33,7 @@ export async function GET(request: NextRequest) {
       registrationStartDate: club.registrationStartDate,
       registrationEndDate: club.registrationEndDate,
       registrationLink: club.registrationLink,
+      websiteUrl: club.websiteUrl,
       createdAt: club.createdAt,
       updatedAt: club.updatedAt,
     }));
@@ -76,6 +77,7 @@ export async function POST(request: NextRequest) {
       registrationStartDate,
       registrationEndDate,
       registrationLink,
+      websiteUrl,
     } = body;
 
     if (!name || !description || !category) {
@@ -101,6 +103,7 @@ export async function POST(request: NextRequest) {
           ? new Date(registrationEndDate)
           : null,
         registrationLink: registrationLink || null,
+        websiteUrl: websiteUrl || null,
       },
     });
 

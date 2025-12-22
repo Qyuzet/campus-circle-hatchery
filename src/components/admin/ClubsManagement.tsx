@@ -29,6 +29,7 @@ interface Club {
   registrationStartDate: string | null;
   registrationEndDate: string | null;
   registrationLink: string | null;
+  websiteUrl: string | null;
   createdAt: string;
   updatedAt: string;
   _count?: {
@@ -67,6 +68,7 @@ export default function ClubsManagement() {
     registrationStartDate: "",
     registrationEndDate: "",
     registrationLink: "",
+    websiteUrl: "",
   });
   const [uploadMethod, setUploadMethod] = useState<"url" | "upload">("url");
   const [uploadingLogo, setUploadingLogo] = useState(false);
@@ -128,6 +130,7 @@ export default function ClubsManagement() {
           registrationStartDate: "",
           registrationEndDate: "",
           registrationLink: "",
+          websiteUrl: "",
         });
         loadClubs();
       } else {
@@ -161,6 +164,7 @@ export default function ClubsManagement() {
           registrationStartDate: "",
           registrationEndDate: "",
           registrationLink: "",
+          websiteUrl: "",
         });
         loadClubs();
       } else {
@@ -246,6 +250,7 @@ export default function ClubsManagement() {
         ? new Date(club.registrationEndDate).toISOString().split("T")[0]
         : "",
       registrationLink: club.registrationLink || "",
+      websiteUrl: club.websiteUrl || "",
     });
     setLogoPreview(club.logoUrl || "");
     setUploadMethod("url");
@@ -264,6 +269,7 @@ export default function ClubsManagement() {
       registrationStartDate: "",
       registrationEndDate: "",
       registrationLink: "",
+      websiteUrl: "",
     });
     setLogoPreview("");
     setUploadMethod("url");
@@ -663,6 +669,27 @@ export default function ClubsManagement() {
                 <p className="text-xs text-gray-500 mt-1">
                   External link (WhatsApp, Telegram, etc.) for additional
                   registration
+                </p>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700 block mb-2">
+                  Website URL (optional)
+                </label>
+                <Input
+                  type="url"
+                  value={formData.websiteUrl}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      websiteUrl: e.target.value,
+                    })
+                  }
+                  placeholder="https://example.com"
+                  className="text-sm"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Club website or social media page
                 </p>
               </div>
 

@@ -5015,6 +5015,19 @@ function DashboardContent() {
                                     </p>
                                   )}
                               </div>
+                              {club.websiteUrl && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="w-full mb-2"
+                                  onClick={() =>
+                                    window.open(club.websiteUrl!, "_blank")
+                                  }
+                                >
+                                  <ExternalLink className="h-3 w-3 mr-1" />
+                                  Visit Website
+                                </Button>
+                              )}
                               <Button
                                 size="sm"
                                 className="w-full"
@@ -5241,6 +5254,19 @@ function DashboardContent() {
                                     </p>
                                   )}
                               </div>
+                              {club.websiteUrl && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="w-full mb-2"
+                                  onClick={() =>
+                                    window.open(club.websiteUrl!, "_blank")
+                                  }
+                                >
+                                  <ExternalLink className="h-3 w-3 mr-1" />
+                                  Visit Website
+                                </Button>
+                              )}
                               <Button
                                 size="sm"
                                 variant="outline"
