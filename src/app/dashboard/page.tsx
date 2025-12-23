@@ -4900,69 +4900,69 @@ function DashboardContent() {
                 {clubsSubTab === "browse" && (
                   <div>
                     {isLoadingClubs ? (
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4">
                         {[1, 2, 3, 4, 5, 6].map((i) => (
                           <Card key={i} className="animate-pulse">
-                            <CardHeader>
-                              <div className="flex items-center gap-3">
-                                <div className="w-16 h-12 bg-gray-200 rounded-lg"></div>
-                                <div className="flex-1 space-y-2">
-                                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                                  <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                            <CardHeader className="p-2 md:p-6">
+                              <div className="flex flex-col md:flex-row items-center gap-1.5 md:gap-3">
+                                <div className="w-14 h-11 md:w-16 md:h-12 bg-gray-200 rounded-md md:rounded-lg"></div>
+                                <div className="flex-1 space-y-1 md:space-y-2 w-full">
+                                  <div className="h-3 md:h-4 bg-gray-200 rounded w-3/4 mx-auto md:mx-0"></div>
+                                  <div className="h-2 md:h-3 bg-gray-200 rounded w-1/2 mx-auto md:mx-0"></div>
                                 </div>
                               </div>
                             </CardHeader>
-                            <CardContent>
-                              <div className="space-y-2">
-                                <div className="h-3 bg-gray-200 rounded"></div>
-                                <div className="h-3 bg-gray-200 rounded w-5/6"></div>
+                            <CardContent className="p-2 md:p-6 pt-0 md:pt-0">
+                              <div className="space-y-1 md:space-y-2">
+                                <div className="h-2 md:h-3 bg-gray-200 rounded"></div>
+                                <div className="h-2 md:h-3 bg-gray-200 rounded w-5/6"></div>
                               </div>
                             </CardContent>
                           </Card>
                         ))}
                       </div>
                     ) : clubs.length > 0 ? (
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4">
                         {clubs.map((club) => (
                           <Card
                             key={club.id}
                             className="hover:shadow-lg transition-shadow"
                           >
-                            <CardHeader>
-                              <div className="flex items-center gap-3">
+                            <CardHeader className="p-2 md:p-6 pb-2 md:pb-6">
+                              <div className="flex flex-col md:flex-row items-center gap-1.5 md:gap-3">
                                 {club.logoUrl ? (
                                   <Image
                                     src={club.logoUrl}
                                     alt={club.name}
                                     width={64}
                                     height={48}
-                                    className="w-16 h-12 rounded-lg object-contain bg-white"
+                                    className="w-14 h-11 md:w-16 md:h-12 rounded-md md:rounded-lg object-contain bg-white"
                                   />
                                 ) : (
-                                  <div className="w-16 h-12 bg-dark-blue rounded-lg flex items-center justify-center">
-                                    <Users className="h-6 w-6 text-white" />
+                                  <div className="w-14 h-11 md:w-16 md:h-12 bg-dark-blue rounded-md md:rounded-lg flex items-center justify-center">
+                                    <Users className="h-5 w-5 md:h-6 md:w-6 text-white" />
                                   </div>
                                 )}
-                                <div className="flex-1">
-                                  <CardTitle className="text-base">
+                                <div className="flex-1 text-center md:text-left w-full">
+                                  <CardTitle className="text-xs md:text-base leading-tight md:leading-normal line-clamp-2 md:line-clamp-none">
                                     {club.name}
                                   </CardTitle>
                                   <Badge
                                     variant="secondary"
-                                    className="text-xs mt-1"
+                                    className="text-[10px] md:text-xs mt-0.5 md:mt-1 px-1.5 md:px-2.5 py-0 md:py-0.5"
                                   >
                                     {club.category}
                                   </Badge>
                                 </div>
                               </div>
                             </CardHeader>
-                            <CardContent>
-                              <p className="text-sm text-medium-gray line-clamp-2 mb-3">
+                            <CardContent className="p-2 md:p-6 pt-0 md:pt-0">
+                              <p className="text-[10px] md:text-sm text-medium-gray line-clamp-2 mb-1.5 md:mb-3 leading-tight md:leading-normal">
                                 {club.description}
                               </p>
-                              <div className="space-y-2 mb-3">
+                              <div className="space-y-1 md:space-y-2 mb-1.5 md:mb-3">
                                 <div className="flex items-center justify-between">
-                                  <span className="text-xs text-medium-gray">
+                                  <span className="text-[10px] md:text-xs text-medium-gray">
                                     {club.memberCount} members
                                   </span>
                                   <Badge
@@ -4984,7 +4984,7 @@ function DashboardContent() {
                                         return "secondary";
                                       return "default";
                                     })()}
-                                    className="text-xs"
+                                    className="text-[10px] md:text-xs px-1.5 md:px-2.5 py-0 md:py-0.5"
                                   >
                                     {(() => {
                                       const now = new Date();
@@ -5016,7 +5016,7 @@ function DashboardContent() {
 
                                   if (isNotYetOpen) {
                                     return (
-                                      <p className="text-xs text-amber-600 font-medium">
+                                      <p className="text-[10px] md:text-xs text-amber-600 font-medium">
                                         Opens on{" "}
                                         {startDate.toLocaleDateString("en-US", {
                                           month: "long",
@@ -5029,7 +5029,7 @@ function DashboardContent() {
                                 })()}
                                 {club.registrationStartDate &&
                                   club.registrationEndDate && (
-                                    <p className="text-xs text-medium-gray">
+                                    <p className="text-[10px] md:text-xs text-medium-gray leading-tight md:leading-normal">
                                       Registration:{" "}
                                       {new Date(
                                         club.registrationStartDate
@@ -5045,18 +5045,21 @@ function DashboardContent() {
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  className="w-full mb-2"
+                                  className="w-full mb-1 md:mb-2 text-[10px] md:text-sm h-7 md:h-9 px-2 md:px-4"
                                   onClick={() =>
                                     window.open(club.websiteUrl!, "_blank")
                                   }
                                 >
-                                  <ExternalLink className="h-3 w-3 mr-1" />
-                                  Visit Website
+                                  <ExternalLink className="h-2.5 w-2.5 md:h-3 md:w-3 mr-1" />
+                                  <span className="hidden md:inline">
+                                    Visit Website
+                                  </span>
+                                  <span className="md:hidden">Website</span>
                                 </Button>
                               )}
                               <Button
                                 size="sm"
-                                className="w-full"
+                                className="w-full text-[10px] md:text-sm h-7 md:h-9 px-2 md:px-4"
                                 disabled={(() => {
                                   const now = new Date();
                                   const startDate = club.registrationStartDate
@@ -5290,15 +5293,15 @@ function DashboardContent() {
                 {clubsSubTab === "my-clubs" && (
                   <div>
                     {isLoadingClubs ? (
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4">
                         {[1, 2, 3].map((i) => (
                           <Card key={i} className="animate-pulse">
-                            <CardHeader>
-                              <div className="flex items-center gap-3">
-                                <div className="w-16 h-12 bg-gray-200 rounded-lg"></div>
-                                <div className="flex-1 space-y-2">
-                                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                                  <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                            <CardHeader className="p-2 md:p-6">
+                              <div className="flex flex-col md:flex-row items-center gap-1.5 md:gap-3">
+                                <div className="w-14 h-11 md:w-16 md:h-12 bg-gray-200 rounded-md md:rounded-lg"></div>
+                                <div className="flex-1 space-y-1 md:space-y-2 w-full">
+                                  <div className="h-3 md:h-4 bg-gray-200 rounded w-3/4 mx-auto md:mx-0"></div>
+                                  <div className="h-2 md:h-3 bg-gray-200 rounded w-1/2 mx-auto md:mx-0"></div>
                                 </div>
                               </div>
                             </CardHeader>
@@ -5306,47 +5309,47 @@ function DashboardContent() {
                         ))}
                       </div>
                     ) : myClubs.length > 0 ? (
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4">
                         {myClubs.map((club) => (
                           <Card
                             key={club.id}
                             className="hover:shadow-lg transition-shadow"
                           >
-                            <CardHeader>
-                              <div className="flex items-center gap-3">
+                            <CardHeader className="p-2 md:p-6 pb-2 md:pb-6">
+                              <div className="flex flex-col md:flex-row items-center gap-1.5 md:gap-3">
                                 {club.logoUrl ? (
                                   <Image
                                     src={club.logoUrl}
                                     alt={club.name}
                                     width={64}
                                     height={48}
-                                    className="w-16 h-12 rounded-lg object-contain bg-white"
+                                    className="w-14 h-11 md:w-16 md:h-12 rounded-md md:rounded-lg object-contain bg-white"
                                   />
                                 ) : (
-                                  <div className="w-16 h-12 bg-dark-blue rounded-lg flex items-center justify-center">
-                                    <Users className="h-6 w-6 text-white" />
+                                  <div className="w-14 h-11 md:w-16 md:h-12 bg-dark-blue rounded-md md:rounded-lg flex items-center justify-center">
+                                    <Users className="h-5 w-5 md:h-6 md:w-6 text-white" />
                                   </div>
                                 )}
-                                <div className="flex-1">
-                                  <CardTitle className="text-base">
+                                <div className="flex-1 text-center md:text-left w-full">
+                                  <CardTitle className="text-xs md:text-base leading-tight md:leading-normal line-clamp-2 md:line-clamp-none">
                                     {club.name}
                                   </CardTitle>
                                   <Badge
                                     variant="secondary"
-                                    className="text-xs mt-1"
+                                    className="text-[10px] md:text-xs mt-0.5 md:mt-1 px-1.5 md:px-2.5 py-0 md:py-0.5"
                                   >
                                     {club.category}
                                   </Badge>
                                 </div>
                               </div>
                             </CardHeader>
-                            <CardContent>
-                              <p className="text-sm text-medium-gray line-clamp-2 mb-3">
+                            <CardContent className="p-2 md:p-6 pt-0 md:pt-0">
+                              <p className="text-[10px] md:text-sm text-medium-gray line-clamp-2 mb-1.5 md:mb-3 leading-tight md:leading-normal">
                                 {club.description}
                               </p>
-                              <div className="space-y-2 mb-3">
+                              <div className="space-y-1 md:space-y-2 mb-1.5 md:mb-3">
                                 <div className="flex items-center justify-between">
-                                  <span className="text-xs text-medium-gray">
+                                  <span className="text-[10px] md:text-xs text-medium-gray">
                                     {club.memberCount} members
                                   </span>
                                   <Badge
@@ -5355,7 +5358,7 @@ function DashboardContent() {
                                         ? "default"
                                         : "secondary"
                                     }
-                                    className="text-xs"
+                                    className="text-[10px] md:text-xs px-1.5 md:px-2.5 py-0 md:py-0.5"
                                   >
                                     {club.isOpenForRegistration
                                       ? "Open"
@@ -5364,7 +5367,7 @@ function DashboardContent() {
                                 </div>
                                 {club.registrationStartDate &&
                                   club.registrationEndDate && (
-                                    <p className="text-xs text-medium-gray">
+                                    <p className="text-[10px] md:text-xs text-medium-gray leading-tight md:leading-normal">
                                       Registration:{" "}
                                       {new Date(
                                         club.registrationStartDate
@@ -5380,19 +5383,22 @@ function DashboardContent() {
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  className="w-full mb-2"
+                                  className="w-full mb-1 md:mb-2 text-[10px] md:text-sm h-7 md:h-9 px-2 md:px-4"
                                   onClick={() =>
                                     window.open(club.websiteUrl!, "_blank")
                                   }
                                 >
-                                  <ExternalLink className="h-3 w-3 mr-1" />
-                                  Visit Website
+                                  <ExternalLink className="h-2.5 w-2.5 md:h-3 md:w-3 mr-1" />
+                                  <span className="hidden md:inline">
+                                    Visit Website
+                                  </span>
+                                  <span className="md:hidden">Website</span>
                                 </Button>
                               )}
                               <Button
                                 size="sm"
                                 variant="outline"
-                                className="w-full"
+                                className="w-full text-[10px] md:text-sm h-7 md:h-9 px-2 md:px-4"
                                 onClick={async () => {
                                   try {
                                     const response = await fetch(
