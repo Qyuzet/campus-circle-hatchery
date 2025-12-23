@@ -25,6 +25,8 @@ interface Club {
   logoUrl: string | null;
   category: string;
   memberCount: number;
+  initialMemberCount?: number;
+  actualMemberCount?: number;
   isOpenForRegistration: boolean;
   registrationStartDate: string | null;
   registrationEndDate: string | null;
@@ -308,7 +310,7 @@ export default function ClubsManagement() {
       description: club.description,
       logoUrl: club.logoUrl || "",
       category: club.category,
-      memberCount: club.memberCount,
+      memberCount: club.initialMemberCount ?? club.memberCount,
       isOpenForRegistration: club.isOpenForRegistration,
       registrationStartDate: club.registrationStartDate
         ? new Date(club.registrationStartDate).toISOString().split("T")[0]
@@ -401,6 +403,14 @@ export default function ClubsManagement() {
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-gray-500">
                     {club.memberCount} members
+                    {club.initialMemberCount !== undefined &&
+                      club.actualMemberCount !== undefined && (
+                        <span className="text-gray-400">
+                          {" "}
+                          ({club.initialMemberCount} initial +{" "}
+                          {club.actualMemberCount} app)
+                        </span>
+                      )}
                   </span>
                   <Badge
                     variant={

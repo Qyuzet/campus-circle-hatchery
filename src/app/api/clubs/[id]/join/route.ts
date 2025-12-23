@@ -116,15 +116,6 @@ export async function POST(
       },
     });
 
-    await prisma.club.update({
-      where: { id: params.id },
-      data: {
-        memberCount: {
-          increment: 1,
-        },
-      },
-    });
-
     return NextResponse.json(
       {
         membership,

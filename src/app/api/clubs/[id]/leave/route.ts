@@ -52,15 +52,6 @@ export async function POST(
       },
     });
 
-    await prisma.club.update({
-      where: { id: params.id },
-      data: {
-        memberCount: {
-          decrement: 1,
-        },
-      },
-    });
-
     return NextResponse.json({ message: "Left club successfully" });
   } catch (error) {
     console.error("Error leaving club:", error);
