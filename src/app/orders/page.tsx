@@ -325,7 +325,7 @@ export default function OrdersPage() {
 
         <div className="lg:flex lg:gap-6">
           {/* Sidebar */}
-          <div className="hidden lg:block lg:w-64 lg:flex-shrink-0">
+          <div className="hidden">
             <div className="bg-white rounded-lg shadow p-6 sticky top-24">
               <nav className="space-y-1">
                 <button
