@@ -35,7 +35,7 @@ async function setupStorage() {
     const { data: updateData, error: updateError } =
       await supabase.storage.updateBucket("study-materials", {
         public: true,
-        fileSizeLimit: 10485760,
+        fileSizeLimit: 20971520,
         allowedMimeTypes: [
           "application/pdf",
           "application/msword",
@@ -57,7 +57,7 @@ async function setupStorage() {
       "study-materials",
       {
         public: true,
-        fileSizeLimit: 10485760,
+        fileSizeLimit: 20971520,
         allowedMimeTypes: [
           "application/pdf",
           "application/msword",

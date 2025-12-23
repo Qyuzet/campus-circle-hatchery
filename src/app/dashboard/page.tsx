@@ -9100,6 +9100,58 @@ function AddItemForm({
   return (
     <>
       <form onSubmit={handleSubmit} className="space-y-2.5">
+        {/* File Upload - Moved to top */}
+        <div>
+          <label className="flex items-center gap-1.5 text-xs font-medium text-dark-gray mb-0.5">
+            Upload File (PDF, Word, or Image) *
+            <span className="flex items-center gap-0.5 text-[10px] text-purple-600 font-normal">
+              <Sparkles className="h-2.5 w-2.5" />
+              AI Auto-fill enabled
+            </span>
+          </label>
+          <div className="mt-0.5">
+            <input
+              type="file"
+              onChange={handleFileChange}
+              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png"
+              className="w-full px-2 py-1 border border-light-gray rounded-md focus:outline-none focus:ring-1 focus:ring-dark-blue focus:border-dark-blue text-xs"
+              required
+            />
+            {isAnalyzingStudyMaterial && (
+              <div className="mt-1.5 p-1.5 bg-purple-50 border border-purple-200 rounded-md flex items-center gap-1.5">
+                <Loader2 className="h-3 w-3 text-purple-600 animate-spin" />
+                <span className="text-xs text-purple-700">
+                  Analyzing document with AI...
+                </span>
+              </div>
+            )}
+            {uploadedFile && !isAnalyzingStudyMaterial && (
+              <div className="mt-1.5 p-1.5 bg-green-50 border border-green-200 rounded-md flex items-center justify-between">
+                <div className="flex items-center space-x-1.5">
+                  <FileText className="h-3 w-3 text-green-600" />
+                  <span className="text-xs text-green-700 truncate">
+                    {uploadedFile.name}
+                  </span>
+                  <span className="text-[10px] text-green-600">
+                    ({(uploadedFile.size / 1024 / 1024).toFixed(2)} MB)
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setUploadedFile(null)}
+                  className="text-red-600 hover:text-red-800"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            )}
+          </div>
+          <p className="text-[10px] text-medium-gray mt-0.5">
+            AI will automatically analyze your file and fill in the form.
+            Supports PDF, Word, and Image files. Max file size: 20MB.
+          </p>
+        </div>
+
         <div>
           <label className="block text-xs font-medium text-dark-gray mb-0.5">
             Title *
@@ -9178,58 +9230,6 @@ function AddItemForm({
               placeholder="e.g., COMP6048"
             />
           </div>
-        </div>
-
-        {/* File Upload */}
-        <div>
-          <label className="flex items-center gap-1.5 text-xs font-medium text-dark-gray mb-0.5">
-            Upload File (PDF, Word, or Image) *
-            <span className="flex items-center gap-0.5 text-[10px] text-purple-600 font-normal">
-              <Sparkles className="h-2.5 w-2.5" />
-              AI Auto-fill enabled
-            </span>
-          </label>
-          <div className="mt-0.5">
-            <input
-              type="file"
-              onChange={handleFileChange}
-              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png"
-              className="w-full px-2 py-1 border border-light-gray rounded-md focus:outline-none focus:ring-1 focus:ring-dark-blue focus:border-dark-blue text-xs"
-              required
-            />
-            {isAnalyzingStudyMaterial && (
-              <div className="mt-1.5 p-1.5 bg-purple-50 border border-purple-200 rounded-md flex items-center gap-1.5">
-                <Loader2 className="h-3 w-3 text-purple-600 animate-spin" />
-                <span className="text-xs text-purple-700">
-                  Analyzing document with AI...
-                </span>
-              </div>
-            )}
-            {uploadedFile && !isAnalyzingStudyMaterial && (
-              <div className="mt-1.5 p-1.5 bg-green-50 border border-green-200 rounded-md flex items-center justify-between">
-                <div className="flex items-center space-x-1.5">
-                  <FileText className="h-3 w-3 text-green-600" />
-                  <span className="text-xs text-green-700 truncate">
-                    {uploadedFile.name}
-                  </span>
-                  <span className="text-[10px] text-green-600">
-                    ({(uploadedFile.size / 1024 / 1024).toFixed(2)} MB)
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setUploadedFile(null)}
-                  className="text-red-600 hover:text-red-800"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </div>
-            )}
-          </div>
-          <p className="text-[10px] text-medium-gray mt-0.5">
-            AI will automatically analyze your file and fill in the form.
-            Supports PDF, Word, and Image files. Max file size: 10MB.
-          </p>
         </div>
 
         {/* Upload Progress */}
