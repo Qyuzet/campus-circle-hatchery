@@ -17,6 +17,7 @@ import {
   RefreshCw,
   Wallet,
   FileImage,
+  Brain,
 } from "lucide-react";
 
 import DashboardOverview from "@/components/admin/DashboardOverview";
@@ -27,6 +28,7 @@ import ConversationsMonitor from "@/components/admin/ConversationsMonitor";
 import WithdrawalManagement from "@/components/admin/WithdrawalManagement";
 import DocumentThumbnails from "@/components/admin/DocumentThumbnails";
 import ClubsManagement from "@/components/admin/ClubsManagement";
+import AIMetadataGenerator from "@/components/admin/AIMetadataGenerator";
 
 type Section =
   | "dashboard"
@@ -36,6 +38,7 @@ type Section =
   | "conversations"
   | "withdrawals"
   | "thumbnails"
+  | "ai-metadata"
   | "clubs";
 
 export default function AdminPage() {
@@ -98,6 +101,7 @@ export default function AdminPage() {
     { id: "clubs" as const, name: "Clubs", icon: Users },
     { id: "withdrawals" as const, name: "Withdrawals", icon: Wallet },
     { id: "thumbnails" as const, name: "Thumbnails", icon: FileImage },
+    { id: "ai-metadata" as const, name: "AI Metadata", icon: Brain },
   ];
 
   return (
@@ -209,6 +213,7 @@ export default function AdminPage() {
           {activeSection === "clubs" && <ClubsManagement />}
           {activeSection === "withdrawals" && <WithdrawalManagement />}
           {activeSection === "thumbnails" && <DocumentThumbnails />}
+          {activeSection === "ai-metadata" && <AIMetadataGenerator />}
         </main>
       </div>
     </div>
