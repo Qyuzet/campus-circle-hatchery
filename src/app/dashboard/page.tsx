@@ -9148,7 +9148,7 @@ function AddItemForm({
           </div>
           <p className="text-[10px] text-medium-gray mt-0.5">
             AI will automatically analyze your file and fill in the form.
-            Supports PDF, Word, and Image files. Max file size: 20MB.
+            Supports PDF, Word, and Image files. Max file size: 24MB.
           </p>
         </div>
 
@@ -9336,7 +9336,7 @@ function AddItemForm({
                             Maximum Allowed:
                           </span>
                           <span className="font-medium text-red-600">
-                            15.00 MB
+                            24.00 MB
                           </span>
                         </div>
                       </div>
@@ -9345,6 +9345,58 @@ function AddItemForm({
                       Would you like to try a more aggressive compression? This
                       may reduce quality but will make the file smaller.
                     </p>
+                  </div>
+                )}
+                {pendingUploadFile && (
+                  <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-sm text-blue-900 mb-2">
+                      Or use an external compression tool:
+                    </p>
+                    <a
+                      href={
+                        pendingUploadFile.type === "application/pdf"
+                          ? "https://www.ilovepdf.com/compress_pdf"
+                          : pendingUploadFile.type === "image/png"
+                          ? "https://www.iloveimg.com/compress-image/compress-png"
+                          : pendingUploadFile.type === "image/jpeg" ||
+                            pendingUploadFile.type === "image/jpg"
+                          ? "https://www.iloveimg.com/compress-image/compress-jpg"
+                          : pendingUploadFile.type === "application/msword" ||
+                            pendingUploadFile.type ===
+                              "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                          ? "https://www.docucompress.com/word/"
+                          : "#"
+                      }
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-800 font-medium underline"
+                    >
+                      {pendingUploadFile.type === "application/pdf"
+                        ? "Compress PDF Online"
+                        : pendingUploadFile.type === "image/png"
+                        ? "Compress PNG Online"
+                        : pendingUploadFile.type === "image/jpeg" ||
+                          pendingUploadFile.type === "image/jpg"
+                        ? "Compress JPG Online"
+                        : pendingUploadFile.type === "application/msword" ||
+                          pendingUploadFile.type ===
+                            "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                        ? "Compress Word Document Online"
+                        : "Compress File Online"}
+                      <svg
+                        className="h-3.5 w-3.5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                        />
+                      </svg>
+                    </a>
                   </div>
                 )}
               </div>
