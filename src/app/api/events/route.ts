@@ -152,6 +152,7 @@ export async function POST(request: NextRequest) {
       contactEmail,
       contactPhone,
       isPublished,
+      aiMetadata,
     } = body;
 
     if (
@@ -195,6 +196,7 @@ export async function POST(request: NextRequest) {
         contactEmail,
         contactPhone,
         isPublished: isPublished || false,
+        aiMetadata: aiMetadata || null,
         organizerId: dbUser.id,
       },
       include: {

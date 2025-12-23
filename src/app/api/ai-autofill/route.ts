@@ -51,7 +51,17 @@ export async function POST(request: NextRequest) {
   "allergens": ["Array of potential allergens from: Nuts, Dairy, Gluten, Eggs, Soy, Shellfish, Fish"],
   "isVegan": true/false,
   "isVegetarian": true/false,
-  "isHalal": true/false (best guess based on visible ingredients)
+  "isHalal": true/false (best guess based on visible ingredients),
+  "metadata": {
+    "analyzedAt": "${new Date().toISOString()}",
+    "contentSummary": "Detailed summary of the food item for AI indexing",
+    "keywords": ["array", "of", "relevant", "keywords"],
+    "cuisine": "Type of cuisine if identifiable",
+    "servingSize": "Estimated serving size if visible",
+    "nutritionalHighlights": "Brief nutritional highlights if identifiable",
+    "visualDescription": "Detailed visual description of the food",
+    "confidence": "high/medium/low - confidence level of the analysis"
+  }
 }
 
 Only return valid JSON, no additional text.`;
@@ -70,7 +80,18 @@ Only return valid JSON, no additional text.`;
   "contactEmail": "Contact email if visible",
   "contactPhone": "Contact phone if visible",
   "tags": "Comma-separated relevant tags",
-  "requirements": "Any requirements or prerequisites mentioned"
+  "requirements": "Any requirements or prerequisites mentioned",
+  "metadata": {
+    "analyzedAt": "${new Date().toISOString()}",
+    "contentSummary": "Comprehensive summary of the event for AI indexing",
+    "keywords": ["array", "of", "relevant", "keywords"],
+    "targetAudience": "Intended audience for the event",
+    "eventFormat": "Format of the event (workshop, seminar, competition, etc.)",
+    "visualElements": "Description of visual elements in the poster",
+    "callToAction": "Any call to action mentioned",
+    "highlights": "Key highlights or selling points of the event",
+    "confidence": "high/medium/low - confidence level of the analysis"
+  }
 }
 
 Only return valid JSON, no additional text.`;
@@ -80,7 +101,23 @@ Only return valid JSON, no additional text.`;
   "title": "Title of the material (from cover page, header, or document title)",
   "description": "Brief description of the content (summarize the main topics or purpose)",
   "category": "One of: Notes, Textbooks, Assignments, Past Papers, Projects, Other",
-  "course": "Course name, course code, or subject if visible (e.g., COMP6048, Data Structures)"
+  "course": "Course name, course code, or subject if visible (e.g., COMP6048, Data Structures)",
+  "metadata": {
+    "analyzedAt": "${new Date().toISOString()}",
+    "contentSummary": "Detailed summary of the study material for AI indexing",
+    "keywords": ["array", "of", "relevant", "keywords", "and", "topics"],
+    "topics": ["main", "topics", "covered"],
+    "academicLevel": "Estimated academic level (undergraduate, graduate, etc.)",
+    "subject": "Main subject area",
+    "documentType": "Type of document (lecture notes, textbook, assignment, etc.)",
+    "language": "Primary language of the content",
+    "pageCount": "Estimated number of pages if visible",
+    "hasImages": true/false,
+    "hasDiagrams": true/false,
+    "hasCode": true/false,
+    "hasMath": true/false,
+    "confidence": "high/medium/low - confidence level of the analysis"
+  }
 }
 
 Only return valid JSON, no additional text.`;

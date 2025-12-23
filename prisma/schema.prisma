@@ -79,6 +79,7 @@ model MarketplaceItem {
   fileSize      Int?
   fileType      String?
   thumbnailUrl  String?
+  aiMetadata    Json?
   seller        User           @relation(fields: [sellerId], references: [id], onDelete: Cascade)
   reviews       Review[]
   transactions  Transaction[]
@@ -350,6 +351,7 @@ model FoodItem {
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
   sellerId       String
+  aiMetadata     Json?
   seller         User          @relation(fields: [sellerId], references: [id], onDelete: Cascade)
   orders         FoodOrder[]
   reviews        FoodReview[]
@@ -424,6 +426,7 @@ model Event {
   createdAt            DateTime           @default(now())
   updatedAt            DateTime           @updatedAt
   organizerId          String
+  aiMetadata           Json?
   organizerUser        User               @relation("EventOrganizer", fields: [organizerId], references: [id], onDelete: Cascade)
   participants         EventParticipant[]
   reviews              EventReview[]

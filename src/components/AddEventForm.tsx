@@ -50,6 +50,7 @@ export function AddEventForm({ onSubmit, onCancel }: AddEventFormProps) {
   const [bannerPreview, setBannerPreview] = useState<string>("");
   const [isUploading, setIsUploading] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [aiMetadata, setAiMetadata] = useState<any>(null);
 
   const handleBannerSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -114,6 +115,19 @@ export function AddEventForm({ onSubmit, onCancel }: AddEventFormProps) {
           tags: aiData.tags || prev.tags,
           requirements: aiData.requirements || prev.requirements,
         }));
+
+        const metadata = {
+          analyzedAt: new Date().toISOString(),
+          aiModel: "gemini-2.5-flash",
+          fileInfo: {
+            originalName: file.name,
+            fileType: file.type,
+            fileSize: file.size,
+          },
+          extractedData: aiData,
+          ...(aiData.metadata || {}),
+        };
+        setAiMetadata(metadata);
 
         toast.success("Form auto-filled with AI suggestions!", {
           description: "Review and adjust the information as needed.",
@@ -189,6 +203,7 @@ export function AddEventForm({ onSubmit, onCancel }: AddEventFormProps) {
       maxParticipants: formData.maxParticipants
         ? parseInt(formData.maxParticipants)
         : null,
+      aiMetadata,
     });
   };
 

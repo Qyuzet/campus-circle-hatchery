@@ -119,6 +119,7 @@ export async function POST(request: NextRequest) {
       fileSize,
       fileType,
       thumbnailUrl,
+      aiMetadata,
     } = body;
 
     // Validation
@@ -165,6 +166,7 @@ export async function POST(request: NextRequest) {
         fileSize: fileSize ? parseInt(fileSize) : null,
         fileType: fileType || null,
         thumbnailUrl: thumbnailUrl || null,
+        aiMetadata: aiMetadata || null,
         sellerId: user.id,
         status: "available",
       },

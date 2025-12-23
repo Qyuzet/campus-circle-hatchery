@@ -45,6 +45,7 @@ export function AddFoodForm({ onSubmit, onCancel }: AddFoodFormProps) {
   const [imagePreview, setImagePreview] = useState<string>("");
   const [isUploading, setIsUploading] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [aiMetadata, setAiMetadata] = useState<any>(null);
 
   const allergenOptions = [
     "Nuts",
@@ -123,6 +124,19 @@ export function AddFoodForm({ onSubmit, onCancel }: AddFoodFormProps) {
           isHalal: aiData.isHalal ?? prev.isHalal,
         }));
 
+        const metadata = {
+          analyzedAt: new Date().toISOString(),
+          aiModel: "gemini-2.5-flash",
+          fileInfo: {
+            originalName: file.name,
+            fileType: file.type,
+            fileSize: file.size,
+          },
+          extractedData: aiData,
+          ...(aiData.metadata || {}),
+        };
+        setAiMetadata(metadata);
+
         toast.success("Form auto-filled with AI suggestions!", {
           description: "Review and adjust the information as needed.",
         });
@@ -189,6 +203,7 @@ export function AddFoodForm({ onSubmit, onCancel }: AddFoodFormProps) {
     onSubmit({
       ...formData,
       imageUrl,
+      aiMetadata,
     });
   };
 

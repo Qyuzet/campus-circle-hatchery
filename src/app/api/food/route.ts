@@ -135,6 +135,7 @@ export async function POST(request: NextRequest) {
       isHalal,
       isVegan,
       isVegetarian,
+      aiMetadata,
     } = body;
 
     if (
@@ -170,6 +171,7 @@ export async function POST(request: NextRequest) {
         isHalal: isHalal || false,
         isVegan: isVegan || false,
         isVegetarian: isVegetarian || false,
+        aiMetadata: aiMetadata || null,
         sellerId: dbUser.id,
       },
       include: {

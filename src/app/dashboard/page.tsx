@@ -8686,6 +8686,7 @@ function AddItemForm({
   const [compressionAttempts, setCompressionAttempts] = useState(0);
   const [isAnalyzingStudyMaterial, setIsAnalyzingStudyMaterial] =
     useState(false);
+  const [aiMetadata, setAiMetadata] = useState<any>(null);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -8747,6 +8748,19 @@ function AddItemForm({
           category: aiData.category || prev.category,
           course: aiData.course || prev.course,
         }));
+
+        const metadata = {
+          analyzedAt: new Date().toISOString(),
+          aiModel: "gemini-2.5-flash",
+          fileInfo: {
+            originalName: file.name,
+            fileType: file.type,
+            fileSize: file.size,
+          },
+          extractedData: aiData,
+          ...(aiData.metadata || {}),
+        };
+        setAiMetadata(metadata);
 
         toast.success("Form auto-filled with AI suggestions!", {
           description: "Review and adjust the information as needed.",
@@ -8928,6 +8942,7 @@ function AddItemForm({
         ...formData,
         price: parseInt(formData.price),
         ...fileData,
+        aiMetadata,
       });
 
       setUploadProgress(100);
@@ -9056,6 +9071,7 @@ function AddItemForm({
           ...formData,
           price: parseInt(formData.price),
           ...fileData,
+          aiMetadata,
         });
 
         setUploadProgress(100);
