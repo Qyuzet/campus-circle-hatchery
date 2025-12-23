@@ -50,6 +50,7 @@ model User {
   wishlistItems        WishlistItem[]
   withdrawals          Withdrawal[]
   clubMemberships      ClubMember[]
+  clubJoinRequests     ClubJoinRequest[] @relation("UserClubRequests")
 
   @@index([studentId])
   @@index([email])
@@ -481,20 +482,22 @@ model EventUpdate {
 }
 
 model Club {
-  id                    String       @id @default(cuid())
+  id                    String            @id @default(cuid())
   name                  String
   description           String
   logoUrl               String?
   category              String
-  memberCount           Int          @default(0)
-  isOpenForRegistration Boolean      @default(true)
+  memberCount           Int               @default(0)
+  isOpenForRegistration Boolean           @default(true)
   registrationStartDate DateTime?
   registrationEndDate   DateTime?
   registrationLink      String?
   websiteUrl            String?
-  createdAt             DateTime     @default(now())
-  updatedAt             DateTime     @updatedAt
+  joinMode              String            @default("DIRECT")
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
   members               ClubMember[]
+  joinRequests          ClubJoinRequest[] @relation("ClubJoinRequests")
 
   @@index([category])
   @@index([createdAt])
@@ -505,6 +508,7 @@ model ClubMember {
   id        String   @id @default(cuid())
   clubId    String
   userId    String
+  status    String   @default("JOINED")
   joinedAt  DateTime @default(now())
   club      Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -512,4 +516,21 @@ model ClubMember {
   @@unique([clubId, userId])
   @@index([clubId])
   @@index([userId])
+  @@index([status])
+}
+
+model ClubJoinRequest {
+  id          String   @id @default(cuid())
+  clubId      String
+  userId      String
+  status      String   @default("PENDING")
+  requestedAt DateTime @default(now())
+  respondedAt DateTime?
+  club        Club     @relation("ClubJoinRequests", fields: [clubId], references: [id], onDelete: Cascade)
+  user        User     @relation("UserClubRequests", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([clubId, userId])
+  @@index([clubId])
+  @@index([userId])
+  @@index([status])
 }

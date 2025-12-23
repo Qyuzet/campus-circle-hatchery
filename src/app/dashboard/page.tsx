@@ -244,6 +244,9 @@ function DashboardContent() {
   const [isLoadingClubs, setIsLoadingClubs] = useState(false);
   const [clubs, setClubs] = useState<any[]>([]);
   const [myClubs, setMyClubs] = useState<any[]>([]);
+  const [clubJoinRequests, setClubJoinRequests] = useState<Map<string, any>>(
+    new Map()
+  );
   const [clubsSubTab, setClubsSubTab] = useState<"browse" | "my-clubs">(
     "browse"
   );
@@ -890,6 +893,29 @@ function DashboardContent() {
             const myClubsData = await myClubsRes.json();
             setClubs(clubsData);
             setMyClubs(myClubsData);
+
+            const requestsMap = new Map();
+            await Promise.all(
+              clubsData.map(async (club: any) => {
+                try {
+                  const statusRes = await fetch(
+                    `/api/clubs/${club.id}/request-status`
+                  );
+                  if (statusRes.ok) {
+                    const { request } = await statusRes.json();
+                    if (request) {
+                      requestsMap.set(club.id, request);
+                    }
+                  }
+                } catch (error) {
+                  console.error(
+                    `Error loading request status for club ${club.id}:`,
+                    error
+                  );
+                }
+              })
+            );
+            setClubJoinRequests(requestsMap);
           } catch (error) {
             console.error("Error loading clubs:", error);
           } finally {
@@ -4910,7 +4936,7 @@ function DashboardContent() {
                                     alt={club.name}
                                     width={64}
                                     height={48}
-                                    className="w-16 h-12 rounded-lg object-cover"
+                                    className="w-16 h-12 rounded-lg object-contain bg-white"
                                   />
                                 ) : (
                                   <div className="w-16 h-12 bg-dark-blue rounded-lg flex items-center justify-center">
@@ -5039,10 +5065,17 @@ function DashboardContent() {
                                   const endDate = club.registrationEndDate
                                     ? new Date(club.registrationEndDate)
                                     : null;
+                                  const request = clubJoinRequests.get(club.id);
+                                  const isMember = myClubs.some(
+                                    (c) => c.id === club.id
+                                  );
 
+                                  if (isMember) return true;
                                   if (!club.isOpenForRegistration) return true;
                                   if (startDate && now < startDate) return true;
                                   if (endDate && now > endDate) return true;
+                                  if (request?.status === "PENDING")
+                                    return true;
                                   return false;
                                 })()}
                                 onClick={async () => {
@@ -5053,6 +5086,9 @@ function DashboardContent() {
                                   const endDate = club.registrationEndDate
                                     ? new Date(club.registrationEndDate)
                                     : null;
+                                  const request = clubJoinRequests.get(club.id);
+                                  const joinMode =
+                                    (club as any).joinMode || "DIRECT";
 
                                   if (!club.isOpenForRegistration) {
                                     toast.error(
@@ -5097,55 +5133,141 @@ function DashboardContent() {
                                     });
                                     setShowProfileCompleteModal(true);
                                     toast.error(
-                                      "Please complete your profile before joining a club"
+                                      "Please complete your profile before requesting to join a club"
                                     );
                                     return;
                                   }
 
                                   try {
-                                    const response = await fetch(
-                                      `/api/clubs/${club.id}/join`,
-                                      {
-                                        method: "POST",
-                                      }
-                                    );
+                                    if (joinMode === "DIRECT") {
+                                      const response = await fetch(
+                                        `/api/clubs/${club.id}/join`,
+                                        {
+                                          method: "POST",
+                                        }
+                                      );
 
-                                    const data = await response.json();
+                                      const data = await response.json();
 
-                                    if (response.ok) {
-                                      toast.success("Registered successfully!");
+                                      if (response.ok) {
+                                        toast.success("Joined successfully!");
 
-                                      if (club.registrationLink) {
-                                        window.open(
-                                          club.registrationLink,
-                                          "_blank"
+                                        if (data.registrationLink) {
+                                          window.open(
+                                            data.registrationLink,
+                                            "_blank"
+                                          );
+                                        }
+
+                                        const clubsRes = await fetch(
+                                          "/api/clubs"
+                                        );
+                                        const clubsData = await clubsRes.json();
+                                        setClubs(clubsData);
+                                        const myClubsRes = await fetch(
+                                          "/api/clubs/my-clubs"
+                                        );
+                                        const myClubsData =
+                                          await myClubsRes.json();
+                                        setMyClubs(myClubsData);
+                                      } else {
+                                        toast.error(
+                                          data.error || "Failed to join club"
                                         );
                                       }
+                                    } else if (request?.status === "APPROVED") {
+                                      const response = await fetch(
+                                        `/api/clubs/${club.id}/join`,
+                                        {
+                                          method: "POST",
+                                        }
+                                      );
 
-                                      const clubsRes = await fetch(
-                                        "/api/clubs"
-                                      );
-                                      const clubsData = await clubsRes.json();
-                                      setClubs(clubsData);
-                                      const myClubsRes = await fetch(
-                                        "/api/clubs/my-clubs"
-                                      );
-                                      const myClubsData =
-                                        await myClubsRes.json();
-                                      setMyClubs(myClubsData);
+                                      const data = await response.json();
+
+                                      if (response.ok) {
+                                        toast.success("Joined successfully!");
+
+                                        if (data.registrationLink) {
+                                          window.open(
+                                            data.registrationLink,
+                                            "_blank"
+                                          );
+                                        }
+
+                                        const clubsRes = await fetch(
+                                          "/api/clubs"
+                                        );
+                                        const clubsData = await clubsRes.json();
+                                        setClubs(clubsData);
+                                        const myClubsRes = await fetch(
+                                          "/api/clubs/my-clubs"
+                                        );
+                                        const myClubsData =
+                                          await myClubsRes.json();
+                                        setMyClubs(myClubsData);
+                                      } else {
+                                        toast.error(
+                                          data.error || "Failed to join club"
+                                        );
+                                      }
                                     } else {
-                                      toast.error(
-                                        data.error || "Failed to join club"
+                                      const response = await fetch(
+                                        `/api/clubs/${club.id}/request-join`,
+                                        {
+                                          method: "POST",
+                                        }
                                       );
+
+                                      const data = await response.json();
+
+                                      if (response.ok) {
+                                        toast.success(
+                                          "Request submitted successfully!"
+                                        );
+                                        const statusRes = await fetch(
+                                          `/api/clubs/${club.id}/request-status`
+                                        );
+                                        if (statusRes.ok) {
+                                          const { request: newRequest } =
+                                            await statusRes.json();
+                                          if (newRequest) {
+                                            setClubJoinRequests((prev) => {
+                                              const newMap = new Map(prev);
+                                              newMap.set(club.id, newRequest);
+                                              return newMap;
+                                            });
+                                          }
+                                        }
+                                      } else {
+                                        toast.error(
+                                          data.error ||
+                                            "Failed to submit request"
+                                        );
+                                      }
                                     }
                                   } catch (error) {
-                                    toast.error("Failed to join club");
+                                    toast.error("Failed to process request");
                                   }
                                 }}
                               >
-                                {club.isOpenForRegistration
-                                  ? "Register"
-                                  : "Registration Closed"}
+                                {(() => {
+                                  const request = clubJoinRequests.get(club.id);
+                                  const joinMode =
+                                    (club as any).joinMode || "DIRECT";
+                                  const isMember = myClubs.some(
+                                    (c) => c.id === club.id
+                                  );
+                                  if (isMember) return "Already Joined";
+                                  if (!club.isOpenForRegistration)
+                                    return "Registration Closed";
+                                  if (joinMode === "DIRECT") return "Join Now";
+                                  if (request?.status === "PENDING")
+                                    return "Request Pending";
+                                  if (request?.status === "APPROVED")
+                                    return "Join Now";
+                                  return "Request to Join";
+                                })()}
                               </Button>
                             </CardContent>
                           </Card>
@@ -5198,7 +5320,7 @@ function DashboardContent() {
                                     alt={club.name}
                                     width={64}
                                     height={48}
-                                    className="w-16 h-12 rounded-lg object-cover"
+                                    className="w-16 h-12 rounded-lg object-contain bg-white"
                                   />
                                 ) : (
                                   <div className="w-16 h-12 bg-dark-blue rounded-lg flex items-center justify-center">

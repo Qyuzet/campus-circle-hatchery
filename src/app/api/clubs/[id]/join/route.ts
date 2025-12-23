@@ -83,8 +83,34 @@ export async function POST(
       );
     }
 
+    if (club.joinMode === "REQUEST") {
+      const joinRequest = await prisma.clubJoinRequest.findUnique({
+        where: {
+          clubId_userId: {
+            clubId: params.id,
+            userId: user.id,
+          },
+        },
+      });
+
+      if (!joinRequest || joinRequest.status !== "APPROVED") {
+        return NextResponse.json(
+          { error: "You need an approved request to join this club" },
+          { status: 403 }
+        );
+      }
+    }
+
     const membership = await prisma.clubMember.create({
       data: {
+        clubId: params.id,
+        userId: user.id,
+        status: "JOINED",
+      },
+    });
+
+    await prisma.clubJoinRequest.deleteMany({
+      where: {
         clubId: params.id,
         userId: user.id,
       },
@@ -99,7 +125,13 @@ export async function POST(
       },
     });
 
-    return NextResponse.json(membership, { status: 201 });
+    return NextResponse.json(
+      {
+        membership,
+        registrationLink: club.registrationLink,
+      },
+      { status: 201 }
+    );
   } catch (error) {
     console.error("Error joining club:", error);
     return NextResponse.json({ error: "Failed to join club" }, { status: 500 });

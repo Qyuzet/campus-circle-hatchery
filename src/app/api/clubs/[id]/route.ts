@@ -39,6 +39,7 @@ export async function GET(
       registrationEndDate: club.registrationEndDate,
       registrationLink: club.registrationLink,
       websiteUrl: club.websiteUrl,
+      joinMode: club.joinMode,
       createdAt: club.createdAt,
       updatedAt: club.updatedAt,
     };
@@ -86,6 +87,7 @@ export async function PUT(
       registrationEndDate,
       registrationLink,
       websiteUrl,
+      joinMode,
     } = body;
 
     const club = await prisma.club.update({
@@ -109,6 +111,7 @@ export async function PUT(
         }),
         ...(registrationLink !== undefined && { registrationLink }),
         ...(websiteUrl !== undefined && { websiteUrl }),
+        ...(joinMode !== undefined && { joinMode }),
       },
     });
 

@@ -45,6 +45,13 @@ export async function POST(
       },
     });
 
+    await prisma.clubJoinRequest.deleteMany({
+      where: {
+        clubId: params.id,
+        userId: user.id,
+      },
+    });
+
     await prisma.club.update({
       where: { id: params.id },
       data: {

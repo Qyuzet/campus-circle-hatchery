@@ -30,6 +30,7 @@ interface Club {
   registrationEndDate: string | null;
   registrationLink: string | null;
   websiteUrl: string | null;
+  joinMode: string;
   createdAt: string;
   updatedAt: string;
   _count?: {
@@ -40,6 +41,7 @@ interface Club {
 interface ClubMember {
   id: string;
   joinedAt: string;
+  status: string;
   user: {
     id: string;
     name: string;
@@ -47,6 +49,25 @@ interface ClubMember {
     studentId: string;
     faculty: string;
     major: string;
+  };
+}
+
+interface ClubJoinRequest {
+  id: string;
+  clubId: string;
+  userId: string;
+  status: string;
+  requestedAt: string;
+  respondedAt: string | null;
+  memberStatus: string | null;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    studentId: string;
+    faculty: string;
+    major: string;
+    avatarUrl: string | null;
   };
 }
 
@@ -58,6 +79,9 @@ export default function ClubsManagement() {
   const [viewingMembers, setViewingMembers] = useState<Club | null>(null);
   const [clubMembers, setClubMembers] = useState<ClubMember[]>([]);
   const [loadingMembers, setLoadingMembers] = useState(false);
+  const [viewingRequests, setViewingRequests] = useState<Club | null>(null);
+  const [clubRequests, setClubRequests] = useState<ClubJoinRequest[]>([]);
+  const [loadingRequests, setLoadingRequests] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -69,6 +93,7 @@ export default function ClubsManagement() {
     registrationEndDate: "",
     registrationLink: "",
     websiteUrl: "",
+    joinMode: "DIRECT",
   });
   const [uploadMethod, setUploadMethod] = useState<"url" | "upload">("url");
   const [uploadingLogo, setUploadingLogo] = useState(false);
@@ -104,6 +129,46 @@ export default function ClubsManagement() {
     }
   };
 
+  const loadClubRequests = async (clubId: string) => {
+    try {
+      setLoadingRequests(true);
+      const response = await fetch(`/api/clubs/${clubId}/requests`);
+      const data = await response.json();
+      setClubRequests(data);
+    } catch (error) {
+      toast.error("Failed to load club requests");
+    } finally {
+      setLoadingRequests(false);
+    }
+  };
+
+  const handleRequestAction = async (
+    requestId: string,
+    action: "APPROVED" | "REJECTED"
+  ) => {
+    try {
+      const response = await fetch(
+        `/api/clubs/${viewingRequests?.id}/requests`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ requestId, action }),
+        }
+      );
+
+      if (response.ok) {
+        toast.success(`Request ${action.toLowerCase()} successfully`);
+        if (viewingRequests) {
+          loadClubRequests(viewingRequests.id);
+        }
+      } else {
+        toast.error("Failed to update request");
+      }
+    } catch (error) {
+      toast.error("Failed to update request");
+    }
+  };
+
   const handleCreate = async () => {
     if (!formData.name || !formData.description || !formData.category) {
       toast.error("Please fill in all required fields");
@@ -131,6 +196,7 @@ export default function ClubsManagement() {
           registrationEndDate: "",
           registrationLink: "",
           websiteUrl: "",
+          joinMode: "DIRECT",
         });
         loadClubs();
       } else {
@@ -165,6 +231,7 @@ export default function ClubsManagement() {
           registrationEndDate: "",
           registrationLink: "",
           websiteUrl: "",
+          joinMode: "DIRECT",
         });
         loadClubs();
       } else {
@@ -251,6 +318,7 @@ export default function ClubsManagement() {
         : "",
       registrationLink: club.registrationLink || "",
       websiteUrl: club.websiteUrl || "",
+      joinMode: club.joinMode || "DIRECT",
     });
     setLogoPreview(club.logoUrl || "");
     setUploadMethod("url");
@@ -270,6 +338,7 @@ export default function ClubsManagement() {
       registrationEndDate: "",
       registrationLink: "",
       websiteUrl: "",
+      joinMode: "DIRECT",
     });
     setLogoPreview("");
     setUploadMethod("url");
@@ -308,7 +377,7 @@ export default function ClubsManagement() {
                     <img
                       src={club.logoUrl}
                       alt={club.name}
-                      className="w-16 h-12 rounded-lg object-cover"
+                      className="w-16 h-12 rounded-lg object-contain bg-white"
                     />
                   ) : (
                     <div className="w-16 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -350,7 +419,19 @@ export default function ClubsManagement() {
                   </p>
                 )}
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 mb-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setViewingRequests(club);
+                    loadClubRequests(club.id);
+                  }}
+                  className="flex-1"
+                >
+                  <Users className="h-3 w-3 mr-1" />
+                  Requests
+                </Button>
                 <Button
                   size="sm"
                   variant="outline"
@@ -363,6 +444,8 @@ export default function ClubsManagement() {
                   <Eye className="h-3 w-3 mr-1" />
                   Members
                 </Button>
+              </div>
+              <div className="flex gap-2">
                 <Button
                   size="sm"
                   variant="outline"
@@ -693,6 +776,29 @@ export default function ClubsManagement() {
                 </p>
               </div>
 
+              <div>
+                <label className="text-sm font-medium text-gray-700 block mb-2">
+                  Join Mode
+                </label>
+                <select
+                  value={formData.joinMode}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      joinMode: e.target.value,
+                    })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="DIRECT">Direct Join</option>
+                  <option value="REQUEST">Request-Based Join</option>
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  Direct: Users join immediately. Request: Admin must approve
+                  join requests
+                </p>
+              </div>
+
               <div className="flex gap-2 pt-4">
                 <Button
                   onClick={closeModal}
@@ -783,6 +889,126 @@ export default function ClubsManagement() {
               ) : (
                 <div className="text-center py-8 text-gray-500">
                   No members have registered yet
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {viewingRequests && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <Card className="w-full max-w-4xl my-8">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>{viewingRequests.name} - Join Requests</CardTitle>
+                <button
+                  onClick={() => {
+                    setViewingRequests(null);
+                    setClubRequests([]);
+                  }}
+                  className="p-1 hover:bg-gray-100 rounded"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              <p className="text-sm text-gray-500 mt-1">
+                Total: {clubRequests.length} requests
+              </p>
+            </CardHeader>
+            <CardContent className="max-h-[calc(100vh-12rem)] overflow-y-auto">
+              {loadingRequests ? (
+                <div className="flex items-center justify-center py-8">
+                  <RefreshCw className="h-6 w-6 animate-spin text-blue-600" />
+                </div>
+              ) : clubRequests.length > 0 ? (
+                <div className="space-y-3">
+                  {clubRequests.map((request) => (
+                    <div
+                      key={request.id}
+                      className="p-4 border rounded-lg hover:bg-gray-50"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <div>
+                              <h4 className="font-medium text-gray-900">
+                                {request.user.name}
+                              </h4>
+                              <p className="text-sm text-gray-500">
+                                {request.user.email}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 text-sm text-gray-600">
+                            <div>
+                              <span className="font-medium">Student ID:</span>{" "}
+                              {request.user.studentId}
+                            </div>
+                            <div>
+                              <span className="font-medium">Faculty:</span>{" "}
+                              {request.user.faculty}
+                            </div>
+                            <div>
+                              <span className="font-medium">Major:</span>{" "}
+                              {request.user.major}
+                            </div>
+                            <div>
+                              <span className="font-medium">Requested:</span>{" "}
+                              {new Date(
+                                request.requestedAt
+                              ).toLocaleDateString()}
+                            </div>
+                          </div>
+                          <div className="mt-2 flex items-center gap-2">
+                            <Badge
+                              variant={
+                                request.status === "PENDING"
+                                  ? "secondary"
+                                  : request.status === "APPROVED"
+                                  ? "default"
+                                  : "destructive"
+                              }
+                            >
+                              {request.status}
+                            </Badge>
+                            {request.memberStatus && (
+                              <Badge variant="outline">
+                                Member Status: {request.memberStatus}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                        {request.status === "PENDING" && (
+                          <div className="flex gap-2 ml-4">
+                            <Button
+                              size="sm"
+                              onClick={() =>
+                                handleRequestAction(request.id, "APPROVED")
+                              }
+                              className="bg-green-600 hover:bg-green-700"
+                            >
+                              Approve
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() =>
+                                handleRequestAction(request.id, "REJECTED")
+                              }
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            >
+                              Reject
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  No join requests yet
                 </div>
               )}
             </CardContent>
