@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { sendEmail, getNewListingEmailTemplate } from "@/lib/resend";
 
 export const revalidate = 30;
 
@@ -184,6 +185,28 @@ export async function POST(request: NextRequest) {
           },
         },
       },
+    });
+
+    const listingUrl = `${process.env.NEXTAUTH_URL}/dashboard?tab=discovery&itemId=${foodItem.id}`;
+
+    // Use real emails if USE_REAL_EMAILS is set to true, otherwise use test email
+    const useRealEmails =
+      process.env.USE_REAL_EMAILS === "true" ||
+      process.env.NODE_ENV === "production";
+    const recipientEmail = useRealEmails
+      ? dbUser.email
+      : "delivered@resend.dev";
+
+    await sendEmail({
+      to: recipientEmail,
+      subject: "Your food listing is now live!",
+      html: getNewListingEmailTemplate(
+        dbUser.name,
+        "food item",
+        foodItem.title,
+        foodItem.price,
+        listingUrl
+      ),
     });
 
     return NextResponse.json(foodItem, { status: 201 });

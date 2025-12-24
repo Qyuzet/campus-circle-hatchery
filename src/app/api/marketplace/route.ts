@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { sendEmail, getNewListingEmailTemplate } from "@/lib/resend";
 
 export const revalidate = 30;
 
@@ -198,6 +199,26 @@ export async function POST(request: NextRequest) {
         reviewsGiven: 0,
         reviewsReceived: 0,
       },
+    });
+
+    const listingUrl = `${process.env.NEXTAUTH_URL}/dashboard?tab=discovery&itemId=${item.id}`;
+
+    // Use real emails if USE_REAL_EMAILS is set to true, otherwise use test email
+    const useRealEmails =
+      process.env.USE_REAL_EMAILS === "true" ||
+      process.env.NODE_ENV === "production";
+    const recipientEmail = useRealEmails ? user.email : "delivered@resend.dev";
+
+    await sendEmail({
+      to: recipientEmail,
+      subject: "Your study material listing is now live!",
+      html: getNewListingEmailTemplate(
+        user.name,
+        "study material",
+        item.title,
+        item.price,
+        listingUrl
+      ),
     });
 
     return NextResponse.json(item, { status: 201 });

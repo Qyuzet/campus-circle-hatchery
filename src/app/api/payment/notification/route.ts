@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifySignature, mapTransactionStatus } from "@/lib/midtrans";
+import { sendEmail, getPurchaseNotificationEmailTemplate } from "@/lib/resend";
 
 // POST /api/payment/notification - Handle Midtrans notification callback
 export async function POST(request: NextRequest) {
@@ -295,6 +296,60 @@ export async function POST(request: NextRequest) {
             }" has been sold for Rp ${transaction.amount.toLocaleString()}`,
           },
         });
+
+        const seller = await prisma.user.findUnique({
+          where: { id: transaction.sellerId },
+          select: { name: true, email: true },
+        });
+
+        const buyer = await prisma.user.findUnique({
+          where: { id: transaction.buyerId },
+          select: { name: true },
+        });
+
+        if (seller && buyer) {
+          const ordersUrl = `${process.env.NEXTAUTH_URL}/orders`;
+
+          // Use real emails if USE_REAL_EMAILS is set to true, otherwise use test email
+          const useRealEmails =
+            process.env.USE_REAL_EMAILS === "true" ||
+            process.env.NODE_ENV === "production";
+          const recipientEmail = useRealEmails
+            ? seller.email
+            : "delivered@resend.dev";
+
+          console.log(
+            `Sending sale notification email to seller: ${seller.name} (${recipientEmail})`
+          );
+
+          const emailResult = await sendEmail({
+            to: recipientEmail,
+            subject: `You made a sale: ${transaction.itemTitle}`,
+            html: getPurchaseNotificationEmailTemplate(
+              seller.name,
+              transaction.itemTitle,
+              transaction.itemType,
+              transaction.amount,
+              buyer.name,
+              ordersUrl
+            ),
+          });
+
+          if (emailResult.success) {
+            console.log(
+              `✅ Sale notification email sent successfully to ${seller.name}`
+            );
+          } else {
+            console.error(
+              `❌ Failed to send sale notification email to ${seller.name}:`,
+              emailResult.error
+            );
+          }
+        } else {
+          console.error(
+            `❌ Cannot send email - seller or buyer not found. Seller: ${seller?.name}, Buyer: ${buyer?.name}`
+          );
+        }
       }
 
       // Create notification for buyer
