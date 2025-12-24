@@ -529,15 +529,9 @@ export const fileAPI = {
 
       const result = await response.json();
 
-      // Create a temporary link and trigger download
-      const a = document.createElement("a");
-      a.href = result.downloadUrl;
-      a.download = result.fileName;
-      a.target = "_blank";
-      a.rel = "noopener noreferrer";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      // Use window.location.href for better compatibility with pop-up blockers
+      // This will open in the same tab but the browser will handle it as a download
+      window.location.href = result.downloadUrl;
     } catch (error) {
       console.error("Download error:", error);
       throw error;
