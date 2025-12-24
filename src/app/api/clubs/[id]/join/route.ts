@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { sendEmail, getClubJoinedEmailTemplate } from "@/lib/resend";
 
 export async function POST(
   request: NextRequest,
@@ -114,6 +115,30 @@ export async function POST(
         clubId: params.id,
         userId: user.id,
       },
+    });
+
+    // Create in-app notification
+    await prisma.notification.create({
+      data: {
+        userId: user.id,
+        type: "system",
+        title: "Successfully Joined Club",
+        message: `Welcome to ${club.name}!`,
+      },
+    });
+
+    // Send email notification
+    const useRealEmails =
+      process.env.USE_REAL_EMAILS === "true" ||
+      process.env.NODE_ENV === "production";
+    const recipientEmail = useRealEmails ? user.email : "delivered@resend.dev";
+
+    const clubsUrl = `${process.env.NEXTAUTH_URL}/dashboard?tab=clubs&subtab=my-clubs`;
+
+    await sendEmail({
+      to: recipientEmail,
+      subject: `Welcome to ${club.name}!`,
+      html: getClubJoinedEmailTemplate(user.name, club.name, clubsUrl),
     });
 
     return NextResponse.json(

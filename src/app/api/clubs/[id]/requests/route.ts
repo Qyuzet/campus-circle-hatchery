@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import {
+  sendEmail,
+  getClubRequestApprovedEmailTemplate,
+  getClubRequestRejectedEmailTemplate,
+} from "@/lib/resend";
 
 export async function GET(
   request: NextRequest,
@@ -103,7 +108,74 @@ export async function PUT(
         status: action,
         respondedAt: new Date(),
       },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        club: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
     });
+
+    const useRealEmails =
+      process.env.USE_REAL_EMAILS === "true" ||
+      process.env.NODE_ENV === "production";
+    const recipientEmail = useRealEmails
+      ? joinRequest.user.email
+      : "delivered@resend.dev";
+
+    if (action === "APPROVED") {
+      // Create in-app notification
+      await prisma.notification.create({
+        data: {
+          userId: joinRequest.user.id,
+          type: "system",
+          title: "Club Request Approved",
+          message: `Your request to join ${joinRequest.club.name} has been approved! Click to join now.`,
+        },
+      });
+
+      // Send email notification
+      const joinUrl = `${process.env.NEXTAUTH_URL}/dashboard?tab=clubs&subtab=browse`;
+
+      await sendEmail({
+        to: recipientEmail,
+        subject: `Your request to join ${joinRequest.club.name} was approved`,
+        html: getClubRequestApprovedEmailTemplate(
+          joinRequest.user.name,
+          joinRequest.club.name,
+          joinUrl
+        ),
+      });
+    } else if (action === "REJECTED") {
+      // Create in-app notification
+      await prisma.notification.create({
+        data: {
+          userId: joinRequest.user.id,
+          type: "system",
+          title: "Club Request Not Approved",
+          message: `Your request to join ${joinRequest.club.name} was not approved.`,
+        },
+      });
+
+      // Send email notification
+      await sendEmail({
+        to: recipientEmail,
+        subject: `Update on your request to join ${joinRequest.club.name}`,
+        html: getClubRequestRejectedEmailTemplate(
+          joinRequest.user.name,
+          joinRequest.club.name
+        ),
+      });
+    }
 
     return NextResponse.json(joinRequest);
   } catch (error) {
@@ -114,4 +186,3 @@ export async function PUT(
     );
   }
 }
-

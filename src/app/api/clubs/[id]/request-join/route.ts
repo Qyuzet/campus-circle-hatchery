@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { sendEmail, getClubJoinRequestEmailTemplate } from "@/lib/resend";
 
 export async function POST(
   request: NextRequest,
@@ -126,6 +127,49 @@ export async function POST(
         status: "PENDING",
       },
     });
+
+    // Notify all admins about the new join request
+    const admins = await prisma.user.findMany({
+      where: { role: "admin" },
+      select: { id: true, name: true, email: true },
+    });
+
+    const manageUrl = `${process.env.NEXTAUTH_URL}/admin?tab=clubs`;
+
+    const useRealEmails =
+      process.env.USE_REAL_EMAILS === "true" ||
+      process.env.NODE_ENV === "production";
+
+    for (const admin of admins) {
+      // Create in-app notification
+      await prisma.notification.create({
+        data: {
+          userId: admin.id,
+          type: "system",
+          title: "New Club Join Request",
+          message: `${user.name} requested to join ${club.name}`,
+        },
+      });
+
+      // Send email notification
+      const recipientEmail = useRealEmails
+        ? admin.email
+        : "delivered@resend.dev";
+
+      await sendEmail({
+        to: recipientEmail,
+        subject: `New join request for ${club.name}`,
+        html: getClubJoinRequestEmailTemplate(
+          admin.name,
+          user.name,
+          user.studentId || "N/A",
+          user.faculty || "N/A",
+          user.major || "N/A",
+          club.name,
+          manageUrl
+        ),
+      });
+    }
 
     return NextResponse.json(joinRequest);
   } catch (error) {

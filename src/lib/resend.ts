@@ -151,3 +151,145 @@ export function getPurchaseNotificationEmailTemplate(
     </html>
   `;
 }
+
+export function getClubJoinRequestEmailTemplate(
+  adminName: string,
+  userName: string,
+  userStudentId: string,
+  userFaculty: string,
+  userMajor: string,
+  clubName: string,
+  manageUrl: string
+) {
+  return `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0;">
+      </head>
+      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background-color: #1e40af; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
+          <h1 style="margin: 0; font-size: 24px;">CampusCircle</h1>
+        </div>
+        <div style="background-color: #f9fafb; padding: 30px; border-radius: 0 0 8px 8px;">
+          <h2 style="color: #1e40af; margin-top: 0;">New Club Join Request</h2>
+          <p>Hi ${adminName},</p>
+          <p>A student has requested to join <strong>${clubName}</strong>:</p>
+          <div style="background-color: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <p style="margin: 5px 0;"><strong>Name:</strong> ${userName}</p>
+            <p style="margin: 5px 0;"><strong>Student ID:</strong> ${userStudentId}</p>
+            <p style="margin: 5px 0;"><strong>Faculty:</strong> ${userFaculty}</p>
+            <p style="margin: 5px 0;"><strong>Major:</strong> ${userMajor}</p>
+          </div>
+          <p>Please review and approve or reject this request.</p>
+          <p>
+            <a href="${manageUrl}" style="display: inline-block; background-color: #1e40af; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">Manage Requests</a>
+          </p>
+          <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
+          <p style="color: #6b7280; font-size: 14px; margin: 0;">
+            This is an automated notification from CampusCircle.
+          </p>
+        </div>
+      </body>
+    </html>
+  `;
+}
+
+export function getClubRequestApprovedEmailTemplate(
+  userName: string,
+  clubName: string,
+  joinUrl: string
+) {
+  return `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0;">
+      </head>
+      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background-color: #1e40af; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
+          <h1 style="margin: 0; font-size: 24px;">CampusCircle</h1>
+        </div>
+        <div style="background-color: #f9fafb; padding: 30px; border-radius: 0 0 8px 8px;">
+          <h2 style="color: #059669; margin-top: 0;">Request Approved!</h2>
+          <p>Hi ${userName},</p>
+          <p>Great news! Your request to join <strong>${clubName}</strong> has been approved.</p>
+          <p>You can now click the button below to complete your membership.</p>
+          <p>
+            <a href="${joinUrl}" style="display: inline-block; background-color: #059669; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">Join Club Now</a>
+          </p>
+          <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
+          <p style="color: #6b7280; font-size: 14px; margin: 0;">
+            This is an automated notification from CampusCircle.
+          </p>
+        </div>
+      </body>
+    </html>
+  `;
+}
+
+export function getClubRequestRejectedEmailTemplate(
+  userName: string,
+  clubName: string
+) {
+  return `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0;">
+      </head>
+      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background-color: #1e40af; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
+          <h1 style="margin: 0; font-size: 24px;">CampusCircle</h1>
+        </div>
+        <div style="background-color: #f9fafb; padding: 30px; border-radius: 0 0 8px 8px;">
+          <h2 style="color: #dc2626; margin-top: 0;">Request Not Approved</h2>
+          <p>Hi ${userName},</p>
+          <p>Unfortunately, your request to join <strong>${clubName}</strong> was not approved at this time.</p>
+          <p>You may contact the club organizers for more information or try again later.</p>
+          <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
+          <p style="color: #6b7280; font-size: 14px; margin: 0;">
+            This is an automated notification from CampusCircle.
+          </p>
+        </div>
+      </body>
+    </html>
+  `;
+}
+
+export function getClubJoinedEmailTemplate(
+  userName: string,
+  clubName: string,
+  clubsUrl: string
+) {
+  return `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0;">
+      </head>
+      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background-color: #1e40af; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
+          <h1 style="margin: 0; font-size: 24px;">CampusCircle</h1>
+        </div>
+        <div style="background-color: #f9fafb; padding: 30px; border-radius: 0 0 8px 8px;">
+          <h2 style="color: #059669; margin-top: 0;">Welcome to ${clubName}!</h2>
+          <p>Hi ${userName},</p>
+          <p>You have successfully joined <strong>${clubName}</strong>.</p>
+          <p>You can now access club activities, events, and connect with other members.</p>
+          <p>
+            <a href="${clubsUrl}" style="display: inline-block; background-color: #1e40af; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">View My Clubs</a>
+          </p>
+          <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
+          <p style="color: #6b7280; font-size: 14px; margin: 0;">
+            This is an automated notification from CampusCircle.
+          </p>
+        </div>
+      </body>
+    </html>
+  `;
+}
