@@ -308,6 +308,9 @@ function DashboardContent() {
   });
 
   const [loadingConversation, setLoadingConversation] = useState(false);
+  const [downloadingItems, setDownloadingItems] = useState<Set<string>>(
+    new Set()
+  );
 
   // Track which tabs have been loaded
   const [loadedTabs, setLoadedTabs] = useState({
@@ -4614,7 +4617,16 @@ function DashboardContent() {
                                       className="w-full text-[10px] md:text-sm h-7 md:h-9"
                                       onClick={async () => {
                                         if (item.item?.fileUrl) {
+                                          if (
+                                            downloadingItems.has(item.itemId)
+                                          ) {
+                                            return;
+                                          }
+
                                           try {
+                                            setDownloadingItems((prev) =>
+                                              new Set(prev).add(item.itemId)
+                                            );
                                             await fileAPI.downloadFile(
                                               item.itemId,
                                               item.item.fileUrl,
@@ -4624,18 +4636,39 @@ function DashboardContent() {
                                             toast.success("Download started!");
                                           } catch (error) {
                                             toast.error("Download failed");
+                                          } finally {
+                                            setDownloadingItems((prev) => {
+                                              const newSet = new Set(prev);
+                                              newSet.delete(item.itemId);
+                                              return newSet;
+                                            });
                                           }
                                         } else {
                                           toast.error("No file available");
                                         }
                                       }}
-                                      disabled={!item.item?.fileUrl}
+                                      disabled={
+                                        !item.item?.fileUrl ||
+                                        downloadingItems.has(item.itemId)
+                                      }
                                     >
-                                      <Download className="h-3 w-3 md:h-4 md:w-4 mr-0.5 md:mr-1" />
-                                      <span className="hidden md:inline">
-                                        Download
-                                      </span>
-                                      <span className="md:hidden">Get</span>
+                                      {downloadingItems.has(item.itemId) ? (
+                                        <>
+                                          <Loader2 className="h-3 w-3 md:h-4 md:w-4 mr-0.5 md:mr-1 animate-spin" />
+                                          <span className="hidden md:inline">
+                                            Downloading...
+                                          </span>
+                                          <span className="md:hidden">...</span>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <Download className="h-3 w-3 md:h-4 md:w-4 mr-0.5 md:mr-1" />
+                                          <span className="hidden md:inline">
+                                            Download
+                                          </span>
+                                          <span className="md:hidden">Get</span>
+                                        </>
+                                      )}
                                     </Button>
                                   </CardFooter>
                                 </Card>
