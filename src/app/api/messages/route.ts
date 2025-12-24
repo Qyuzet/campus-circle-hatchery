@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { triggerNewMessage } from "@/lib/pusher";
+import { notifyUnreadMessages } from "@/lib/notify-unread-messages";
 
 // GET /api/messages?conversationId=xxx - Get messages for a conversation
 export async function GET(request: NextRequest) {
@@ -197,6 +198,15 @@ export async function POST(request: NextRequest) {
 
     // Trigger real-time event via Pusher
     await triggerNewMessage(conversationId, message);
+
+    // Schedule email notification check (runs in background after 1 minute)
+    setTimeout(async () => {
+      try {
+        await notifyUnreadMessages(conversationId);
+      } catch (error) {
+        console.error("Background email notification error:", error);
+      }
+    }, 60000);
 
     return NextResponse.json(message, { status: 201 });
   } catch (error) {

@@ -959,6 +959,11 @@ function DashboardContent() {
           break;
 
         case "wallet":
+          // Trigger auto-release of balances in background
+          statsAPI.autoReleaseBalances().catch((error) => {
+            console.error("Auto-release balance error:", error);
+          });
+
           const [withdrawalData, statsData, walletSales, walletPurchases] =
             await Promise.all([
               withdrawalsAPI.getWithdrawals({}),

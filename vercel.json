@@ -1,13 +1,1 @@
-{
-  "crons": [
-    {
-      "path": "/api/cron/notify-unread-messages",
-      "schedule": "* * * * *"
-    },
-    {
-      "path": "/api/cron/release-balances",
-      "schedule": "0 * * * *"
-    }
-  ]
-}
-
+{}

@@ -347,6 +347,14 @@ export const statsAPI = {
     apiCache.set(CACHE_KEYS.USER_STATS, data, CACHE_DURATION.MEDIUM);
     return data;
   },
+
+  async autoReleaseBalances() {
+    const response = await fetch("/api/balance/auto-release", {
+      method: "POST",
+    });
+    if (!response.ok) throw new Error("Failed to auto-release balances");
+    return response.json();
+  },
 };
 
 // ============================================
