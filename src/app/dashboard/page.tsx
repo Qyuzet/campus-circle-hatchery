@@ -311,6 +311,13 @@ function DashboardContent() {
   const [downloadingItems, setDownloadingItems] = useState<Set<string>>(
     new Set()
   );
+  const [registeringEvents, setRegisteringEvents] = useState<Set<string>>(
+    new Set()
+  );
+  const [joiningClubs, setJoiningClubs] = useState(false);
+  const [requestingClubs, setRequestingClubs] = useState<Set<string>>(
+    new Set()
+  );
 
   // Track which tabs have been loaded
   const [loadedTabs, setLoadedTabs] = useState({
@@ -1425,7 +1432,12 @@ function DashboardContent() {
       return;
     }
 
+    if (registeringEvents.has(eventId)) {
+      return;
+    }
+
     try {
+      setRegisteringEvents((prev) => new Set(prev).add(eventId));
       const response = await fetch(`/api/events/${eventId}/register`, {
         method: "POST",
       });
@@ -1456,6 +1468,12 @@ function DashboardContent() {
     } catch (error: any) {
       console.error("Error registering for event:", error);
       toast.error(error.message || "Failed to register for event.");
+    } finally {
+      setRegisteringEvents((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(eventId);
+        return newSet;
+      });
     }
   };
 
@@ -1661,9 +1679,10 @@ function DashboardContent() {
   };
 
   const confirmJoinClub = async () => {
-    if (!clubToJoin) return;
+    if (!clubToJoin || joiningClubs) return;
 
     try {
+      setJoiningClubs(true);
       const response = await fetch(`/api/clubs/${clubToJoin.id}/join`, {
         method: "POST",
       });
@@ -1689,6 +1708,8 @@ function DashboardContent() {
       }
     } catch (error) {
       toast.error("Failed to process request");
+    } finally {
+      setJoiningClubs(false);
     }
   };
 
@@ -5164,6 +5185,7 @@ function DashboardContent() {
                                   if (endDate && now > endDate) return true;
                                   if (request?.status === "PENDING")
                                     return true;
+                                  if (requestingClubs.has(club.id)) return true;
                                   return false;
                                 })()}
                                 onClick={async () => {
@@ -5226,6 +5248,10 @@ function DashboardContent() {
                                     return;
                                   }
 
+                                  if (requestingClubs.has(club.id)) {
+                                    return;
+                                  }
+
                                   try {
                                     if (joinMode === "DIRECT") {
                                       setClubToJoin({
@@ -5244,6 +5270,9 @@ function DashboardContent() {
                                       });
                                       setShowJoinClubConfirm(true);
                                     } else {
+                                      setRequestingClubs((prev) =>
+                                        new Set(prev).add(club.id)
+                                      );
                                       const response = await fetch(
                                         `/api/clubs/${club.id}/request-join`,
                                         {
@@ -5280,26 +5309,42 @@ function DashboardContent() {
                                     }
                                   } catch (error) {
                                     toast.error("Failed to process request");
+                                  } finally {
+                                    setRequestingClubs((prev) => {
+                                      const newSet = new Set(prev);
+                                      newSet.delete(club.id);
+                                      return newSet;
+                                    });
                                   }
                                 }}
                               >
-                                {(() => {
-                                  const request = clubJoinRequests.get(club.id);
-                                  const joinMode =
-                                    (club as any).joinMode || "DIRECT";
-                                  const isMember = myClubs.some(
-                                    (c) => c.id === club.id
-                                  );
-                                  if (isMember) return "Already Joined";
-                                  if (!club.isOpenForRegistration)
-                                    return "Registration Closed";
-                                  if (joinMode === "DIRECT") return "Join Now";
-                                  if (request?.status === "PENDING")
-                                    return "Request Pending";
-                                  if (request?.status === "APPROVED")
-                                    return "Join Now";
-                                  return "Request to Join";
-                                })()}
+                                {requestingClubs.has(club.id) ? (
+                                  <>
+                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                    Requesting...
+                                  </>
+                                ) : (
+                                  (() => {
+                                    const request = clubJoinRequests.get(
+                                      club.id
+                                    );
+                                    const joinMode =
+                                      (club as any).joinMode || "DIRECT";
+                                    const isMember = myClubs.some(
+                                      (c) => c.id === club.id
+                                    );
+                                    if (isMember) return "Already Joined";
+                                    if (!club.isOpenForRegistration)
+                                      return "Registration Closed";
+                                    if (joinMode === "DIRECT")
+                                      return "Join Now";
+                                    if (request?.status === "PENDING")
+                                      return "Request Pending";
+                                    if (request?.status === "APPROVED")
+                                      return "Join Now";
+                                    return "Request to Join";
+                                  })()
+                                )}
                               </Button>
                             </CardContent>
                           </Card>
@@ -7083,9 +7128,19 @@ function DashboardContent() {
                                 }
                               }}
                               className="flex-1"
+                              disabled={registeringEvents.has(selectedEvent.id)}
                             >
-                              <Calendar className="h-4 w-4 mr-2" />
-                              Register
+                              {registeringEvents.has(selectedEvent.id) ? (
+                                <>
+                                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                  Registering...
+                                </>
+                              ) : (
+                                <>
+                                  <Calendar className="h-4 w-4 mr-2" />
+                                  Register
+                                </>
+                              )}
                             </Button>
                           </>
                         )}
@@ -8289,10 +8344,11 @@ function DashboardContent() {
             ? "Your request has been approved."
             : "You will become a member immediately."
         }`}
-        confirmText="Join Now"
+        confirmText={joiningClubs ? "Joining..." : "Join Now"}
         cancelText="Cancel"
         variant="info"
         icon="info"
+        isLoading={joiningClubs}
       />
 
       {/* WhatsApp Group Modal */}

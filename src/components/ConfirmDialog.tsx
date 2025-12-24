@@ -10,7 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { AlertTriangle, Info, Trash2, UserMinus } from "lucide-react";
+import { AlertTriangle, Info, Trash2, UserMinus, Loader2 } from "lucide-react";
 
 interface ConfirmDialogProps {
   isOpen: boolean;
@@ -22,6 +22,7 @@ interface ConfirmDialogProps {
   cancelText?: string;
   variant?: "danger" | "warning" | "info";
   icon?: "trash" | "warning" | "info" | "user-minus";
+  isLoading?: boolean;
 }
 
 export function ConfirmDialog({
@@ -34,12 +35,16 @@ export function ConfirmDialog({
   cancelText = "Cancel",
   variant = "warning",
   icon = "warning",
+  isLoading = false,
 }: ConfirmDialogProps) {
   if (!isOpen) return null;
 
   const handleConfirm = () => {
+    if (isLoading) return;
     onConfirm();
-    onClose();
+    if (!isLoading) {
+      onClose();
+    }
   };
 
   const getIcon = () => {
@@ -86,6 +91,7 @@ export function ConfirmDialog({
             className="flex-1"
             onClick={onClose}
             type="button"
+            disabled={isLoading}
           >
             {cancelText}
           </Button>
@@ -93,7 +99,9 @@ export function ConfirmDialog({
             className={`flex-1 ${getVariantStyles()}`}
             onClick={handleConfirm}
             type="button"
+            disabled={isLoading}
           >
+            {isLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
             {confirmText}
           </Button>
         </CardFooter>
@@ -101,4 +109,3 @@ export function ConfirmDialog({
     </div>
   );
 }
-
