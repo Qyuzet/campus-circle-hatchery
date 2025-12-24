@@ -61,10 +61,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Invalid file URL" }, { status: 500 });
     }
 
-    // Generate a signed URL (valid for 1 hour)
+    // Generate a signed URL (valid for 1 hour) with download option
     const { data, error } = await supabaseAdmin.storage
       .from("study-materials")
-      .createSignedUrl(fileName, 3600);
+      .createSignedUrl(fileName, 3600, {
+        download: true,
+      });
 
     if (error) {
       console.error("Failed to generate signed URL:", error);

@@ -529,9 +529,24 @@ export const fileAPI = {
 
       const result = await response.json();
 
-      // Use window.location.href for better compatibility with pop-up blockers
-      // This will open in the same tab but the browser will handle it as a download
-      window.location.href = result.downloadUrl;
+      // Fetch the file as a blob to force download instead of opening in browser
+      const fileResponse = await fetch(result.downloadUrl);
+      const blob = await fileResponse.blob();
+
+      // Create a blob URL and trigger download
+      const blobUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = result.fileName;
+      a.style.display = "none";
+      document.body.appendChild(a);
+      a.click();
+
+      // Clean up
+      setTimeout(() => {
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(blobUrl);
+      }, 100);
     } catch (error) {
       console.error("Download error:", error);
       throw error;
