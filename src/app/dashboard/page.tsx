@@ -198,6 +198,13 @@ function DashboardContent() {
     userId: string;
     name: string;
   } | null>(null);
+  const [showJoinClubConfirm, setShowJoinClubConfirm] = useState(false);
+  const [clubToJoin, setClubToJoin] = useState<{
+    id: string;
+    name: string;
+    joinMode: string;
+    isApproved: boolean;
+  } | null>(null);
   const [showProfileCompleteModal, setShowProfileCompleteModal] =
     useState(false);
   const [userProfile, setUserProfile] = useState<any>(null);
@@ -1645,6 +1652,37 @@ function DashboardContent() {
     } catch (error) {
       console.error("Error removing member:", error);
       toast.error("Failed to remove member");
+    }
+  };
+
+  const confirmJoinClub = async () => {
+    if (!clubToJoin) return;
+
+    try {
+      const response = await fetch(`/api/clubs/${clubToJoin.id}/join`, {
+        method: "POST",
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast.success("Joined successfully!");
+
+        if (data.registrationLink) {
+          window.open(data.registrationLink, "_blank");
+        }
+
+        const clubsRes = await fetch("/api/clubs");
+        const clubsData = await clubsRes.json();
+        setClubs(clubsData);
+        const myClubsRes = await fetch("/api/clubs/my-clubs");
+        const myClubsData = await myClubsRes.json();
+        setMyClubs(myClubsData);
+      } else {
+        toast.error(data.error || "Failed to join club");
+      }
+    } catch (error) {
+      toast.error("Failed to process request");
     }
   };
 
@@ -5148,77 +5186,21 @@ function DashboardContent() {
 
                                   try {
                                     if (joinMode === "DIRECT") {
-                                      const response = await fetch(
-                                        `/api/clubs/${club.id}/join`,
-                                        {
-                                          method: "POST",
-                                        }
-                                      );
-
-                                      const data = await response.json();
-
-                                      if (response.ok) {
-                                        toast.success("Joined successfully!");
-
-                                        if (data.registrationLink) {
-                                          window.open(
-                                            data.registrationLink,
-                                            "_blank"
-                                          );
-                                        }
-
-                                        const clubsRes = await fetch(
-                                          "/api/clubs"
-                                        );
-                                        const clubsData = await clubsRes.json();
-                                        setClubs(clubsData);
-                                        const myClubsRes = await fetch(
-                                          "/api/clubs/my-clubs"
-                                        );
-                                        const myClubsData =
-                                          await myClubsRes.json();
-                                        setMyClubs(myClubsData);
-                                      } else {
-                                        toast.error(
-                                          data.error || "Failed to join club"
-                                        );
-                                      }
+                                      setClubToJoin({
+                                        id: club.id,
+                                        name: club.name,
+                                        joinMode: "DIRECT",
+                                        isApproved: false,
+                                      });
+                                      setShowJoinClubConfirm(true);
                                     } else if (request?.status === "APPROVED") {
-                                      const response = await fetch(
-                                        `/api/clubs/${club.id}/join`,
-                                        {
-                                          method: "POST",
-                                        }
-                                      );
-
-                                      const data = await response.json();
-
-                                      if (response.ok) {
-                                        toast.success("Joined successfully!");
-
-                                        if (data.registrationLink) {
-                                          window.open(
-                                            data.registrationLink,
-                                            "_blank"
-                                          );
-                                        }
-
-                                        const clubsRes = await fetch(
-                                          "/api/clubs"
-                                        );
-                                        const clubsData = await clubsRes.json();
-                                        setClubs(clubsData);
-                                        const myClubsRes = await fetch(
-                                          "/api/clubs/my-clubs"
-                                        );
-                                        const myClubsData =
-                                          await myClubsRes.json();
-                                        setMyClubs(myClubsData);
-                                      } else {
-                                        toast.error(
-                                          data.error || "Failed to join club"
-                                        );
-                                      }
+                                      setClubToJoin({
+                                        id: club.id,
+                                        name: club.name,
+                                        joinMode: "REQUEST",
+                                        isApproved: true,
+                                      });
+                                      setShowJoinClubConfirm(true);
                                     } else {
                                       const response = await fetch(
                                         `/api/clubs/${club.id}/request-join`,
@@ -8243,6 +8225,26 @@ function DashboardContent() {
         cancelText="Cancel"
         variant="danger"
         icon="user-minus"
+      />
+
+      {/* Join Club Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={showJoinClubConfirm}
+        onClose={() => {
+          setShowJoinClubConfirm(false);
+          setClubToJoin(null);
+        }}
+        onConfirm={confirmJoinClub}
+        title="Join Club"
+        description={`Are you sure you want to join ${clubToJoin?.name}? ${
+          clubToJoin?.isApproved
+            ? "Your request has been approved."
+            : "You will become a member immediately."
+        }`}
+        confirmText="Join Now"
+        cancelText="Cancel"
+        variant="info"
+        icon="info"
       />
 
       {/* Wishlist Modal */}
