@@ -308,7 +308,7 @@ export async function POST(request: NextRequest) {
         });
 
         if (seller && buyer) {
-          const ordersUrl = `${process.env.NEXTAUTH_URL}/orders`;
+          const ordersUrl = `${process.env.NEXTAUTH_URL}/dashboard?tab=hub&subtab=sales`;
 
           // Use real emails if USE_REAL_EMAILS is set to true, otherwise use test email
           const useRealEmails =
