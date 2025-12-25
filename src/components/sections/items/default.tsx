@@ -1,12 +1,12 @@
 import {
-  Box,
-  CircleDot,
+  BookOpen,
+  ShoppingCart,
+  Calendar,
+  MessageCircle,
+  Wallet,
+  GraduationCap,
+  Shield,
   Zap,
-  Globe,
-  Smartphone,
-  Rocket,
-  Eye,
-  Edit,
 } from "lucide-react";
 import { ReactNode } from "react";
 
@@ -26,50 +26,55 @@ interface ItemsProps {
 }
 
 export default function Items({
-  title = "Everything you need for campus trading",
+  title = "Everything you need for campus life",
   items = [
     {
-      title: "Verified Students Only",
+      title: "Study Materials Marketplace",
       description:
-        "Exclusive access for Binus University students with verified accounts",
-      icon: <Eye className="size-5 stroke-1" />,
+        "Buy and sell notes, books, assignments, and study resources with AI-powered metadata and instant PDF downloads",
+      icon: <BookOpen className="size-5 stroke-1" />,
     },
     {
-      title: "Mobile Friendly",
-      description: "Browse and trade on any device, anytime, anywhere",
-      icon: <Smartphone className="size-5 stroke-1" />,
+      title: "Campus Food Ordering",
+      description:
+        "Order food from fellow students, schedule pickup times, and pay securely through the platform",
+      icon: <ShoppingCart className="size-5 stroke-1" />,
+    },
+    {
+      title: "Events & Activities",
+      description:
+        "Discover campus events, workshops, and activities. Register and pay for tickets all in one place",
+      icon: <Calendar className="size-5 stroke-1" />,
+    },
+    {
+      title: "Tutoring Services",
+      description:
+        "Find expert tutors or offer your tutoring services. Schedule sessions and manage payments seamlessly",
+      icon: <GraduationCap className="size-5 stroke-1" />,
+    },
+    {
+      title: "Real-time Messaging",
+      description:
+        "Chat directly with buyers, sellers, and tutors. Send order requests and negotiate deals instantly",
+      icon: <MessageCircle className="size-5 stroke-1" />,
+    },
+    {
+      title: "Digital Wallet",
+      description:
+        "Track your earnings, manage transactions, and withdraw funds securely to your bank account",
+      icon: <Wallet className="size-5 stroke-1" />,
     },
     {
       title: "Secure Payments",
       description:
-        "Integrated with Midtrans for safe and reliable transactions",
-      icon: <CircleDot className="size-5 stroke-1" />,
-    },
-    {
-      title: "Study Materials",
-      description:
-        "Buy and sell notes, books, assignments, and study resources",
-      icon: <Box className="size-5 stroke-1" />,
+        "Integrated with Midtrans payment gateway supporting GoPay, bank transfers, and credit cards",
+      icon: <Shield className="size-5 stroke-1" />,
     },
     {
       title: "Fast & Easy",
-      description: "List items in seconds, find what you need instantly",
+      description:
+        "List items in seconds, find what you need instantly with smart search and AI autofill",
       icon: <Zap className="size-5 stroke-1" />,
-    },
-    {
-      title: "PDF Documents",
-      description: "All materials in standardized PDF format for easy access",
-      icon: <Rocket className="size-5 stroke-1" />,
-    },
-    {
-      title: "Campus Community",
-      description: "Built by students, for students at Binus University",
-      icon: <Globe className="size-5 stroke-1" />,
-    },
-    {
-      title: "Real-time Messaging",
-      description: "Chat directly with buyers and sellers for quick deals",
-      icon: <Edit className="size-5 stroke-1" />,
     },
   ],
   className,

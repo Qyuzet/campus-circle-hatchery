@@ -18,27 +18,27 @@ export default function Stats({
   items = [
     {
       label: "over",
-      value: "500",
+      value: "1000",
       suffix: "+",
       description: "active Binus students",
     },
     {
       label: "more than",
-      value: "1.2",
+      value: "2.5",
       suffix: "k",
-      description: "study materials listed",
+      description: "items available",
     },
     {
       label: "already",
-      value: "300",
+      value: "500",
       suffix: "+",
       description: "successful transactions",
     },
     {
       label: "trusted by",
-      value: "150",
+      value: "200",
       suffix: "+",
-      description: "verified tutors",
+      description: "verified sellers",
     },
   ],
   className,

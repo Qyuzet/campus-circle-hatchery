@@ -47,7 +47,9 @@ export default function FooterSection({
     {
       title: "Platform",
       links: [
-        { text: "Marketplace", href: "/dashboard" },
+        { text: "Study Materials", href: "/dashboard" },
+        { text: "Campus Food", href: "/dashboard" },
+        { text: "Events", href: "/dashboard" },
         { text: "Tutoring", href: "/dashboard" },
         { text: "My Library", href: "/library" },
       ],
@@ -55,8 +57,8 @@ export default function FooterSection({
     {
       title: "Resources",
       links: [
-        { text: "How It Works", href: "/" },
-        { text: "FAQ", href: "/" },
+        { text: "How It Works", href: "/#faq" },
+        { text: "FAQ", href: "/#faq" },
         { text: "Support", href: siteConfig.links.email },
       ],
     },
@@ -74,7 +76,7 @@ export default function FooterSection({
     { text: "Privacy Policy", href: "/privacy" },
     { text: "Terms of Service", href: "/terms" },
   ],
-  showModeToggle = true,
+  showModeToggle = false,
   className,
 }: FooterProps) {
   return (

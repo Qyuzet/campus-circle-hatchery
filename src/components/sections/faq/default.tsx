@@ -66,13 +66,13 @@ export default function FAQ({
       answer: (
         <>
           <p className="text-muted-foreground mb-4 max-w-[580px]">
-            You can trade study materials like notes, textbooks, past exam
-            papers, and course materials. We also support tutoring services
-            where you can offer or find academic help.
+            You can buy and sell study materials (notes, textbooks,
+            assignments), order campus food from fellow students, register for
+            events and workshops, and book tutoring sessions.
           </p>
           <p className="text-muted-foreground mb-4 max-w-[580px]">
-            All items must be related to academic purposes and comply with
-            university policies. Prohibited items will be removed.
+            All items must be related to academic or campus life purposes and
+            comply with university policies. Prohibited items will be removed.
           </p>
         </>
       ),
@@ -93,31 +93,30 @@ export default function FAQ({
       ),
     },
     {
-      question: "How do I contact a seller?",
+      question: "How do I contact a seller or buyer?",
       answer: (
         <p className="text-muted-foreground mb-4 max-w-[580px]">
           Once you find an item you&apos;re interested in, you can use our
-          built-in messaging system to chat directly with the seller. Simply
-          click the &quot;Message Seller&quot; button on any listing to start a
-          conversation. .
+          built-in real-time messaging system to chat directly with the seller.
+          Simply click the &quot;Message Seller&quot; button on any listing to
+          start a conversation. You can also send order requests for food items
+          directly through chat.
         </p>
       ),
     },
     {
-      question: "Can I get a discount?",
+      question: "How do I withdraw my earnings?",
       answer: (
         <>
           <p className="text-muted-foreground mb-4 max-w-[580px]">
-            Actually, yes! I&apos;m always acively looking for beta testers of
-            new features. If you are interested in exchanging feedback for a
-            discount, please contact me via{" "}
-            <a
-              href={siteConfig.links.email}
-              className="underline underline-offset-2"
-            >
-              email
-            </a>
-            .
+            Go to the Wallet section in your dashboard to view your balance and
+            transaction history. Click &quot;Withdraw Funds&quot; to request a
+            withdrawal to your bank account. Withdrawals are processed within
+            1-3 business days.
+          </p>
+          <p className="text-muted-foreground mb-4 max-w-[580px]">
+            You can track all your sales, purchases, and withdrawal requests in
+            the Wallet tab.
           </p>
         </>
       ),

@@ -32,8 +32,8 @@ interface HeroProps {
 }
 
 export default function Hero({
-  title = "Your Campus Marketplace for Study Materials & Services",
-  description = "Exclusively for Binus University students. Buy, sell, and exchange study materials, notes, and tutoring services in a trusted community.",
+  title = "Your All-in-One Campus Platform for Study, Food, Events & More",
+  description = "Exclusively for Binus University students. Buy and sell study materials, order campus food, join events, find tutors, and connect with your community in one trusted platform.",
   mockup = (
     <Screenshot
       srcLight="/binus-student.png"

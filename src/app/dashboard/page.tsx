@@ -1398,6 +1398,16 @@ function DashboardContent() {
             new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
         setAllTransactions(combined);
+
+        setTimeout(() => {
+          setActiveTab("my-hub");
+          setMyHubTab("purchases");
+
+          setTimeout(() => {
+            setMyHubTab("library");
+            setShowPaymentSuccessModal(false);
+          }, 3000);
+        }, 2000);
       }
 
       setHasCheckedRecentPayment(true);
@@ -9785,7 +9795,7 @@ function AddItemForm({
         relatedItemTitle={supportContext.itemTitle}
       />
 
-      {/* Payment Success Modal */}
+      {/* Payment Success Notification */}
       {showPaymentSuccessModal && recentPayment && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 md:p-8 animate-in fade-in zoom-in duration-300">
@@ -9835,29 +9845,9 @@ function AddItemForm({
                 </div>
               </div>
 
-              <div className="flex flex-col gap-3">
-                <Button
-                  onClick={() => {
-                    setShowPaymentSuccessModal(false);
-                    setActiveTab("my-hub");
-                    setMyHubTab(
-                      recentPayment.itemType === "event"
-                        ? "events"
-                        : recentPayment.itemType === "food"
-                        ? "purchases"
-                        : "library"
-                    );
-                  }}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                >
-                  View My Purchase
-                </Button>
-                <button
-                  onClick={() => setShowPaymentSuccessModal(false)}
-                  className="w-full px-4 py-2 text-gray-700 hover:text-gray-900 font-medium transition-colors"
-                >
-                  Continue Shopping
-                </button>
+              <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
+                <div className="animate-spin h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full"></div>
+                <span>Redirecting to your purchase...</span>
               </div>
             </div>
           </div>

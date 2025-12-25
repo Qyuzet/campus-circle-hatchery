@@ -1,6 +1,6 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useState } from "react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { BookOpen, Star, Eye, Heart, HelpCircle } from "lucide-react";
@@ -40,6 +40,8 @@ const MarketplaceCardComponent = ({
   viewMode = "grid",
   onSupportClick,
 }: MarketplaceCardProps) => {
+  const [imageLoaded, setImageLoaded] = useState(false);
+
   const formatPrice = (price: number) => {
     if (price >= 1000) {
       return `${(price / 1000).toFixed(price % 1000 === 0 ? 0 : 1)}K`;
@@ -56,15 +58,25 @@ const MarketplaceCardComponent = ({
     >
       <div className="relative aspect-[3/4] bg-gray-100 overflow-hidden">
         {item.thumbnailUrl ? (
-          <Image
-            src={item.thumbnailUrl}
-            alt={item.title}
-            fill
-            sizes="(max-width: 768px) 33vw, 20vw"
-            className="object-cover group-hover:scale-105 transition-transform"
-            loading="lazy"
-            priority={false}
-          />
+          <>
+            {!imageLoaded && (
+              <div className="absolute inset-0 bg-gray-200 animate-pulse flex items-center justify-center">
+                <BookOpen className="h-12 w-12 text-gray-400" />
+              </div>
+            )}
+            <Image
+              src={item.thumbnailUrl}
+              alt={item.title}
+              fill
+              sizes="(max-width: 768px) 33vw, 20vw"
+              className={`object-cover group-hover:scale-105 transition-all duration-300 ${
+                imageLoaded ? "opacity-100" : "opacity-0"
+              }`}
+              loading="lazy"
+              priority={false}
+              onLoad={() => setImageLoaded(true)}
+            />
+          </>
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-blue-50">
             <BookOpen className="h-12 w-12 text-blue-300" />
