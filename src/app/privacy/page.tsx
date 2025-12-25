@@ -1,5 +1,26 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { siteConfig } from "@/config/site";
+
+export const metadata: Metadata = {
+  title: "Privacy Policy",
+  description:
+    "Learn how CampusCircle collects, uses, and protects your personal information. Our privacy policy for Binus University students.",
+  alternates: {
+    canonical: `${siteConfig.url}/privacy`,
+  },
+  openGraph: {
+    title: "Privacy Policy | CampusCircle",
+    description:
+      "Learn how CampusCircle collects, uses, and protects your personal information.",
+    url: `${siteConfig.url}/privacy`,
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+};
 
 export default function PrivacyPolicy() {
   return (
@@ -178,7 +199,7 @@ export default function PrivacyPolicy() {
               <p>
                 We may update our Privacy Policy from time to time. We will
                 notify you of any changes by posting the new Privacy Policy on
-                this page and updating the "Last updated" date.
+                this page and updating the &quot;Last updated&quot; date.
               </p>
             </section>
 

@@ -4,11 +4,11 @@ import { ReactNode } from "react";
 import { siteConfig } from "@/config/site";
 
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "../../ui/accordion";
+  AccordionSSR,
+  AccordionContentSSR,
+  AccordionItemSSR,
+  AccordionTriggerSSR,
+} from "../../ui/accordion-ssr";
 import { Section } from "../../ui/section";
 
 interface FAQItemProps {
@@ -131,17 +131,14 @@ export default function FAQ({
           {title}
         </h2>
         {items !== false && items.length > 0 && (
-          <Accordion type="single" collapsible className="w-full max-w-[800px]">
+          <AccordionSSR className="w-full max-w-[800px]">
             {items.map((item, index) => (
-              <AccordionItem
-                key={index}
-                value={item.value || `item-${index + 1}`}
-              >
-                <AccordionTrigger>{item.question}</AccordionTrigger>
-                <AccordionContent>{item.answer}</AccordionContent>
-              </AccordionItem>
+              <AccordionItemSSR key={index}>
+                <AccordionTriggerSSR>{item.question}</AccordionTriggerSSR>
+                <AccordionContentSSR>{item.answer}</AccordionContentSSR>
+              </AccordionItemSSR>
             ))}
-          </Accordion>
+          </AccordionSSR>
         )}
       </div>
     </Section>

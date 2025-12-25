@@ -4,7 +4,19 @@ export const siteConfig = {
   getStartedUrl: "/dashboard",
   ogImage: "/campus-circle-logo.png",
   description:
-    "Exclusive marketplace for Binus University students to buy, sell, and exchange study materials, notes, assignments, and books in PDF format.",
+    "Your all-in-one campus platform for Binus University students. Buy and sell study materials, order campus food, join events, find tutors, and connect with your community in one trusted platform.",
+  keywords: [
+    "Binus University",
+    "campus marketplace",
+    "study materials",
+    "campus food ordering",
+    "student events",
+    "tutoring services",
+    "student community",
+    "academic resources",
+    "campus platform",
+    "student marketplace",
+  ],
   links: {
     twitter: "https://twitter.com/campuscircle",
     github: "https://github.com/Qyuzet/campus-circle-hatchery",

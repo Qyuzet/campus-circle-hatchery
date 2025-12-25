@@ -86,10 +86,6 @@ export const authConfig: NextAuthConfig = {
       return token;
     },
   },
-  pages: {
-    signIn: "/", // Custom sign-in page (landing page)
-    error: "/", // Error page
-  },
   session: {
     strategy: "jwt",
   },

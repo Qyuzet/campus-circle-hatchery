@@ -1,18 +1,18 @@
 import { type VariantProps } from "class-variance-authority";
 import { ArrowRightIcon } from "lucide-react";
 import { ReactNode } from "react";
+import Link from "next/link";
 
 import { siteConfig } from "@/config/site";
 import { cn } from "@/lib/utils";
 
-import SignInButton from "@/components/SignInButton";
-import Github from "@/components/logos/github";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import Glow from "@/components/ui/glow";
 import { Mockup, MockupFrame } from "@/components/ui/mockup";
-import Screenshot from "@/components/ui/screenshot";
+import ScreenshotSSR from "@/components/ui/screenshot-ssr";
 import { Section } from "@/components/ui/section";
+import GoogleSignInButton from "@/components/GoogleSignInButton";
 
 interface HeroButtonProps {
   href: string;
@@ -35,7 +35,7 @@ export default function Hero({
   title = "Your All-in-One Campus Platform for Study, Food, Events & More",
   description = "Exclusively for Binus University students. Buy and sell study materials, order campus food, join events, find tutors, and connect with your community in one trusted platform.",
   mockup = (
-    <Screenshot
+    <ScreenshotSSR
       srcLight="/binus-student.png"
       srcDark="/binus-student.png"
       alt="Binus University Students"
@@ -75,7 +75,7 @@ export default function Hero({
             {description}
           </p>
           <div className="animate-appear relative z-10 flex justify-center gap-4 opacity-0 delay-300">
-            <SignInButton text="Start Exploring" variant="default" />
+            <GoogleSignInButton text="Start Exploring" variant="default" />
           </div>
           {mockup !== false && (
             <div className="relative w-full pt-12">

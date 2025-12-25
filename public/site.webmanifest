@@ -1,0 +1,28 @@
+{
+  "name": "CampusCircle - All-in-One Campus Platform",
+  "short_name": "CampusCircle",
+  "description": "Your all-in-one campus platform for Binus University students. Buy and sell study materials, order campus food, join events, find tutors, and connect with your community.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3b82f6",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/campus-circle-icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/campus-circle-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["education", "social", "shopping"],
+  "lang": "en-US",
+  "dir": "ltr"
+}
+

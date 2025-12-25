@@ -1,5 +1,26 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { siteConfig } from "@/config/site";
+
+export const metadata: Metadata = {
+  title: "Terms of Service",
+  description:
+    "Read the terms and conditions for using CampusCircle. Rules and guidelines for Binus University students using our platform.",
+  alternates: {
+    canonical: `${siteConfig.url}/terms`,
+  },
+  openGraph: {
+    title: "Terms of Service | CampusCircle",
+    description:
+      "Read the terms and conditions for using CampusCircle platform.",
+    url: `${siteConfig.url}/terms`,
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+};
 
 export default function TermsOfService() {
   return (
@@ -86,7 +107,9 @@ export default function TermsOfService() {
                 </li>
                 <li>Accurate descriptions and pricing required</li>
                 <li>Pickup times must be honored</li>
-                <li>Food quality and safety is the seller's responsibility</li>
+                <li>
+                  Food quality and safety is the seller&apos;s responsibility
+                </li>
               </ul>
 
               <h3 className="text-xl font-semibold text-gray-800 mb-3">
@@ -182,8 +205,8 @@ export default function TermsOfService() {
                 7. Liability and Disclaimers
               </h2>
               <p className="mb-4">
-                CampusCircle is provided "as is" without warranties of any kind.
-                We are not responsible for:
+                CampusCircle is provided &quot;as is&quot; without warranties of
+                any kind. We are not responsible for:
               </p>
               <ul className="list-disc pl-6 space-y-2">
                 <li>Quality or accuracy of user-generated content</li>
@@ -249,9 +272,10 @@ export default function TermsOfService() {
               <p className="text-gray-700">
                 CampusCircle is designed to facilitate legitimate academic
                 collaboration and resource sharing. Users must maintain academic
-                integrity and comply with Binus University's academic policies.
-                Misuse of the platform for academic dishonesty may result in
-                account termination and reporting to university authorities.
+                integrity and comply with Binus University&apos;s academic
+                policies. Misuse of the platform for academic dishonesty may
+                result in account termination and reporting to university
+                authorities.
               </p>
             </section>
           </div>

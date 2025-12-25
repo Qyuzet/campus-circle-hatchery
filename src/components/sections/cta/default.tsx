@@ -1,13 +1,14 @@
 import { type VariantProps } from "class-variance-authority";
 import { ReactNode } from "react";
+import Link from "next/link";
 
 import { siteConfig } from "@/config/site";
 import { cn } from "@/lib/utils";
 
-import SignInButton from "@/components/SignInButton";
 import { Button, buttonVariants } from "../../ui/button";
 import Glow from "../../ui/glow";
 import { Section } from "../../ui/section";
+import GoogleSignInButton from "@/components/GoogleSignInButton";
 
 interface CTAButtonProps {
   href: string;
@@ -35,7 +36,7 @@ export default function CTA({
           {title}
         </h2>
         <div className="flex justify-center gap-4">
-          <SignInButton text="Start Trading Now" variant="default" />
+          <GoogleSignInButton text="Start Trading Now" variant="default" />
         </div>
       </div>
       <div className="absolute top-0 left-0 h-full w-full translate-y-[1rem] opacity-80 transition-all duration-500 ease-in-out group-hover:translate-y-[-2rem] group-hover:opacity-100">
