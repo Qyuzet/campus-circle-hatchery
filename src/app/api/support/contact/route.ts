@@ -42,14 +42,25 @@ export async function POST(request: NextRequest) {
       select: { email: true, name: true },
     });
 
+    console.log("Found admins:", admins);
+
     if (admins.length === 0) {
+      console.error("No admin users found in database");
       return NextResponse.json(
         { error: "No admin users found" },
         { status: 500 }
       );
     }
 
-    const adminEmails = admins.map((admin) => admin.email);
+    const adminEmails = admins.map((admin) => admin.email).filter(Boolean);
+
+    if (adminEmails.length === 0) {
+      console.error("No valid admin emails found");
+      return NextResponse.json(
+        { error: "No valid admin emails found" },
+        { status: 500 }
+      );
+    }
 
     const emailHtml = `
       <!DOCTYPE html>
@@ -122,13 +133,22 @@ export async function POST(request: NextRequest) {
       </html>
     `;
 
-    await resend.emails.send({
-      from: "CampusCircle Support <noreply@campuscircle.com>",
+    const fromEmail =
+      process.env.RESEND_FROM_EMAIL || "noreply@campuscircle.id";
+
+    console.log("Sending support email to admins:", adminEmails);
+    console.log("From email:", fromEmail);
+    console.log("User:", user.email);
+
+    const emailResult = await resend.emails.send({
+      from: `CampusCircle Support <${fromEmail}>`,
       to: adminEmails,
       subject: `[Support] ${category.toUpperCase()}: ${subject}`,
       html: emailHtml,
       replyTo: user.email,
     });
+
+    console.log("Email send result:", emailResult);
 
     return NextResponse.json({
       success: true,
@@ -142,4 +162,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

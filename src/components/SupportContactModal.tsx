@@ -89,7 +89,7 @@ export function SupportContactModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 animate-in fade-in duration-200">
       <Card className="w-full max-w-lg shadow-2xl animate-in zoom-in-95 duration-200">
         <CardHeader className="pb-4">
           <div className="flex items-start justify-between">
@@ -131,7 +131,7 @@ export function SupportContactModal({
                 <SelectTrigger id="category">
                   <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="z-[99999]">
                   <SelectItem value="technical">Technical Issue</SelectItem>
                   <SelectItem value="payment">Payment Problem</SelectItem>
                   <SelectItem value="account">Account Issue</SelectItem>
@@ -206,4 +206,3 @@ export function SupportContactModal({
     </div>
   );
 }
-

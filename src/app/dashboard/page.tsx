@@ -5165,10 +5165,7 @@ function DashboardContent() {
                     ) : clubs.length > 0 ? (
                       <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4">
                         {clubs.map((club) => (
-                          <Card
-                            key={club.id}
-                            className="hover:shadow-lg transition-shadow relative"
-                          >
+                          <div key={club.id} className="relative">
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -5179,331 +5176,349 @@ function DashboardContent() {
                                 });
                                 setShowSupportModal(true);
                               }}
-                              className="absolute top-1 right-1 md:top-2 md:right-2 z-10 bg-white/90 hover:bg-white backdrop-blur-sm p-1 md:p-1.5 rounded-full shadow-sm transition-all hover:shadow-md group"
+                              className="absolute top-1 right-1 md:top-2 md:right-2 z-50 bg-white/90 hover:bg-white backdrop-blur-sm p-1 md:p-1.5 rounded-full shadow-sm transition-all hover:shadow-md group pointer-events-auto cursor-pointer"
                               title="Contact Support"
                             >
-                              <HelpCircle className="h-3 w-3 md:h-4 md:w-4 text-gray-600 group-hover:text-blue-600 transition-colors" />
+                              <HelpCircle className="h-3 w-3 md:h-4 md:w-4 text-gray-600 group-hover:text-blue-600 transition-colors pointer-events-none" />
                             </button>
-                            <CardHeader className="p-2 md:p-6 pb-2 md:pb-6">
-                              <div className="flex flex-col md:flex-row items-center gap-1.5 md:gap-3">
-                                {club.logoUrl ? (
-                                  <Image
-                                    src={club.logoUrl}
-                                    alt={club.name}
-                                    width={64}
-                                    height={48}
-                                    className="w-14 h-11 md:w-16 md:h-12 rounded-md md:rounded-lg object-contain bg-white"
-                                  />
-                                ) : (
-                                  <div className="w-14 h-11 md:w-16 md:h-12 bg-dark-blue rounded-md md:rounded-lg flex items-center justify-center">
-                                    <Users className="h-5 w-5 md:h-6 md:w-6 text-white" />
-                                  </div>
-                                )}
-                                <div className="flex-1 text-center md:text-left w-full">
-                                  <CardTitle className="text-xs md:text-base leading-tight md:leading-normal line-clamp-2 md:line-clamp-none">
-                                    {club.name}
-                                  </CardTitle>
-                                  <Badge
-                                    variant="secondary"
-                                    className="text-[10px] md:text-xs mt-0.5 md:mt-1 px-1.5 md:px-2.5 py-0 md:py-0.5"
-                                  >
-                                    {club.category}
-                                  </Badge>
-                                </div>
-                              </div>
-                            </CardHeader>
-                            <CardContent className="p-2 md:p-6 pt-0 md:pt-0">
-                              <p className="text-[10px] md:text-sm text-medium-gray line-clamp-2 mb-1.5 md:mb-3 leading-tight md:leading-normal">
-                                {club.description}
-                              </p>
-                              <div className="space-y-1 md:space-y-2 mb-1.5 md:mb-3">
-                                <div className="flex items-center justify-between">
-                                  <span className="text-[10px] md:text-xs text-medium-gray">
-                                    {club.memberCount} members
-                                  </span>
-                                  <Badge
-                                    variant={(() => {
-                                      const now = new Date();
-                                      const startDate =
-                                        club.registrationStartDate
-                                          ? new Date(club.registrationStartDate)
-                                          : null;
-                                      const endDate = club.registrationEndDate
-                                        ? new Date(club.registrationEndDate)
-                                        : null;
-
-                                      if (!club.isOpenForRegistration)
-                                        return "secondary";
-                                      if (startDate && now < startDate)
-                                        return "secondary";
-                                      if (endDate && now > endDate)
-                                        return "secondary";
-                                      return "default";
-                                    })()}
-                                    className="text-[10px] md:text-xs px-1.5 md:px-2.5 py-0 md:py-0.5"
-                                  >
-                                    {(() => {
-                                      const now = new Date();
-                                      const startDate =
-                                        club.registrationStartDate
-                                          ? new Date(club.registrationStartDate)
-                                          : null;
-                                      const endDate = club.registrationEndDate
-                                        ? new Date(club.registrationEndDate)
-                                        : null;
-
-                                      if (!club.isOpenForRegistration)
-                                        return "Closed";
-                                      if (startDate && now < startDate)
-                                        return "Not Yet Open";
-                                      if (endDate && now > endDate)
-                                        return "Closed";
-                                      return "Open";
-                                    })()}
-                                  </Badge>
-                                </div>
-                                {(() => {
-                                  const now = new Date();
-                                  const startDate = club.registrationStartDate
-                                    ? new Date(club.registrationStartDate)
-                                    : null;
-                                  const isNotYetOpen =
-                                    startDate && now < startDate;
-
-                                  if (isNotYetOpen) {
-                                    return (
-                                      <p className="text-[10px] md:text-xs text-amber-600 font-medium">
-                                        Opens on{" "}
-                                        {startDate.toLocaleDateString("en-US", {
-                                          month: "long",
-                                          year: "numeric",
-                                        })}
-                                      </p>
-                                    );
-                                  }
-                                  return null;
-                                })()}
-                                {club.registrationStartDate &&
-                                  club.registrationEndDate && (
-                                    <p className="text-[10px] md:text-xs text-medium-gray leading-tight md:leading-normal">
-                                      Registration:{" "}
-                                      {new Date(
-                                        club.registrationStartDate
-                                      ).toLocaleDateString()}{" "}
-                                      -{" "}
-                                      {new Date(
-                                        club.registrationEndDate
-                                      ).toLocaleDateString()}
-                                    </p>
+                            <Card className="hover:shadow-lg transition-shadow">
+                              <CardHeader className="p-2 md:p-6 pb-2 md:pb-6">
+                                <div className="flex flex-col md:flex-row items-center gap-1.5 md:gap-3">
+                                  {club.logoUrl ? (
+                                    <Image
+                                      src={club.logoUrl}
+                                      alt={club.name}
+                                      width={64}
+                                      height={48}
+                                      className="w-14 h-11 md:w-16 md:h-12 rounded-md md:rounded-lg object-contain bg-white"
+                                    />
+                                  ) : (
+                                    <div className="w-14 h-11 md:w-16 md:h-12 bg-dark-blue rounded-md md:rounded-lg flex items-center justify-center">
+                                      <Users className="h-5 w-5 md:h-6 md:w-6 text-white" />
+                                    </div>
                                   )}
-                              </div>
-                              {club.websiteUrl && (
+                                  <div className="flex-1 text-center md:text-left w-full">
+                                    <CardTitle className="text-xs md:text-base leading-tight md:leading-normal line-clamp-2 md:line-clamp-none">
+                                      {club.name}
+                                    </CardTitle>
+                                    <Badge
+                                      variant="secondary"
+                                      className="text-[10px] md:text-xs mt-0.5 md:mt-1 px-1.5 md:px-2.5 py-0 md:py-0.5"
+                                    >
+                                      {club.category}
+                                    </Badge>
+                                  </div>
+                                </div>
+                              </CardHeader>
+                              <CardContent className="p-2 md:p-6 pt-0 md:pt-0">
+                                <p className="text-[10px] md:text-sm text-medium-gray line-clamp-2 mb-1.5 md:mb-3 leading-tight md:leading-normal">
+                                  {club.description}
+                                </p>
+                                <div className="space-y-1 md:space-y-2 mb-1.5 md:mb-3">
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-[10px] md:text-xs text-medium-gray">
+                                      {club.memberCount} members
+                                    </span>
+                                    <Badge
+                                      variant={(() => {
+                                        const now = new Date();
+                                        const startDate =
+                                          club.registrationStartDate
+                                            ? new Date(
+                                                club.registrationStartDate
+                                              )
+                                            : null;
+                                        const endDate = club.registrationEndDate
+                                          ? new Date(club.registrationEndDate)
+                                          : null;
+
+                                        if (!club.isOpenForRegistration)
+                                          return "secondary";
+                                        if (startDate && now < startDate)
+                                          return "secondary";
+                                        if (endDate && now > endDate)
+                                          return "secondary";
+                                        return "default";
+                                      })()}
+                                      className="text-[10px] md:text-xs px-1.5 md:px-2.5 py-0 md:py-0.5"
+                                    >
+                                      {(() => {
+                                        const now = new Date();
+                                        const startDate =
+                                          club.registrationStartDate
+                                            ? new Date(
+                                                club.registrationStartDate
+                                              )
+                                            : null;
+                                        const endDate = club.registrationEndDate
+                                          ? new Date(club.registrationEndDate)
+                                          : null;
+
+                                        if (!club.isOpenForRegistration)
+                                          return "Closed";
+                                        if (startDate && now < startDate)
+                                          return "Not Yet Open";
+                                        if (endDate && now > endDate)
+                                          return "Closed";
+                                        return "Open";
+                                      })()}
+                                    </Badge>
+                                  </div>
+                                  {(() => {
+                                    const now = new Date();
+                                    const startDate = club.registrationStartDate
+                                      ? new Date(club.registrationStartDate)
+                                      : null;
+                                    const isNotYetOpen =
+                                      startDate && now < startDate;
+
+                                    if (isNotYetOpen) {
+                                      return (
+                                        <p className="text-[10px] md:text-xs text-amber-600 font-medium">
+                                          Opens on{" "}
+                                          {startDate.toLocaleDateString(
+                                            "en-US",
+                                            {
+                                              month: "long",
+                                              year: "numeric",
+                                            }
+                                          )}
+                                        </p>
+                                      );
+                                    }
+                                    return null;
+                                  })()}
+                                  {club.registrationStartDate &&
+                                    club.registrationEndDate && (
+                                      <p className="text-[10px] md:text-xs text-medium-gray leading-tight md:leading-normal">
+                                        Registration:{" "}
+                                        {new Date(
+                                          club.registrationStartDate
+                                        ).toLocaleDateString()}{" "}
+                                        -{" "}
+                                        {new Date(
+                                          club.registrationEndDate
+                                        ).toLocaleDateString()}
+                                      </p>
+                                    )}
+                                </div>
+                                {club.websiteUrl && (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="w-full mb-1 md:mb-2 text-[10px] md:text-sm h-7 md:h-9 px-2 md:px-4"
+                                    onClick={() => {
+                                      const link = document.createElement("a");
+                                      link.href = club.websiteUrl!;
+                                      link.target = "_blank";
+                                      link.rel = "noopener noreferrer";
+                                      document.body.appendChild(link);
+                                      link.click();
+                                      document.body.removeChild(link);
+                                    }}
+                                  >
+                                    <ExternalLink className="h-2.5 w-2.5 md:h-3 md:w-3 mr-1" />
+                                    <span className="hidden md:inline">
+                                      Visit Website
+                                    </span>
+                                    <span className="md:hidden">Website</span>
+                                  </Button>
+                                )}
                                 <Button
                                   size="sm"
-                                  variant="outline"
-                                  className="w-full mb-1 md:mb-2 text-[10px] md:text-sm h-7 md:h-9 px-2 md:px-4"
-                                  onClick={() => {
-                                    const link = document.createElement("a");
-                                    link.href = club.websiteUrl!;
-                                    link.target = "_blank";
-                                    link.rel = "noopener noreferrer";
-                                    document.body.appendChild(link);
-                                    link.click();
-                                    document.body.removeChild(link);
-                                  }}
-                                >
-                                  <ExternalLink className="h-2.5 w-2.5 md:h-3 md:w-3 mr-1" />
-                                  <span className="hidden md:inline">
-                                    Visit Website
-                                  </span>
-                                  <span className="md:hidden">Website</span>
-                                </Button>
-                              )}
-                              <Button
-                                size="sm"
-                                className="w-full text-[10px] md:text-sm h-7 md:h-9 px-2 md:px-4"
-                                disabled={(() => {
-                                  const now = new Date();
-                                  const startDate = club.registrationStartDate
-                                    ? new Date(club.registrationStartDate)
-                                    : null;
-                                  const endDate = club.registrationEndDate
-                                    ? new Date(club.registrationEndDate)
-                                    : null;
-                                  const request = clubJoinRequests.get(club.id);
-                                  const isMember = myClubs.some(
-                                    (c) => c.id === club.id
-                                  );
-
-                                  if (isMember) return true;
-                                  if (!club.isOpenForRegistration) return true;
-                                  if (startDate && now < startDate) return true;
-                                  if (endDate && now > endDate) return true;
-                                  if (request?.status === "PENDING")
-                                    return true;
-                                  if (requestingClubs.has(club.id)) return true;
-                                  return false;
-                                })()}
-                                onClick={async () => {
-                                  const now = new Date();
-                                  const startDate = club.registrationStartDate
-                                    ? new Date(club.registrationStartDate)
-                                    : null;
-                                  const endDate = club.registrationEndDate
-                                    ? new Date(club.registrationEndDate)
-                                    : null;
-                                  const request = clubJoinRequests.get(club.id);
-                                  const joinMode =
-                                    (club as any).joinMode || "DIRECT";
-
-                                  if (!club.isOpenForRegistration) {
-                                    toast.error(
-                                      "This club is not currently accepting new members"
+                                  className="w-full text-[10px] md:text-sm h-7 md:h-9 px-2 md:px-4"
+                                  disabled={(() => {
+                                    const now = new Date();
+                                    const startDate = club.registrationStartDate
+                                      ? new Date(club.registrationStartDate)
+                                      : null;
+                                    const endDate = club.registrationEndDate
+                                      ? new Date(club.registrationEndDate)
+                                      : null;
+                                    const request = clubJoinRequests.get(
+                                      club.id
                                     );
-                                    return;
-                                  }
-
-                                  if (startDate && now < startDate) {
-                                    toast.error(
-                                      `Registration opens on ${startDate.toLocaleDateString(
-                                        "en-US",
-                                        {
-                                          month: "long",
-                                          year: "numeric",
-                                        }
-                                      )}`
+                                    const isMember = myClubs.some(
+                                      (c) => c.id === club.id
                                     );
-                                    return;
-                                  }
 
-                                  if (endDate && now > endDate) {
-                                    toast.error(
-                                      "Registration period has ended"
-                                    );
-                                    return;
-                                  }
-
-                                  if (!isProfileComplete) {
-                                    setProfileFormData({
-                                      name: userProfile?.fullName || "",
-                                      studentId: userProfile?.studentId || "",
-                                      faculty:
-                                        userProfile?.faculty === "Unknown"
-                                          ? ""
-                                          : userProfile?.faculty || "",
-                                      major:
-                                        userProfile?.major === "Unknown"
-                                          ? ""
-                                          : userProfile?.major || "",
-                                      year: userProfile?.year || 1,
-                                    });
-                                    setShowProfileCompleteModal(true);
-                                    toast.error(
-                                      "Please complete your profile before requesting to join a club"
-                                    );
-                                    return;
-                                  }
-
-                                  if (requestingClubs.has(club.id)) {
-                                    return;
-                                  }
-
-                                  try {
-                                    if (joinMode === "DIRECT") {
-                                      setClubToJoin({
-                                        id: club.id,
-                                        name: club.name,
-                                        joinMode: "DIRECT",
-                                        isApproved: false,
-                                      });
-                                      setShowJoinClubConfirm(true);
-                                    } else if (request?.status === "APPROVED") {
-                                      setClubToJoin({
-                                        id: club.id,
-                                        name: club.name,
-                                        joinMode: "REQUEST",
-                                        isApproved: true,
-                                      });
-                                      setShowJoinClubConfirm(true);
-                                    } else {
-                                      setRequestingClubs((prev) =>
-                                        new Set(prev).add(club.id)
-                                      );
-                                      const response = await fetch(
-                                        `/api/clubs/${club.id}/request-join`,
-                                        {
-                                          method: "POST",
-                                        }
-                                      );
-
-                                      const data = await response.json();
-
-                                      if (response.ok) {
-                                        toast.success(
-                                          "Request submitted successfully!"
-                                        );
-                                        const statusRes = await fetch(
-                                          `/api/clubs/${club.id}/request-status`
-                                        );
-                                        if (statusRes.ok) {
-                                          const { request: newRequest } =
-                                            await statusRes.json();
-                                          if (newRequest) {
-                                            setClubJoinRequests((prev) => {
-                                              const newMap = new Map(prev);
-                                              newMap.set(club.id, newRequest);
-                                              return newMap;
-                                            });
-                                          }
-                                        }
-                                      } else {
-                                        toast.error(
-                                          data.error ||
-                                            "Failed to submit request"
-                                        );
-                                      }
-                                    }
-                                  } catch (error) {
-                                    toast.error("Failed to process request");
-                                  } finally {
-                                    setRequestingClubs((prev) => {
-                                      const newSet = new Set(prev);
-                                      newSet.delete(club.id);
-                                      return newSet;
-                                    });
-                                  }
-                                }}
-                              >
-                                {requestingClubs.has(club.id) ? (
-                                  <>
-                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                    Requesting...
-                                  </>
-                                ) : (
-                                  (() => {
+                                    if (isMember) return true;
+                                    if (!club.isOpenForRegistration)
+                                      return true;
+                                    if (startDate && now < startDate)
+                                      return true;
+                                    if (endDate && now > endDate) return true;
+                                    if (request?.status === "PENDING")
+                                      return true;
+                                    if (requestingClubs.has(club.id))
+                                      return true;
+                                    return false;
+                                  })()}
+                                  onClick={async () => {
+                                    const now = new Date();
+                                    const startDate = club.registrationStartDate
+                                      ? new Date(club.registrationStartDate)
+                                      : null;
+                                    const endDate = club.registrationEndDate
+                                      ? new Date(club.registrationEndDate)
+                                      : null;
                                     const request = clubJoinRequests.get(
                                       club.id
                                     );
                                     const joinMode =
                                       (club as any).joinMode || "DIRECT";
-                                    const isMember = myClubs.some(
-                                      (c) => c.id === club.id
-                                    );
-                                    if (isMember) return "Already Joined";
-                                    if (!club.isOpenForRegistration)
-                                      return "Registration Closed";
-                                    if (joinMode === "DIRECT")
-                                      return "Join Now";
-                                    if (request?.status === "PENDING")
-                                      return "Request Pending";
-                                    if (request?.status === "APPROVED")
-                                      return "Join Now";
-                                    return "Request to Join";
-                                  })()
-                                )}
-                              </Button>
-                            </CardContent>
-                          </Card>
+
+                                    if (!club.isOpenForRegistration) {
+                                      toast.error(
+                                        "This club is not currently accepting new members"
+                                      );
+                                      return;
+                                    }
+
+                                    if (startDate && now < startDate) {
+                                      toast.error(
+                                        `Registration opens on ${startDate.toLocaleDateString(
+                                          "en-US",
+                                          {
+                                            month: "long",
+                                            year: "numeric",
+                                          }
+                                        )}`
+                                      );
+                                      return;
+                                    }
+
+                                    if (endDate && now > endDate) {
+                                      toast.error(
+                                        "Registration period has ended"
+                                      );
+                                      return;
+                                    }
+
+                                    if (!isProfileComplete) {
+                                      setProfileFormData({
+                                        name: userProfile?.fullName || "",
+                                        studentId: userProfile?.studentId || "",
+                                        faculty:
+                                          userProfile?.faculty === "Unknown"
+                                            ? ""
+                                            : userProfile?.faculty || "",
+                                        major:
+                                          userProfile?.major === "Unknown"
+                                            ? ""
+                                            : userProfile?.major || "",
+                                        year: userProfile?.year || 1,
+                                      });
+                                      setShowProfileCompleteModal(true);
+                                      toast.error(
+                                        "Please complete your profile before requesting to join a club"
+                                      );
+                                      return;
+                                    }
+
+                                    if (requestingClubs.has(club.id)) {
+                                      return;
+                                    }
+
+                                    try {
+                                      if (joinMode === "DIRECT") {
+                                        setClubToJoin({
+                                          id: club.id,
+                                          name: club.name,
+                                          joinMode: "DIRECT",
+                                          isApproved: false,
+                                        });
+                                        setShowJoinClubConfirm(true);
+                                      } else if (
+                                        request?.status === "APPROVED"
+                                      ) {
+                                        setClubToJoin({
+                                          id: club.id,
+                                          name: club.name,
+                                          joinMode: "REQUEST",
+                                          isApproved: true,
+                                        });
+                                        setShowJoinClubConfirm(true);
+                                      } else {
+                                        setRequestingClubs((prev) =>
+                                          new Set(prev).add(club.id)
+                                        );
+                                        const response = await fetch(
+                                          `/api/clubs/${club.id}/request-join`,
+                                          {
+                                            method: "POST",
+                                          }
+                                        );
+
+                                        const data = await response.json();
+
+                                        if (response.ok) {
+                                          toast.success(
+                                            "Request submitted successfully!"
+                                          );
+                                          const statusRes = await fetch(
+                                            `/api/clubs/${club.id}/request-status`
+                                          );
+                                          if (statusRes.ok) {
+                                            const { request: newRequest } =
+                                              await statusRes.json();
+                                            if (newRequest) {
+                                              setClubJoinRequests((prev) => {
+                                                const newMap = new Map(prev);
+                                                newMap.set(club.id, newRequest);
+                                                return newMap;
+                                              });
+                                            }
+                                          }
+                                        } else {
+                                          toast.error(
+                                            data.error ||
+                                              "Failed to submit request"
+                                          );
+                                        }
+                                      }
+                                    } catch (error) {
+                                      toast.error("Failed to process request");
+                                    } finally {
+                                      setRequestingClubs((prev) => {
+                                        const newSet = new Set(prev);
+                                        newSet.delete(club.id);
+                                        return newSet;
+                                      });
+                                    }
+                                  }}
+                                >
+                                  {requestingClubs.has(club.id) ? (
+                                    <>
+                                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                      Requesting...
+                                    </>
+                                  ) : (
+                                    (() => {
+                                      const request = clubJoinRequests.get(
+                                        club.id
+                                      );
+                                      const joinMode =
+                                        (club as any).joinMode || "DIRECT";
+                                      const isMember = myClubs.some(
+                                        (c) => c.id === club.id
+                                      );
+                                      if (isMember) return "Already Joined";
+                                      if (!club.isOpenForRegistration)
+                                        return "Registration Closed";
+                                      if (joinMode === "DIRECT")
+                                        return "Join Now";
+                                      if (request?.status === "PENDING")
+                                        return "Request Pending";
+                                      if (request?.status === "APPROVED")
+                                        return "Join Now";
+                                      return "Request to Join";
+                                    })()
+                                  )}
+                                </Button>
+                              </CardContent>
+                            </Card>
+                          </div>
                         ))}
                       </div>
                     ) : (
@@ -5541,141 +5556,147 @@ function DashboardContent() {
                     ) : myClubs.length > 0 ? (
                       <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4">
                         {myClubs.map((club) => (
-                          <Card
-                            key={club.id}
-                            className="hover:shadow-lg transition-shadow relative"
-                          >
+                          <div key={club.id} className="relative">
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
+                                console.log(
+                                  "My Club support button clicked!",
+                                  club.name
+                                );
                                 setSupportContext({
                                   itemId: club.id,
                                   itemType: "club",
                                   itemTitle: club.name,
                                 });
                                 setShowSupportModal(true);
+                                console.log("Modal should be open now");
                               }}
-                              className="absolute top-1 right-1 md:top-2 md:right-2 z-10 bg-white/90 hover:bg-white backdrop-blur-sm p-1 md:p-1.5 rounded-full shadow-sm transition-all hover:shadow-md group"
+                              className="absolute top-1 right-1 md:top-2 md:right-2 z-50 bg-white/90 hover:bg-white backdrop-blur-sm p-1 md:p-1.5 rounded-full shadow-sm transition-all hover:shadow-md group pointer-events-auto cursor-pointer"
                               title="Contact Support"
                             >
-                              <HelpCircle className="h-3 w-3 md:h-4 md:w-4 text-gray-600 group-hover:text-blue-600 transition-colors" />
+                              <HelpCircle className="h-3 w-3 md:h-4 md:w-4 text-gray-600 group-hover:text-blue-600 transition-colors pointer-events-none" />
                             </button>
-                            <CardHeader className="p-2 md:p-6 pb-2 md:pb-6">
-                              <div className="flex flex-col md:flex-row items-center gap-1.5 md:gap-3">
-                                {club.logoUrl ? (
-                                  <Image
-                                    src={club.logoUrl}
-                                    alt={club.name}
-                                    width={64}
-                                    height={48}
-                                    className="w-14 h-11 md:w-16 md:h-12 rounded-md md:rounded-lg object-contain bg-white"
-                                  />
-                                ) : (
-                                  <div className="w-14 h-11 md:w-16 md:h-12 bg-dark-blue rounded-md md:rounded-lg flex items-center justify-center">
-                                    <Users className="h-5 w-5 md:h-6 md:w-6 text-white" />
-                                  </div>
-                                )}
-                                <div className="flex-1 text-center md:text-left w-full">
-                                  <CardTitle className="text-xs md:text-base leading-tight md:leading-normal line-clamp-2 md:line-clamp-none">
-                                    {club.name}
-                                  </CardTitle>
-                                  <Badge
-                                    variant="secondary"
-                                    className="text-[10px] md:text-xs mt-0.5 md:mt-1 px-1.5 md:px-2.5 py-0 md:py-0.5"
-                                  >
-                                    {club.category}
-                                  </Badge>
-                                </div>
-                              </div>
-                            </CardHeader>
-                            <CardContent className="p-2 md:p-6 pt-0 md:pt-0">
-                              <p className="text-[10px] md:text-sm text-medium-gray line-clamp-2 mb-1.5 md:mb-3 leading-tight md:leading-normal">
-                                {club.description}
-                              </p>
-                              <div className="space-y-1 md:space-y-2 mb-1.5 md:mb-3">
-                                <div className="flex items-center justify-between">
-                                  <span className="text-[10px] md:text-xs text-medium-gray">
-                                    {club.memberCount} members
-                                  </span>
-                                  <Badge
-                                    variant={
-                                      club.isOpenForRegistration
-                                        ? "default"
-                                        : "secondary"
-                                    }
-                                    className="text-[10px] md:text-xs px-1.5 md:px-2.5 py-0 md:py-0.5"
-                                  >
-                                    {club.isOpenForRegistration
-                                      ? "Open"
-                                      : "Closed"}
-                                  </Badge>
-                                </div>
-                                {club.registrationStartDate &&
-                                  club.registrationEndDate && (
-                                    <p className="text-[10px] md:text-xs text-medium-gray leading-tight md:leading-normal">
-                                      Registration:{" "}
-                                      {new Date(
-                                        club.registrationStartDate
-                                      ).toLocaleDateString()}{" "}
-                                      -{" "}
-                                      {new Date(
-                                        club.registrationEndDate
-                                      ).toLocaleDateString()}
-                                    </p>
+                            <Card className="hover:shadow-lg transition-shadow">
+                              <CardHeader className="p-2 md:p-6 pb-2 md:pb-6">
+                                <div className="flex flex-col md:flex-row items-center gap-1.5 md:gap-3">
+                                  {club.logoUrl ? (
+                                    <Image
+                                      src={club.logoUrl}
+                                      alt={club.name}
+                                      width={64}
+                                      height={48}
+                                      className="w-14 h-11 md:w-16 md:h-12 rounded-md md:rounded-lg object-contain bg-white"
+                                    />
+                                  ) : (
+                                    <div className="w-14 h-11 md:w-16 md:h-12 bg-dark-blue rounded-md md:rounded-lg flex items-center justify-center">
+                                      <Users className="h-5 w-5 md:h-6 md:w-6 text-white" />
+                                    </div>
                                   )}
-                              </div>
-                              {club.websiteUrl && (
+                                  <div className="flex-1 text-center md:text-left w-full">
+                                    <CardTitle className="text-xs md:text-base leading-tight md:leading-normal line-clamp-2 md:line-clamp-none">
+                                      {club.name}
+                                    </CardTitle>
+                                    <Badge
+                                      variant="secondary"
+                                      className="text-[10px] md:text-xs mt-0.5 md:mt-1 px-1.5 md:px-2.5 py-0 md:py-0.5"
+                                    >
+                                      {club.category}
+                                    </Badge>
+                                  </div>
+                                </div>
+                              </CardHeader>
+                              <CardContent className="p-2 md:p-6 pt-0 md:pt-0">
+                                <p className="text-[10px] md:text-sm text-medium-gray line-clamp-2 mb-1.5 md:mb-3 leading-tight md:leading-normal">
+                                  {club.description}
+                                </p>
+                                <div className="space-y-1 md:space-y-2 mb-1.5 md:mb-3">
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-[10px] md:text-xs text-medium-gray">
+                                      {club.memberCount} members
+                                    </span>
+                                    <Badge
+                                      variant={
+                                        club.isOpenForRegistration
+                                          ? "default"
+                                          : "secondary"
+                                      }
+                                      className="text-[10px] md:text-xs px-1.5 md:px-2.5 py-0 md:py-0.5"
+                                    >
+                                      {club.isOpenForRegistration
+                                        ? "Open"
+                                        : "Closed"}
+                                    </Badge>
+                                  </div>
+                                  {club.registrationStartDate &&
+                                    club.registrationEndDate && (
+                                      <p className="text-[10px] md:text-xs text-medium-gray leading-tight md:leading-normal">
+                                        Registration:{" "}
+                                        {new Date(
+                                          club.registrationStartDate
+                                        ).toLocaleDateString()}{" "}
+                                        -{" "}
+                                        {new Date(
+                                          club.registrationEndDate
+                                        ).toLocaleDateString()}
+                                      </p>
+                                    )}
+                                </div>
+                                {club.websiteUrl && (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="w-full mb-1 md:mb-2 text-[10px] md:text-sm h-7 md:h-9 px-2 md:px-4"
+                                    onClick={() => {
+                                      const link = document.createElement("a");
+                                      link.href = club.websiteUrl!;
+                                      link.target = "_blank";
+                                      link.rel = "noopener noreferrer";
+                                      document.body.appendChild(link);
+                                      link.click();
+                                      document.body.removeChild(link);
+                                    }}
+                                  >
+                                    <ExternalLink className="h-2.5 w-2.5 md:h-3 md:w-3 mr-1" />
+                                    <span className="hidden md:inline">
+                                      Visit Website
+                                    </span>
+                                    <span className="md:hidden">Website</span>
+                                  </Button>
+                                )}
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  className="w-full mb-1 md:mb-2 text-[10px] md:text-sm h-7 md:h-9 px-2 md:px-4"
-                                  onClick={() => {
-                                    const link = document.createElement("a");
-                                    link.href = club.websiteUrl!;
-                                    link.target = "_blank";
-                                    link.rel = "noopener noreferrer";
-                                    document.body.appendChild(link);
-                                    link.click();
-                                    document.body.removeChild(link);
+                                  className="w-full text-[10px] md:text-sm h-7 md:h-9 px-2 md:px-4"
+                                  onClick={async () => {
+                                    try {
+                                      const response = await fetch(
+                                        `/api/clubs/${club.id}/leave`,
+                                        {
+                                          method: "POST",
+                                        }
+                                      );
+                                      if (response.ok) {
+                                        toast.success(
+                                          "Left club successfully!"
+                                        );
+                                        const myClubsRes = await fetch(
+                                          "/api/clubs/my-clubs"
+                                        );
+                                        const myClubsData =
+                                          await myClubsRes.json();
+                                        setMyClubs(myClubsData);
+                                      }
+                                    } catch (error) {
+                                      toast.error("Failed to leave club");
+                                    }
                                   }}
                                 >
-                                  <ExternalLink className="h-2.5 w-2.5 md:h-3 md:w-3 mr-1" />
-                                  <span className="hidden md:inline">
-                                    Visit Website
-                                  </span>
-                                  <span className="md:hidden">Website</span>
+                                  Leave
                                 </Button>
-                              )}
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="w-full text-[10px] md:text-sm h-7 md:h-9 px-2 md:px-4"
-                                onClick={async () => {
-                                  try {
-                                    const response = await fetch(
-                                      `/api/clubs/${club.id}/leave`,
-                                      {
-                                        method: "POST",
-                                      }
-                                    );
-                                    if (response.ok) {
-                                      toast.success("Left club successfully!");
-                                      const myClubsRes = await fetch(
-                                        "/api/clubs/my-clubs"
-                                      );
-                                      const myClubsData =
-                                        await myClubsRes.json();
-                                      setMyClubs(myClubsData);
-                                    }
-                                  } catch (error) {
-                                    toast.error("Failed to leave club");
-                                  }
-                                }}
-                              >
-                                Leave
-                              </Button>
-                            </CardContent>
-                          </Card>
+                              </CardContent>
+                            </Card>
+                          </div>
                         ))}
                       </div>
                     ) : (
@@ -8703,6 +8724,18 @@ function DashboardContent() {
           </div>
         </div>
       )}
+
+      {/* Support Contact Modal */}
+      <SupportContactModal
+        isOpen={showSupportModal}
+        onClose={() => {
+          setShowSupportModal(false);
+          setSupportContext({});
+        }}
+        relatedItemId={supportContext.itemId}
+        relatedItemType={supportContext.itemType}
+        relatedItemTitle={supportContext.itemTitle}
+      />
     </div>
   );
 }
@@ -9794,18 +9827,6 @@ function AddItemForm({
           </div>
         </div>
       )}
-
-      {/* Support Contact Modal */}
-      <SupportContactModal
-        isOpen={showSupportModal}
-        onClose={() => {
-          setShowSupportModal(false);
-          setSupportContext({});
-        }}
-        relatedItemId={supportContext.itemId}
-        relatedItemType={supportContext.itemType}
-        relatedItemTitle={supportContext.itemTitle}
-      />
 
       {/* Payment Success Notification */}
       {showPaymentSuccessModal && recentPayment && (
