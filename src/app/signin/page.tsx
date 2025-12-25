@@ -15,6 +15,8 @@ import { Loader2 } from "lucide-react";
 import Image from "next/image";
 import { PWARedirect } from "@/components/PWARedirect";
 
+export const dynamic = "force-dynamic";
+
 export default function SignInPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
