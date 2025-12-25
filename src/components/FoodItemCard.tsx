@@ -10,6 +10,7 @@ import {
   Leaf,
   Heart,
   Edit,
+  HelpCircle,
 } from "lucide-react";
 import { FoodItem } from "@/lib/api";
 import Image from "next/image";
@@ -19,6 +20,7 @@ interface FoodItemCardProps {
   onClick?: () => void;
   viewMode?: "grid" | "list";
   isOwner?: boolean;
+  onSupportClick?: (itemId: string, itemTitle: string) => void;
 }
 
 const FoodItemCardComponent = ({
@@ -26,17 +28,30 @@ const FoodItemCardComponent = ({
   onClick,
   viewMode = "grid",
   isOwner = false,
+  onSupportClick,
 }: FoodItemCardProps) => {
   const isListView = viewMode === "list";
 
   return (
     <Card
       onClick={onClick}
-      className={`cursor-pointer hover:shadow-lg transition-shadow group overflow-hidden ${
+      className={`cursor-pointer hover:shadow-lg transition-shadow group overflow-hidden relative ${
         isListView ? "flex flex-row" : ""
       }`}
       style={{ contentVisibility: "auto" }}
     >
+      {onSupportClick && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onSupportClick(item.id, item.title);
+          }}
+          className="absolute top-1 right-1 md:top-2 md:right-2 z-10 bg-white/90 hover:bg-white backdrop-blur-sm p-1 md:p-1.5 rounded-full shadow-sm transition-all hover:shadow-md group"
+          title="Contact Support"
+        >
+          <HelpCircle className="h-3 w-3 md:h-4 md:w-4 text-gray-600 group-hover:text-blue-600 transition-colors" />
+        </button>
+      )}
       <div
         className={`relative bg-secondary-200 overflow-hidden ${
           isListView ? "w-24 h-24 flex-shrink-0" : "aspect-square"

@@ -3,7 +3,7 @@
 import { memo } from "react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { BookOpen, Star, Eye, Heart } from "lucide-react";
+import { BookOpen, Star, Eye, Heart, HelpCircle } from "lucide-react";
 import Image from "next/image";
 
 interface MarketplaceItem {
@@ -29,6 +29,7 @@ interface MarketplaceCardProps {
   onWishlistToggle?: (itemId: string) => void;
   isWishlisted?: boolean;
   viewMode?: "grid" | "list";
+  onSupportClick?: (itemId: string, itemTitle: string) => void;
 }
 
 const MarketplaceCardComponent = ({
@@ -37,6 +38,7 @@ const MarketplaceCardComponent = ({
   onWishlistToggle,
   isWishlisted = false,
   viewMode = "grid",
+  onSupportClick,
 }: MarketplaceCardProps) => {
   const formatPrice = (price: number) => {
     if (price >= 1000) {
@@ -68,25 +70,43 @@ const MarketplaceCardComponent = ({
             <BookOpen className="h-12 w-12 text-blue-300" />
           </div>
         )}
-        
-        {onWishlistToggle && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onWishlistToggle(item.id);
-            }}
-            className={`absolute top-1 right-1 bg-white/90 backdrop-blur-sm p-1 rounded-full transition-all shadow-sm z-10 ${
-              isWishlisted ? "text-red-500" : "text-gray-600 hover:text-red-500"
-            } hover:bg-white`}
-          >
-            <Heart className={`h-3 w-3 ${isWishlisted ? "fill-current" : ""}`} />
-          </button>
-        )}
+
+        <div className="absolute top-1 right-1 flex gap-1 z-10">
+          {onSupportClick && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onSupportClick(item.id, item.title);
+              }}
+              className="bg-white/90 hover:bg-white backdrop-blur-sm p-1 rounded-full shadow-sm transition-all hover:shadow-md group"
+              title="Contact Support"
+            >
+              <HelpCircle className="h-3 w-3 text-gray-600 group-hover:text-blue-600 transition-colors" />
+            </button>
+          )}
+          {onWishlistToggle && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onWishlistToggle(item.id);
+              }}
+              className={`bg-white/90 backdrop-blur-sm p-1 rounded-full transition-all shadow-sm ${
+                isWishlisted
+                  ? "text-red-500"
+                  : "text-gray-600 hover:text-red-500"
+              } hover:bg-white`}
+            >
+              <Heart
+                className={`h-3 w-3 ${isWishlisted ? "fill-current" : ""}`}
+              />
+            </button>
+          )}
+        </div>
       </div>
 
       <CardContent className="p-2">
         <h3 className="font-bold text-xs line-clamp-1 mb-1">{item.title}</h3>
-        
+
         <div className="flex items-center gap-0.5 text-[9px] text-gray-500 mb-1">
           <BookOpen className="h-2.5 w-2.5" />
           <span className="font-medium truncate">{item.course}</span>
@@ -98,8 +118,12 @@ const MarketplaceCardComponent = ({
           </p>
           <div className="flex items-center gap-0.5">
             <Star className="h-2.5 w-2.5 text-yellow-400 fill-yellow-400" />
-            <span className="text-[9px] font-medium text-gray-700">{item.rating}</span>
-            <span className="text-[9px] text-gray-500">({item.reviewCount || 0})</span>
+            <span className="text-[9px] font-medium text-gray-700">
+              {item.rating}
+            </span>
+            <span className="text-[9px] text-gray-500">
+              ({item.reviewCount || 0})
+            </span>
           </div>
         </div>
 
@@ -113,4 +137,3 @@ const MarketplaceCardComponent = ({
 };
 
 export const MarketplaceCard = memo(MarketplaceCardComponent);
-
