@@ -15,19 +15,22 @@ export function PWARedirect() {
       (window.navigator as any).standalone ||
       searchParams.get("source") === "pwa";
 
-    if (isPWA && window.location.pathname === "/") {
+    const currentPath = window.location.pathname;
+
+    if (isPWA && (currentPath === "/" || currentPath === "/signin")) {
       if (status === "loading") {
         return;
       }
 
-      if (session) {
+      if (session && currentPath === "/signin") {
         router.replace("/dashboard");
-      } else {
-        router.replace("/auth/signin");
+      } else if (!session && currentPath === "/") {
+        router.replace("/signin");
+      } else if (session && currentPath === "/") {
+        router.replace("/dashboard");
       }
     }
   }, [session, status, router, searchParams]);
 
   return null;
 }
-

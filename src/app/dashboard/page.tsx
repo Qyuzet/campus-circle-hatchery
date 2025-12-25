@@ -2592,7 +2592,9 @@ function DashboardContent() {
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={() => {
-                      import("next-auth/react").then((mod) => mod.signOut());
+                      import("next-auth/react").then((mod) =>
+                        mod.signOut({ callbackUrl: "/signin" })
+                      );
                     }}
                     className="text-red-600 focus:text-red-600"
                   >

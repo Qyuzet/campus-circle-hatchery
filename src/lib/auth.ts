@@ -17,6 +17,11 @@ export const authConfig: NextAuthConfig = {
       },
     }),
   ],
+  pages: {
+    signIn: "/signin",
+    signOut: "/signin",
+    error: "/signin",
+  },
   callbacks: {
     async signIn({ user, account, profile }) {
       // For Google OAuth, create user if doesn't exist
