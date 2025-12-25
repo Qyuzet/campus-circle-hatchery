@@ -14,28 +14,17 @@ export function PWAInstaller() {
     const handler = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e);
-      
+
       const isPWA =
         window.matchMedia("(display-mode: standalone)").matches ||
         (window.navigator as any).standalone;
-      
+
       if (!isPWA) {
         setTimeout(() => setShowInstallPrompt(true), 3000);
       }
     };
 
     window.addEventListener("beforeinstallprompt", handler);
-
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker
-        .register("/sw.js")
-        .then((registration) => {
-          console.log("Service Worker registered:", registration);
-        })
-        .catch((error) => {
-          console.log("Service Worker registration failed:", error);
-        });
-    }
 
     return () => {
       window.removeEventListener("beforeinstallprompt", handler);
@@ -47,7 +36,7 @@ export function PWAInstaller() {
 
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
-    
+
     console.log(`User response to install prompt: ${outcome}`);
     setDeferredPrompt(null);
     setShowInstallPrompt(false);
@@ -98,4 +87,3 @@ export function PWAInstaller() {
     </div>
   );
 }
-

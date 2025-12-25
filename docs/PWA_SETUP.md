@@ -5,23 +5,29 @@ CampusCircle is now a fully functional Progressive Web App that can be installed
 ## Features
 
 ### 1. Install Prompt
+
 - Users will see an install prompt after 3 seconds on the landing page
 - The prompt appears at the bottom of the screen with install and dismiss options
 - Only shows if the app is not already installed
 
 ### 2. Smart Redirect Logic
+
 When the app is installed and opened:
+
 - **Not logged in**: Redirects to `/auth/signin` (login page)
 - **Already logged in**: Redirects to `/dashboard` (main app)
 - **Browser access**: Shows normal landing page
 
 ### 3. Offline Support
+
 - Service worker caches essential pages and assets
 - App works offline for previously visited pages
 - Automatic cache updates when online
 
 ### 4. App Shortcuts
+
 Long-press the app icon to access quick shortcuts:
+
 - Dashboard
 - Messages
 
@@ -30,12 +36,14 @@ Long-press the app icon to access quick shortcuts:
 ### On Mobile (Android/iOS)
 
 #### Chrome (Android)
+
 1. Visit the website
 2. Tap the install prompt that appears, OR
 3. Tap the menu (3 dots) > "Install app" or "Add to Home Screen"
 4. Confirm installation
 
 #### Safari (iOS)
+
 1. Visit the website
 2. Tap the Share button
 3. Scroll down and tap "Add to Home Screen"
@@ -44,6 +52,7 @@ Long-press the app icon to access quick shortcuts:
 ### On Desktop
 
 #### Chrome/Edge
+
 1. Visit the website
 2. Click the install icon in the address bar (computer with down arrow), OR
 3. Click the menu (3 dots) > "Install CampusCircle"
@@ -52,12 +61,32 @@ Long-press the app icon to access quick shortcuts:
 ## Technical Details
 
 ### Files Added
+
 - `public/site.webmanifest` - PWA manifest configuration
-- `public/sw.js` - Service worker for offline support
 - `src/components/PWARedirect.tsx` - Smart redirect logic
 - `src/components/PWAInstaller.tsx` - Install prompt component
+- `next.config.js` - Updated with next-pwa configuration
+
+### Service Worker
+
+We use **next-pwa** which is specifically designed for Next.js and serverless environments:
+
+- Automatically generates optimized service workers
+- Works perfectly with Vercel and other serverless platforms
+- Handles Next.js specific caching (pages, data, images)
+- Disabled in development mode for easier debugging
+- Production-ready caching strategies
+
+### Caching Strategy
+
+- **Static Assets**: Fonts, images, CSS, JS cached with StaleWhileRevalidate
+- **Next.js Pages**: NetworkFirst with fallback to cache
+- **API Routes**: Never cached (always fresh data)
+- **Images**: Cached for 24 hours
+- **Fonts**: Cached for 1 year
 
 ### Manifest Configuration
+
 ```json
 {
   "name": "CampusCircle - All-in-One Campus Platform",
@@ -69,25 +98,41 @@ Long-press the app icon to access quick shortcuts:
 ```
 
 ### Detection Logic
+
 The app detects PWA mode using:
+
 1. `window.matchMedia("(display-mode: standalone)").matches`
 2. `window.navigator.standalone` (iOS)
 3. URL parameter `?source=pwa`
 
+### Serverless Compatibility
+
+The service worker runs entirely on the client side, so it works perfectly with:
+
+- Vercel (serverless functions)
+- Netlify
+- AWS Lambda
+- Any serverless platform
+
+The service worker does NOT run on the server, it runs in the user's browser and caches responses from your serverless API routes.
+
 ## User Experience
 
 ### First Time User (PWA)
+
 1. Opens installed app
 2. Sees login page
 3. Logs in
 4. Redirected to dashboard
 
 ### Returning User (PWA)
+
 1. Opens installed app
 2. Automatically redirected to dashboard
 3. No landing page shown
 
 ### Browser User
+
 1. Visits website
 2. Sees landing page
 3. Can browse normally
@@ -105,16 +150,19 @@ The app detects PWA mode using:
 ## Testing
 
 ### Test PWA Redirect
+
 1. Install the app
 2. Open it
 3. Should redirect to dashboard (if logged in) or login page (if not)
 
 ### Test Install Prompt
+
 1. Visit website in browser (not installed)
 2. Wait 3 seconds
 3. Install prompt should appear at bottom
 
 ### Test Offline
+
 1. Install the app
 2. Visit dashboard
 3. Turn off internet
@@ -127,4 +175,3 @@ The app detects PWA mode using:
 - Background sync for offline actions
 - App badge for unread messages
 - Share target API for sharing content to CampusCircle
-
