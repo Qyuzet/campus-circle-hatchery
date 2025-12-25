@@ -17,7 +17,7 @@ import { PWARedirect } from "@/components/PWARedirect";
 
 export const dynamic = "force-dynamic";
 
-export default function SignInPage() {
+function SignInContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -59,9 +59,7 @@ export default function SignInPage() {
 
   return (
     <>
-      <Suspense fallback={null}>
-        <PWARedirect />
-      </Suspense>
+      <PWARedirect />
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 p-4">
         <Card className="w-full max-w-md shadow-2xl border-0">
           <CardHeader className="space-y-4 text-center pb-8">
@@ -143,5 +141,19 @@ export default function SignInPage() {
         </Card>
       </div>
     </>
+  );
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        </div>
+      }
+    >
+      <SignInContent />
+    </Suspense>
   );
 }
