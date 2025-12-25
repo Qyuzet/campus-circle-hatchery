@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import CTA from "../components/sections/cta/default";
 import FAQ from "../components/sections/faq/default";
 import Footer from "../components/sections/footer/default";
@@ -9,6 +10,8 @@ import Navbar from "../components/sections/navbar/default";
 import Stats from "../components/sections/stats/default";
 import { LayoutLines } from "../components/ui/layout-lines";
 import { siteConfig } from "@/config/site";
+import { PWARedirect } from "@/components/PWARedirect";
+import { PWAInstaller } from "@/components/PWAInstaller";
 
 export const metadata: Metadata = {
   title: "CampusCircle - All-in-One Campus Platform for Binus University",
@@ -62,6 +65,10 @@ const jsonLd = {
 export default function Home() {
   return (
     <>
+      <Suspense fallback={null}>
+        <PWARedirect />
+      </Suspense>
+      <PWAInstaller />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
