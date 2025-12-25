@@ -8736,6 +8736,55 @@ function DashboardContent() {
         relatedItemType={supportContext.itemType}
         relatedItemTitle={supportContext.itemTitle}
       />
+
+      {/* Payment Success Notification */}
+      {showPaymentSuccessModal && recentPayment && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 md:p-8 animate-in fade-in zoom-in duration-300">
+            <div className="text-center">
+              <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-4">
+                <svg
+                  className="h-10 w-10 text-green-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                Payment Successful!
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Your payment has been processed successfully
+              </p>
+
+              <div className="bg-blue-50 rounded-lg p-4 mb-6">
+                <p className="text-sm text-gray-600 mb-2">You purchased</p>
+                <p className="font-semibold text-gray-900 mb-3">
+                  {recentPayment.itemTitle}
+                </p>
+                <div className="flex items-center justify-center gap-2">
+                  <span className="text-sm text-gray-600">Amount paid:</span>
+                  <span className="text-lg font-bold text-green-600">
+                    Rp {recentPayment.amount.toLocaleString()}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
+                <div className="animate-spin h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full"></div>
+                <span>Redirecting to your purchase...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -9823,65 +9872,6 @@ function AddItemForm({
               >
                 Cancel
               </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Payment Success Notification */}
-      {showPaymentSuccessModal && recentPayment && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 md:p-8 animate-in fade-in zoom-in duration-300">
-            <div className="text-center">
-              <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-4">
-                <svg
-                  className="h-10 w-10 text-green-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                Payment Successful!
-              </h3>
-              <p className="text-gray-600 mb-6">
-                Your payment has been processed successfully
-              </p>
-
-              <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left">
-                <div className="flex justify-between items-start mb-2">
-                  <span className="text-sm text-gray-600">Item</span>
-                  <span className="text-sm font-semibold text-gray-900 text-right max-w-[200px] line-clamp-2">
-                    {recentPayment.itemTitle}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm text-gray-600">Type</span>
-                  <span className="text-sm font-medium text-gray-900 capitalize">
-                    {recentPayment.itemType}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center pt-2 border-t border-gray-200">
-                  <span className="text-sm font-semibold text-gray-900">
-                    Amount Paid
-                  </span>
-                  <span className="text-lg font-bold text-green-600">
-                    Rp {recentPayment.amount.toLocaleString()}
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
-                <div className="animate-spin h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full"></div>
-                <span>Redirecting to your purchase...</span>
-              </div>
             </div>
           </div>
         </div>
