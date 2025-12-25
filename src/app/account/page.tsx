@@ -211,11 +211,19 @@ export default function AccountPage() {
                     <UserCircle className="mr-2 h-4 w-4" />
                     <span>My Account</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => router.push("/orders")}>
+                  <DropdownMenuItem
+                    onClick={() =>
+                      router.push("/dashboard?tab=my-hub&subTab=purchases")
+                    }
+                  >
                     <Package className="mr-2 h-4 w-4" />
                     <span>My Orders</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => router.push("/library")}>
+                  <DropdownMenuItem
+                    onClick={() =>
+                      router.push("/dashboard?tab=my-hub&subTab=library")
+                    }
+                  >
                     <Library className="mr-2 h-4 w-4" />
                     <span>My Library</span>
                   </DropdownMenuItem>
@@ -566,7 +574,9 @@ export default function AccountPage() {
                 variant="outline"
                 className="w-full justify-start text-sm"
                 size="sm"
-                onClick={() => router.push("/orders")}
+                onClick={() =>
+                  router.push("/dashboard?tab=my-hub&subTab=purchases")
+                }
               >
                 <Package className="mr-2 h-4 w-4" />
                 View My Orders
@@ -575,7 +585,9 @@ export default function AccountPage() {
                 variant="outline"
                 className="w-full justify-start text-sm"
                 size="sm"
-                onClick={() => router.push("/library")}
+                onClick={() =>
+                  router.push("/dashboard?tab=my-hub&subTab=library")
+                }
               >
                 <Library className="mr-2 h-4 w-4" />
                 View My Library

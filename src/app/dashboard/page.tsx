@@ -2567,11 +2567,21 @@ function DashboardContent() {
                     <UserCircle className="mr-2 h-4 w-4" />
                     <span>My Account</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => router.push("/orders")}>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setActiveTab("my-hub");
+                      setMyHubTab("purchases");
+                    }}
+                  >
                     <Package className="mr-2 h-4 w-4" />
                     <span>My Orders</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => router.push("/library")}>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setActiveTab("my-hub");
+                      setMyHubTab("library");
+                    }}
+                  >
                     <Library className="mr-2 h-4 w-4" />
                     <span>My Library</span>
                   </DropdownMenuItem>
@@ -4180,12 +4190,12 @@ function DashboardContent() {
 
             {activeTab === "my-hub" && (
               <div className="space-y-6">
-                <div>
+                {/* <div>
                   <h1 className="text-2xl font-bold text-dark-gray">My Hub</h1>
                   <p className="text-sm text-medium-gray mt-1">
                     Manage your purchases, sales, library, listings, and events
                   </p>
-                </div>
+                </div> */}
 
                 <Tabs value={myHubTab} onValueChange={setMyHubTab}>
                   <TabsList className="grid w-full grid-cols-5">
@@ -5095,13 +5105,13 @@ function DashboardContent() {
 
             {activeTab === "clubs" && (
               <div className="space-y-6">
-                <div>
+                {/* <div>
                   <h1 className="text-2xl font-bold text-dark-gray">Clubs</h1>
                   <p className="text-sm text-medium-gray mt-1">
                     Join communities and connect with students who share your
                     interests
                   </p>
-                </div>
+                </div> */}
 
                 {/* Sub-tabs */}
                 <div className="flex gap-2 border-b border-light-gray">
@@ -5694,12 +5704,14 @@ function DashboardContent() {
               <div className="space-y-3">
                 {/* Header */}
                 <div>
-                  <h1 className="text-xl font-semibold text-dark-gray">
+                  {/* <h1 className="text-xl font-semibold text-dark-gray">
                     Wallet & Withdrawals
-                  </h1>
+                  </h1> */}
                   <p className="text-xs text-medium-gray mt-0.5">
-                    Platform fee: 5% • Holding: 3 days • Min withdrawal: Rp
-                    50,000
+                    <i>
+                      *Platform fee: 5% • Holding: 3 days • Min withdrawal: Rp
+                      50,000
+                    </i>
                   </p>
                 </div>
 
