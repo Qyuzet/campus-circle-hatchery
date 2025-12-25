@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSession, signOut } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import {
@@ -129,7 +129,8 @@ export default function AccountPage() {
   };
 
   const handleLogout = async () => {
-    await signOut({ callbackUrl: "/" });
+    const { handleLogout: logout } = await import("@/lib/logout");
+    logout();
   };
 
   if (loading || status === "loading") {
@@ -235,7 +236,7 @@ export default function AccountPage() {
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
-                    onClick={() => signOut()}
+                    onClick={handleLogout}
                     className="text-red-600 focus:text-red-600"
                   >
                     <LogOut className="mr-2 h-4 w-4" />
