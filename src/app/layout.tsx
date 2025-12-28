@@ -85,12 +85,14 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="theme-color" content="#3b82f6" />
         <link rel="apple-touch-icon" href="/campus-circle-icon.png" />
-        <script
-          type="text/javascript"
-          src={midtransSnapUrl}
-          data-client-key={midtransClientKey}
-          defer
-        ></script>
+        {midtransClientKey && (
+          <script
+            type="text/javascript"
+            src={midtransSnapUrl}
+            data-client-key={midtransClientKey}
+            async
+          ></script>
+        )}
       </head>
       <body>
         <ThemeProvider>

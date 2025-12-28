@@ -28,18 +28,32 @@ export default function PaymentModal({
   const [isSnapLoaded, setIsSnapLoaded] = useState(false);
 
   useEffect(() => {
+    if (!isOpen) return;
+
+    let attempts = 0;
+    const maxAttempts = 100;
+
     const checkSnapLoaded = () => {
+      attempts++;
+
       // @ts-ignore
       if (window.snap) {
         setIsSnapLoaded(true);
-      } else {
-        setTimeout(checkSnapLoaded, 100);
+        return;
       }
+
+      if (attempts >= maxAttempts) {
+        console.error("Midtrans Snap failed to load after 10 seconds");
+        setError(
+          "Payment system failed to load. Please refresh the page and try again."
+        );
+        return;
+      }
+
+      setTimeout(checkSnapLoaded, 100);
     };
 
-    if (isOpen) {
-      checkSnapLoaded();
-    }
+    checkSnapLoaded();
   }, [isOpen]);
 
   if (!isOpen) return null;
