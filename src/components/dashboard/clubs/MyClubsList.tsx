@@ -25,7 +25,7 @@ type Club = {
 
 type MyClubsListProps = {
   clubs: Club[];
-  onLeaveClub: (clubId: string) => Promise<void>;
+  onLeaveClub: (clubId: string) => void;
   onBrowseClick: () => void;
   onSupportClick: (clubId: string, clubName: string) => void;
 };
