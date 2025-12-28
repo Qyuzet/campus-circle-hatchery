@@ -477,8 +477,8 @@ function DashboardContent() {
   useEffect(() => {
     if (status === "authenticated") {
       loadEssentialData();
-      // Preload discovery tab data since it's the default tab
-      if (!loadedTabs.discovery) {
+      // Only preload discovery tab data if SSR is disabled
+      if (!isSSRComponentsEnabled() && !loadedTabs.discovery) {
         loadTabData("discovery");
       }
     }
