@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { paymentAPI } from "@/lib/api";
+import { toast } from "sonner";
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -79,37 +80,50 @@ export default function PaymentModal({
           window.snap.pay(result.payment.token, {
             onSuccess: function (result: any) {
               console.log("Payment success:", result);
+
+              toast.success("Payment successful!", {
+                description:
+                  "Your purchase has been confirmed. Redirecting to My Hub...",
+                duration: 3000,
+              });
+
               onSuccess?.();
               onClose();
 
-              // Redirect to My Hub > Purchases to wait for confirmation
               setTimeout(() => {
                 router.push("/dashboard/my-hub?tab=purchases");
-              }, 500);
+              }, 1000);
             },
             onPending: function (result: any) {
               console.log("Payment pending:", result);
+
+              toast.info("Payment pending", {
+                description:
+                  "Your payment is being processed. Please check My Hub for updates.",
+                duration: 3000,
+              });
+
               onClose();
 
-              // Redirect to My Hub > Purchases to wait for confirmation
               setTimeout(() => {
                 router.push("/dashboard/my-hub?tab=purchases");
-              }, 500);
+              }, 1000);
             },
             onError: function (result: any) {
               console.log("Payment error:", result);
+
+              toast.error("Payment failed", {
+                description:
+                  "There was an error processing your payment. Please try again.",
+                duration: 4000,
+              });
+
               setError("Payment failed. Please try again.");
               setIsProcessing(false);
             },
             onClose: function () {
               console.log("Payment popup closed");
               setIsProcessing(false);
-              onClose();
-
-              // Redirect to My Hub > Purchases to check status
-              setTimeout(() => {
-                router.push("/dashboard/my-hub?tab=purchases");
-              }, 500);
             },
           });
         } else {
