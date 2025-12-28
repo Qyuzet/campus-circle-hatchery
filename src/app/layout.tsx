@@ -89,6 +89,7 @@ export default function RootLayout({
           type="text/javascript"
           src={midtransSnapUrl}
           data-client-key={midtransClientKey}
+          defer
         ></script>
       </head>
       <body>
