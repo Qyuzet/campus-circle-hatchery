@@ -1,3 +1,5 @@
+@import "../styles/carbon-tokens.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -205,5 +207,54 @@
   }
   100% {
     transform: translateX(-100%);
+  }
+}
+
+/* Carbon Design System Utilities */
+@layer utilities {
+  .carbon-focus {
+    outline: var(--focus-width) solid var(--focus-color);
+    outline-offset: 2px;
+  }
+
+  .carbon-focus-inset {
+    outline: var(--focus-width) solid var(--focus-color);
+    outline-offset: -2px;
+  }
+
+  .carbon-text-primary {
+    color: var(--text-primary);
+  }
+
+  .carbon-text-secondary {
+    color: var(--text-secondary);
+  }
+
+  .carbon-text-placeholder {
+    color: var(--text-placeholder);
+  }
+
+  .carbon-bg-layer-01 {
+    background-color: var(--layer-01);
+  }
+
+  .carbon-bg-layer-02 {
+    background-color: var(--layer-02);
+  }
+
+  .carbon-border-subtle {
+    border: var(--border-subtle);
+  }
+
+  .carbon-border-strong {
+    border: var(--border-strong);
+  }
+
+  .carbon-shadow-01 {
+    box-shadow: var(--shadow-01);
+  }
+
+  .carbon-shadow-02 {
+    box-shadow: var(--shadow-02);
   }
 }

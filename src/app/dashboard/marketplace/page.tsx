@@ -176,7 +176,9 @@ export default async function MarketplacePage({
           initialContentMode={contentMode}
           myEventRegistrations={myEventRegistrations.map((r) => r.eventId)}
           wishlistItemIds={wishlistItems.map((w) => w.itemId)}
-          myPurchasedItemIds={myPurchases.map((p) => p.itemId)}
+          myPurchasedItemIds={myPurchases
+            .map((p) => p.itemId)
+            .filter((id): id is string => id !== null)}
           userId={userId}
           userProfile={userProfile}
         />

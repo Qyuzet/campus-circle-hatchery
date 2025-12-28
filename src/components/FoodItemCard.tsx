@@ -91,7 +91,7 @@ const FoodItemCardComponent = ({
         className={`${isListView ? "flex-1 py-1.5" : "p-1 space-y-0.5"}`}
       >
         <div className="flex items-start justify-between gap-1">
-          <h3 className="font-normal text-[10px] line-clamp-1 text-gray-900">
+          <h3 className="font-bold text-[10px] line-clamp-1 text-gray-900">
             {item.title}
           </h3>
           <Badge

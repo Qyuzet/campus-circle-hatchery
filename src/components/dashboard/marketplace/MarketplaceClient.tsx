@@ -906,186 +906,408 @@ export function MarketplaceClient({
 
       {/* Item Detail Modal */}
       {showItemModal && selectedItem && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[70] p-2">
-          <div className="bg-white w-full max-w-sm shadow-sm">
-            {/* Header */}
-            <div className="flex items-center justify-between px-2 py-1.5 border-b border-gray-200 bg-gray-50">
-              <h2 className="text-sm font-normal text-gray-900 line-clamp-1">
-                {selectedItem.title}
-              </h2>
-              <button
-                onClick={() => {
-                  setShowItemModal(false);
-                  setSelectedItem(null);
-                }}
-                className="text-gray-400 hover:text-gray-600 transition-colors p-0.5 flex-shrink-0"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </div>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[70] md:p-4">
+          <div className="bg-white md:rounded-lg w-full h-full md:h-auto md:max-w-4xl md:max-h-[90vh] overflow-hidden flex flex-col relative">
+            <button
+              onClick={() => {
+                setShowItemModal(false);
+                setSelectedItem(null);
+              }}
+              className="absolute top-2 right-2 md:top-4 md:right-4 z-10 bg-white/90 hover:bg-white p-1.5 rounded-full shadow-md"
+            >
+              <X className="h-4 w-4" />
+            </button>
 
-            {/* Content */}
-            <div className="p-2 space-y-1.5">
-              {/* File Preview Section */}
-              <div className="relative w-full h-32 overflow-hidden bg-gray-50">
-                <FilePreview
-                  fileUrl={selectedItem.fileUrl || selectedItem.imageUrl || ""}
-                  fileType={selectedItem.fileType || ""}
-                  fileName={selectedItem.fileName || selectedItem.title}
-                  title={selectedItem.title}
-                  category={selectedItem.category}
-                  thumbnailUrl={selectedItem.thumbnailUrl}
-                />
-              </div>
-
-              {/* Category Badge */}
-              <Badge
-                variant="secondary"
-                className="text-[8px] px-1 py-0 bg-gray-100 text-gray-700"
-              >
-                {selectedItem.category}
-              </Badge>
-
-              {/* Description */}
-              <p className="text-[9px] text-gray-600 line-clamp-2 leading-tight">
-                {selectedItem.description}
-              </p>
-
-              {/* Info - Compact Grid */}
-              <div className="grid grid-cols-2 gap-1 text-[8px] text-gray-600">
-                <div
-                  className="flex items-center gap-0.5 bg-gray-50 px-1.5 py-1"
-                  title="Course"
-                >
-                  <BookOpen className="h-2 w-2 text-gray-500 flex-shrink-0" />
-                  <span className="font-normal text-gray-900 truncate">
-                    {selectedItem.course}
-                  </span>
-                </div>
-                <div
-                  className="flex items-center gap-0.5 bg-gray-50 px-1.5 py-1"
-                  title="Seller"
-                >
-                  <User className="h-2 w-2 text-gray-500 flex-shrink-0" />
-                  <span className="font-normal text-gray-900 truncate">
-                    {typeof selectedItem.seller === "string"
-                      ? `${selectedItem.seller.slice(-9)}`
-                      : selectedItem.seller?.name || "Unknown"}
-                  </span>
-                </div>
-                <div
-                  className="flex items-center gap-0.5 bg-gray-50 px-1.5 py-1"
-                  title="Rating"
-                >
-                  <Star className="h-2 w-2 text-yellow-400 fill-yellow-400 flex-shrink-0" />
-                  <span className="font-normal text-gray-900">
-                    {selectedItem.rating || 0} ({selectedItem.reviews || 0})
-                  </span>
-                </div>
-                {selectedItem.condition && (
-                  <div
-                    className="flex items-center gap-0.5 bg-gray-50 px-1.5 py-1"
-                    title="Condition"
-                  >
-                    <Eye className="h-2 w-2 text-gray-500 flex-shrink-0" />
-                    <span className="font-normal text-gray-900 truncate">
-                      {selectedItem.condition}
-                    </span>
+            <div className="flex flex-col md:flex-row h-full overflow-y-auto">
+              {/* Mobile: Thumbnail + Buttons at top */}
+              <div className="md:hidden flex flex-col">
+                {/* Thumbnail */}
+                <div className="relative w-full bg-gray-100">
+                  <div className="aspect-[1/1.414] relative">
+                    <FilePreview
+                      fileUrl={
+                        selectedItem.fileUrl || selectedItem.imageUrl || ""
+                      }
+                      fileType={selectedItem.fileType || ""}
+                      fileName={selectedItem.fileName || selectedItem.title}
+                      title={selectedItem.title}
+                      category={selectedItem.category}
+                      thumbnailUrl={selectedItem.thumbnailUrl}
+                    />
                   </div>
+                </div>
+
+                {/* Title and Price */}
+                <div className="p-3 border-b">
+                  <h2 className="text-lg font-bold mb-2">
+                    {selectedItem.title}
+                  </h2>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Badge variant="secondary" className="text-sm">
+                      Rp {selectedItem.price.toLocaleString()}
+                    </Badge>
+                    <Badge className="text-xs">{selectedItem.category}</Badge>
+                  </div>
+
+                  {/* Action Buttons - Mobile */}
+                  <div className="flex gap-2">
+                    {selectedItem.sellerId === userId ? (
+                      <>
+                        <Button
+                          variant="outline"
+                          className="flex-1"
+                          onClick={() => handleEditItem(selectedItem)}
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          className="flex-1"
+                          onClick={() => {
+                            alert(
+                              "Delete functionality not implemented in SSR"
+                            );
+                            setShowItemModal(false);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4 mr-1" />
+                          Delete
+                        </Button>
+                      </>
+                    ) : purchasedItems.has(selectedItem.id) ? (
+                      <div className="flex-1 bg-green-100 text-green-700 px-4 py-2 text-center text-sm font-medium rounded">
+                        Already Purchased
+                      </div>
+                    ) : selectedItem.status === "available" ? (
+                      <>
+                        <Button
+                          variant="outline"
+                          className="flex-1"
+                          onClick={() => {
+                            router.push(
+                              `/dashboard/messages?userId=${selectedItem.sellerId}`
+                            );
+                          }}
+                        >
+                          <MessageCircle className="h-4 w-4 mr-1" />
+                          Message
+                        </Button>
+                        <Button
+                          className="flex-1 bg-blue-600 hover:bg-blue-700"
+                          onClick={() => {
+                            handleBuyItem(selectedItem);
+                          }}
+                          disabled={isCheckingPurchase}
+                        >
+                          <ShoppingCart className="h-4 w-4 mr-1" />
+                          {isCheckingPurchase
+                            ? "Checking..."
+                            : hasPurchasedItem
+                            ? "Buy Again"
+                            : "Buy Now"}
+                        </Button>
+                      </>
+                    ) : selectedItem.status === "sold" ? (
+                      <div className="flex-1 bg-gray-100 text-gray-500 px-4 py-2 text-center text-sm font-medium rounded">
+                        SOLD OUT
+                      </div>
+                    ) : (
+                      <div className="flex-1 bg-gray-100 text-gray-500 px-4 py-2 text-center text-sm font-medium rounded">
+                        Item Not Available
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Collapsible Details - Mobile */}
+                <details className="border-b" open>
+                  <summary className="px-3 py-2 font-semibold text-sm cursor-pointer hover:bg-gray-50">
+                    Description
+                  </summary>
+                  <div className="px-3 pb-3">
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      {selectedItem.description}
+                    </p>
+                  </div>
+                </details>
+
+                <details className="border-b">
+                  <summary className="px-3 py-2 font-semibold text-sm cursor-pointer hover:bg-gray-50">
+                    Details
+                  </summary>
+                  <div className="px-3 pb-3 space-y-3">
+                    <div>
+                      <h3 className="font-semibold text-xs mb-1 text-gray-700">
+                        Course
+                      </h3>
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <BookOpen className="h-3 w-3" />
+                        <span>{selectedItem.course}</span>
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-xs mb-1 text-gray-700">
+                        Seller
+                      </h3>
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <User className="h-3 w-3" />
+                        <span>
+                          {typeof selectedItem.seller === "string"
+                            ? selectedItem.seller.slice(-9)
+                            : selectedItem.seller?.name || "Unknown"}
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-xs mb-1 text-gray-700">
+                        Rating
+                      </h3>
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
+                        <span>
+                          {selectedItem.rating || 0} (
+                          {selectedItem.reviewCount || 0} reviews)
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-xs mb-1 text-gray-700">
+                        Views
+                      </h3>
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <Eye className="h-3 w-3" />
+                        <span>{selectedItem.viewCount || 0}</span>
+                      </div>
+                    </div>
+                    {selectedItem.condition && (
+                      <div>
+                        <h3 className="font-semibold text-xs mb-1 text-gray-700">
+                          Condition
+                        </h3>
+                        <p className="text-xs text-muted-foreground">
+                          {selectedItem.condition}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </details>
+
+                {selectedItem.fileName && (
+                  <details className="border-b">
+                    <summary className="px-3 py-2 font-semibold text-sm cursor-pointer hover:bg-gray-50">
+                      File Details
+                    </summary>
+                    <div className="px-3 pb-3 space-y-1">
+                      <p className="text-xs text-muted-foreground">
+                        Name: {selectedItem.fileName}
+                      </p>
+                      {selectedItem.fileType && (
+                        <p className="text-xs text-muted-foreground">
+                          Type: {selectedItem.fileType.toUpperCase()}
+                        </p>
+                      )}
+                    </div>
+                  </details>
                 )}
               </div>
 
-              {/* Price & Status */}
-              <div className="flex items-center justify-between px-2 py-1 bg-blue-50 border-l border-blue-600">
-                <div>
-                  <p className="text-[8px] text-gray-600">Price</p>
-                  <p className="text-sm font-medium text-blue-600">
-                    Rp {selectedItem.price.toLocaleString()}
-                  </p>
+              {/* Desktop: Traditional Layout */}
+              <div className="hidden md:flex md:flex-row w-full">
+                {/* Left: Thumbnail Preview */}
+                <div className="relative w-2/5 bg-gray-100 flex-shrink-0">
+                  <div className="aspect-[1/1.414] relative">
+                    <FilePreview
+                      fileUrl={
+                        selectedItem.fileUrl || selectedItem.imageUrl || ""
+                      }
+                      fileType={selectedItem.fileType || ""}
+                      fileName={selectedItem.fileName || selectedItem.title}
+                      title={selectedItem.title}
+                      category={selectedItem.category}
+                      thumbnailUrl={selectedItem.thumbnailUrl}
+                    />
+                  </div>
                 </div>
-                <Badge
-                  variant={
-                    selectedItem.status === "available"
-                      ? "default"
-                      : "secondary"
-                  }
-                  className={`text-[8px] px-1 py-0 ${
-                    selectedItem.status === "available"
-                      ? "bg-green-100 text-green-700 hover:bg-green-100"
-                      : selectedItem.status === "sold"
-                      ? "bg-red-100 text-red-700"
-                      : "bg-yellow-100 text-yellow-700"
-                  }`}
-                >
-                  {selectedItem.status || "available"}
-                </Badge>
-              </div>
 
-              {/* Action Buttons */}
-              <div className="flex gap-1 pt-1 border-t border-gray-100">
-                {selectedItem.sellerId === userId ? (
-                  <>
-                    <Button
-                      variant="outline"
-                      className="flex-1 text-[9px] px-2 py-1 h-auto font-normal border-gray-300"
-                      onClick={() => handleEditItem(selectedItem)}
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      className="flex-1 text-[9px] px-2 py-1 h-auto font-normal"
-                      onClick={() => {
-                        alert("Delete functionality not implemented in SSR");
-                        setShowItemModal(false);
-                      }}
-                    >
-                      <Trash2 className="h-2 w-2 mr-0.5" />
-                      Delete
-                    </Button>
-                  </>
-                ) : purchasedItems.has(selectedItem.id) ? (
-                  <div className="flex-1 bg-green-100 text-green-700 px-2 py-1 text-center text-[9px] font-normal">
-                    Already Purchased
+                {/* Right: Details */}
+                <div className="flex-1 p-4">
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <h2 className="text-xl font-bold mb-1">
+                        {selectedItem.title}
+                      </h2>
+                      <div className="flex items-center gap-2 mb-1">
+                        <Badge variant="secondary">
+                          Rp {selectedItem.price.toLocaleString()}
+                        </Badge>
+                        <Badge className="text-xs">
+                          {selectedItem.category}
+                        </Badge>
+                      </div>
+                    </div>
                   </div>
-                ) : selectedItem.status === "available" ? (
-                  <>
-                    <Button
-                      variant="outline"
-                      className="flex-1 text-[9px] px-2 py-1 h-auto font-normal border-gray-300"
-                      onClick={() => {
-                        router.push(
-                          `/dashboard/messages?userId=${selectedItem.sellerId}`
-                        );
-                      }}
-                    >
-                      <MessageCircle className="h-2 w-2 mr-0.5" />
-                      Message Seller
-                    </Button>
-                    <Button
-                      className="flex-1 text-[9px] px-2 py-1 h-auto font-normal bg-blue-600 hover:bg-blue-700"
-                      onClick={() => {
-                        handleBuyItem(selectedItem);
-                      }}
-                      disabled={isCheckingPurchase}
-                    >
-                      <ShoppingCart className="h-2 w-2 mr-0.5" />
-                      {isCheckingPurchase
-                        ? "Checking..."
-                        : hasPurchasedItem
-                        ? "Buy Again"
-                        : "Buy Now"}
-                    </Button>
-                  </>
-                ) : selectedItem.status === "sold" ? (
-                  <div className="flex-1 bg-gray-100 text-gray-500 px-2 py-1 text-center text-[9px] font-normal">
-                    SOLD OUT
+
+                  <div className="space-y-3">
+                    <div>
+                      <h3 className="font-semibold text-sm mb-0.5">
+                        Description
+                      </h3>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        {selectedItem.description}
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <h3 className="font-semibold text-sm mb-0.5">Course</h3>
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <BookOpen className="h-3 w-3" />
+                          <span>{selectedItem.course}</span>
+                        </div>
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-sm mb-0.5">Seller</h3>
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <User className="h-3 w-3" />
+                          <span>
+                            {typeof selectedItem.seller === "string"
+                              ? selectedItem.seller.slice(-9)
+                              : selectedItem.seller?.name || "Unknown"}
+                          </span>
+                        </div>
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-sm mb-0.5">Rating</h3>
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
+                          <span>
+                            {selectedItem.rating || 0} (
+                            {selectedItem.reviewCount || 0} reviews)
+                          </span>
+                        </div>
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-sm mb-0.5">Views</h3>
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <Eye className="h-3 w-3" />
+                          <span>{selectedItem.viewCount || 0}</span>
+                        </div>
+                      </div>
+                      {selectedItem.condition && (
+                        <div>
+                          <h3 className="font-semibold text-sm mb-0.5">
+                            Condition
+                          </h3>
+                          <p className="text-xs text-muted-foreground">
+                            {selectedItem.condition}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
+                    {selectedItem.fileName && (
+                      <div>
+                        <h3 className="font-semibold text-sm mb-0.5">
+                          File Details
+                        </h3>
+                        <div className="text-xs text-muted-foreground space-y-1">
+                          <p>Name: {selectedItem.fileName}</p>
+                          {selectedItem.fileType && (
+                            <p>Type: {selectedItem.fileType.toUpperCase()}</p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-between pt-3 border-t">
+                      <Badge
+                        variant={
+                          selectedItem.status === "available"
+                            ? "default"
+                            : "secondary"
+                        }
+                        className={`text-xs ${
+                          selectedItem.status === "available"
+                            ? "bg-green-100 text-green-700 hover:bg-green-100"
+                            : selectedItem.status === "sold"
+                            ? "bg-red-100 text-red-700"
+                            : "bg-yellow-100 text-yellow-700"
+                        }`}
+                      >
+                        {selectedItem.status || "available"}
+                      </Badge>
+                    </div>
                   </div>
-                ) : (
-                  <div className="flex-1 bg-gray-100 text-gray-500 px-2 py-1 text-center text-[9px] font-normal">
-                    Item Not Available
+
+                  {/* Action Buttons - Desktop */}
+                  <div className="flex gap-2 pt-3 border-t mt-3">
+                    {selectedItem.sellerId === userId ? (
+                      <>
+                        <Button
+                          variant="outline"
+                          className="flex-1 text-sm"
+                          onClick={() => handleEditItem(selectedItem)}
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          className="flex-1 text-sm"
+                          onClick={() => {
+                            alert(
+                              "Delete functionality not implemented in SSR"
+                            );
+                            setShowItemModal(false);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4 mr-1" />
+                          Delete
+                        </Button>
+                      </>
+                    ) : purchasedItems.has(selectedItem.id) ? (
+                      <div className="flex-1 bg-green-100 text-green-700 px-4 py-2 text-center text-sm font-medium rounded">
+                        Already Purchased
+                      </div>
+                    ) : selectedItem.status === "available" ? (
+                      <>
+                        <Button
+                          variant="outline"
+                          className="flex-1 text-sm"
+                          onClick={() => {
+                            router.push(
+                              `/dashboard/messages?userId=${selectedItem.sellerId}`
+                            );
+                          }}
+                        >
+                          <MessageCircle className="h-4 w-4 mr-1" />
+                          Message Seller
+                        </Button>
+                        <Button
+                          className="flex-1 text-sm bg-blue-600 hover:bg-blue-700"
+                          onClick={() => {
+                            handleBuyItem(selectedItem);
+                          }}
+                          disabled={isCheckingPurchase}
+                        >
+                          <ShoppingCart className="h-4 w-4 mr-1" />
+                          {isCheckingPurchase
+                            ? "Checking..."
+                            : hasPurchasedItem
+                            ? "Buy Again"
+                            : "Buy Now"}
+                        </Button>
+                      </>
+                    ) : selectedItem.status === "sold" ? (
+                      <div className="flex-1 bg-gray-100 text-gray-500 px-4 py-2 text-center text-sm font-medium rounded">
+                        SOLD OUT
+                      </div>
+                    ) : (
+                      <div className="flex-1 bg-gray-100 text-gray-500 px-4 py-2 text-center text-sm font-medium rounded">
+                        Item Not Available
+                      </div>
+                    )}
                   </div>
-                )}
+                </div>
               </div>
             </div>
           </div>

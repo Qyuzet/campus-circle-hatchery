@@ -72,7 +72,7 @@ const EventCardComponent = ({
           <HelpCircle className="h-2.5 w-2.5 text-gray-600 hover:text-blue-600 transition-colors" />
         </button>
       )}
-      <div className="relative h-28 bg-gray-50 overflow-hidden">
+      <div className="relative w-full aspect-[210/297] bg-gray-50 overflow-hidden">
         {event.bannerUrl || event.imageUrl ? (
           <Image
             src={event.bannerUrl || event.imageUrl || ""}
@@ -108,7 +108,7 @@ const EventCardComponent = ({
 
       <CardContent className="p-1 space-y-0.5">
         <div className="flex items-start justify-between gap-1">
-          <h3 className="font-normal text-[10px] line-clamp-2 text-gray-900">
+          <h3 className="font-bold text-[10px] line-clamp-2 text-gray-900">
             {event.title}
           </h3>
           <Badge
