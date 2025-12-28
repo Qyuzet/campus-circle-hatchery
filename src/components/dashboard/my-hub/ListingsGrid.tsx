@@ -77,76 +77,82 @@ export function ListingsGrid({ listings, currentUserId }: ListingsGridProps) {
 
   return (
     <>
-      <div className="grid gap-2 md:gap-6 grid-cols-2 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         {listings.map((item) => (
-          <Card key={item.id} className="hover:shadow-lg transition-shadow">
+          <Card
+            key={item.id}
+            className="hover:shadow-lg transition-shadow flex flex-col h-full"
+          >
             {item.imageUrl && (
-              <div className="relative w-full h-24 md:h-48 bg-gray-100">
+              <div className="relative w-full h-48 bg-gray-100">
                 <img
                   src={item.imageUrl}
                   alt={item.title}
                   className="w-full h-full object-cover rounded-t-lg"
                 />
-                <Badge
-                  className="absolute top-1 right-1 md:top-2 md:right-2 text-[10px] md:text-xs h-4 md:h-5 px-1 md:px-2"
-                  variant={
-                    item.status === "available" ? "default" : "secondary"
+                <div
+                  className={
+                    item.status === "available"
+                      ? "absolute top-2 right-2 inline-flex items-center px-2.5 py-1 bg-green-50 border-l-4 border-green-600 rounded-sm shadow-sm"
+                      : "absolute top-2 right-2 inline-flex items-center px-2.5 py-1 bg-gray-50 border-l-4 border-gray-600 rounded-sm shadow-sm"
                   }
                 >
-                  {item.status}
-                </Badge>
+                  <span
+                    className={
+                      item.status === "available"
+                        ? "text-xs font-semibold text-green-800"
+                        : "text-xs font-semibold text-gray-800"
+                    }
+                  >
+                    {item.status}
+                  </span>
+                </div>
               </div>
             )}
-            <CardHeader className="p-2 md:p-6">
-              <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-1 md:gap-2">
+            <CardHeader className="p-3 sm:p-4 pb-2 sm:pb-3">
+              <div className="flex flex-col gap-1.5 sm:gap-2">
                 <div className="flex-1 min-w-0">
-                  <CardTitle className="text-xs md:text-lg line-clamp-2">
+                  <CardTitle className="text-sm sm:text-base font-semibold line-clamp-2 mb-1.5 sm:mb-2">
                     {item.title}
                   </CardTitle>
-                  <p className="text-[10px] md:text-sm text-muted-foreground mt-0.5 md:mt-1">
-                    {item.category}
-                  </p>
+                  <div className="inline-flex items-center px-2 sm:px-2.5 py-0.5 sm:py-1 bg-purple-50 border-l-4 border-purple-600 rounded-sm w-fit">
+                    <span className="text-[10px] sm:text-xs font-semibold text-purple-800">
+                      {item.category}
+                    </span>
+                  </div>
                 </div>
-                {!item.imageUrl && (
-                  <Badge
-                    variant="secondary"
-                    className="text-[10px] md:text-xs h-4 md:h-5 px-1 md:px-2 flex-shrink-0 w-fit"
-                  >
-                    {item.category}
-                  </Badge>
-                )}
               </div>
             </CardHeader>
-            <CardContent className="p-2 md:p-6 pt-0">
-              <p className="text-[10px] md:text-sm text-muted-foreground line-clamp-2 md:line-clamp-3">
+            <CardContent className="p-3 sm:p-4 pt-0 flex-1">
+              <p className="text-xs sm:text-sm text-muted-foreground line-clamp-3 mb-2 sm:mb-3">
                 {item.description}
               </p>
-              <div className="mt-2 md:mt-4 flex items-center justify-between">
-                <p className="text-xs md:text-lg font-bold text-dark-blue">
+              <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                <p className="text-base sm:text-lg font-bold text-blue-600">
                   Rp {item.price.toLocaleString()}
                 </p>
-                <div className="text-[10px] md:text-xs text-muted-foreground">
-                  {item.viewCount || 0} views
+                <div className="flex items-center gap-1 text-[10px] sm:text-xs text-muted-foreground">
+                  <Eye className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                  {item.viewCount || 0}
                 </div>
               </div>
             </CardContent>
-            <CardFooter className="flex gap-1 md:gap-2 p-2 md:p-6 pt-0">
+            <CardFooter className="flex gap-2 p-3 sm:p-4 pt-0">
               <Button
                 size="sm"
                 variant="outline"
-                className="flex-1 text-[10px] md:text-sm h-7 md:h-9 px-1 md:px-3"
+                className="flex-1 text-sm h-9"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleViewClick(item);
                 }}
               >
-                <Eye className="h-3 w-3 md:h-4 md:w-4 mr-0.5 md:mr-1" />
-                <span className="hidden md:inline">View</span>
+                <Eye className="h-4 w-4 mr-2" />
+                View
               </Button>
               <Button
                 size="sm"
-                variant="outline"
-                className="flex-1 text-[10px] md:text-sm h-7 md:h-9 px-1 md:px-3"
+                className="flex-1 text-sm h-9"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleEditClick(item);

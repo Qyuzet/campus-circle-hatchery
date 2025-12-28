@@ -26,6 +26,11 @@ interface LibraryTabClientProps {
   totalItems: number;
   notesCount: number;
   booksCount: number;
+  onSupportClick?: (context: {
+    itemId: string | null;
+    itemType: string;
+    itemTitle: string;
+  }) => void;
 }
 
 export function LibraryTabClient({
@@ -33,23 +38,66 @@ export function LibraryTabClient({
   totalItems,
   notesCount,
   booksCount,
+  onSupportClick,
 }: LibraryTabClientProps) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>My Library</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {transactions.length === 0 ? (
-          <LibraryEmptyState />
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4">
-            {transactions.map((transaction) => (
-              <LibraryItemCard key={transaction.id} transaction={transaction} />
-            ))}
+    <>
+      <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-4 sm:mb-6">
+        <Card className="p-2 sm:p-4 hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-1 sm:mb-2">
+            <BookOpen className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
           </div>
-        )}
-      </CardContent>
-    </Card>
+          <div className="text-xl sm:text-3xl font-bold mb-0.5 sm:mb-1">
+            {totalItems}
+          </div>
+          <p className="text-[10px] sm:text-sm text-muted-foreground font-medium">
+            Total Items
+          </p>
+        </Card>
+        <Card className="p-2 sm:p-4 hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-1 sm:mb-2">
+            <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
+          </div>
+          <div className="text-xl sm:text-3xl font-bold mb-0.5 sm:mb-1">
+            {notesCount}
+          </div>
+          <p className="text-[10px] sm:text-sm text-muted-foreground font-medium">
+            Notes
+          </p>
+        </Card>
+        <Card className="p-2 sm:p-4 hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-1 sm:mb-2">
+            <BookOpen className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
+          </div>
+          <div className="text-xl sm:text-3xl font-bold mb-0.5 sm:mb-1">
+            {booksCount}
+          </div>
+          <p className="text-[10px] sm:text-sm text-muted-foreground font-medium">
+            Books
+          </p>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>My Library</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {transactions.length === 0 ? (
+            <LibraryEmptyState />
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {transactions.map((transaction) => (
+                <LibraryItemCard
+                  key={transaction.id}
+                  transaction={transaction}
+                  onSupportClick={onSupportClick}
+                />
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </>
   );
 }

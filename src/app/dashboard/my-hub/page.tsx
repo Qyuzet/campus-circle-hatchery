@@ -122,7 +122,7 @@ export default async function MyHubPage({
     >
       <Suspense fallback={<MyHubSkeleton />}>
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
-          <h1 className="text-2xl font-bold mb-6">My Hub</h1>
+          {/* <h1 className="text-2xl font-bold mb-6">My Hub</h1> */}
 
           <MyHubClient
             initialTab={searchParams.tab || "purchases"}

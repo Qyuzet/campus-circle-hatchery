@@ -69,16 +69,17 @@ export function WalletTabClient({
   };
 
   return (
-    <div className="space-y-3">
-      <div>
-        <p className="text-xs text-medium-gray mt-0.5">
-          <i>*Platform fee: 5% • Holding: 3 days • Min withdrawal: Rp 50,000</i>
+    <div className="space-y-6">
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+        <p className="text-sm text-blue-800">
+          Platform fee: 5% • Holding period: 3 days • Minimum withdrawal: Rp
+          50,000
         </p>
       </div>
 
       <WalletBalanceCards userStats={userStats} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <WithdrawalForm
           availableBalance={userStats?.availableBalance || 0}
           userStats={userStats}

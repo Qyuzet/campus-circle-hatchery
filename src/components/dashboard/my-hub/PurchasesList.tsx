@@ -103,20 +103,30 @@ export function PurchasesList({ transactions }: PurchasesListProps) {
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
-                    <Badge
-                      variant={
+                    <div
+                      className={
                         order.status === "COMPLETED"
-                          ? "default"
+                          ? "flex items-center gap-2 px-3 py-1 bg-green-50 border-l-4 border-green-600 rounded-sm"
                           : order.status === "PENDING"
-                          ? "secondary"
-                          : "destructive"
+                          ? "flex items-center gap-2 px-3 py-1 bg-yellow-50 border-l-4 border-yellow-600 rounded-sm"
+                          : "flex items-center gap-2 px-3 py-1 bg-red-50 border-l-4 border-red-600 rounded-sm"
                       }
                     >
-                      {order.status}
-                    </Badge>
-                    {isSyncing && order.status === "PENDING" && (
-                      <RefreshCw className="h-3 w-3 text-blue-600 animate-spin" />
-                    )}
+                      <span
+                        className={
+                          order.status === "COMPLETED"
+                            ? "text-sm font-medium text-green-800"
+                            : order.status === "PENDING"
+                            ? "text-sm font-medium text-yellow-800"
+                            : "text-sm font-medium text-red-800"
+                        }
+                      >
+                        {order.status}
+                      </span>
+                      {isSyncing && order.status === "PENDING" && (
+                        <RefreshCw className="h-3.5 w-3.5 text-yellow-600 animate-spin" />
+                      )}
+                    </div>
                   </div>
                 </TableCell>
               </TableRow>
@@ -125,16 +135,19 @@ export function PurchasesList({ transactions }: PurchasesListProps) {
         </Table>
       </div>
 
-      <div className="md:hidden space-y-2">
+      <div className="md:hidden space-y-3">
         {transactions.map((order) => (
-          <Card key={order.id} className="p-2">
-            <div className="space-y-1.5">
-              <div className="flex items-start justify-between gap-2">
+          <Card
+            key={order.id}
+            className="p-4 hover:shadow-md transition-shadow"
+          >
+            <div className="space-y-3">
+              <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-xs line-clamp-1">
+                  <p className="font-semibold text-sm line-clamp-2 mb-1">
                     {order.itemTitle}
                   </p>
-                  <p className="text-[10px] text-muted-foreground">
+                  <p className="text-xs text-muted-foreground">
                     {order.itemType === "marketplace"
                       ? "Study Material"
                       : order.itemType === "food"
@@ -142,34 +155,51 @@ export function PurchasesList({ transactions }: PurchasesListProps) {
                       : "Event"}
                   </p>
                 </div>
-                <div className="flex items-center gap-1 flex-shrink-0">
-                  <Badge
-                    variant={
+                <div
+                  className={
+                    order.status === "COMPLETED"
+                      ? "flex items-center gap-1.5 px-2.5 py-1 bg-green-50 border-l-4 border-green-600 rounded-sm flex-shrink-0"
+                      : order.status === "PENDING"
+                      ? "flex items-center gap-1.5 px-2.5 py-1 bg-yellow-50 border-l-4 border-yellow-600 rounded-sm flex-shrink-0"
+                      : "flex items-center gap-1.5 px-2.5 py-1 bg-red-50 border-l-4 border-red-600 rounded-sm flex-shrink-0"
+                  }
+                >
+                  <span
+                    className={
                       order.status === "COMPLETED"
-                        ? "default"
+                        ? "text-xs font-semibold text-green-800"
                         : order.status === "PENDING"
-                        ? "secondary"
-                        : "destructive"
+                        ? "text-xs font-semibold text-yellow-800"
+                        : "text-xs font-semibold text-red-800"
                     }
-                    className="text-[10px] h-4 px-1.5"
                   >
                     {order.status}
-                  </Badge>
+                  </span>
                   {isSyncing && order.status === "PENDING" && (
-                    <RefreshCw className="h-3 w-3 text-blue-600 animate-spin" />
+                    <RefreshCw className="h-3.5 w-3.5 text-yellow-600 animate-spin" />
                   )}
                 </div>
               </div>
-              <div className="flex items-center justify-between text-[10px]">
-                <span className="text-muted-foreground">
-                  {new Date(order.createdAt).toLocaleDateString("en-US", {
-                    month: "short",
-                    day: "numeric",
-                  })}
-                </span>
-                <span className="font-semibold text-xs">
-                  Rp {order.amount.toLocaleString()}
-                </span>
+
+              <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-xs text-muted-foreground">
+                    Order Date
+                  </span>
+                  <span className="text-sm font-medium">
+                    {new Date(order.createdAt).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    })}
+                  </span>
+                </div>
+                <div className="flex flex-col gap-0.5 items-end">
+                  <span className="text-xs text-muted-foreground">Amount</span>
+                  <span className="font-bold text-base text-blue-600">
+                    Rp {order.amount.toLocaleString()}
+                  </span>
+                </div>
               </div>
             </div>
           </Card>

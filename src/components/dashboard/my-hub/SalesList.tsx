@@ -71,17 +71,27 @@ export function SalesList({ transactions }: SalesListProps) {
                   Rp {sale.amount.toLocaleString()}
                 </TableCell>
                 <TableCell>
-                  <Badge
-                    variant={
+                  <div
+                    className={
                       sale.status === "COMPLETED"
-                        ? "default"
+                        ? "inline-flex items-center px-3 py-1 bg-green-50 border-l-4 border-green-600 rounded-sm"
                         : sale.status === "PENDING"
-                        ? "secondary"
-                        : "destructive"
+                        ? "inline-flex items-center px-3 py-1 bg-yellow-50 border-l-4 border-yellow-600 rounded-sm"
+                        : "inline-flex items-center px-3 py-1 bg-red-50 border-l-4 border-red-600 rounded-sm"
                     }
                   >
-                    {sale.status}
-                  </Badge>
+                    <span
+                      className={
+                        sale.status === "COMPLETED"
+                          ? "text-sm font-medium text-green-800"
+                          : sale.status === "PENDING"
+                          ? "text-sm font-medium text-yellow-800"
+                          : "text-sm font-medium text-red-800"
+                      }
+                    >
+                      {sale.status}
+                    </span>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
@@ -89,14 +99,16 @@ export function SalesList({ transactions }: SalesListProps) {
         </Table>
       </div>
 
-      <div className="md:hidden space-y-2">
+      <div className="md:hidden space-y-3">
         {transactions.map((sale) => (
-          <Card key={sale.id} className="p-2">
-            <div className="space-y-1.5">
-              <div className="flex items-start justify-between gap-2">
+          <Card key={sale.id} className="p-4 hover:shadow-md transition-shadow">
+            <div className="space-y-3">
+              <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-xs line-clamp-1">{sale.itemTitle}</p>
-                  <p className="text-[10px] text-muted-foreground">
+                  <p className="font-semibold text-sm line-clamp-2 mb-1">
+                    {sale.itemTitle}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
                     {sale.itemType === "marketplace"
                       ? "Study Material"
                       : sale.itemType === "food"
@@ -104,33 +116,49 @@ export function SalesList({ transactions }: SalesListProps) {
                       : "Event"}
                   </p>
                 </div>
-                <Badge
-                  variant={
+                <div
+                  className={
                     sale.status === "COMPLETED"
-                      ? "default"
+                      ? "inline-flex items-center px-2.5 py-1 bg-green-50 border-l-4 border-green-600 rounded-sm flex-shrink-0"
                       : sale.status === "PENDING"
-                      ? "secondary"
-                      : "destructive"
+                      ? "inline-flex items-center px-2.5 py-1 bg-yellow-50 border-l-4 border-yellow-600 rounded-sm flex-shrink-0"
+                      : "inline-flex items-center px-2.5 py-1 bg-red-50 border-l-4 border-red-600 rounded-sm flex-shrink-0"
                   }
-                  className="text-[10px] h-4 px-1.5 flex-shrink-0"
                 >
-                  {sale.status}
-                </Badge>
+                  <span
+                    className={
+                      sale.status === "COMPLETED"
+                        ? "text-xs font-semibold text-green-800"
+                        : sale.status === "PENDING"
+                        ? "text-xs font-semibold text-yellow-800"
+                        : "text-xs font-semibold text-red-800"
+                    }
+                  >
+                    {sale.status}
+                  </span>
+                </div>
               </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                  <span className="truncate">{sale.buyer?.name || "Unknown"}</span>
-                  <span>•</span>
-                  <span>
+
+              <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-xs text-muted-foreground">Buyer</span>
+                  <span className="text-sm font-medium truncate">
+                    {sale.buyer?.name || "Unknown"}
+                  </span>
+                  <span className="text-xs text-muted-foreground mt-1">
                     {new Date(sale.createdAt).toLocaleDateString("en-US", {
                       month: "short",
                       day: "numeric",
+                      year: "numeric",
                     })}
                   </span>
                 </div>
-                <span className="font-semibold text-xs flex-shrink-0">
-                  Rp {sale.amount.toLocaleString()}
-                </span>
+                <div className="flex flex-col gap-0.5 items-end">
+                  <span className="text-xs text-muted-foreground">Amount</span>
+                  <span className="font-bold text-base text-green-600">
+                    Rp {sale.amount.toLocaleString()}
+                  </span>
+                </div>
               </div>
             </div>
           </Card>
@@ -139,4 +167,3 @@ export function SalesList({ transactions }: SalesListProps) {
     </>
   );
 }
-

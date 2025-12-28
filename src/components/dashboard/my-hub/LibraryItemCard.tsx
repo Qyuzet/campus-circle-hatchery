@@ -77,63 +77,57 @@ export function LibraryItemCard({
   };
 
   return (
-    <Card className="hover:shadow-lg transition-shadow relative">
+    <Card className="hover:shadow-lg transition-shadow relative flex flex-col h-full">
       <button
         onClick={handleSupportClick}
-        className="absolute top-1 right-1 md:top-2 md:right-2 z-10 bg-white/90 hover:bg-white backdrop-blur-sm p-1 md:p-1.5 rounded-full shadow-sm transition-all hover:shadow-md group"
+        className="absolute top-2 right-2 z-10 bg-white/90 hover:bg-white backdrop-blur-sm p-1.5 rounded-full shadow-sm transition-all hover:shadow-md group"
         title="Contact Support"
       >
-        <HelpCircle className="h-3 w-3 md:h-4 md:w-4 text-gray-600 group-hover:text-blue-600 transition-colors" />
+        <HelpCircle className="h-4 w-4 text-gray-600 group-hover:text-blue-600 transition-colors" />
       </button>
-      <CardHeader className="p-2 md:p-6">
-        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-1 md:gap-2">
-          <div className="flex-1 min-w-0">
-            <CardTitle className="text-xs md:text-lg line-clamp-2">
+      <CardHeader className="p-3 sm:p-4 pb-2 sm:pb-3">
+        <div className="flex flex-col gap-1.5 sm:gap-2">
+          <div className="flex-1 min-w-0 pr-8">
+            <CardTitle className="text-sm sm:text-base font-semibold line-clamp-2 mb-1.5 sm:mb-2">
               {transaction.itemTitle}
             </CardTitle>
-            <p className="text-[10px] md:text-sm text-muted-foreground mt-0.5 md:mt-1">
-              {transaction.item?.category || "Study Material"}
-            </p>
+            <div className="inline-flex items-center px-2 sm:px-2.5 py-0.5 sm:py-1 bg-blue-50 border-l-4 border-blue-600 rounded-sm w-fit">
+              <span className="text-[10px] sm:text-xs font-semibold text-blue-800">
+                {transaction.item?.category || "Material"}
+              </span>
+            </div>
           </div>
-          <Badge
-            variant="secondary"
-            className="text-[10px] md:text-xs h-4 md:h-5 px-1 md:px-2 flex-shrink-0 w-fit"
-          >
-            {transaction.item?.category || "Material"}
-          </Badge>
         </div>
       </CardHeader>
-      <CardContent className="p-2 md:p-6 pt-0">
-        <p className="text-[10px] md:text-sm text-muted-foreground line-clamp-2 md:line-clamp-3">
+      <CardContent className="p-3 sm:p-4 pt-0 flex-1">
+        <p className="text-xs sm:text-sm text-muted-foreground line-clamp-3 mb-2 sm:mb-3">
           {transaction.item?.description || "No description available"}
         </p>
-        <div className="mt-2 md:mt-4 space-y-0.5 md:space-y-1">
-          <div className="text-[10px] md:text-xs text-muted-foreground">
-            {new Date(transaction.createdAt).toLocaleDateString("en-US", {
-              month: "short",
-              day: "numeric",
-            })}
-          </div>
+        <div className="text-[10px] sm:text-xs text-muted-foreground">
+          Added{" "}
+          {new Date(transaction.createdAt).toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          })}
         </div>
       </CardContent>
-      <CardFooter className="p-2 md:p-6 pt-0">
+      <CardFooter className="p-3 sm:p-4 pt-0">
         <Button
           size="sm"
-          className="w-full text-[10px] md:text-sm h-7 md:h-9"
+          className="w-full text-xs sm:text-sm h-8 sm:h-9"
           onClick={handleDownload}
           disabled={!transaction.item?.fileUrl || isDownloading}
         >
           {isDownloading ? (
             <>
-              <Loader2 className="h-3 w-3 md:h-4 md:w-4 mr-0.5 md:mr-1 animate-spin" />
-              <span className="hidden md:inline">Downloading...</span>
-              <span className="md:hidden">...</span>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Downloading...
             </>
           ) : (
             <>
-              <Download className="h-3 w-3 md:h-4 md:w-4 mr-0.5 md:mr-1" />
-              <span className="hidden md:inline">Download</span>
-              <span className="md:hidden">Get</span>
+              <Download className="h-4 w-4 mr-2" />
+              Download
             </>
           )}
         </Button>

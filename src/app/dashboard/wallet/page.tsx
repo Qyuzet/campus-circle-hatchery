@@ -113,7 +113,7 @@ export default async function WalletPage() {
     >
       <Suspense fallback={<WalletSkeleton />}>
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
-          <h1 className="text-2xl font-bold mb-2">Wallet & Withdrawals</h1>
+          {/* <h1 className="text-2xl font-bold mb-2">Wallet & Withdrawals</h1> */}
           <p className="text-xs text-muted-foreground mb-6">
             <i>
               *Platform fee: 5% • Holding: 3 days • Min withdrawal: Rp 50,000
