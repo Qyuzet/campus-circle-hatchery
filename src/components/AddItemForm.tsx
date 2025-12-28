@@ -195,15 +195,20 @@ export function AddItemForm({ onSubmit, onCancel }: AddItemFormProps) {
       setUploadProgress(30);
 
       const uploadResult = await fileAPI.uploadFile(uploadedFile, false);
-      setUploadProgress(50);
+      setUploadProgress(70);
 
       if (!uploadResult.success || !uploadResult.url) {
         throw new Error("Upload failed");
       }
 
-      setUploadProgress(60);
-      const thumbnailUrl = await generateThumbnail(uploadedFile);
-      setUploadProgress(80);
+      // Use server-generated thumbnail if available, otherwise generate on client
+      let thumbnailUrl = uploadResult.thumbnailUrl;
+      if (!thumbnailUrl && uploadedFile.type === "application/pdf") {
+        setUploadProgress(75);
+        thumbnailUrl = await generateThumbnail(uploadedFile);
+      }
+
+      setUploadProgress(85);
 
       const fileData = {
         fileUrl: uploadResult.url,

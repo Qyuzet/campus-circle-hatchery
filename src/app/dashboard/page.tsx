@@ -9566,9 +9566,13 @@ function AddItemForm({
           fileName: uploadResult.fileName,
           fileSize: uploadResult.fileSize,
           fileType: uploadResult.fileType,
+          thumbnailUrl: uploadResult.thumbnailUrl,
         };
 
-        if (uploadResult.fileType === "application/pdf") {
+        if (
+          uploadResult.fileType === "application/pdf" &&
+          !uploadResult.thumbnailUrl
+        ) {
           try {
             setUploadProgress(70);
             const thumbnailBlob = await generatePdfThumbnailClientSide(

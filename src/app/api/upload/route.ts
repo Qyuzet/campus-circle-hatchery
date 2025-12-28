@@ -4,9 +4,16 @@ import { auth } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabase";
 import { compressFile } from "@/lib/pdf-compressor";
 import { generateUniqueFilename } from "@/lib/sanitize-filename";
+import { generatePdfThumbnail } from "@/lib/pdf-thumbnail";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+function generateRandomFilename(extension: string): string {
+  const timestamp = Date.now();
+  const randomString = Math.random().toString(36).substring(2, 15);
+  return `thumbnail-${timestamp}-${randomString}.${extension}`;
+}
 
 // POST /api/upload - Upload file to Supabase Storage
 export async function POST(request: NextRequest) {
@@ -192,6 +199,42 @@ export async function POST(request: NextRequest) {
 
     console.log("File uploaded successfully:", publicUrl);
 
+    // Generate thumbnail for PDFs automatically
+    let thumbnailUrl: string | undefined = undefined;
+    if (file.type === "application/pdf") {
+      try {
+        console.log("Generating thumbnail for PDF...");
+        const thumbnailBuffer = await generatePdfThumbnail(buffer);
+
+        if (thumbnailBuffer) {
+          const thumbnailFileName = generateRandomFilename("jpg");
+
+          const { data: thumbData, error: thumbError } =
+            await supabaseAdmin.storage
+              .from("study-materials")
+              .upload(thumbnailFileName, thumbnailBuffer, {
+                contentType: "image/jpeg",
+                upsert: true,
+              });
+
+          if (!thumbError) {
+            const {
+              data: { publicUrl: thumbPublicUrl },
+            } = supabaseAdmin.storage
+              .from("study-materials")
+              .getPublicUrl(thumbnailFileName);
+
+            thumbnailUrl = thumbPublicUrl;
+            console.log("Thumbnail generated successfully:", thumbnailUrl);
+          } else {
+            console.error("Failed to upload thumbnail:", thumbError);
+          }
+        }
+      } catch (thumbError) {
+        console.error("Error generating thumbnail:", thumbError);
+      }
+    }
+
     return NextResponse.json({
       success: true,
       url: publicUrl,
@@ -199,6 +242,7 @@ export async function POST(request: NextRequest) {
       fileSize: buffer.length,
       fileType: file.type,
       compressionInfo,
+      thumbnailUrl,
     });
   } catch (error: any) {
     console.error("Upload error:", error);
