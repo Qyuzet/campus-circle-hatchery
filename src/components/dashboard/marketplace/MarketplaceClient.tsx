@@ -91,6 +91,7 @@ export function MarketplaceClient({
     type: "marketplace" | "tutoring" | "food" | "event";
   } | null>(null);
   const [hasPurchasedItem, setHasPurchasedItem] = useState(false);
+  const [isCheckingPurchase, setIsCheckingPurchase] = useState(false);
   const [showReorderConfirm, setShowReorderConfirm] = useState(false);
   const [showAddTypeModal, setShowAddTypeModal] = useState(false);
   const [showAddItemModal, setShowAddItemModal] = useState(false);
@@ -328,26 +329,15 @@ export function MarketplaceClient({
     );
   };
 
-  const handleBuyItem = async (item: any) => {
+  const handleBuyItem = (item: any) => {
     if (!isProfileComplete()) {
       toast.error("Please complete your profile before purchasing items");
       return;
     }
 
-    try {
-      const result = await fetch(
-        `/api/transactions/check-purchase?itemId=${item.id}`
-      );
-      const data = await result.json();
-      setHasPurchasedItem(data.hasPurchased);
-
-      if (data.hasPurchased) {
-        setShowReorderConfirm(true);
-      } else {
-        proceedWithPurchase(item);
-      }
-    } catch (error) {
-      console.error("Error checking purchase:", error);
+    if (hasPurchasedItem) {
+      setShowReorderConfirm(true);
+    } else {
       proceedWithPurchase(item);
     }
   };
@@ -371,7 +361,7 @@ export function MarketplaceClient({
       await messagesAPI.sendOrderRequest(conversation.id, foodItem);
       setShowFoodModal(false);
       toast.success("Order request sent to seller!");
-      router.push("/marketplace?tab=messages");
+      router.push("/dashboard/messages");
     } catch (error) {
       console.error("Error sending order request:", error);
       toast.error("Failed to send order request. Please try again.");
@@ -568,6 +558,7 @@ export function MarketplaceClient({
                 onClick={async () => {
                   setSelectedItem(item);
                   setShowItemModal(true);
+                  setIsCheckingPurchase(true);
                   try {
                     const result = await fetch(
                       `/api/transactions/check-purchase?itemId=${item.id}`
@@ -577,6 +568,8 @@ export function MarketplaceClient({
                   } catch (error) {
                     console.error("Error checking purchase:", error);
                     setHasPurchasedItem(false);
+                  } finally {
+                    setIsCheckingPurchase(false);
                   }
                 }}
                 className={`cursor-pointer hover:shadow-lg transition-shadow group overflow-hidden relative ${
@@ -747,7 +740,7 @@ export function MarketplaceClient({
                             onClick={(e) => {
                               e.stopPropagation();
                               router.push(
-                                `/dashboard?message=${item.sellerId}`
+                                `/dashboard/messages?userId=${item.sellerId}`
                               );
                             }}
                           >
@@ -1036,7 +1029,7 @@ export function MarketplaceClient({
                       className="flex-1 text-xs px-3 py-1.5 h-auto"
                       onClick={() => {
                         router.push(
-                          `/dashboard?message=${selectedItem.sellerId}`
+                          `/dashboard/messages?userId=${selectedItem.sellerId}`
                         );
                       }}
                     >
@@ -1048,9 +1041,14 @@ export function MarketplaceClient({
                       onClick={() => {
                         handleBuyItem(selectedItem);
                       }}
+                      disabled={isCheckingPurchase}
                     >
                       <ShoppingCart className="h-3 w-3 mr-1.5" />
-                      {hasPurchasedItem ? "Order Again" : "Buy Now"}
+                      {isCheckingPurchase
+                        ? "Checking..."
+                        : hasPurchasedItem
+                        ? "Order Again"
+                        : "Buy Now"}
                     </Button>
                   </>
                 ) : (

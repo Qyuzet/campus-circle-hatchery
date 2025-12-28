@@ -54,7 +54,7 @@ export default function PaymentModal({
 
               // Redirect to My Hub > Purchases to wait for confirmation
               setTimeout(() => {
-                router.push("/dashboard?tab=my-hub&subTab=purchases");
+                router.push("/dashboard/my-hub?tab=purchases");
               }, 500);
             },
             onPending: function (result: any) {
@@ -63,7 +63,7 @@ export default function PaymentModal({
 
               // Redirect to My Hub > Purchases to wait for confirmation
               setTimeout(() => {
-                router.push("/dashboard?tab=my-hub&subTab=purchases");
+                router.push("/dashboard/my-hub?tab=purchases");
               }, 500);
             },
             onError: function (result: any) {
@@ -78,7 +78,7 @@ export default function PaymentModal({
 
               // Redirect to My Hub > Purchases to check status
               setTimeout(() => {
-                router.push("/dashboard?tab=my-hub&subTab=purchases");
+                router.push("/dashboard/my-hub?tab=purchases");
               }, 500);
             },
           });

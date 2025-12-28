@@ -31,7 +31,12 @@ function MessagesSkeleton() {
 export default async function MessagesPage({
   searchParams,
 }: {
-  searchParams: { conversation?: string; group?: string; mode?: string };
+  searchParams: {
+    conversation?: string;
+    group?: string;
+    mode?: string;
+    userId?: string;
+  };
 }) {
   const session = await auth();
 
@@ -40,10 +45,34 @@ export default async function MessagesPage({
   }
 
   const userId = session.user.id;
-  const selectedConversationId = searchParams.conversation;
+  let selectedConversationId = searchParams.conversation;
   const selectedGroupId = searchParams.group;
+  const targetUserId = searchParams.userId;
   const viewMode =
     (searchParams.mode as "conversations" | "groups") || "conversations";
+
+  if (targetUserId && !selectedConversationId) {
+    const existingConversation = await prisma.conversation.findFirst({
+      where: {
+        OR: [
+          { user1Id: userId, user2Id: targetUserId },
+          { user1Id: targetUserId, user2Id: userId },
+        ],
+      },
+    });
+
+    if (existingConversation) {
+      selectedConversationId = existingConversation.id;
+    } else {
+      const newConversation = await prisma.conversation.create({
+        data: {
+          user1Id: userId,
+          user2Id: targetUserId,
+        },
+      });
+      selectedConversationId = newConversation.id;
+    }
+  }
 
   const [conversations, groups, currentUser, wishlistItems, notifications] =
     await Promise.all([
