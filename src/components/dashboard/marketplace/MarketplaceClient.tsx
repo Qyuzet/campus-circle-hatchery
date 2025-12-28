@@ -577,146 +577,78 @@ export function MarketplaceClient({
                   }
                 }}
                 className={`transition-all duration-150 overflow-hidden border-0 ${
-                  viewMode === "list" ? "flex flex-row" : ""
+                  viewMode === "list" ? "flex flex-col" : ""
                 } ${
                   purchasedItems.has(item.id)
                     ? "opacity-60 cursor-not-allowed"
                     : "cursor-pointer hover:shadow-lg"
                 } shadow-sm bg-white`}
               >
-                <div
-                  className={`relative bg-gray-50 overflow-hidden ${
-                    viewMode === "list"
-                      ? "w-16 h-20 flex-shrink-0"
-                      : "aspect-[1/1.414]"
-                  }`}
-                >
-                  <FilePreview
-                    fileUrl={item.fileUrl}
-                    fileType={item.fileType}
-                    fileName={item.fileName}
-                    category={item.category}
-                    title={item.title}
-                    compact={viewMode === "list"}
-                    thumbnailUrl={item.thumbnailUrl}
-                  />
-                  {viewMode === "grid" && (
-                    <button
-                      onClick={(e) => handleWishlistToggle(item.id, e)}
-                      className={`absolute top-3 right-3 bg-white p-1.5 transition-all z-10 ${
-                        wishlist.has(item.id)
-                          ? "text-red-600"
-                          : "text-gray-600 hover:text-red-600"
-                      }`}
-                    >
-                      <Heart
-                        className={`h-4 w-4 ${
-                          wishlist.has(item.id) ? "fill-current" : ""
-                        }`}
-                      />
-                    </button>
-                  )}
-                </div>
+                {viewMode === "list" ? (
+                  <>
+                    {/* List View Layout */}
+                    <div className="flex flex-row">
+                      <div className="relative bg-gray-50 overflow-hidden w-24 h-32 flex-shrink-0">
+                        <FilePreview
+                          fileUrl={item.fileUrl}
+                          fileType={item.fileType}
+                          fileName={item.fileName}
+                          category={item.category}
+                          title={item.title}
+                          compact={true}
+                          thumbnailUrl={item.thumbnailUrl}
+                        />
+                      </div>
 
-                <div
-                  className={`flex ${
-                    viewMode === "list" ? "flex-row flex-1" : "flex-col"
-                  }`}
-                >
-                  <CardContent
-                    className={`${
-                      viewMode === "list"
-                        ? "p-2 flex-1 flex items-center"
-                        : "p-1.5 md:p-2 space-y-1"
-                    }`}
-                  >
-                    <div
-                      className={
-                        viewMode === "list" ? "flex-1 min-w-0" : "space-y-1"
-                      }
-                    >
-                      {viewMode === "list" ? (
-                        <div className="flex items-center gap-2">
-                          <Badge
-                            variant="secondary"
-                            className="text-[10px] px-1.5 py-0.5 flex-shrink-0 font-normal"
-                          >
-                            {item.category}
-                          </Badge>
-                          {purchasedItems.has(item.id) && (
-                            <Badge
-                              variant="default"
-                              className="text-[10px] px-1.5 py-0.5 bg-green-600 hover:bg-green-700 flex-shrink-0 font-normal"
-                            >
-                              Purchased
-                            </Badge>
-                          )}
-                          <h3 className="font-medium text-sm line-clamp-1 text-gray-900 flex-1 min-w-0">
-                            {item.title}
-                          </h3>
-                          <BookOpen className="h-3.5 w-3.5 text-gray-500 flex-shrink-0" />
-                          <span className="text-xs text-gray-600 truncate max-w-[80px]">
-                            {item.course}
-                          </span>
-                          <div className="flex items-center gap-1 flex-shrink-0">
-                            <Star className="h-3.5 w-3.5 text-yellow-500 fill-yellow-500" />
-                            <span className="text-xs font-medium text-gray-700">
-                              {item.seller?.rating || 0}
-                            </span>
-                          </div>
-                          <p className="text-sm font-semibold text-blue-600 flex-shrink-0">
-                            Rp {formatPrice(item.price)}
-                          </p>
-                        </div>
-                      ) : (
-                        <>
-                          <div className="flex items-start justify-between gap-1">
-                            <h3 className="font-medium text-[11px] md:text-xs line-clamp-2 text-gray-900 leading-tight flex-1">
+                      <div className="flex-1 p-3 flex flex-col justify-between min-w-0">
+                        <div className="space-y-2">
+                          <div className="flex items-start justify-between gap-2">
+                            <h3 className="font-semibold text-base line-clamp-2 text-gray-900 flex-1 min-w-0">
                               {item.title}
                             </h3>
                             {purchasedItems.has(item.id) && (
                               <Badge
                                 variant="default"
-                                className="text-[8px] md:text-[9px] px-1 py-0 bg-green-600 hover:bg-green-700 font-normal flex-shrink-0"
+                                className="text-[10px] px-2 py-0.5 bg-green-600 hover:bg-green-700 flex-shrink-0"
                               >
                                 Purchased
                               </Badge>
                             )}
                           </div>
 
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-0.5">
-                              <Star className="h-2.5 w-2.5 md:h-3 md:w-3 text-yellow-500 fill-yellow-500" />
-                              <span className="text-[9px] md:text-[10px] font-medium text-gray-700">
-                                {item.seller?.rating || 0}
-                              </span>
-                              <span className="text-[9px] md:text-[10px] text-gray-500">
-                                ({item.reviewCount || 0})
-                              </span>
+                          <div className="flex items-center gap-3 text-xs text-gray-600">
+                            <div className="flex items-center gap-1 min-w-0 flex-1">
+                              <BookOpen className="h-3.5 w-3.5 flex-shrink-0" />
+                              <span className="truncate">{item.course}</span>
                             </div>
+                            <div className="flex items-center gap-1 flex-shrink-0">
+                              <Star className="h-3.5 w-3.5 text-yellow-500 fill-yellow-500" />
+                              <span>{item.seller?.rating || 0}</span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between">
                             <Badge
                               variant="secondary"
-                              className="text-[8px] md:text-[9px] px-1 py-0 font-normal bg-gray-100 text-gray-700"
+                              className="text-xs px-2 py-0.5"
                             >
                               {item.category}
                             </Badge>
+                            <p className="text-lg font-bold text-blue-600">
+                              Rp {formatPrice(item.price)}
+                            </p>
                           </div>
-
-                          <p className="text-sm md:text-base font-semibold text-blue-600">
-                            Rp {item.price.toLocaleString()}
-                          </p>
-                        </>
-                      )}
+                        </div>
+                      </div>
                     </div>
-                  </CardContent>
 
-                  {viewMode === "list" ? (
-                    <div className="flex flex-col gap-1.5 p-2 justify-center border-l border-gray-100">
+                    {/* Action Buttons Row */}
+                    <div className="flex gap-2 p-3 pt-0 border-t border-gray-100">
                       {item.sellerId === userId ? (
                         <Button
                           variant="destructive"
                           size="sm"
-                          className="h-7 w-7 p-0"
+                          className="flex-1 h-9 text-sm"
                           onClick={(e) => {
                             e.stopPropagation();
                             alert(
@@ -724,12 +656,13 @@ export function MarketplaceClient({
                             );
                           }}
                         >
-                          <Trash2 className="h-3.5 w-3.5" />
+                          <Trash2 className="h-4 w-4 mr-1.5" />
+                          Delete
                         </Button>
                       ) : purchasedItems.has(item.id) ? (
-                        <div className="px-2 py-2 text-center">
-                          <span className="text-[10px] text-green-600 font-medium">
-                            Purchased
+                        <div className="flex-1 bg-green-50 text-green-600 px-4 py-2 text-center rounded-md flex items-center justify-center h-9">
+                          <span className="text-sm font-medium">
+                            Already Purchased
                           </span>
                         </div>
                       ) : (
@@ -737,7 +670,7 @@ export function MarketplaceClient({
                           <Button
                             variant="outline"
                             size="sm"
-                            className="h-7 w-7 p-0 border-gray-300"
+                            className="flex-1 h-9 border-gray-300 text-sm"
                             onClick={(e) => {
                               e.stopPropagation();
                               router.push(
@@ -745,22 +678,93 @@ export function MarketplaceClient({
                               );
                             }}
                           >
-                            <MessageCircle className="h-3.5 w-3.5" />
+                            <MessageCircle className="h-4 w-4 mr-1.5" />
+                            Message
                           </Button>
                           <Button
                             size="sm"
-                            className="h-7 w-7 p-0 bg-blue-600 hover:bg-blue-700"
+                            className="flex-1 h-9 bg-blue-600 hover:bg-blue-700 text-sm"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleBuyItem(item);
                             }}
                           >
-                            <ShoppingCart className="h-3.5 w-3.5" />
+                            <ShoppingCart className="h-4 w-4 mr-1.5" />
+                            Buy
                           </Button>
                         </>
                       )}
                     </div>
-                  ) : (
+                  </>
+                ) : (
+                  <>
+                    {/* Grid View Layout */}
+                    <div className="relative bg-gray-50 overflow-hidden aspect-[1/1.414]">
+                      <FilePreview
+                        fileUrl={item.fileUrl}
+                        fileType={item.fileType}
+                        fileName={item.fileName}
+                        category={item.category}
+                        title={item.title}
+                        compact={false}
+                        thumbnailUrl={item.thumbnailUrl}
+                      />
+                      <button
+                        onClick={(e) => handleWishlistToggle(item.id, e)}
+                        className={`absolute top-3 right-3 bg-white p-1.5 transition-all z-10 ${
+                          wishlist.has(item.id)
+                            ? "text-red-600"
+                            : "text-gray-600 hover:text-red-600"
+                        }`}
+                      >
+                        <Heart
+                          className={`h-4 w-4 ${
+                            wishlist.has(item.id) ? "fill-current" : ""
+                          }`}
+                        />
+                      </button>
+                    </div>
+
+                    <CardContent className="p-1.5 md:p-2 space-y-1">
+                      <div className="space-y-1">
+                        <div className="flex items-start justify-between gap-1">
+                          <h3 className="font-medium text-[11px] md:text-xs line-clamp-2 text-gray-900 leading-tight flex-1">
+                            {item.title}
+                          </h3>
+                          {purchasedItems.has(item.id) && (
+                            <Badge
+                              variant="default"
+                              className="text-[8px] md:text-[9px] px-1 py-0 bg-green-600 hover:bg-green-700 font-normal flex-shrink-0"
+                            >
+                              Purchased
+                            </Badge>
+                          )}
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-0.5">
+                            <Star className="h-2.5 w-2.5 md:h-3 md:w-3 text-yellow-500 fill-yellow-500" />
+                            <span className="text-[9px] md:text-[10px] font-medium text-gray-700">
+                              {item.seller?.rating || 0}
+                            </span>
+                            <span className="text-[9px] md:text-[10px] text-gray-500">
+                              ({item.reviewCount || 0})
+                            </span>
+                          </div>
+                          <Badge
+                            variant="secondary"
+                            className="text-[8px] md:text-[9px] px-1 py-0 font-normal bg-gray-100 text-gray-700"
+                          >
+                            {item.category}
+                          </Badge>
+                        </div>
+
+                        <p className="text-sm md:text-base font-semibold text-blue-600">
+                          Rp {item.price.toLocaleString()}
+                        </p>
+                      </div>
+                    </CardContent>
+
                     <CardFooter className="flex gap-1 px-1.5 md:px-2 pb-1.5 md:pb-2 pt-0">
                       {item.sellerId === userId ? (
                         <Button
@@ -818,8 +822,8 @@ export function MarketplaceClient({
                         </>
                       )}
                     </CardFooter>
-                  )}
-                </div>
+                  </>
+                )}
               </Card>
             ))
           )}
