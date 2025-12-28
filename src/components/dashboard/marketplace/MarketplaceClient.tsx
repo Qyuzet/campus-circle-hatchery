@@ -52,6 +52,7 @@ interface MarketplaceClientProps {
   initialContentMode: "study" | "food" | "event";
   myEventRegistrations: string[];
   wishlistItemIds: string[];
+  myPurchasedItemIds: string[];
   userId: string;
   userProfile: any;
 }
@@ -63,6 +64,7 @@ export function MarketplaceClient({
   initialContentMode,
   myEventRegistrations,
   wishlistItemIds,
+  myPurchasedItemIds,
   userId,
   userProfile,
 }: MarketplaceClientProps) {
@@ -77,6 +79,7 @@ export function MarketplaceClient({
   const [wishlist, setWishlist] = useState<Set<string>>(
     new Set(wishlistItemIds)
   );
+  const [purchasedItems] = useState<Set<string>>(new Set(myPurchasedItemIds));
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [showItemModal, setShowItemModal] = useState(false);
   const [selectedFood, setSelectedFood] = useState<any>(null);
@@ -556,6 +559,7 @@ export function MarketplaceClient({
               <Card
                 key={item.id}
                 onClick={async () => {
+                  if (purchasedItems.has(item.id)) return;
                   setSelectedItem(item);
                   setShowItemModal(true);
                   setIsCheckingPurchase(true);
@@ -572,8 +576,12 @@ export function MarketplaceClient({
                     setIsCheckingPurchase(false);
                   }
                 }}
-                className={`cursor-pointer hover:shadow-lg transition-shadow group overflow-hidden relative ${
+                className={`transition-shadow group overflow-hidden relative ${
                   viewMode === "list" ? "flex flex-row" : ""
+                } ${
+                  purchasedItems.has(item.id)
+                    ? "opacity-60 cursor-not-allowed bg-gray-50"
+                    : "cursor-pointer hover:shadow-lg"
                 }`}
               >
                 <div
@@ -637,6 +645,14 @@ export function MarketplaceClient({
                               >
                                 {item.category}
                               </Badge>
+                              {purchasedItems.has(item.id) && (
+                                <Badge
+                                  variant="default"
+                                  className="text-[9px] px-1 py-0 bg-green-500 hover:bg-green-600 flex-shrink-0"
+                                >
+                                  Purchased
+                                </Badge>
+                              )}
                               <h3 className="font-bold text-xs line-clamp-1 text-gray-900 flex-1 min-w-0">
                                 {item.title}
                               </h3>
@@ -655,9 +671,19 @@ export function MarketplaceClient({
                               </p>
                             </div>
                           ) : (
-                            <h3 className="font-bold text-xs sm:text-base lg:text-sm line-clamp-1 text-gray-900 leading-tight">
-                              {item.title}
-                            </h3>
+                            <div className="flex items-center gap-1.5">
+                              <h3 className="font-bold text-xs sm:text-base lg:text-sm line-clamp-1 text-gray-900 leading-tight flex-1">
+                                {item.title}
+                              </h3>
+                              {purchasedItems.has(item.id) && (
+                                <Badge
+                                  variant="default"
+                                  className="text-[9px] px-1.5 py-0 bg-green-500 hover:bg-green-600 flex-shrink-0"
+                                >
+                                  Purchased
+                                </Badge>
+                              )}
+                            </div>
                           )}
                         </div>
                       </div>
@@ -731,6 +757,12 @@ export function MarketplaceClient({
                         >
                           <Trash2 className="h-3 w-3" />
                         </Button>
+                      ) : purchasedItems.has(item.id) ? (
+                        <div className="px-1 py-2 text-center">
+                          <span className="text-[8px] text-green-600 font-medium">
+                            Purchased
+                          </span>
+                        </div>
                       ) : (
                         <>
                           <Button
@@ -776,6 +808,10 @@ export function MarketplaceClient({
                           <Trash2 className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 lg:h-3 lg:w-3 sm:mr-1 lg:mr-0.5" />
                           <span className="hidden sm:inline">Delete</span>
                         </Button>
+                      ) : purchasedItems.has(item.id) ? (
+                        <div className="w-full bg-green-100 text-green-700 px-3 py-1.5 rounded-md text-center text-[9px] sm:text-xs lg:text-[10px] font-medium h-6 sm:h-8 lg:h-7 flex items-center justify-center">
+                          Already Purchased
+                        </div>
                       ) : (
                         <>
                           <Button
@@ -1022,6 +1058,10 @@ export function MarketplaceClient({
                       Delete Item
                     </Button>
                   </>
+                ) : purchasedItems.has(selectedItem.id) ? (
+                  <div className="flex-1 bg-green-100 text-green-700 px-3 py-1.5 rounded-md text-center text-xs font-medium">
+                    Already Purchased
+                  </div>
                 ) : selectedItem.status === "available" ? (
                   <>
                     <Button
@@ -1047,10 +1087,14 @@ export function MarketplaceClient({
                       {isCheckingPurchase
                         ? "Checking..."
                         : hasPurchasedItem
-                        ? "Order Again"
+                        ? "Buy Again"
                         : "Buy Now"}
                     </Button>
                   </>
+                ) : selectedItem.status === "sold" ? (
+                  <div className="flex-1 bg-gray-100 text-gray-500 px-3 py-1.5 rounded-md text-center text-xs font-medium">
+                    SOLD OUT
+                  </div>
                 ) : (
                   <div className="flex-1 bg-gray-100 text-gray-500 px-3 py-1.5 rounded-md text-center text-xs font-medium">
                     Item Not Available
@@ -1465,9 +1509,9 @@ export function MarketplaceClient({
       {showReorderConfirm && selectedItem && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[70] p-4">
           <div className="bg-white rounded-lg max-w-md w-full p-6 space-y-4">
-            <h3 className="text-lg font-semibold">Order Again?</h3>
+            <h3 className="text-lg font-semibold">Already Purchased</h3>
             <p className="text-sm text-gray-600">
-              You have already purchased this item. Would you like to order it
+              You have already bought this item. Would you like to purchase it
               again?
             </p>
             <div className="flex gap-3">
@@ -1485,7 +1529,7 @@ export function MarketplaceClient({
                   setShowItemModal(false);
                 }}
               >
-                Yes, Order Again
+                Yes, Buy Again
               </Button>
             </div>
           </div>
