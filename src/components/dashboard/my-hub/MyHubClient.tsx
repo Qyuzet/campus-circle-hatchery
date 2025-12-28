@@ -43,13 +43,25 @@ export function MyHubClient({
 
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab}>
-      <TabsList className="grid w-full grid-cols-6 mb-6">
-        <TabsTrigger value="purchases">Purchases</TabsTrigger>
-        <TabsTrigger value="sales">Sales</TabsTrigger>
-        <TabsTrigger value="library">Library</TabsTrigger>
-        <TabsTrigger value="listings">Listings</TabsTrigger>
-        <TabsTrigger value="events">Events</TabsTrigger>
-        <TabsTrigger value="wishlist">Wishlist</TabsTrigger>
+      <TabsList className="grid w-full grid-cols-6 mb-6 h-8">
+        <TabsTrigger value="purchases" className="text-xs px-2 py-1">
+          Purchases
+        </TabsTrigger>
+        <TabsTrigger value="sales" className="text-xs px-2 py-1">
+          Sales
+        </TabsTrigger>
+        <TabsTrigger value="library" className="text-xs px-2 py-1">
+          Library
+        </TabsTrigger>
+        <TabsTrigger value="listings" className="text-xs px-2 py-1">
+          Listings
+        </TabsTrigger>
+        <TabsTrigger value="events" className="text-xs px-2 py-1">
+          Events
+        </TabsTrigger>
+        <TabsTrigger value="wishlist" className="text-xs px-2 py-1">
+          Wishlist
+        </TabsTrigger>
       </TabsList>
 
       <TabsContent value="purchases">
