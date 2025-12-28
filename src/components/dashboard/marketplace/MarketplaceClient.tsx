@@ -415,7 +415,7 @@ export function MarketplaceClient({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <Card className="sticky top-28 z-40 bg-white">
         <CardContent className="p-3 sm:p-3">
           <div className="flex items-center gap-1.5 sm:gap-2">
@@ -534,7 +534,7 @@ export function MarketplaceClient({
       {/* Marketplace Items */}
       {contentMode === "study" && (
         <div
-          className={`grid gap-2 md:gap-3 ${
+          className={`grid gap-4 ${
             viewMode === "grid"
               ? "grid-cols-3 md:grid-cols-3 lg:grid-cols-4"
               : "grid-cols-1"
@@ -828,7 +828,7 @@ export function MarketplaceClient({
 
       {contentMode === "food" && (
         <div
-          className={`grid gap-2 sm:gap-4 ${
+          className={`grid gap-4 ${
             viewMode === "grid"
               ? "grid-cols-2 md:grid-cols-2 lg:grid-cols-3"
               : "grid-cols-1"
@@ -868,7 +868,7 @@ export function MarketplaceClient({
 
       {contentMode === "event" && (
         <div
-          className={`grid gap-2 sm:gap-4 ${
+          className={`grid gap-4 ${
             viewMode === "grid"
               ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
               : "grid-cols-1"
