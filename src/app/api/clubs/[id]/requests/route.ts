@@ -144,7 +144,7 @@ export async function PUT(
       });
 
       // Send email notification
-      const joinUrl = `${process.env.NEXTAUTH_URL}/dashboard?tab=clubs&subtab=browse`;
+      const joinUrl = `${process.env.NEXTAUTH_URL}/dashboard/clubs?tab=browse`;
 
       await sendEmail({
         to: recipientEmail,

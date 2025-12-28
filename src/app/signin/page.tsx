@@ -24,12 +24,13 @@ function SignInContent() {
   const [isLoading, setIsLoading] = useState(false);
 
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
+  const isLogout = searchParams.get("logout") === "true";
 
   useEffect(() => {
-    if (status === "authenticated") {
+    if (status === "authenticated" && !isLogout) {
       router.replace(callbackUrl);
     }
-  }, [status, router, callbackUrl]);
+  }, [status, router, callbackUrl, isLogout]);
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true);

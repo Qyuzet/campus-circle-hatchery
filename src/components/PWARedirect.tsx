@@ -17,16 +17,14 @@ export function PWARedirect() {
 
     const currentPath = window.location.pathname;
 
-    if (isPWA && (currentPath === "/" || currentPath === "/signin")) {
+    if (isPWA && currentPath === "/") {
       if (status === "loading") {
         return;
       }
 
-      if (session && currentPath === "/signin") {
-        router.replace("/dashboard");
-      } else if (!session && currentPath === "/") {
+      if (!session) {
         router.replace("/signin");
-      } else if (session && currentPath === "/") {
+      } else {
         router.replace("/dashboard");
       }
     }

@@ -134,7 +134,24 @@ function DashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isRedirecting, setIsRedirecting] = useState(false);
-  const isHandlingAddItem = useRef(false);
+
+  // Redirect to SSR marketplace if SSR is enabled and no special parameters
+  useEffect(() => {
+    const showAddItem = searchParams.get("showAddItem");
+    const tab = searchParams.get("tab");
+    const message = searchParams.get("message");
+
+    if (
+      isSSRComponentsEnabled() &&
+      !showAddItem &&
+      !tab &&
+      !message &&
+      status === "authenticated"
+    ) {
+      setIsRedirecting(true);
+      router.replace("/dashboard/marketplace?mode=study");
+    }
+  }, [searchParams, status, router]);
 
   // Helper function to format price with K for thousands (memoized)
   const formatPrice = useCallback((price: number) => {
@@ -380,13 +397,11 @@ function DashboardContent() {
 
     // Handle showAddItem parameter
     if (showAddItem === "true" && status === "authenticated") {
-      console.log(
-        "🔵 Detected showAddItem=true, setting flag and calling handleAddItemClick"
-      );
-      isHandlingAddItem.current = true;
       handleAddItemClick();
-      // Don't remove the parameter yet - let it stay to prevent redirect
-      // It will be removed when modal is shown or component unmounts
+      // Remove the parameter from URL
+      const url = new URL(window.location.href);
+      url.searchParams.delete("showAddItem");
+      window.history.replaceState({}, "", url.toString());
     }
 
     // Handle My Hub sub-tab parameter
@@ -398,80 +413,6 @@ function DashboardContent() {
       setMyHubTab(subTab);
     }
   }, [searchParams, status]);
-
-  // Clean up showAddItem parameter once modal is shown
-  useEffect(() => {
-    const showAddItem = searchParams.get("showAddItem");
-    if (
-      showAddItem === "true" &&
-      (showAddItemModal || showProfileCompleteModal)
-    ) {
-      console.log("🧹 Cleaning up showAddItem parameter - modal is shown");
-      const url = new URL(window.location.href);
-      url.searchParams.delete("showAddItem");
-      window.history.replaceState({}, "", url.toString());
-    }
-  }, [searchParams, showAddItemModal, showProfileCompleteModal]);
-
-  // Redirect to SSR marketplace if SSR is enabled and no special parameters
-  useEffect(() => {
-    const showAddItem = searchParams.get("showAddItem");
-    const tab = searchParams.get("tab");
-    const message = searchParams.get("message");
-
-    console.log("🔍 Redirect check:", {
-      isSSREnabled: isSSRComponentsEnabled(),
-      showAddItem,
-      tab,
-      message,
-      status,
-      showAddItemModal,
-      showAddFoodModal,
-      showAddEventModal,
-      isHandlingAddItem: isHandlingAddItem.current,
-    });
-
-    // Don't redirect if we have showAddItem parameter (even if it will be removed)
-    if (showAddItem === "true") {
-      console.log("⏸️ Skipping redirect - showAddItem detected");
-      return;
-    }
-
-    // Check each condition individually for debugging
-    const shouldRedirect =
-      isSSRComponentsEnabled() &&
-      !tab &&
-      !message &&
-      status === "authenticated" &&
-      !showAddItemModal &&
-      !showAddFoodModal &&
-      !showAddEventModal &&
-      !isHandlingAddItem.current;
-
-    console.log("Should redirect?", shouldRedirect);
-
-    if (shouldRedirect) {
-      console.log("🔴 Redirecting to SSR marketplace");
-      setIsRedirecting(true);
-      router.replace("/dashboard/marketplace?mode=study");
-    } else {
-      console.log("✅ Redirect blocked");
-    }
-  }, [
-    searchParams,
-    status,
-    router,
-    showAddItemModal,
-    showAddFoodModal,
-    showAddEventModal,
-  ]);
-
-  // Reset the add item handling flag when all modals are closed
-  useEffect(() => {
-    if (!showAddItemModal && !showAddFoodModal && !showAddEventModal) {
-      isHandlingAddItem.current = false;
-    }
-  }, [showAddItemModal, showAddFoodModal, showAddEventModal]);
 
   // Initialize essential data on component mount (notifications, stats, and discovery tab)
   useEffect(() => {
@@ -1196,7 +1137,6 @@ function DashboardContent() {
   };
 
   const handleAddItemClick = async () => {
-    console.log("🟢 handleAddItemClick called");
     // Ensure profile is loaded
     if (!userProfile) {
       console.log("Loading profile before checking...");
@@ -1216,7 +1156,6 @@ function DashboardContent() {
         );
 
         if (!isComplete) {
-          console.log("Profile incomplete, showing profile modal");
           setProfileFormData({
             name: profile?.name || "",
             studentId: profile?.studentId || "",
@@ -1227,7 +1166,6 @@ function DashboardContent() {
           });
           setShowProfileCompleteModal(true);
         } else {
-          console.log("✅ Profile complete, showing add item modal");
           setShowAddItemModal(true);
         }
       } catch (error) {
@@ -1238,7 +1176,6 @@ function DashboardContent() {
     }
 
     if (!isProfileComplete()) {
-      console.log("Profile incomplete, showing profile modal");
       // Pre-fill form with existing data
       setProfileFormData({
         name: userProfile?.name || "",
@@ -1250,7 +1187,6 @@ function DashboardContent() {
       });
       setShowProfileCompleteModal(true);
     } else {
-      console.log("✅ Profile complete, showing add item modal");
       setShowAddItemModal(true);
     }
   };

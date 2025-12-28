@@ -133,7 +133,7 @@ export async function POST(
       process.env.NODE_ENV === "production";
     const recipientEmail = useRealEmails ? user.email : "delivered@resend.dev";
 
-    const clubsUrl = `${process.env.NEXTAUTH_URL}/dashboard?tab=clubs&subtab=my-clubs`;
+    const clubsUrl = `${process.env.NEXTAUTH_URL}/dashboard/clubs?tab=my-clubs`;
 
     await sendEmail({
       to: recipientEmail,

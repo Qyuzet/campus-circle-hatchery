@@ -177,6 +177,9 @@ const nextConfig = {
         hostname: "**",
       },
     ],
+    dangerouslyAllowSVG: true,
+    contentDispositionType: "attachment",
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
   async headers() {
     return [
@@ -194,6 +197,11 @@ const nextConfig = {
           {
             key: "Access-Control-Allow-Headers",
             value: "Content-Type, Authorization",
+          },
+          {
+            key: "Content-Security-Policy",
+            value:
+              "img-src 'self' data: https: http: blob:; default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https: wss: ws:;",
           },
           {
             key: "X-DNS-Prefetch-Control",
