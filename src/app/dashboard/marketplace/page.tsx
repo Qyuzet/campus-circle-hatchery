@@ -39,12 +39,12 @@ export default async function MarketplacePage({
     events,
     myEventRegistrations,
     wishlistItems,
+    myPurchases,
     userProfile,
     notifications,
   ] = await Promise.all([
     prisma.marketplaceItem.findMany({
       where: {
-        status: "available",
         fileUrl: {
           not: null,
         },
@@ -131,6 +131,18 @@ export default async function MarketplacePage({
         itemId: true,
       },
     }),
+    prisma.transaction.findMany({
+      where: {
+        buyerId: userId,
+        status: "COMPLETED",
+        itemId: {
+          not: null,
+        },
+      },
+      select: {
+        itemId: true,
+      },
+    }),
     prisma.user.findUnique({
       where: { id: userId },
       select: {
@@ -164,6 +176,7 @@ export default async function MarketplacePage({
           initialContentMode={contentMode}
           myEventRegistrations={myEventRegistrations.map((r) => r.eventId)}
           wishlistItemIds={wishlistItems.map((w) => w.itemId)}
+          myPurchasedItemIds={myPurchases.map((p) => p.itemId)}
           userId={userId}
           userProfile={userProfile}
         />

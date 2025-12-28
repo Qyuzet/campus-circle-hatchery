@@ -65,30 +65,30 @@ export function ItemDetailModal({
 
   return (
     <div
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-3"
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] p-3"
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-lg w-full max-w-md shadow-2xl"
+        className="bg-white w-full max-w-md shadow-lg"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-3 py-2 border-b">
-          <h2 className="text-base font-bold text-gray-900 line-clamp-1">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
+          <h2 className="text-base font-medium text-gray-900 line-clamp-1">
             {isEditing ? "Edit Item" : item.title}
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors p-1 hover:bg-gray-100 rounded-full flex-shrink-0"
+            className="text-gray-500 hover:text-gray-700 transition-colors p-1 flex-shrink-0"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-3 space-y-2">
+        <div className="p-3 space-y-2 max-h-[calc(100vh-120px)] overflow-y-auto">
           {/* File Preview Section */}
-          <div className="relative w-full h-48 rounded-md overflow-hidden">
+          <div className="relative w-full h-40 overflow-hidden bg-gray-50">
             <FilePreview
               fileUrl={item.fileUrl || item.imageUrl || ""}
               fileType={item.fileType || ""}
@@ -105,7 +105,7 @@ export function ItemDetailModal({
               <div className="space-y-2">
                 {/* Title */}
                 <div>
-                  <label className="text-xs font-medium text-gray-700">
+                  <label className="text-[10px] font-normal text-gray-700 mb-0.5 block">
                     Title
                   </label>
                   <Input
@@ -116,13 +116,13 @@ export function ItemDetailModal({
                         title: e.target.value,
                       })
                     }
-                    className="text-xs h-8"
+                    className="text-xs h-8 border-gray-300"
                   />
                 </div>
 
                 {/* Description */}
                 <div>
-                  <label className="text-xs font-medium text-gray-700">
+                  <label className="text-[10px] font-normal text-gray-700 mb-0.5 block">
                     Description
                   </label>
                   <textarea
@@ -133,13 +133,13 @@ export function ItemDetailModal({
                         description: e.target.value,
                       })
                     }
-                    className="w-full text-xs border rounded-md px-2 py-1.5 min-h-[60px]"
+                    className="w-full text-xs border border-gray-300 px-2 py-1.5 min-h-[60px] focus:outline-none focus:ring-1 focus:ring-blue-500"
                   />
                 </div>
 
                 {/* Category */}
                 <div>
-                  <label className="text-xs font-medium text-gray-700">
+                  <label className="text-[10px] font-normal text-gray-700 mb-0.5 block">
                     Category
                   </label>
                   <select
@@ -150,7 +150,7 @@ export function ItemDetailModal({
                         category: e.target.value,
                       })
                     }
-                    className="w-full text-xs border rounded-md px-2 py-1.5 h-8"
+                    className="w-full text-xs border border-gray-300 px-2 py-1.5 h-8 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   >
                     <option value="Assignment">Assignment</option>
                     <option value="Notes">Notes</option>
@@ -161,7 +161,7 @@ export function ItemDetailModal({
 
                 {/* Course */}
                 <div>
-                  <label className="text-xs font-medium text-gray-700">
+                  <label className="text-[10px] font-normal text-gray-700 mb-0.5 block">
                     Course
                   </label>
                   <Input
@@ -172,14 +172,14 @@ export function ItemDetailModal({
                         course: e.target.value,
                       })
                     }
-                    className="text-xs h-8"
+                    className="text-xs h-8 border-gray-300"
                     placeholder="e.g., AEXXX"
                   />
                 </div>
 
                 {/* Price */}
                 <div>
-                  <label className="text-xs font-medium text-gray-700">
+                  <label className="text-[10px] font-normal text-gray-700 mb-0.5 block">
                     Price (Rp)
                   </label>
                   <Input
@@ -191,7 +191,7 @@ export function ItemDetailModal({
                         price: parseInt(e.target.value) || 0,
                       })
                     }
-                    className="text-xs h-8"
+                    className="text-xs h-8 border-gray-300"
                   />
                 </div>
               </div>
@@ -199,65 +199,71 @@ export function ItemDetailModal({
           ) : (
             <>
               {/* Category Badge */}
-              <Badge variant="secondary" className="text-[10px] px-2 py-0.5">
+              <Badge
+                variant="secondary"
+                className="text-[9px] px-1.5 py-0 font-normal bg-gray-100 text-gray-700"
+              >
                 {item.category}
               </Badge>
 
               {/* Description */}
-              <p className="text-xs text-gray-600 line-clamp-2">
+              <p className="text-[10px] text-gray-600 line-clamp-2 leading-snug">
                 {item.description}
               </p>
 
-              {/* Info - Single Line with Icons */}
-              <div className="flex items-center gap-3 text-[10px] text-gray-600 bg-gray-50 px-2 py-1.5 rounded-md">
+              {/* Info - Compact Grid */}
+              <div className="grid grid-cols-2 gap-1.5 text-[9px] text-gray-600">
                 {item.course && (
-                  <>
-                    <div className="flex items-center gap-1" title="Course">
-                      <BookOpen className="h-3 w-3 text-gray-500" />
-                      <span className="font-medium text-gray-900 truncate max-w-[60px]">
-                        {item.course}
-                      </span>
-                    </div>
-                    <div className="w-px h-3 bg-gray-300"></div>
-                  </>
+                  <div
+                    className="flex items-center gap-1 bg-gray-50 px-2 py-1"
+                    title="Course"
+                  >
+                    <BookOpen className="h-2.5 w-2.5 text-gray-500 flex-shrink-0" />
+                    <span className="font-normal text-gray-900 truncate">
+                      {item.course}
+                    </span>
+                  </div>
                 )}
                 {item.seller && (
-                  <>
-                    <div className="flex items-center gap-1" title="Seller">
-                      <User className="h-3 w-3 text-gray-500" />
-                      <span className="font-medium text-gray-900 truncate max-w-[80px]">
-                        {typeof item.seller === "string"
-                          ? item.seller.slice(-9)
-                          : item.seller?.name || "Unknown"}
-                      </span>
-                    </div>
-                    <div className="w-px h-3 bg-gray-300"></div>
-                  </>
+                  <div
+                    className="flex items-center gap-1 bg-gray-50 px-2 py-1"
+                    title="Seller"
+                  >
+                    <User className="h-2.5 w-2.5 text-gray-500 flex-shrink-0" />
+                    <span className="font-normal text-gray-900 truncate">
+                      {typeof item.seller === "string"
+                        ? item.seller.slice(-9)
+                        : item.seller?.name || "Unknown"}
+                    </span>
+                  </div>
                 )}
-                <div className="flex items-center gap-1" title="Rating">
-                  <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
-                  <span className="font-medium text-gray-900">
+                <div
+                  className="flex items-center gap-1 bg-gray-50 px-2 py-1"
+                  title="Rating"
+                >
+                  <Star className="h-2.5 w-2.5 text-yellow-500 fill-yellow-500 flex-shrink-0" />
+                  <span className="font-normal text-gray-900">
                     {item.rating || 0} ({item.reviewCount || 0})
                   </span>
                 </div>
                 {item.viewCount !== undefined && (
-                  <>
-                    <div className="w-px h-3 bg-gray-300"></div>
-                    <div className="flex items-center gap-1" title="Views">
-                      <Eye className="h-3 w-3 text-gray-500" />
-                      <span className="font-medium text-gray-900">
-                        {item.viewCount}
-                      </span>
-                    </div>
-                  </>
+                  <div
+                    className="flex items-center gap-1 bg-gray-50 px-2 py-1"
+                    title="Views"
+                  >
+                    <Eye className="h-2.5 w-2.5 text-gray-500 flex-shrink-0" />
+                    <span className="font-normal text-gray-900">
+                      {item.viewCount}
+                    </span>
+                  </div>
                 )}
               </div>
 
               {/* Price & Status */}
-              <div className="flex items-center justify-between px-2 py-1.5 bg-gradient-to-r from-blue-50 to-purple-50 rounded-md">
+              <div className="flex items-center justify-between px-3 py-2 bg-gray-50 border-l-2 border-blue-600">
                 <div>
-                  <p className="text-[10px] text-gray-600">Price</p>
-                  <p className="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  <p className="text-[9px] text-gray-600 mb-0.5">Price</p>
+                  <p className="text-base font-medium text-blue-600">
                     Rp {item.price.toLocaleString()}
                   </p>
                 </div>
@@ -265,7 +271,7 @@ export function ItemDetailModal({
                   variant={
                     item.status === "available" ? "default" : "secondary"
                   }
-                  className={`text-[10px] px-2 py-0.5 ${
+                  className={`text-[9px] px-1.5 py-0.5 font-normal ${
                     item.status === "available"
                       ? "bg-green-100 text-green-700 hover:bg-green-100"
                       : item.status === "sold"
@@ -280,20 +286,20 @@ export function ItemDetailModal({
           )}
 
           {/* Action Buttons */}
-          <div className="flex gap-2 pt-1">
+          <div className="flex gap-2 pt-2 border-t border-gray-200 mt-2">
             {isOwner ? (
               isEditing ? (
                 <>
                   <Button
                     variant="outline"
-                    className="flex-1 text-xs px-3 py-1.5 h-auto"
+                    className="flex-1 text-[10px] px-3 py-2 h-auto font-normal border-gray-300 hover:bg-gray-50 transition-colors"
                     onClick={onCancel}
                     disabled={isSaving}
                   >
                     Cancel
                   </Button>
                   <Button
-                    className="flex-1 text-xs px-3 py-1.5 h-auto"
+                    className="flex-1 text-[10px] px-3 py-2 h-auto font-normal bg-blue-600 hover:bg-blue-700 transition-colors"
                     onClick={handleSave}
                     disabled={isSaving}
                   >
@@ -304,20 +310,20 @@ export function ItemDetailModal({
                 <>
                   <Button
                     variant="outline"
-                    className="flex-1 text-xs px-3 py-1.5 h-auto"
+                    className="flex-1 text-[10px] px-3 py-2 h-auto font-normal border-gray-300 hover:bg-gray-50 transition-colors"
                     onClick={onEdit}
                   >
                     Edit
                   </Button>
                   <Button
                     variant="destructive"
-                    className="flex-1 text-xs px-3 py-1.5 h-auto"
+                    className="flex-1 text-[10px] px-3 py-2 h-auto font-normal bg-red-600 hover:bg-red-700 transition-colors"
                     onClick={() => {
                       onDelete();
                       onClose();
                     }}
                   >
-                    <Trash2 className="h-3 w-3 mr-1.5" />
+                    <Trash2 className="h-3 w-3 mr-1" />
                     Delete Item
                   </Button>
                 </>
@@ -328,22 +334,22 @@ export function ItemDetailModal({
                   <>
                     <Button
                       variant="outline"
-                      className="flex-1 text-xs px-3 py-1.5 h-auto"
+                      className="flex-1 text-[10px] px-3 py-2 h-auto font-normal border-gray-300 hover:bg-gray-50 transition-colors"
                       onClick={onMessage}
                     >
-                      <MessageCircle className="h-3 w-3 mr-1.5" />
+                      <MessageCircle className="h-3 w-3 mr-1" />
                       Message Seller
                     </Button>
                     <Button
-                      className="flex-1 text-xs px-3 py-1.5 h-auto"
+                      className="flex-1 text-[10px] px-3 py-2 h-auto font-normal bg-blue-600 hover:bg-blue-700 transition-colors"
                       onClick={onBuy}
                     >
-                      <ShoppingCart className="h-3 w-3 mr-1.5" />
+                      <ShoppingCart className="h-3 w-3 mr-1" />
                       Buy Now
                     </Button>
                   </>
                 ) : (
-                  <div className="flex-1 bg-gray-100 text-gray-500 px-3 py-1.5 rounded-md text-center text-xs font-medium">
+                  <div className="flex-1 bg-gray-100 text-gray-600 px-3 py-2 text-center text-[10px] font-normal">
                     View Only
                   </div>
                 )}

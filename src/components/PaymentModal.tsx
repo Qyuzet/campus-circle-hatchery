@@ -142,16 +142,20 @@ export default function PaymentModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[70]">
-      <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-        <h2 className="text-2xl font-bold mb-4">Confirm Purchase</h2>
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[70] p-3">
+      <div className="bg-white w-full max-w-sm shadow-sm">
+        <h2 className="text-sm font-normal px-3 py-2 border-b border-gray-200 bg-gray-50">
+          Confirm Purchase
+        </h2>
 
-        <div className="mb-6">
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <h3 className="font-semibold text-lg mb-2">{item.title}</h3>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Price:</span>
-              <span className="text-2xl font-bold text-dark-blue">
+        <div className="px-3 py-2">
+          <div className="bg-blue-50 p-2 border-l border-blue-600">
+            <h3 className="font-normal text-xs mb-1 text-gray-900 line-clamp-1">
+              {item.title}
+            </h3>
+            <div className="flex justify-between items-baseline">
+              <span className="text-[10px] text-gray-600">Price:</span>
+              <span className="text-sm font-medium text-blue-600">
                 Rp {item.price.toLocaleString()}
               </span>
             </div>
@@ -159,9 +163,9 @@ export default function PaymentModal({
         </div>
 
         {!isSnapLoaded && !error && (
-          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-700 text-sm flex items-center">
+          <div className="mx-3 mb-2 p-1.5 bg-blue-50 border-l border-blue-600 text-blue-700 text-[10px] flex items-center">
             <svg
-              className="animate-spin h-4 w-4 mr-2"
+              className="animate-spin h-2.5 w-2.5 mr-1.5"
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 24 24"
@@ -185,36 +189,36 @@ export default function PaymentModal({
         )}
 
         {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+          <div className="mx-3 mb-2 p-1.5 bg-red-50 border-l border-red-600 text-red-700 text-[10px]">
             {error}
           </div>
         )}
 
-        <div className="mb-6 text-sm text-gray-600">
+        <div className="px-3 pb-2 text-[10px] text-gray-600 space-y-0.5">
           <p>You will be redirected to Midtrans secure payment page.</p>
-          <p className="mt-2">
+          <p>
             Accepted payment methods: Credit Card, Bank Transfer, E-Wallet, and
             more.
           </p>
         </div>
 
-        <div className="flex gap-3">
+        <div className="flex gap-1.5 px-3 pb-3 border-t border-gray-200 pt-2">
           <button
             onClick={onClose}
             disabled={isProcessing}
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 px-3 py-1.5 text-[10px] font-normal border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={handlePayment}
             disabled={isProcessing || !isSnapLoaded}
-            className="flex-1 px-4 py-2 bg-dark-blue text-white rounded-lg hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+            className="flex-1 px-3 py-1.5 text-[10px] font-normal bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center transition-colors"
           >
             {!isSnapLoaded ? (
               <>
                 <svg
-                  className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                  className="animate-spin h-2.5 w-2.5 mr-1 text-white"
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
                   viewBox="0 0 24 24"
@@ -238,7 +242,7 @@ export default function PaymentModal({
             ) : isProcessing ? (
               <>
                 <svg
-                  className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                  className="animate-spin h-2.5 w-2.5 mr-1 text-white"
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
                   viewBox="0 0 24 24"

@@ -56,7 +56,7 @@ const EventCardComponent = ({
 
   return (
     <Card
-      className="cursor-pointer hover:shadow-lg transition-shadow group overflow-hidden relative"
+      className="cursor-pointer hover:border-gray-300 transition-all group overflow-hidden relative border border-gray-200 bg-white"
       onClick={onClick}
       style={{ contentVisibility: "auto" }}
     >
@@ -66,13 +66,13 @@ const EventCardComponent = ({
             e.stopPropagation();
             onSupportClick(event.id, event.title);
           }}
-          className="absolute top-1 right-1 md:top-2 md:right-2 z-10 bg-white/90 hover:bg-white backdrop-blur-sm p-1 md:p-1.5 rounded-full shadow-sm transition-all hover:shadow-md group"
+          className="absolute top-1 right-1 z-10 bg-white p-1 transition-all"
           title="Contact Support"
         >
-          <HelpCircle className="h-3 w-3 md:h-4 md:w-4 text-gray-600 group-hover:text-blue-600 transition-colors" />
+          <HelpCircle className="h-2.5 w-2.5 text-gray-600 hover:text-blue-600 transition-colors" />
         </button>
       )}
-      <div className="relative h-32 md:h-48 bg-secondary-200 overflow-hidden">
+      <div className="relative h-28 bg-gray-50 overflow-hidden">
         {event.bannerUrl || event.imageUrl ? (
           <Image
             src={event.bannerUrl || event.imageUrl || ""}
@@ -81,77 +81,77 @@ const EventCardComponent = ({
             className="object-cover group-hover:scale-105 transition-transform"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-purple-100">
-            <Calendar className="h-10 w-10 md:h-16 md:w-16 text-purple-400" />
+          <div className="w-full h-full flex items-center justify-center bg-gray-50">
+            <Calendar className="h-8 w-8 text-gray-300" />
           </div>
         )}
         {event.isFeatured && (
-          <Badge className="absolute top-1 right-1 md:top-2 md:right-2 bg-yellow-500 text-[9px] md:text-xs h-4 md:h-5 px-1 md:px-2">
+          <Badge className="absolute top-1 right-1 bg-yellow-500 text-[8px] px-1 py-0 font-normal">
             Featured
           </Badge>
         )}
         {isFull && (
           <Badge
             variant="destructive"
-            className="absolute top-1 left-1 md:top-2 md:left-2 text-[9px] md:text-xs h-4 md:h-5 px-1 md:px-2"
+            className="absolute top-1 left-1 text-[8px] px-1 py-0 font-normal"
           >
             Full
           </Badge>
         )}
         {isOwner && (
-          <Badge className="absolute bottom-1 left-1 md:bottom-2 md:left-2 bg-blue-600 text-white text-[9px] md:text-xs h-4 md:h-5 px-1 md:px-2">
-            <Edit className="h-2.5 w-2.5 md:h-3 md:w-3 mr-0.5 md:mr-1" />
+          <Badge className="absolute bottom-1 left-1 bg-blue-600 text-white text-[8px] px-1 py-0 font-normal">
+            <Edit className="h-2 w-2 mr-0.5" />
             My Event
           </Badge>
         )}
       </div>
 
-      <CardContent className="p-2 md:p-4">
-        <div className="flex items-start justify-between gap-1 md:gap-2 mb-1 md:mb-2">
-          <h3 className="font-bold text-xs md:text-lg line-clamp-2">
+      <CardContent className="p-1 space-y-0.5">
+        <div className="flex items-start justify-between gap-1">
+          <h3 className="font-normal text-[10px] line-clamp-2 text-gray-900">
             {event.title}
           </h3>
           <Badge
             className={`${getCategoryColor(
               event.category
-            )} text-[9px] md:text-xs h-4 md:h-5 px-1 md:px-2 flex-shrink-0`}
+            )} text-[8px] px-1 py-0 flex-shrink-0 font-normal`}
           >
             {event.category}
           </Badge>
         </div>
 
-        <p className="text-[10px] md:text-sm text-muted-foreground line-clamp-2 mb-1.5 md:mb-3">
+        <p className="text-[9px] text-gray-600 line-clamp-1 leading-tight">
           {event.description}
         </p>
 
-        <div className="space-y-1 md:space-y-2 text-[10px] md:text-sm">
-          <div className="flex items-center gap-1 md:gap-2 text-muted-foreground">
-            <Calendar className="h-2.5 w-2.5 md:h-4 md:w-4 shrink-0" />
+        <div className="space-y-0.5 text-[8px]">
+          <div className="flex items-center gap-0.5 text-gray-600">
+            <Calendar className="h-2 w-2 shrink-0 text-gray-500" />
             <span className="line-clamp-1">
               {format(startDate, "MMM dd, yyyy")} at{" "}
               {format(startDate, "HH:mm")}
             </span>
           </div>
 
-          <div className="flex items-center gap-1 md:gap-2 text-muted-foreground">
-            <MapPin className="h-2.5 w-2.5 md:h-4 md:w-4 shrink-0" />
+          <div className="flex items-center gap-0.5 text-gray-600">
+            <MapPin className="h-2 w-2 shrink-0 text-gray-500" />
             <span className="line-clamp-1">
               {event.isOnline ? "Online Event" : event.location}
             </span>
           </div>
 
-          <div className="flex items-center gap-1 md:gap-2 text-muted-foreground">
-            <Users className="h-2.5 w-2.5 md:h-4 md:w-4 shrink-0" />
+          <div className="flex items-center gap-0.5 text-gray-600">
+            <Users className="h-2 w-2 shrink-0 text-gray-500" />
             <span>
               {event.currentParticipants}
               {event.maxParticipants ? ` / ${event.maxParticipants}` : ""}{" "}
-              <span className="hidden md:inline">participants</span>
+              participants
             </span>
           </div>
 
           {event.price > 0 && (
-            <div className="flex items-center gap-1 md:gap-2 text-muted-foreground">
-              <DollarSign className="h-2.5 w-2.5 md:h-4 md:w-4 shrink-0" />
+            <div className="flex items-center gap-0.5 text-gray-600">
+              <DollarSign className="h-2 w-2 shrink-0 text-gray-500" />
               <span>
                 Rp{" "}
                 {event.price >= 1000
@@ -163,12 +163,12 @@ const EventCardComponent = ({
         </div>
 
         {event.tags && event.tags.length > 0 && (
-          <div className="flex flex-wrap gap-0.5 md:gap-1 mt-1.5 md:mt-3">
+          <div className="flex flex-wrap gap-0.5">
             {event.tags.slice(0, 3).map((tag, index) => (
               <Badge
                 key={index}
                 variant="outline"
-                className="text-[9px] md:text-xs h-4 md:h-5 px-1 md:px-2"
+                className="text-[7px] px-0.5 py-0 font-normal"
               >
                 {tag}
               </Badge>
@@ -177,8 +177,8 @@ const EventCardComponent = ({
         )}
       </CardContent>
 
-      <CardFooter className="p-2 md:p-4 pt-0 flex items-center justify-between">
-        <div className="text-[10px] md:text-xs text-muted-foreground truncate">
+      <CardFooter className="p-1 pt-0 flex items-center justify-between border-t border-gray-100">
+        <div className="text-[8px] text-gray-600 truncate">
           by {event.organizer}
         </div>
         {onRegister && (
@@ -190,7 +190,7 @@ const EventCardComponent = ({
             }}
             disabled={isFull || isRegistered}
             variant={isRegistered ? "outline" : "default"}
-            className="text-[10px] md:text-sm h-7 md:h-9 px-2 md:px-3"
+            className="text-[8px] h-5 px-1.5 font-normal"
           >
             {isRegistered ? "Registered" : isFull ? "Full" : "Register"}
           </Button>

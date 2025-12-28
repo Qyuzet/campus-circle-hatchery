@@ -534,9 +534,9 @@ export function MarketplaceClient({
       {/* Marketplace Items */}
       {contentMode === "study" && (
         <div
-          className={`grid gap-2 sm:gap-4 ${
+          className={`grid gap-2 md:gap-3 ${
             viewMode === "grid"
-              ? "grid-cols-3 md:grid-cols-3 lg:grid-cols-5"
+              ? "grid-cols-3 md:grid-cols-3 lg:grid-cols-4"
               : "grid-cols-1"
           }`}
         >
@@ -576,19 +576,19 @@ export function MarketplaceClient({
                     setIsCheckingPurchase(false);
                   }
                 }}
-                className={`transition-shadow group overflow-hidden relative ${
+                className={`transition-all duration-150 overflow-hidden border-0 ${
                   viewMode === "list" ? "flex flex-row" : ""
                 } ${
                   purchasedItems.has(item.id)
-                    ? "opacity-60 cursor-not-allowed bg-gray-50"
+                    ? "opacity-60 cursor-not-allowed"
                     : "cursor-pointer hover:shadow-lg"
-                }`}
+                } shadow-sm bg-white`}
               >
                 <div
-                  className={`relative bg-secondary-200 overflow-hidden ${
+                  className={`relative bg-gray-50 overflow-hidden ${
                     viewMode === "list"
-                      ? "w-12 h-12 flex-shrink-0 rounded-md"
-                      : "aspect-square sm:aspect-video lg:aspect-[3/2]"
+                      ? "w-16 h-20 flex-shrink-0"
+                      : "aspect-[1/1.414]"
                   }`}
                 >
                   <FilePreview
@@ -603,14 +603,14 @@ export function MarketplaceClient({
                   {viewMode === "grid" && (
                     <button
                       onClick={(e) => handleWishlistToggle(item.id, e)}
-                      className={`absolute top-1 right-1 sm:top-2 sm:right-2 lg:top-1.5 lg:right-1.5 bg-white/95 p-1 sm:p-1.5 lg:p-1 rounded-full transition-colors shadow-sm z-10 ${
+                      className={`absolute top-3 right-3 bg-white p-1.5 transition-all z-10 ${
                         wishlist.has(item.id)
-                          ? "text-red-500 hover:text-red-600"
-                          : "text-gray-600 hover:text-red-500"
-                      } hover:bg-white`}
+                          ? "text-red-600"
+                          : "text-gray-600 hover:text-red-600"
+                      }`}
                     >
                       <Heart
-                        className={`h-3 w-3 sm:h-4 sm:w-4 lg:h-3 lg:w-3 ${
+                        className={`h-4 w-4 ${
                           wishlist.has(item.id) ? "fill-current" : ""
                         }`}
                       />
@@ -626,128 +626,97 @@ export function MarketplaceClient({
                   <CardContent
                     className={`${
                       viewMode === "list"
-                        ? "p-1.5 flex-1 flex items-center"
-                        : "p-2 sm:p-3 lg:p-2.5 space-y-1.5 sm:space-y-2 lg:space-y-1.5"
+                        ? "p-2 flex-1 flex items-center"
+                        : "p-1.5 md:p-2 space-y-1"
                     }`}
                   >
                     <div
                       className={
-                        viewMode === "list" ? "flex-1 min-w-0" : "space-y-3"
+                        viewMode === "list" ? "flex-1 min-w-0" : "space-y-1"
                       }
                     >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1 min-w-0">
-                          {viewMode === "list" ? (
-                            <div className="flex items-center gap-1.5">
-                              <Badge
-                                variant="secondary"
-                                className="text-[9px] px-1 py-0 flex-shrink-0"
-                              >
-                                {item.category}
-                              </Badge>
-                              {purchasedItems.has(item.id) && (
-                                <Badge
-                                  variant="default"
-                                  className="text-[9px] px-1 py-0 bg-green-500 hover:bg-green-600 flex-shrink-0"
-                                >
-                                  Purchased
-                                </Badge>
-                              )}
-                              <h3 className="font-bold text-xs line-clamp-1 text-gray-900 flex-1 min-w-0">
-                                {item.title}
-                              </h3>
-                              <BookOpen className="h-2.5 w-2.5 text-gray-400 flex-shrink-0" />
-                              <span className="text-[9px] text-gray-500 truncate max-w-[60px]">
-                                {item.course}
-                              </span>
-                              <div className="flex items-center gap-0.5 flex-shrink-0">
-                                <Star className="h-2.5 w-2.5 text-yellow-400 fill-yellow-400" />
-                                <span className="text-[9px] font-medium text-gray-700">
-                                  {item.seller?.rating || 0}
-                                </span>
-                              </div>
-                              <p className="text-xs font-bold text-blue-600 flex-shrink-0">
-                                Rp {formatPrice(item.price)}
-                              </p>
-                            </div>
-                          ) : (
-                            <div className="flex items-center gap-1.5">
-                              <h3 className="font-bold text-xs sm:text-base lg:text-sm line-clamp-1 text-gray-900 leading-tight flex-1">
-                                {item.title}
-                              </h3>
-                              {purchasedItems.has(item.id) && (
-                                <Badge
-                                  variant="default"
-                                  className="text-[9px] px-1.5 py-0 bg-green-500 hover:bg-green-600 flex-shrink-0"
-                                >
-                                  Purchased
-                                </Badge>
-                              )}
-                            </div>
+                      {viewMode === "list" ? (
+                        <div className="flex items-center gap-2">
+                          <Badge
+                            variant="secondary"
+                            className="text-[10px] px-1.5 py-0.5 flex-shrink-0 font-normal"
+                          >
+                            {item.category}
+                          </Badge>
+                          {purchasedItems.has(item.id) && (
+                            <Badge
+                              variant="default"
+                              className="text-[10px] px-1.5 py-0.5 bg-green-600 hover:bg-green-700 flex-shrink-0 font-normal"
+                            >
+                              Purchased
+                            </Badge>
                           )}
-                        </div>
-                      </div>
-
-                      {viewMode === "list" ? null : (
-                        <p className="hidden sm:block text-xs lg:text-[11px] text-gray-600 line-clamp-2 lg:line-clamp-1 lg:min-h-0 min-h-[40px]">
-                          {item.description}
-                        </p>
-                      )}
-
-                      {viewMode === "list" ? null : (
-                        <div className="flex items-center gap-0.5 sm:gap-1 lg:gap-0.5 text-[9px] sm:text-xs lg:text-[10px] text-gray-500">
-                          <BookOpen className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 lg:h-2.5 lg:w-2.5" />
-                          <span className="font-medium truncate">
+                          <h3 className="font-medium text-sm line-clamp-1 text-gray-900 flex-1 min-w-0">
+                            {item.title}
+                          </h3>
+                          <BookOpen className="h-3.5 w-3.5 text-gray-500 flex-shrink-0" />
+                          <span className="text-xs text-gray-600 truncate max-w-[80px]">
                             {item.course}
                           </span>
-                        </div>
-                      )}
-
-                      {viewMode === "grid" && (
-                        <>
-                          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between pt-1 sm:pt-1.5 lg:pt-1 border-t gap-0.5 sm:gap-0">
-                            <div className="flex items-center justify-between sm:block">
-                              <p className="text-sm sm:text-lg lg:text-base font-bold text-blue-600 leading-tight">
-                                <span className="sm:hidden">
-                                  Rp {formatPrice(item.price)}
-                                </span>
-                                <span className="hidden sm:inline">
-                                  Rp {item.price.toLocaleString()}
-                                </span>
-                              </p>
-                              <div className="flex items-center gap-0.5 sm:gap-1 sm:mt-0.5 lg:mt-0">
-                                <Star className="h-2.5 w-2.5 sm:h-3 sm:w-3 lg:h-2.5 lg:w-2.5 text-yellow-400 fill-yellow-400" />
-                                <span className="text-[9px] sm:text-xs lg:text-[10px] font-medium text-gray-700">
-                                  {item.seller?.rating || 0}
-                                </span>
-                                <span className="text-[9px] sm:text-xs lg:text-[10px] text-gray-500">
-                                  ({item.reviewCount || 0})
-                                </span>
-                              </div>
-                            </div>
-                            <div className="text-right hidden sm:block">
-                              <p className="text-[10px] lg:text-[9px] text-gray-500">
-                                by
-                              </p>
-                              <p className="text-xs lg:text-[10px] font-medium text-gray-700">
-                                {typeof item.seller === "string"
-                                  ? `Student ${item.seller.slice(-9)}`
-                                  : item.seller?.name || "Unknown"}
-                              </p>
-                            </div>
+                          <div className="flex items-center gap-1 flex-shrink-0">
+                            <Star className="h-3.5 w-3.5 text-yellow-500 fill-yellow-500" />
+                            <span className="text-xs font-medium text-gray-700">
+                              {item.seller?.rating || 0}
+                            </span>
                           </div>
+                          <p className="text-sm font-semibold text-blue-600 flex-shrink-0">
+                            Rp {formatPrice(item.price)}
+                          </p>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="flex items-start justify-between gap-1">
+                            <h3 className="font-medium text-[11px] md:text-xs line-clamp-2 text-gray-900 leading-tight flex-1">
+                              {item.title}
+                            </h3>
+                            {purchasedItems.has(item.id) && (
+                              <Badge
+                                variant="default"
+                                className="text-[8px] md:text-[9px] px-1 py-0 bg-green-600 hover:bg-green-700 font-normal flex-shrink-0"
+                              >
+                                Purchased
+                              </Badge>
+                            )}
+                          </div>
+
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-0.5">
+                              <Star className="h-2.5 w-2.5 md:h-3 md:w-3 text-yellow-500 fill-yellow-500" />
+                              <span className="text-[9px] md:text-[10px] font-medium text-gray-700">
+                                {item.seller?.rating || 0}
+                              </span>
+                              <span className="text-[9px] md:text-[10px] text-gray-500">
+                                ({item.reviewCount || 0})
+                              </span>
+                            </div>
+                            <Badge
+                              variant="secondary"
+                              className="text-[8px] md:text-[9px] px-1 py-0 font-normal bg-gray-100 text-gray-700"
+                            >
+                              {item.category}
+                            </Badge>
+                          </div>
+
+                          <p className="text-sm md:text-base font-semibold text-blue-600">
+                            Rp {item.price.toLocaleString()}
+                          </p>
                         </>
                       )}
                     </div>
                   </CardContent>
 
                   {viewMode === "list" ? (
-                    <div className="flex flex-col gap-1 p-1 justify-center border-l">
+                    <div className="flex flex-col gap-1.5 p-2 justify-center border-l border-gray-100">
                       {item.sellerId === userId ? (
                         <Button
                           variant="destructive"
                           size="sm"
-                          className="h-6 w-6 p-0"
+                          className="h-7 w-7 p-0"
                           onClick={(e) => {
                             e.stopPropagation();
                             alert(
@@ -755,11 +724,11 @@ export function MarketplaceClient({
                             );
                           }}
                         >
-                          <Trash2 className="h-3 w-3" />
+                          <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                       ) : purchasedItems.has(item.id) ? (
-                        <div className="px-1 py-2 text-center">
-                          <span className="text-[8px] text-green-600 font-medium">
+                        <div className="px-2 py-2 text-center">
+                          <span className="text-[10px] text-green-600 font-medium">
                             Purchased
                           </span>
                         </div>
@@ -768,7 +737,7 @@ export function MarketplaceClient({
                           <Button
                             variant="outline"
                             size="sm"
-                            className="h-6 w-6 p-0"
+                            className="h-7 w-7 p-0 border-gray-300"
                             onClick={(e) => {
                               e.stopPropagation();
                               router.push(
@@ -776,28 +745,28 @@ export function MarketplaceClient({
                               );
                             }}
                           >
-                            <MessageCircle className="h-3 w-3" />
+                            <MessageCircle className="h-3.5 w-3.5" />
                           </Button>
                           <Button
                             size="sm"
-                            className="h-6 w-6 p-0"
+                            className="h-7 w-7 p-0 bg-blue-600 hover:bg-blue-700"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleBuyItem(item);
                             }}
                           >
-                            <ShoppingCart className="h-3 w-3" />
+                            <ShoppingCart className="h-3.5 w-3.5" />
                           </Button>
                         </>
                       )}
                     </div>
                   ) : (
-                    <CardFooter className="flex gap-1 sm:gap-2 p-2 sm:p-4 pt-0">
+                    <CardFooter className="flex gap-1 px-1.5 md:px-2 pb-1.5 md:pb-2 pt-0">
                       {item.sellerId === userId ? (
                         <Button
                           variant="destructive"
                           size="sm"
-                          className="w-full text-[9px] sm:text-xs lg:text-[10px] px-1.5 sm:px-3 lg:px-2 py-1 sm:py-1.5 lg:py-1 h-6 sm:h-8 lg:h-7"
+                          className="w-full text-[10px] md:text-xs px-2 py-1 h-6 md:h-7 font-normal"
                           onClick={(e) => {
                             e.stopPropagation();
                             alert(
@@ -805,19 +774,22 @@ export function MarketplaceClient({
                             );
                           }}
                         >
-                          <Trash2 className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 lg:h-3 lg:w-3 sm:mr-1 lg:mr-0.5" />
-                          <span className="hidden sm:inline">Delete</span>
+                          <Trash2 className="h-3 w-3 md:h-3.5 md:w-3.5 md:mr-1" />
+                          <span className="hidden md:inline">Delete</span>
                         </Button>
                       ) : purchasedItems.has(item.id) ? (
-                        <div className="w-full bg-green-100 text-green-700 px-3 py-1.5 rounded-md text-center text-[9px] sm:text-xs lg:text-[10px] font-medium h-6 sm:h-8 lg:h-7 flex items-center justify-center">
-                          Already Purchased
+                        <div className="w-full bg-green-50 text-green-700 px-2 py-1 text-center text-[10px] md:text-xs font-medium h-6 md:h-7 flex items-center justify-center border border-green-200">
+                          <span className="hidden md:inline">
+                            Already Purchased
+                          </span>
+                          <span className="md:hidden">Purchased</span>
                         </div>
                       ) : (
                         <>
                           <Button
                             variant="outline"
                             size="sm"
-                            className="flex-1 text-[9px] sm:text-xs lg:text-[10px] px-1.5 sm:px-3 lg:px-2 py-1 sm:py-1.5 lg:py-1 h-6 sm:h-8 lg:h-7"
+                            className="flex-1 text-[10px] md:text-xs px-1.5 md:px-2 py-1 h-6 md:h-7 font-normal border-gray-300"
                             onClick={(e) => {
                               e.stopPropagation();
                               router.push(
@@ -825,19 +797,23 @@ export function MarketplaceClient({
                               );
                             }}
                           >
-                            <MessageCircle className="h-3 w-3 sm:h-3.5 sm:w-3.5 lg:h-3 lg:w-3 sm:mr-1 lg:mr-0.5" />
-                            <span className="hidden sm:inline">Message</span>
+                            <MessageCircle className="h-3 w-3 md:h-3.5 md:w-3.5 md:mr-1" />
+                            <span className="hidden md:inline truncate">
+                              Message
+                            </span>
                           </Button>
                           <Button
                             size="sm"
-                            className="flex-1 text-[9px] sm:text-xs lg:text-[10px] px-1.5 sm:px-3 lg:px-2 py-1 sm:py-1.5 lg:py-1 h-6 sm:h-8 lg:h-7"
+                            className="flex-1 text-[10px] md:text-xs px-1.5 md:px-2 py-1 h-6 md:h-7 font-normal bg-blue-600 hover:bg-blue-700"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleBuyItem(item);
                             }}
                           >
-                            <ShoppingCart className="h-3 w-3 sm:h-3.5 sm:w-3.5 lg:h-3 lg:w-3 sm:mr-1 lg:mr-0.5" />
-                            <span className="hidden sm:inline">Buy</span>
+                            <ShoppingCart className="h-3 w-3 md:h-3.5 md:w-3.5 md:mr-1" />
+                            <span className="hidden md:inline truncate">
+                              Buy
+                            </span>
                           </Button>
                         </>
                       )}
@@ -930,11 +906,11 @@ export function MarketplaceClient({
 
       {/* Item Detail Modal */}
       {showItemModal && selectedItem && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[70] p-3">
-          <div className="bg-white rounded-lg w-full max-w-md shadow-2xl">
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[70] p-2">
+          <div className="bg-white w-full max-w-sm shadow-sm">
             {/* Header */}
-            <div className="flex items-center justify-between px-3 py-2 border-b">
-              <h2 className="text-base font-bold text-gray-900 line-clamp-1">
+            <div className="flex items-center justify-between px-2 py-1.5 border-b border-gray-200 bg-gray-50">
+              <h2 className="text-sm font-normal text-gray-900 line-clamp-1">
                 {selectedItem.title}
               </h2>
               <button
@@ -942,16 +918,16 @@ export function MarketplaceClient({
                   setShowItemModal(false);
                   setSelectedItem(null);
                 }}
-                className="text-gray-400 hover:text-gray-600 transition-colors p-1 hover:bg-gray-100 rounded-full flex-shrink-0"
+                className="text-gray-400 hover:text-gray-600 transition-colors p-0.5 flex-shrink-0"
               >
-                <X className="h-4 w-4" />
+                <X className="h-3 w-3" />
               </button>
             </div>
 
             {/* Content */}
-            <div className="p-3 space-y-2">
+            <div className="p-2 space-y-1.5">
               {/* File Preview Section */}
-              <div className="relative w-full h-48 rounded-md overflow-hidden">
+              <div className="relative w-full h-32 overflow-hidden bg-gray-50">
                 <FilePreview
                   fileUrl={selectedItem.fileUrl || selectedItem.imageUrl || ""}
                   fileType={selectedItem.fileType || ""}
@@ -963,57 +939,67 @@ export function MarketplaceClient({
               </div>
 
               {/* Category Badge */}
-              <Badge variant="secondary" className="text-[10px] px-2 py-0.5">
+              <Badge
+                variant="secondary"
+                className="text-[8px] px-1 py-0 bg-gray-100 text-gray-700"
+              >
                 {selectedItem.category}
               </Badge>
 
               {/* Description */}
-              <p className="text-xs text-gray-600 line-clamp-2">
+              <p className="text-[9px] text-gray-600 line-clamp-2 leading-tight">
                 {selectedItem.description}
               </p>
 
-              {/* Info - Single Line with Icons */}
-              <div className="flex items-center gap-3 text-[10px] text-gray-600 bg-gray-50 px-2 py-1.5 rounded-md">
-                <div className="flex items-center gap-1" title="Course">
-                  <BookOpen className="h-3 w-3 text-gray-500" />
-                  <span className="font-medium text-gray-900 truncate max-w-[60px]">
+              {/* Info - Compact Grid */}
+              <div className="grid grid-cols-2 gap-1 text-[8px] text-gray-600">
+                <div
+                  className="flex items-center gap-0.5 bg-gray-50 px-1.5 py-1"
+                  title="Course"
+                >
+                  <BookOpen className="h-2 w-2 text-gray-500 flex-shrink-0" />
+                  <span className="font-normal text-gray-900 truncate">
                     {selectedItem.course}
                   </span>
                 </div>
-                <div className="w-px h-3 bg-gray-300"></div>
-                <div className="flex items-center gap-1" title="Seller">
-                  <User className="h-3 w-3 text-gray-500" />
-                  <span className="font-medium text-gray-900 truncate max-w-[80px]">
+                <div
+                  className="flex items-center gap-0.5 bg-gray-50 px-1.5 py-1"
+                  title="Seller"
+                >
+                  <User className="h-2 w-2 text-gray-500 flex-shrink-0" />
+                  <span className="font-normal text-gray-900 truncate">
                     {typeof selectedItem.seller === "string"
                       ? `${selectedItem.seller.slice(-9)}`
                       : selectedItem.seller?.name || "Unknown"}
                   </span>
                 </div>
-                <div className="w-px h-3 bg-gray-300"></div>
-                <div className="flex items-center gap-1" title="Rating">
-                  <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
-                  <span className="font-medium text-gray-900">
+                <div
+                  className="flex items-center gap-0.5 bg-gray-50 px-1.5 py-1"
+                  title="Rating"
+                >
+                  <Star className="h-2 w-2 text-yellow-400 fill-yellow-400 flex-shrink-0" />
+                  <span className="font-normal text-gray-900">
                     {selectedItem.rating || 0} ({selectedItem.reviews || 0})
                   </span>
                 </div>
                 {selectedItem.condition && (
-                  <>
-                    <div className="w-px h-3 bg-gray-300"></div>
-                    <div className="flex items-center gap-1" title="Condition">
-                      <Eye className="h-3 w-3 text-gray-500" />
-                      <span className="font-medium text-gray-900">
-                        {selectedItem.condition}
-                      </span>
-                    </div>
-                  </>
+                  <div
+                    className="flex items-center gap-0.5 bg-gray-50 px-1.5 py-1"
+                    title="Condition"
+                  >
+                    <Eye className="h-2 w-2 text-gray-500 flex-shrink-0" />
+                    <span className="font-normal text-gray-900 truncate">
+                      {selectedItem.condition}
+                    </span>
+                  </div>
                 )}
               </div>
 
               {/* Price & Status */}
-              <div className="flex items-center justify-between px-2 py-1.5 bg-gradient-to-r from-blue-50 to-purple-50 rounded-md">
+              <div className="flex items-center justify-between px-2 py-1 bg-blue-50 border-l border-blue-600">
                 <div>
-                  <p className="text-[10px] text-gray-600">Price</p>
-                  <p className="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  <p className="text-[8px] text-gray-600">Price</p>
+                  <p className="text-sm font-medium text-blue-600">
                     Rp {selectedItem.price.toLocaleString()}
                   </p>
                 </div>
@@ -1023,7 +1009,7 @@ export function MarketplaceClient({
                       ? "default"
                       : "secondary"
                   }
-                  className={`text-[10px] px-2 py-0.5 ${
+                  className={`text-[8px] px-1 py-0 ${
                     selectedItem.status === "available"
                       ? "bg-green-100 text-green-700 hover:bg-green-100"
                       : selectedItem.status === "sold"
@@ -1036,54 +1022,54 @@ export function MarketplaceClient({
               </div>
 
               {/* Action Buttons */}
-              <div className="flex gap-2 pt-1">
+              <div className="flex gap-1 pt-1 border-t border-gray-100">
                 {selectedItem.sellerId === userId ? (
                   <>
                     <Button
                       variant="outline"
-                      className="flex-1 text-xs px-3 py-1.5 h-auto"
+                      className="flex-1 text-[9px] px-2 py-1 h-auto font-normal border-gray-300"
                       onClick={() => handleEditItem(selectedItem)}
                     >
                       Edit
                     </Button>
                     <Button
                       variant="destructive"
-                      className="flex-1 text-xs px-3 py-1.5 h-auto"
+                      className="flex-1 text-[9px] px-2 py-1 h-auto font-normal"
                       onClick={() => {
                         alert("Delete functionality not implemented in SSR");
                         setShowItemModal(false);
                       }}
                     >
-                      <Trash2 className="h-3 w-3 mr-1.5" />
-                      Delete Item
+                      <Trash2 className="h-2 w-2 mr-0.5" />
+                      Delete
                     </Button>
                   </>
                 ) : purchasedItems.has(selectedItem.id) ? (
-                  <div className="flex-1 bg-green-100 text-green-700 px-3 py-1.5 rounded-md text-center text-xs font-medium">
+                  <div className="flex-1 bg-green-100 text-green-700 px-2 py-1 text-center text-[9px] font-normal">
                     Already Purchased
                   </div>
                 ) : selectedItem.status === "available" ? (
                   <>
                     <Button
                       variant="outline"
-                      className="flex-1 text-xs px-3 py-1.5 h-auto"
+                      className="flex-1 text-[9px] px-2 py-1 h-auto font-normal border-gray-300"
                       onClick={() => {
                         router.push(
                           `/dashboard/messages?userId=${selectedItem.sellerId}`
                         );
                       }}
                     >
-                      <MessageCircle className="h-3 w-3 mr-1.5" />
+                      <MessageCircle className="h-2 w-2 mr-0.5" />
                       Message Seller
                     </Button>
                     <Button
-                      className="flex-1 text-xs px-3 py-1.5 h-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                      className="flex-1 text-[9px] px-2 py-1 h-auto font-normal bg-blue-600 hover:bg-blue-700"
                       onClick={() => {
                         handleBuyItem(selectedItem);
                       }}
                       disabled={isCheckingPurchase}
                     >
-                      <ShoppingCart className="h-3 w-3 mr-1.5" />
+                      <ShoppingCart className="h-2 w-2 mr-0.5" />
                       {isCheckingPurchase
                         ? "Checking..."
                         : hasPurchasedItem
@@ -1092,11 +1078,11 @@ export function MarketplaceClient({
                     </Button>
                   </>
                 ) : selectedItem.status === "sold" ? (
-                  <div className="flex-1 bg-gray-100 text-gray-500 px-3 py-1.5 rounded-md text-center text-xs font-medium">
+                  <div className="flex-1 bg-gray-100 text-gray-500 px-2 py-1 text-center text-[9px] font-normal">
                     SOLD OUT
                   </div>
                 ) : (
-                  <div className="flex-1 bg-gray-100 text-gray-500 px-3 py-1.5 rounded-md text-center text-xs font-medium">
+                  <div className="flex-1 bg-gray-100 text-gray-500 px-2 py-1 text-center text-[9px] font-normal">
                     Item Not Available
                   </div>
                 )}
