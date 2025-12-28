@@ -2058,9 +2058,9 @@ export function MarketplaceClient({
           setShowSupportModal(false);
           setSupportContext(null);
         }}
-        itemId={supportContext?.itemId || ""}
-        itemType={supportContext?.itemType || ""}
-        itemTitle={supportContext?.itemTitle || ""}
+        relatedItemId={supportContext?.itemId || ""}
+        relatedItemType={supportContext?.itemType || ""}
+        relatedItemTitle={supportContext?.itemTitle || ""}
       />
     </div>
   );
