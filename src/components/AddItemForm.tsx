@@ -109,6 +109,69 @@ export function AddItemForm({ onSubmit, onCancel }: AddItemFormProps) {
     }
   };
 
+  const generateThumbnail = async (file: File): Promise<string | null> => {
+    try {
+      const isPdf = file.type === "application/pdf";
+
+      if (!isPdf) {
+        return null;
+      }
+
+      const pdfjsLib = (window as any).pdfjsLib;
+      if (!pdfjsLib) {
+        const script = document.createElement("script");
+        script.src =
+          "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+        script.onload = () => {
+          (window as any).pdfjsLib.GlobalWorkerOptions.workerSrc =
+            "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+        };
+        document.head.appendChild(script);
+        await new Promise((res) => setTimeout(res, 2000));
+      }
+
+      const arrayBuffer = await file.arrayBuffer();
+      const loadingTask = (window as any).pdfjsLib.getDocument({
+        data: arrayBuffer,
+      });
+      const pdf = await loadingTask.promise;
+      const page = await pdf.getPage(1);
+
+      const viewport = page.getViewport({ scale: 2.0 });
+      const canvas = document.createElement("canvas");
+      const context = canvas.getContext("2d");
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+
+      await page.render({ canvasContext: context, viewport }).promise;
+
+      const thumbnailBlob = await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob(
+          (blob) => {
+            if (blob) resolve(blob);
+            else reject(new Error("Failed to create thumbnail"));
+          },
+          "image/jpeg",
+          0.85
+        );
+      });
+
+      const formData = new FormData();
+      formData.append("file", thumbnailBlob, `thumbnail-${Date.now()}.jpg`);
+
+      const response = await fetch("/api/upload-thumbnail", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+      return data.success ? data.thumbnailUrl : null;
+    } catch (error) {
+      console.error("Thumbnail generation error:", error);
+      return null;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -132,17 +195,22 @@ export function AddItemForm({ onSubmit, onCancel }: AddItemFormProps) {
       setUploadProgress(30);
 
       const uploadResult = await fileAPI.uploadFile(uploadedFile, false);
-      setUploadProgress(60);
+      setUploadProgress(50);
 
       if (!uploadResult.success || !uploadResult.url) {
         throw new Error("Upload failed");
       }
+
+      setUploadProgress(60);
+      const thumbnailUrl = await generateThumbnail(uploadedFile);
+      setUploadProgress(80);
 
       const fileData = {
         fileUrl: uploadResult.url,
         fileName: uploadResult.fileName,
         fileSize: uploadResult.fileSize,
         fileType: uploadResult.fileType,
+        thumbnailUrl: thumbnailUrl || undefined,
       };
 
       setUploadProgress(90);

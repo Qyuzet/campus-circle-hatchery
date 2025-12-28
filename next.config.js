@@ -201,7 +201,7 @@ const nextConfig = {
           {
             key: "Content-Security-Policy",
             value:
-              "img-src 'self' data: https: http: blob:; default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://app.midtrans.com https://app.sandbox.midtrans.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https: wss: ws:; frame-src 'self' https://app.midtrans.com https://app.sandbox.midtrans.com;",
+              "img-src 'self' data: https: http: blob:; default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://app.midtrans.com https://app.sandbox.midtrans.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https: wss: ws:; frame-src 'self' https://app.midtrans.com https://app.sandbox.midtrans.com;",
           },
           {
             key: "X-DNS-Prefetch-Control",

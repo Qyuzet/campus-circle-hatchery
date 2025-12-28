@@ -14,6 +14,13 @@ export default function DocumentThumbnails() {
   const generatePdfThumbnail = async (pdfUrl: string): Promise<Blob> => {
     return new Promise(async (resolve, reject) => {
       try {
+        console.log("generatePdfThumbnail called for:", pdfUrl);
+        console.log("pdfjsLib available?", typeof (window as any).pdfjsLib);
+
+        if (!(window as any).pdfjsLib) {
+          throw new Error("PDF.js library not loaded");
+        }
+
         const loadingTask = (window as any).pdfjsLib.getDocument(pdfUrl);
         const pdf = await loadingTask.promise;
         const page = await pdf.getPage(1);
@@ -143,6 +150,36 @@ export default function DocumentThumbnails() {
     });
   };
 
+  const ensurePdfJsLoaded = async () => {
+    if ((window as any).pdfjsLib) {
+      console.log("PDF.js already loaded");
+      return;
+    }
+
+    console.log("Loading PDF.js...");
+    const script = document.createElement("script");
+    script.src =
+      "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+    script.onload = () => {
+      console.log("PDF.js script loaded");
+      (window as any).pdfjsLib.GlobalWorkerOptions.workerSrc =
+        "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+    };
+    script.onerror = (e) => {
+      console.error("Failed to load PDF.js script:", e);
+    };
+    document.head.appendChild(script);
+
+    await new Promise((res) => setTimeout(res, 3000));
+
+    if (!(window as any).pdfjsLib) {
+      console.error("PDF.js still not available after 3 seconds");
+      throw new Error("PDF.js failed to load");
+    }
+
+    console.log("PDF.js is now available:", typeof (window as any).pdfjsLib);
+  };
+
   const generateThumbnails = async () => {
     setThumbnailProcessing(true);
     setThumbnailStatus("Fetching documents without thumbnails...");
@@ -163,21 +200,14 @@ export default function DocumentThumbnails() {
       }
 
       setThumbnailStatus(
-        `Found ${docsWithoutThumbnails.length} documents. Starting generation...`
+        `Found ${docsWithoutThumbnails.length} documents. Loading PDF.js...`
       );
 
-      const pdfjsLib = (window as any).pdfjsLib;
-      if (!pdfjsLib) {
-        const script = document.createElement("script");
-        script.src =
-          "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
-        script.onload = () => {
-          (window as any).pdfjsLib.GlobalWorkerOptions.workerSrc =
-            "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
-        };
-        document.head.appendChild(script);
-        await new Promise((res) => setTimeout(res, 1000));
-      }
+      await ensurePdfJsLoaded();
+
+      setThumbnailStatus(
+        `Found ${docsWithoutThumbnails.length} documents. Starting generation...`
+      );
 
       for (let i = 0; i < docsWithoutThumbnails.length; i++) {
         const doc = docsWithoutThumbnails[i];
