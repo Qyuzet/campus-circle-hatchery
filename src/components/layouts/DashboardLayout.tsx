@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
+import { useUnreadMessages } from "@/contexts/UnreadMessagesContext";
 import Image from "next/image";
 import {
   ShoppingCart,
@@ -68,6 +69,10 @@ export function DashboardLayout({
   const pathname = usePathname();
   const [showMobileSearch, setShowMobileSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const { unreadCount } = useUnreadMessages();
+
+  const displayUnreadCount =
+    unreadCount > 0 ? unreadCount : unreadMessagesCount;
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -233,9 +238,9 @@ export function DashboardLayout({
                   title="Messages"
                 >
                   <MessageCircle className="h-5 w-5 sm:h-6 sm:w-6" />
-                  {unreadMessagesCount > 0 && (
+                  {displayUnreadCount > 0 && (
                     <span className="absolute -top-1 -right-1 bg-campus-green text-white text-xs rounded-full h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center text-[10px] sm:text-xs font-semibold">
-                      {unreadMessagesCount}
+                      {displayUnreadCount}
                     </span>
                   )}
                 </button>
@@ -250,9 +255,9 @@ export function DashboardLayout({
                   title="Messages"
                 >
                   <MessageCircle className="h-5 w-5 sm:h-6 sm:w-6" />
-                  {unreadMessagesCount > 0 && (
+                  {displayUnreadCount > 0 && (
                     <span className="absolute -top-1 -right-1 bg-campus-green text-white text-xs rounded-full h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center text-[10px] sm:text-xs font-semibold">
-                      {unreadMessagesCount}
+                      {displayUnreadCount}
                     </span>
                   )}
                 </Link>

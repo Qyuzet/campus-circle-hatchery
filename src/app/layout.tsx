@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import SessionProvider from "@/components/SessionProvider";
 import { ThemeProvider } from "@/components/contexts/theme-provider";
+import { UnreadMessagesProvider } from "@/contexts/UnreadMessagesContext";
 import { siteConfig } from "@/config/site";
 
 export const metadata: Metadata = {
@@ -96,7 +97,9 @@ export default function RootLayout({
       </head>
       <body>
         <ThemeProvider>
-          <SessionProvider>{children}</SessionProvider>
+          <SessionProvider>
+            <UnreadMessagesProvider>{children}</UnreadMessagesProvider>
+          </SessionProvider>
         </ThemeProvider>
       </body>
     </html>

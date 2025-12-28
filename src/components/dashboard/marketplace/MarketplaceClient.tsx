@@ -44,6 +44,8 @@ import { AddItemForm } from "@/components/AddItemForm";
 import { EditItemForm } from "@/components/EditItemForm";
 import { EditFoodForm } from "@/components/EditFoodForm";
 import { EditEventForm } from "@/components/EditEventForm";
+import { MessageSellerModal } from "./MessageSellerModal";
+import { SupportContactModal } from "@/components/SupportContactModal";
 
 interface MarketplaceClientProps {
   initialMarketplaceItems: any[];
@@ -107,6 +109,14 @@ export function MarketplaceClient({
   const [editingFood, setEditingFood] = useState<any>(null);
   const [editingEvent, setEditingEvent] = useState<any>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [showMessageModal, setShowMessageModal] = useState(false);
+  const [messageItem, setMessageItem] = useState<any>(null);
+  const [showSupportModal, setShowSupportModal] = useState(false);
+  const [supportContext, setSupportContext] = useState<{
+    itemId: string;
+    itemType: string;
+    itemTitle: string;
+  } | null>(null);
 
   useEffect(() => {
     const search = searchParams.get("search");
@@ -584,6 +594,22 @@ export function MarketplaceClient({
                     : "cursor-pointer hover:shadow-lg"
                 } shadow-sm bg-white`}
               >
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSupportContext({
+                      itemId: item.id,
+                      itemType: "marketplace",
+                      itemTitle: item.title,
+                    });
+                    setShowSupportModal(true);
+                  }}
+                  className="absolute top-2 right-2 z-10 bg-white/90 hover:bg-white backdrop-blur-sm p-1.5 rounded-full shadow-sm transition-all hover:shadow-md group"
+                  title="Contact Support"
+                >
+                  <HelpCircle className="h-3.5 w-3.5 text-gray-600 group-hover:text-blue-600 transition-colors" />
+                </button>
+
                 {viewMode === "list" ? (
                   <>
                     {/* List View Layout */}
@@ -673,9 +699,8 @@ export function MarketplaceClient({
                             className="flex-1 h-9 border-gray-300 text-sm"
                             onClick={(e) => {
                               e.stopPropagation();
-                              router.push(
-                                `/dashboard/messages?userId=${item.sellerId}`
-                              );
+                              setMessageItem(item);
+                              setShowMessageModal(true);
                             }}
                           >
                             <MessageCircle className="h-4 w-4 mr-1.5" />
@@ -796,9 +821,8 @@ export function MarketplaceClient({
                             className="flex-1 text-[10px] md:text-xs px-1.5 md:px-2 py-1 h-6 md:h-7 font-normal border-gray-300"
                             onClick={(e) => {
                               e.stopPropagation();
-                              router.push(
-                                `/dashboard?message=${item.sellerId}`
-                              );
+                              setMessageItem(item);
+                              setShowMessageModal(true);
                             }}
                           >
                             <MessageCircle className="h-3 w-3 md:h-3.5 md:w-3.5 md:mr-1" />
@@ -864,6 +888,15 @@ export function MarketplaceClient({
                   setShowFoodModal(true);
                 }}
                 viewMode={viewMode as "grid" | "list"}
+                isOwner={item.sellerId === userId}
+                onSupportClick={(itemId, itemTitle) => {
+                  setSupportContext({
+                    itemId,
+                    itemType: "food",
+                    itemTitle,
+                  });
+                  setShowSupportModal(true);
+                }}
               />
             ))
           )}
@@ -902,6 +935,15 @@ export function MarketplaceClient({
                   setShowEventModal(true);
                 }}
                 isRegistered={myEventRegistrations.includes(event.id)}
+                isOwner={event.organizerId === userId}
+                onSupportClick={(eventId, eventTitle) => {
+                  setSupportContext({
+                    itemId: eventId,
+                    itemType: "event",
+                    itemTitle: eventTitle,
+                  });
+                  setShowSupportModal(true);
+                }}
               />
             ))
           )}
@@ -1278,9 +1320,9 @@ export function MarketplaceClient({
                           variant="outline"
                           className="flex-1 text-sm"
                           onClick={() => {
-                            router.push(
-                              `/dashboard/messages?userId=${selectedItem.sellerId}`
-                            );
+                            setMessageItem(selectedItem);
+                            setShowItemModal(false);
+                            setShowMessageModal(true);
                           }}
                         >
                           <MessageCircle className="h-4 w-4 mr-1" />
@@ -1477,9 +1519,9 @@ export function MarketplaceClient({
                         <Button
                           variant="outline"
                           onClick={() => {
-                            router.push(
-                              `/dashboard?message=${selectedFood.sellerId}`
-                            );
+                            setMessageItem(selectedFood);
+                            setShowFoodModal(false);
+                            setShowMessageModal(true);
                           }}
                           className="flex-1"
                         >
@@ -1999,6 +2041,27 @@ export function MarketplaceClient({
           </div>
         </div>
       )}
+
+      <MessageSellerModal
+        isOpen={showMessageModal}
+        onClose={() => {
+          setShowMessageModal(false);
+          setMessageItem(null);
+        }}
+        item={messageItem}
+        currentUserId={userId}
+      />
+
+      <SupportContactModal
+        isOpen={showSupportModal}
+        onClose={() => {
+          setShowSupportModal(false);
+          setSupportContext(null);
+        }}
+        itemId={supportContext?.itemId || ""}
+        itemType={supportContext?.itemType || ""}
+        itemTitle={supportContext?.itemTitle || ""}
+      />
     </div>
   );
 }

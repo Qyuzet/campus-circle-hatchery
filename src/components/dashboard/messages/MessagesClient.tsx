@@ -72,6 +72,8 @@ export function MessagesClient({
   const [newGroupName, setNewGroupName] = useState("");
   const [isLoadingConversations, setIsLoadingConversations] = useState(false);
   const [isLoadingGroups, setIsLoadingGroups] = useState(false);
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const lastMessageCountRef = useRef<number>(0);
 
   const formatMessageTime = (date: Date | string) => {
     const messageDate = new Date(date);
@@ -88,35 +90,85 @@ export function MessagesClient({
     }
   };
 
-  const loadMessages = async (conversationId: string) => {
+  const loadMessages = async (conversationId: string, silent = false) => {
     try {
-      setLoadingConversation(true);
+      if (!silent) {
+        setLoadingConversation(true);
+      }
       const msgs = await messagesAPI.getMessages(conversationId);
+
+      const hasNewMessages = msgs.length > lastMessageCountRef.current;
+
+      if (silent && hasNewMessages) {
+        const newMessagesCount = msgs.length - lastMessageCountRef.current;
+        const hasNewMessagesFromOther = msgs
+          .slice(-newMessagesCount)
+          .some((msg: any) => msg.senderId !== currentUser?.id);
+
+        if (hasNewMessagesFromOther) {
+          playNotificationSound();
+          toast.success("New message received!");
+        }
+      }
+
       setMessages(msgs);
-      setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-      }, 100);
+      lastMessageCountRef.current = msgs.length;
+
+      if (!silent || hasNewMessages) {
+        setTimeout(() => {
+          messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        }, 100);
+      }
     } catch (error) {
       console.error("Error loading messages:", error);
-      toast.error("Failed to load messages");
+      if (!silent) {
+        toast.error("Failed to load messages");
+      }
     } finally {
-      setLoadingConversation(false);
+      if (!silent) {
+        setLoadingConversation(false);
+      }
     }
   };
 
-  const loadGroupMessages = async (groupId: string) => {
+  const loadGroupMessages = async (groupId: string, silent = false) => {
     try {
-      setLoadingConversation(true);
+      if (!silent) {
+        setLoadingConversation(true);
+      }
       const msgs = await groupsAPI.getMessages(groupId);
+
+      const hasNewMessages = msgs.length > lastMessageCountRef.current;
+
+      if (silent && hasNewMessages) {
+        const newMessagesCount = msgs.length - lastMessageCountRef.current;
+        const hasNewMessagesFromOther = msgs
+          .slice(-newMessagesCount)
+          .some((msg: any) => msg.senderId !== currentUser?.id);
+
+        if (hasNewMessagesFromOther) {
+          playNotificationSound();
+          toast.success("New group message!");
+        }
+      }
+
       setGroupMessages(msgs);
-      setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-      }, 100);
+      lastMessageCountRef.current = msgs.length;
+
+      if (!silent || hasNewMessages) {
+        setTimeout(() => {
+          messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        }, 100);
+      }
     } catch (error) {
       console.error("Error loading group messages:", error);
-      toast.error("Failed to load messages");
+      if (!silent) {
+        toast.error("Failed to load messages");
+      }
     } finally {
-      setLoadingConversation(false);
+      if (!silent) {
+        setLoadingConversation(false);
+      }
     }
   };
 
@@ -134,6 +186,14 @@ export function MessagesClient({
   useEffect(() => {
     if (selectedConversation) {
       loadMessages(selectedConversation);
+
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
+
+      pollingIntervalRef.current = setInterval(() => {
+        loadMessages(selectedConversation, true);
+      }, 2000);
 
       const channelName = getConversationChannel(selectedConversation);
       const channel = pusherClient.subscribe(channelName);
@@ -181,9 +241,16 @@ export function MessagesClient({
       });
 
       return () => {
+        if (pollingIntervalRef.current) {
+          clearInterval(pollingIntervalRef.current);
+        }
         channel.unbind_all();
         pusherClient.unsubscribe(channelName);
       };
+    } else {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
     }
   }, [selectedConversation, currentUser]);
 
@@ -191,6 +258,14 @@ export function MessagesClient({
     if (selectedGroup) {
       loadGroupMessages(selectedGroup);
       loadGroupMembers(selectedGroup);
+
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
+
+      pollingIntervalRef.current = setInterval(() => {
+        loadGroupMessages(selectedGroup, true);
+      }, 2000);
 
       const channelName = getGroupChannel(selectedGroup);
       const channel = pusherClient.subscribe(channelName);
@@ -218,9 +293,16 @@ export function MessagesClient({
       });
 
       return () => {
+        if (pollingIntervalRef.current) {
+          clearInterval(pollingIntervalRef.current);
+        }
         channel.unbind_all();
         pusherClient.unsubscribe(channelName);
       };
+    } else {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
     }
   }, [selectedGroup, currentUser]);
 
