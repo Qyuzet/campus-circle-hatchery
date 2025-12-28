@@ -127,7 +127,7 @@ export function ClubCard({
   };
 
   return (
-    <div className="relative">
+    <div className="relative h-full">
       <button
         onClick={(e) => {
           e.stopPropagation();
@@ -138,105 +138,120 @@ export function ClubCard({
       >
         <HelpCircle className="h-3 w-3 md:h-4 md:w-4 text-gray-600 group-hover:text-blue-600 transition-colors pointer-events-none" />
       </button>
-      <Card className="hover:shadow-lg transition-shadow">
-        <CardHeader className="p-2 md:p-6 pb-2 md:pb-6">
-          <div className="flex flex-col md:flex-row items-center gap-1.5 md:gap-3">
+      <Card className="hover:shadow-lg transition-shadow h-full flex flex-col">
+        <CardHeader className="p-3 sm:p-4 pb-2 sm:pb-3 flex-shrink-0">
+          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
             {club.logoUrl ? (
               <Image
                 src={club.logoUrl}
                 alt={club.name}
                 width={64}
                 height={48}
-                className="w-14 h-11 md:w-16 md:h-12 rounded-md md:rounded-lg object-contain bg-white"
+                className="w-12 h-10 sm:w-16 sm:h-12 rounded object-contain bg-white"
               />
             ) : (
-              <div className="w-14 h-11 md:w-16 md:h-12 bg-dark-blue rounded-md md:rounded-lg flex items-center justify-center">
-                <Users className="h-5 w-5 md:h-6 md:w-6 text-white" />
+              <div className="w-12 h-10 sm:w-16 sm:h-12 bg-blue-600 rounded flex items-center justify-center">
+                <Users className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
               </div>
             )}
-            <div className="flex-1 text-center md:text-left w-full">
-              <CardTitle className="text-xs md:text-base leading-tight md:leading-normal line-clamp-2 md:line-clamp-none">
+            <div className="flex-1 text-center sm:text-left w-full">
+              <CardTitle className="text-sm sm:text-base leading-tight line-clamp-2 mb-1.5 sm:mb-2">
                 {club.name}
               </CardTitle>
-              <Badge
-                variant="secondary"
-                className="text-[10px] md:text-xs mt-0.5 md:mt-1 px-1.5 md:px-2.5 py-0 md:py-0.5"
-              >
-                {club.category}
-              </Badge>
+              <div className="inline-flex items-center px-2 sm:px-2.5 py-0.5 sm:py-1 bg-purple-50 border-l-4 border-purple-600 rounded-sm w-fit">
+                <span className="text-[10px] sm:text-xs font-semibold text-purple-800">
+                  {club.category}
+                </span>
+              </div>
             </div>
           </div>
         </CardHeader>
-        <CardContent className="p-2 md:p-6 pt-0 md:pt-0">
-          <p className="text-[10px] md:text-sm text-medium-gray line-clamp-2 mb-1.5 md:mb-3 leading-tight md:leading-normal">
+        <CardContent className="p-3 sm:p-4 pt-0 flex-1 flex flex-col">
+          <p className="text-xs sm:text-sm text-muted-foreground mb-2 sm:mb-3 leading-relaxed">
             {club.description}
           </p>
-          <div className="space-y-1 md:space-y-2 mb-1.5 md:mb-3">
+          <div className="space-y-1.5 sm:space-y-2 mb-2 sm:mb-3 flex-1">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] md:text-xs text-medium-gray">
-                {club.memberCount} members
-              </span>
-              <Badge
-                variant={
-                  getRegistrationStatus() === "Open" ? "default" : "secondary"
+              <div className="flex items-center gap-1.5">
+                <Users className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-muted-foreground" />
+                <span className="text-[10px] sm:text-xs text-muted-foreground font-medium">
+                  {club.memberCount} members
+                </span>
+              </div>
+              <div
+                className={
+                  getRegistrationStatus() === "Open"
+                    ? "inline-flex items-center px-2 sm:px-2.5 py-0.5 sm:py-1 bg-green-50 border-l-4 border-green-600 rounded-sm"
+                    : "inline-flex items-center px-2 sm:px-2.5 py-0.5 sm:py-1 bg-gray-50 border-l-4 border-gray-600 rounded-sm"
                 }
-                className="text-[10px] md:text-xs px-1.5 md:px-2.5 py-0 md:py-0.5"
               >
-                {getRegistrationStatus()}
-              </Badge>
+                <span
+                  className={
+                    getRegistrationStatus() === "Open"
+                      ? "text-[10px] sm:text-xs font-semibold text-green-800"
+                      : "text-[10px] sm:text-xs font-semibold text-gray-800"
+                  }
+                >
+                  {getRegistrationStatus()}
+                </span>
+              </div>
             </div>
             {isNotYetOpen && startDate && (
-              <p className="text-[10px] md:text-xs text-amber-600 font-medium">
-                Opens on{" "}
-                {startDate.toLocaleDateString("en-US", {
-                  month: "long",
-                  year: "numeric",
-                })}
-              </p>
+              <div className="inline-flex items-center px-2 sm:px-2.5 py-0.5 sm:py-1 bg-amber-50 border-l-4 border-amber-600 rounded-sm w-full">
+                <span className="text-[10px] sm:text-xs font-semibold text-amber-800">
+                  Opens on{" "}
+                  {startDate.toLocaleDateString("en-US", {
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </span>
+              </div>
             )}
             {club.registrationStartDate && club.registrationEndDate && (
-              <p className="text-[10px] md:text-xs text-medium-gray leading-tight md:leading-normal">
+              <p className="text-[10px] sm:text-xs text-muted-foreground">
                 Registration:{" "}
                 {new Date(club.registrationStartDate).toLocaleDateString()} -{" "}
                 {new Date(club.registrationEndDate).toLocaleDateString()}
               </p>
             )}
           </div>
-          {club.websiteUrl && (
+          <div className="mt-auto space-y-1.5 sm:space-y-2">
+            {club.websiteUrl && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="w-full text-xs sm:text-sm h-8 sm:h-9"
+                onClick={() => {
+                  const link = document.createElement("a");
+                  link.href = club.websiteUrl!;
+                  link.target = "_blank";
+                  link.rel = "noopener noreferrer";
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                }}
+              >
+                <ExternalLink className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1.5" />
+                <span className="hidden sm:inline">Visit Website</span>
+                <span className="sm:hidden">Website</span>
+              </Button>
+            )}
             <Button
               size="sm"
-              variant="outline"
-              className="w-full mb-1 md:mb-2 text-[10px] md:text-sm h-7 md:h-9 px-2 md:px-4"
-              onClick={() => {
-                const link = document.createElement("a");
-                link.href = club.websiteUrl!;
-                link.target = "_blank";
-                link.rel = "noopener noreferrer";
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-              }}
+              className="w-full text-xs sm:text-sm h-8 sm:h-9"
+              disabled={isButtonDisabled()}
+              onClick={handleButtonClick}
             >
-              <ExternalLink className="h-2.5 w-2.5 md:h-3 md:w-3 mr-1" />
-              <span className="hidden md:inline">Visit Website</span>
-              <span className="md:hidden">Website</span>
+              {isRequesting ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-2 animate-spin" />
+                  Requesting...
+                </>
+              ) : (
+                getButtonText()
+              )}
             </Button>
-          )}
-          <Button
-            size="sm"
-            className="w-full text-[10px] md:text-sm h-7 md:h-9 px-2 md:px-4"
-            disabled={isButtonDisabled()}
-            onClick={handleButtonClick}
-          >
-            {isRequesting ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Requesting...
-              </>
-            ) : (
-              getButtonText()
-            )}
-          </Button>
+          </div>
         </CardContent>
       </Card>
     </div>
