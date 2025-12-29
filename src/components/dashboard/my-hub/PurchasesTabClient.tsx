@@ -7,9 +7,13 @@ import { PaymentSyncBanner } from "./PaymentSyncBanner";
 
 interface PurchasesTabClientProps {
   transactions: any[];
+  onPaymentCompleted?: () => void;
 }
 
-export function PurchasesTabClient({ transactions }: PurchasesTabClientProps) {
+export function PurchasesTabClient({
+  transactions,
+  onPaymentCompleted,
+}: PurchasesTabClientProps) {
   const totalOrders = transactions.length;
   const completedOrders = transactions.filter(
     (t) => t.status === "COMPLETED"
@@ -68,11 +72,13 @@ export function PurchasesTabClient({ transactions }: PurchasesTabClientProps) {
               <p className="text-muted-foreground">No purchases yet</p>
             </div>
           ) : (
-            <PurchasesList transactions={transactions} />
+            <PurchasesList
+              transactions={transactions}
+              onPaymentCompleted={onPaymentCompleted}
+            />
           )}
         </CardContent>
       </Card>
     </>
   );
 }
-

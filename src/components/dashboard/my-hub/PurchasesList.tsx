@@ -28,13 +28,44 @@ interface Transaction {
 
 interface PurchasesListProps {
   transactions: Transaction[];
+  onPaymentCompleted?: () => void;
 }
 
-export function PurchasesList({ transactions }: PurchasesListProps) {
+export function PurchasesList({
+  transactions,
+  onPaymentCompleted,
+}: PurchasesListProps) {
   const [isSyncing, setIsSyncing] = useState(false);
+  const [previousTransactions, setPreviousTransactions] =
+    useState(transactions);
   const router = useRouter();
 
   const pendingOrders = transactions.filter((t) => t.status === "PENDING");
+
+  useEffect(() => {
+    const newlyCompleted = transactions.filter(
+      (t) =>
+        t.status === "COMPLETED" &&
+        previousTransactions.find((pt) => pt.id === t.id)?.status === "PENDING"
+    );
+
+    if (newlyCompleted.length > 0) {
+      newlyCompleted.forEach((transaction) => {
+        toast.success("Payment Confirmed!", {
+          description: `${transaction.itemTitle} is now available in your Library`,
+          duration: 5000,
+        });
+      });
+
+      if (onPaymentCompleted) {
+        setTimeout(() => {
+          onPaymentCompleted();
+        }, 1500);
+      }
+    }
+
+    setPreviousTransactions(transactions);
+  }, [transactions, previousTransactions, onPaymentCompleted]);
 
   useEffect(() => {
     const syncPayments = async () => {

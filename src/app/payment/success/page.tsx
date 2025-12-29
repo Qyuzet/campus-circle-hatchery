@@ -11,7 +11,7 @@ function PaymentSuccessContent() {
   const orderId = searchParams.get("order_id");
   const [transaction, setTransaction] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [countdown, setCountdown] = useState(5);
+  const [countdown, setCountdown] = useState(10);
 
   useEffect(() => {
     if (orderId) {
@@ -146,21 +146,22 @@ function PaymentSuccessContent() {
           </h3>
           <ul className="text-sm text-medium-gray space-y-2">
             <li className="flex items-start">
-              <span className="text-blue-600 mr-2">•</span>
-              <span>Wait for payment confirmation in My Purchases</span>
-            </li>
-            <li className="flex items-start">
-              <span className="text-blue-600 mr-2">•</span>
+              <span className="text-blue-600 mr-2">1.</span>
               <span>
-                Once confirmed, you&apos;ll be redirected to Library
-                automatically
+                Your payment is being verified (usually takes 1-2 minutes)
               </span>
             </li>
             <li className="flex items-start">
-              <span className="text-blue-600 mr-2">•</span>
-              <span>
-                Download your purchased materials anytime from Library
-              </span>
+              <span className="text-blue-600 mr-2">2.</span>
+              <span>Check My Purchases tab to see payment status</span>
+            </li>
+            <li className="flex items-start">
+              <span className="text-blue-600 mr-2">3.</span>
+              <span>Once confirmed, your item will appear in Library tab</span>
+            </li>
+            <li className="flex items-start">
+              <span className="text-blue-600 mr-2">4.</span>
+              <span>Download your materials anytime from Library</span>
             </li>
           </ul>
         </div>

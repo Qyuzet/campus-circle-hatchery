@@ -42,6 +42,14 @@ export function LibraryItemCard({
 }: LibraryItemCardProps) {
   const [isDownloading, setIsDownloading] = useState(false);
 
+  const isNew = () => {
+    const purchaseDate = new Date(transaction.createdAt);
+    const now = new Date();
+    const hoursDiff =
+      (now.getTime() - purchaseDate.getTime()) / (1000 * 60 * 60);
+    return hoursDiff < 24;
+  };
+
   const handleDownload = async () => {
     if (!transaction.item?.fileUrl || !transaction.itemId) {
       toast.error("No file available");
@@ -78,6 +86,13 @@ export function LibraryItemCard({
 
   return (
     <Card className="hover:shadow-lg transition-shadow relative flex flex-col h-full">
+      {isNew() && (
+        <div className="absolute top-2 left-2 z-10">
+          <Badge className="bg-green-500 text-white text-[10px] sm:text-xs px-2 py-0.5 animate-pulse">
+            NEW
+          </Badge>
+        </div>
+      )}
       <button
         onClick={handleSupportClick}
         className="absolute top-2 right-2 z-10 bg-white/90 hover:bg-white backdrop-blur-sm p-1.5 rounded-full shadow-sm transition-all hover:shadow-md group"

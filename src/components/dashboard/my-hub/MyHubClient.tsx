@@ -41,6 +41,10 @@ export function MyHubClient({
   const notesCount = library.filter((t) => t.item?.category === "Notes").length;
   const booksCount = library.filter((t) => t.item?.category === "Book").length;
 
+  const handlePaymentCompleted = () => {
+    setActiveTab("library");
+  };
+
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab}>
       <TabsList className="grid w-full grid-cols-6 mb-6 h-8">
@@ -65,7 +69,10 @@ export function MyHubClient({
       </TabsList>
 
       <TabsContent value="purchases">
-        <PurchasesTabClient transactions={purchases} />
+        <PurchasesTabClient
+          transactions={purchases}
+          onPaymentCompleted={handlePaymentCompleted}
+        />
       </TabsContent>
 
       <TabsContent value="sales">
