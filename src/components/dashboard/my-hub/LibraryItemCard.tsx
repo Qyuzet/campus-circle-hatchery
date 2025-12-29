@@ -86,13 +86,6 @@ export function LibraryItemCard({
 
   return (
     <Card className="hover:shadow-lg transition-shadow relative flex flex-col h-full">
-      {isNew() && (
-        <div className="absolute top-2 left-2 z-10">
-          <Badge className="bg-green-500 text-white text-[10px] sm:text-xs px-2 py-0.5 animate-pulse">
-            NEW
-          </Badge>
-        </div>
-      )}
       <button
         onClick={handleSupportClick}
         className="absolute top-2 right-2 z-10 bg-white/90 hover:bg-white backdrop-blur-sm p-1.5 rounded-full shadow-sm transition-all hover:shadow-md group"
@@ -103,9 +96,16 @@ export function LibraryItemCard({
       <CardHeader className="p-3 sm:p-4 pb-2 sm:pb-3">
         <div className="flex flex-col gap-1.5 sm:gap-2">
           <div className="flex-1 min-w-0 pr-8">
-            <CardTitle className="text-sm sm:text-base font-semibold line-clamp-2 mb-1.5 sm:mb-2">
-              {transaction.itemTitle}
-            </CardTitle>
+            <div className="flex items-start gap-2 mb-1.5 sm:mb-2">
+              {isNew() && (
+                <Badge className="bg-green-500 text-white text-[10px] sm:text-xs px-2 py-0.5 animate-pulse shrink-0">
+                  NEW
+                </Badge>
+              )}
+              <CardTitle className="text-sm sm:text-base font-semibold line-clamp-2 flex-1">
+                {transaction.itemTitle}
+              </CardTitle>
+            </div>
             <div className="inline-flex items-center px-2 sm:px-2.5 py-0.5 sm:py-1 bg-blue-50 border-l-4 border-blue-600 rounded-sm w-fit">
               <span className="text-[10px] sm:text-xs font-semibold text-blue-800">
                 {transaction.item?.category || "Material"}
