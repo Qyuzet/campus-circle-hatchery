@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -9,7 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Loader2 } from "lucide-react";
 
 type LeaveClubConfirmDialogProps = {
   open: boolean;
@@ -24,9 +25,21 @@ export function LeaveClubConfirmDialog({
   clubName,
   onConfirm,
 }: LeaveClubConfirmDialogProps) {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleConfirm = async () => {
+    setIsLoading(true);
+    try {
+      await onConfirm();
+      onOpenChange(false);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <div className="flex items-center gap-3">
             <div className="bg-red-100 p-2 rounded-full">
@@ -35,20 +48,24 @@ export function LeaveClubConfirmDialog({
             <DialogTitle>Leave {clubName}?</DialogTitle>
           </div>
           <DialogDescription className="pt-2">
-            Are you sure you want to leave this club? You will need to request to join again if you change your mind.
+            Are you sure you want to leave this club? You will need to request
+            to join again if you change your mind.
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+        <DialogFooter className="gap-2 sm:gap-0">
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isLoading}
+          >
             Cancel
           </Button>
           <Button
             variant="destructive"
-            onClick={async () => {
-              await onConfirm();
-              onOpenChange(false);
-            }}
+            onClick={handleConfirm}
+            disabled={isLoading}
           >
+            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Leave Club
           </Button>
         </DialogFooter>
@@ -56,4 +73,3 @@ export function LeaveClubConfirmDialog({
     </Dialog>
   );
 }
-

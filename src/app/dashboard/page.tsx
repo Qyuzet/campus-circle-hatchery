@@ -2604,6 +2604,30 @@ function DashboardContent() {
                                     await notificationsAPI.getNotifications();
                                   setNotifications(notifs);
                                 }
+
+                                // Navigate based on notification type
+                                if (notification.type === "purchase") {
+                                  // Check if it's a payment success notification
+                                  if (
+                                    notification.title
+                                      .toLowerCase()
+                                      .includes("payment") &&
+                                    notification.title
+                                      .toLowerCase()
+                                      .includes("success")
+                                  ) {
+                                    setShowNotifications(false);
+                                    setActiveTab("my-hub");
+                                    setMyHubTab("library");
+                                  } else {
+                                    setShowNotifications(false);
+                                    setActiveTab("my-hub");
+                                    setMyHubTab("purchases");
+                                  }
+                                } else if (notification.type === "message") {
+                                  setShowNotifications(false);
+                                  setActiveTab("messages");
+                                }
                               } catch (error) {
                                 console.error(
                                   "Error marking notification:",

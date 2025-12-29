@@ -1,6 +1,6 @@
 "use client";
 
-import { ClubCard } from "./ClubCard";
+import ClubCard from "./ClubCard";
 import { Card, CardContent } from "@/components/ui/card";
 import { Users } from "lucide-react";
 
@@ -86,4 +86,3 @@ export function ClubsList({
     </div>
   );
 }
-

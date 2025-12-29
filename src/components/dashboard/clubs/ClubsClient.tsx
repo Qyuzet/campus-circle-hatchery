@@ -140,20 +140,14 @@ export function ClubsClient({
 
   const refreshClubRequests = async () => {
     try {
-      const requests = await Promise.all(
-        allClubs.map(async (club) => {
-          const res = await fetch(`/api/clubs/${club.id}/request-status`);
-          if (res.ok) {
-            const { request } = await res.json();
-            return request ? [club.id, request] : null;
-          }
-          return null;
-        })
-      );
-      const newMap = new Map(
-        requests.filter((r): r is [string, ClubJoinRequest] => r !== null)
-      );
-      setClubJoinRequests(newMap);
+      const response = await fetch("/api/clubs/my-requests");
+      if (response.ok) {
+        const requests: ClubJoinRequest[] = await response.json();
+        const newMap = new Map<string, ClubJoinRequest>(
+          requests.map((r) => [r.clubId, r])
+        );
+        setClubJoinRequests(newMap);
+      }
     } catch (error) {
       console.error("Failed to refresh club requests:", error);
     }

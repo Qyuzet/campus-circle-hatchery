@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -257,3 +258,5 @@ export function ClubCard({
     </div>
   );
 }
+
+export default React.memo(ClubCard);
