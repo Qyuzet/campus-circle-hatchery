@@ -61,13 +61,8 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Check if item is available
-      if (item.status !== "available") {
-        return NextResponse.json(
-          { error: "Item is not available" },
-          { status: 400 }
-        );
-      }
+      // Note: Marketplace items are digital products that can be purchased multiple times
+      // No status check needed - they're always available
 
       // Prevent buying own item
       if (item.sellerId === session.user.id) {
