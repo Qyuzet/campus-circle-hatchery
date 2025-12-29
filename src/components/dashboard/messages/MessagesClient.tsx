@@ -570,8 +570,8 @@ export function MessagesClient({
               }
 
               setTimeout(() => {
-                router.push("/dashboard/my-hub?tab=purchases");
-              }, 1500);
+                window.location.href = "/dashboard/my-hub?tab=purchases";
+              }, 1000);
             },
             onPending: function (result: any) {
               console.log("Payment pending:", result);

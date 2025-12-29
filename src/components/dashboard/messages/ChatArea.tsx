@@ -253,7 +253,7 @@ export function ChatArea({
                     </p>
                     <p
                       className={`text-xs mt-1 ${
-                        isOwnMessage ? "text-blue-100" : "text-medium-gray"
+                        isOwnMessage ? "text-blue-200" : "text-medium-gray"
                       }`}
                     >
                       {format(new Date(message.createdAt), "HH:mm")}
