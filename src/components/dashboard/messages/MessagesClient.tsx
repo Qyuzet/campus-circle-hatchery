@@ -15,7 +15,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { toast } from "sonner";
-import { messagesAPI, groupsAPI, usersAPI } from "@/lib/api";
+import { messagesAPI, groupsAPI, usersAPI, paymentAPI } from "@/lib/api";
 import {
   pusherClient,
   getConversationChannel,
@@ -25,6 +25,12 @@ import { playNotificationSound } from "@/lib/notification-sound";
 import { format } from "date-fns";
 import { ConversationsList } from "./ConversationsList";
 import { ChatArea } from "./ChatArea";
+
+declare global {
+  interface Window {
+    snap: any;
+  }
+}
 
 interface MessagesClientProps {
   initialConversations: any[];
@@ -489,6 +495,106 @@ export function MessagesClient({
     router.push(`/dashboard/messages?mode=${mode}`);
   };
 
+  const handleAcceptOrder = async (messageId: string) => {
+    try {
+      await fetch(`/api/messages/${messageId}/respond`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "accept" }),
+      });
+      toast.success("Order accepted!");
+
+      if (selectedConversation) {
+        await loadMessages(selectedConversation, true);
+      }
+    } catch (error) {
+      console.error("Error accepting order:", error);
+      toast.error("Failed to accept order");
+    }
+  };
+
+  const handleRejectOrder = async (messageId: string) => {
+    try {
+      await fetch(`/api/messages/${messageId}/respond`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "reject" }),
+      });
+      toast.success("Order declined");
+
+      if (selectedConversation) {
+        await loadMessages(selectedConversation, true);
+      }
+    } catch (error) {
+      console.error("Error declining order:", error);
+      toast.error("Failed to decline order");
+    }
+  };
+
+  const handlePayOrder = async (message: any) => {
+    try {
+      const result = await paymentAPI.createPayment({
+        itemId: message.orderData.foodId,
+        itemType: "food",
+        amount: message.orderData.price,
+        itemTitle: message.orderData.foodTitle,
+      });
+
+      if (result.success && result.payment.token) {
+        if (window.snap) {
+          window.snap.pay(result.payment.token, {
+            onSuccess: async function (paymentResult: any) {
+              console.log("Payment success:", paymentResult);
+
+              toast.success("Payment successful!", {
+                description: "Redirecting to My Hub...",
+              });
+
+              try {
+                await fetch(`/api/messages/${message.id}`, {
+                  method: "PATCH",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    orderData: {
+                      ...message.orderData,
+                      status: "paid",
+                    },
+                  }),
+                });
+
+                if (selectedConversation) {
+                  await loadMessages(selectedConversation, true);
+                }
+              } catch (error) {
+                console.error("Error updating message:", error);
+              }
+
+              setTimeout(() => {
+                router.push("/dashboard/my-hub?tab=purchases");
+              }, 1500);
+            },
+            onPending: function (result: any) {
+              console.log("Payment pending:", result);
+              toast.info("Payment is being processed...");
+            },
+            onError: function (result: any) {
+              console.log("Payment error:", result);
+              toast.error("Payment failed. Please try again.");
+            },
+            onClose: function () {
+              console.log("Payment popup closed");
+            },
+          });
+        } else {
+          toast.error("Payment system not loaded. Please refresh the page.");
+        }
+      }
+    } catch (error: any) {
+      console.error("Error creating payment:", error);
+      toast.error(error.message || "Failed to create payment");
+    }
+  };
+
   const currentConversation = conversations.find(
     (c) => c.id === selectedConversation
   );
@@ -592,6 +698,9 @@ export function MessagesClient({
               setSelectedMembers([]);
               setUserSearchQuery("");
             }}
+            onAcceptOrder={handleAcceptOrder}
+            onRejectOrder={handleRejectOrder}
+            onPayOrder={handlePayOrder}
           />
         ) : (
           <div className="hidden sm:flex flex-1 items-center justify-center bg-gray-50">
