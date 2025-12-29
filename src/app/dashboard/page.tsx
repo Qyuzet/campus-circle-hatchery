@@ -2383,8 +2383,8 @@ function DashboardContent() {
   const stats = useMemo(
     () => [
       {
-        label: "Items Sold",
-        value: soldItemsCount.toString(),
+        label: "Active Listings",
+        value: availableItemsCount.toString(),
         icon: ShoppingCart,
         color: "bg-dark-blue",
       },
@@ -2407,7 +2407,7 @@ function DashboardContent() {
         color: "bg-light-blue",
       },
     ],
-    [soldItemsCount, userStats.itemsBought, conversations.length]
+    [availableItemsCount, userStats.itemsBought, conversations.length]
   );
 
   // Show loading state only for initial auth check
