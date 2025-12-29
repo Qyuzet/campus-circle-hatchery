@@ -51,6 +51,7 @@ export default async function MarketplacePage({
         NOT: {
           fileUrl: "",
         },
+        status: "available",
       },
       include: {
         seller: {
