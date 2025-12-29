@@ -35,9 +35,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Toaster } from "sonner";
+import { toast, Toaster } from "sonner";
 import { AddItemButton } from "@/components/marketplace/AddItemButton";
 import { isSSRComponentsEnabled } from "@/lib/feature-flags";
+import { pusherClient, getUserTransactionChannel } from "@/lib/pusher";
+import { playNotificationSound } from "@/lib/notification-sound";
 
 interface Notification {
   id: string;
@@ -100,6 +102,81 @@ export function DashboardLayout({
   useEffect(() => {
     setLocalNotifications(notifications);
   }, [notifications]);
+
+  // Listen for real-time payment updates via Pusher
+  useEffect(() => {
+    if (session?.user?.email && status === "authenticated") {
+      const fetchUserId = async () => {
+        try {
+          const response = await fetch("/api/users/me");
+          if (response.ok) {
+            const userData = await response.json();
+            const userId = userData.id;
+
+            const channelName = getUserTransactionChannel(userId);
+            console.log(
+              "🔌 [DashboardLayout] Subscribing to transaction channel:",
+              channelName
+            );
+            const channel = pusherClient.subscribe(channelName);
+
+            channel.bind("transaction-updated", (updatedTransaction: any) => {
+              console.log(
+                "✅ [DashboardLayout] Real-time transaction update received:",
+                updatedTransaction
+              );
+
+              if (updatedTransaction.status === "COMPLETED") {
+                playNotificationSound();
+                toast.success("Payment confirmed!", {
+                  description: `Your payment for ${updatedTransaction.itemTitle} has been confirmed. Click to view.`,
+                  duration: 8000,
+                  action: {
+                    label: "View",
+                    onClick: () => {
+                      if (updatedTransaction.itemType === "marketplace") {
+                        window.location.href = "/dashboard/my-hub?tab=library";
+                      } else if (updatedTransaction.itemType === "event") {
+                        window.location.href = "/dashboard/my-hub?tab=events";
+                      } else {
+                        window.location.href =
+                          "/dashboard/my-hub?tab=purchases";
+                      }
+                    },
+                  },
+                });
+
+                // Reload notifications to show the new purchase notification
+                fetch("/api/notifications")
+                  .then((res) => res.json())
+                  .then((data) => {
+                    setLocalNotifications(data);
+                  })
+                  .catch((err) =>
+                    console.error("Failed to reload notifications:", err)
+                  );
+              }
+            });
+
+            return () => {
+              channel.unbind_all();
+              pusherClient.unsubscribe(channelName);
+              console.log(
+                "🔌 [DashboardLayout] Unsubscribed from transaction channel"
+              );
+            };
+          }
+        } catch (error) {
+          console.error(
+            "Failed to fetch user ID for Pusher subscription:",
+            error
+          );
+        }
+      };
+
+      fetchUserId();
+    }
+  }, [session, status]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -350,6 +427,22 @@ export function DashboardLayout({
                               if (!notification.isRead) {
                                 handleMarkAsRead([notification.id]);
                               }
+
+                              // Handle notification click based on type
+                              if (notification.type === "purchase") {
+                                // Redirect to Library for marketplace purchases
+                                window.location.href =
+                                  "/dashboard/my-hub?tab=library";
+                              } else if (notification.type === "sale") {
+                                // Redirect to Listings for sales
+                                window.location.href =
+                                  "/dashboard/my-hub?tab=listings";
+                              } else if (notification.type === "message") {
+                                // Redirect to Messages
+                                window.location.href = "/dashboard/messages";
+                              }
+
+                              setShowNotifications(false);
                             }}
                           >
                             <div className="flex items-start space-x-3">
