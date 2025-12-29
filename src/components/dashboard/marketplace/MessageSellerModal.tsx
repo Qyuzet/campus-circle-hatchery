@@ -113,9 +113,10 @@ export function MessageSellerModal({
   const handleSendMessage = async () => {
     if (!messageText.trim() || !conversationId || !item) return;
 
+    const content = messageText.trim();
+
     try {
       setIsSending(true);
-      const content = messageText.trim();
       setMessageText("");
 
       await messagesAPI.sendMessage(conversationId, content);
