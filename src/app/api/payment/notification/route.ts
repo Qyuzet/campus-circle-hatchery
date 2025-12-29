@@ -77,13 +77,8 @@ export async function POST(request: NextRequest) {
 
     // Handle successful payment
     if (newStatus === "COMPLETED") {
-      // Update marketplace item status if applicable
-      if (transaction.itemType === "marketplace" && transaction.itemId) {
-        await prisma.marketplaceItem.update({
-          where: { id: transaction.itemId },
-          data: { status: "sold" },
-        });
-      }
+      // Note: Marketplace items are digital products and can be sold multiple times
+      // so we don't change their status to "sold"
 
       // Handle food order creation
       if (transaction.itemType === "food" && transaction.foodItemId) {
@@ -373,13 +368,8 @@ export async function POST(request: NextRequest) {
 
     // Handle failed payment
     if (newStatus === "FAILED" || newStatus === "CANCELLED") {
-      // Restore item availability if marketplace item
-      if (transaction.itemType === "marketplace" && transaction.itemId) {
-        await prisma.marketplaceItem.update({
-          where: { id: transaction.itemId },
-          data: { status: "available" },
-        });
-      }
+      // Note: Marketplace items are digital products that remain available
+      // No need to restore availability
 
       // Create notification for buyer
       await prisma.notification.create({
