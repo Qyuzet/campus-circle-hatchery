@@ -2229,16 +2229,10 @@ function DashboardContent() {
     [marketplaceItems, currentUser?.id]
   );
 
-  // Memoize sold items count
-  const soldItemsCount = useMemo(
-    () => userMarketplaceItems.filter((item) => item.status === "sold").length,
-    [userMarketplaceItems]
-  );
-
-  // Memoize available items count
+  // Note: Digital marketplace items are never "sold" - they remain available
+  // Count is based on total listings
   const availableItemsCount = useMemo(
-    () =>
-      userMarketplaceItems.filter((item) => item.status === "available").length,
+    () => userMarketplaceItems.length,
     [userMarketplaceItems]
   );
 

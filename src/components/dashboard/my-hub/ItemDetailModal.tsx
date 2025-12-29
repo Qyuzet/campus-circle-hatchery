@@ -259,7 +259,7 @@ export function ItemDetailModal({
                 )}
               </div>
 
-              {/* Price & Status */}
+              {/* Price */}
               <div className="flex items-center justify-between px-3 py-2 bg-gray-50 border-l-2 border-blue-600">
                 <div>
                   <p className="text-[9px] text-gray-600 mb-0.5">Price</p>
@@ -267,20 +267,6 @@ export function ItemDetailModal({
                     Rp {item.price.toLocaleString()}
                   </p>
                 </div>
-                <Badge
-                  variant={
-                    item.status === "available" ? "default" : "secondary"
-                  }
-                  className={`text-[9px] px-1.5 py-0.5 font-normal ${
-                    item.status === "available"
-                      ? "bg-green-100 text-green-700 hover:bg-green-100"
-                      : item.status === "sold"
-                      ? "bg-red-100 text-red-700"
-                      : "bg-yellow-100 text-yellow-700"
-                  }`}
-                >
-                  {item.status}
-                </Badge>
               </div>
             </>
           )}

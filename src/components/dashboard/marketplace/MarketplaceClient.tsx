@@ -1024,7 +1024,7 @@ export function MarketplaceClient({
                       <div className="flex-1 bg-green-100 text-green-700 px-4 py-2 text-center text-sm font-medium rounded">
                         Already Purchased
                       </div>
-                    ) : selectedItem.status === "available" ? (
+                    ) : (
                       <>
                         <Button
                           variant="outline"
@@ -1053,14 +1053,6 @@ export function MarketplaceClient({
                             : "Buy Now"}
                         </Button>
                       </>
-                    ) : selectedItem.status === "sold" ? (
-                      <div className="flex-1 bg-gray-100 text-gray-500 px-4 py-2 text-center text-sm font-medium rounded">
-                        SOLD OUT
-                      </div>
-                    ) : (
-                      <div className="flex-1 bg-gray-100 text-gray-500 px-4 py-2 text-center text-sm font-medium rounded">
-                        Item Not Available
-                      </div>
                     )}
                   </div>
                 </div>
@@ -1265,24 +1257,16 @@ export function MarketplaceClient({
                       </div>
                     )}
 
-                    <div className="flex items-center justify-between pt-3 border-t">
-                      <Badge
-                        variant={
-                          selectedItem.status === "available"
-                            ? "default"
-                            : "secondary"
-                        }
-                        className={`text-xs ${
-                          selectedItem.status === "available"
-                            ? "bg-green-100 text-green-700 hover:bg-green-100"
-                            : selectedItem.status === "sold"
-                            ? "bg-red-100 text-red-700"
-                            : "bg-yellow-100 text-yellow-700"
-                        }`}
-                      >
-                        {selectedItem.status || "available"}
-                      </Badge>
-                    </div>
+                    {hasPurchasedItem && (
+                      <div className="flex items-center justify-between pt-3 border-t">
+                        <Badge
+                          variant="default"
+                          className="text-xs bg-green-600 hover:bg-green-700 text-white"
+                        >
+                          Already Purchased
+                        </Badge>
+                      </div>
+                    )}
                   </div>
 
                   {/* Action Buttons - Desktop */}
@@ -1314,7 +1298,7 @@ export function MarketplaceClient({
                       <div className="flex-1 bg-green-100 text-green-700 px-4 py-2 text-center text-sm font-medium rounded">
                         Already Purchased
                       </div>
-                    ) : selectedItem.status === "available" ? (
+                    ) : (
                       <>
                         <Button
                           variant="outline"
@@ -1343,14 +1327,6 @@ export function MarketplaceClient({
                             : "Buy Now"}
                         </Button>
                       </>
-                    ) : selectedItem.status === "sold" ? (
-                      <div className="flex-1 bg-gray-100 text-gray-500 px-4 py-2 text-center text-sm font-medium rounded">
-                        SOLD OUT
-                      </div>
-                    ) : (
-                      <div className="flex-1 bg-gray-100 text-gray-500 px-4 py-2 text-center text-sm font-medium rounded">
-                        Item Not Available
-                      </div>
                     )}
                   </div>
                 </div>
