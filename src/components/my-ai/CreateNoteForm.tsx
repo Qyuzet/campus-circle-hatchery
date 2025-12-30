@@ -23,7 +23,7 @@ export function CreateNoteForm({
   onCancel,
   initialNote,
 }: CreateNoteFormProps) {
-  const [title, setTitle] = useState(initialNote?.title || "Untitled");
+  const [title, setTitle] = useState(initialNote?.title || "");
   const [blocks, setBlocks] = useState<Block[]>(() =>
     contentToBlocks(initialNote?.content || "")
   );
@@ -137,7 +137,7 @@ export function CreateNoteForm({
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Untitled"
+            placeholder="Halaman Saya"
             className="w-full text-4xl font-bold text-gray-900 placeholder-gray-300 border-none outline-none focus:ring-0 mb-2 bg-transparent"
           />
 

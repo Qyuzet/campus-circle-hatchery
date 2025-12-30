@@ -145,7 +145,7 @@ export function CreateNoteDialog({
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Untitled"
+              placeholder="Halaman Saya"
               className="w-full text-5xl font-bold text-dark-blue placeholder:text-gray-300 border-none outline-none focus:ring-0 bg-transparent mb-1 p-0"
               autoFocus
             />
