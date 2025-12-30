@@ -159,5 +159,6 @@ export interface LiveLectureInterest {
   useCase: string;
   frequency: string;
   features: string[];
+  preferredPricing?: string;
   createdAt: string;
 }

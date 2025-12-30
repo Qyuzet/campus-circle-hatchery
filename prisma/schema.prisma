@@ -569,17 +569,18 @@ model AINote {
 }
 
 model LiveLectureInterest {
-  id          String   @id @default(cuid())
-  userId      String
-  email       String
-  name        String
-  faculty     String
-  major       String
-  useCase     String   @db.Text
-  frequency   String
-  features    String[]
-  createdAt   DateTime @default(now())
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id              String   @id @default(cuid())
+  userId          String
+  email           String
+  name            String
+  faculty         String
+  major           String
+  useCase         String   @db.Text
+  frequency       String
+  features        String[]
+  preferredPricing String?
+  createdAt       DateTime @default(now())
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([createdAt])

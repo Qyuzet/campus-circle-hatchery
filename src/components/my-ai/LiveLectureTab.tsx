@@ -23,6 +23,8 @@ import {
   Zap,
   FileAudio,
   Brain,
+  DollarSign,
+  Check,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -46,6 +48,7 @@ export function LiveLectureTab({
   const [useCase, setUseCase] = useState("");
   const [frequency, setFrequency] = useState("");
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
+  const [selectedPricing, setSelectedPricing] = useState<string>("");
 
   const features = [
     "Real-time transcription",
@@ -56,6 +59,53 @@ export function LiveLectureTab({
     "Searchable transcripts",
     "Export to multiple formats",
     "Integration with note-taking",
+  ];
+
+  const pricingTiers = [
+    {
+      id: "free",
+      name: "Free",
+      price: "Rp 0",
+      description: "Try it out",
+      features: ["2 hours/month", "Basic transcription"],
+    },
+    {
+      id: "starter",
+      name: "Starter",
+      price: "Rp 50,000",
+      pricePerMonth: "/mo",
+      description: "Light usage",
+      features: ["7.5 hours/month", "AI summarization", "Export formats"],
+      popular: false,
+    },
+    {
+      id: "student",
+      name: "Student",
+      price: "Rp 200,000",
+      pricePerMonth: "/mo",
+      description: "Best value",
+      features: [
+        "30 hours/month",
+        "All AI features",
+        "Cloud storage",
+        "Priority support",
+      ],
+      popular: true,
+    },
+    {
+      id: "premium",
+      name: "Premium",
+      price: "Rp 500,000",
+      pricePerMonth: "/mo",
+      description: "Unlimited",
+      features: [
+        "Unlimited hours",
+        "Advanced AI",
+        "Team features",
+        "API access",
+      ],
+      popular: false,
+    },
   ];
 
   const handleFeatureToggle = (feature: string) => {
@@ -87,6 +137,7 @@ export function LiveLectureTab({
           useCase,
           frequency,
           features: selectedFeatures,
+          preferredPricing: selectedPricing || null,
         }),
       });
 
@@ -271,6 +322,65 @@ export function LiveLectureTab({
                   Please select at least one feature
                 </p>
               )}
+            </div>
+
+            <div>
+              <Label className="mb-2 sm:mb-3 block text-sm">
+                Which pricing would you prefer?
+              </Label>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
+                {pricingTiers.map((tier) => (
+                  <div
+                    key={tier.id}
+                    onClick={() => setSelectedPricing(tier.id)}
+                    className={`relative p-2 sm:p-3 md:p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                      selectedPricing === tier.id
+                        ? "border-blue-600 bg-blue-50"
+                        : "border-gray-200 hover:border-blue-300 bg-white"
+                    } ${tier.popular ? "ring-2 ring-blue-400" : ""}`}
+                  >
+                    {tier.popular && (
+                      <div className="absolute -top-2 left-1/2 transform -translate-x-1/2">
+                        <span className="bg-blue-600 text-white text-[9px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 rounded-full font-semibold">
+                          POPULAR
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex items-center justify-between mb-1 sm:mb-2">
+                      <h4 className="font-semibold text-gray-900 text-xs sm:text-sm">
+                        {tier.name}
+                      </h4>
+                      {selectedPricing === tier.id && (
+                        <Check className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600" />
+                      )}
+                    </div>
+                    <div className="mb-1 sm:mb-2">
+                      <div className="text-sm sm:text-base md:text-lg font-bold text-gray-900">
+                        {tier.price}
+                      </div>
+                      {tier.pricePerMonth && (
+                        <span className="text-[9px] sm:text-xs text-gray-500">
+                          {tier.pricePerMonth}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[9px] sm:text-[10px] md:text-xs text-gray-600 mb-1.5 sm:mb-2">
+                      {tier.description}
+                    </p>
+                    <ul className="space-y-0.5 sm:space-y-1">
+                      {tier.features.map((feature, idx) => (
+                        <li
+                          key={idx}
+                          className="flex items-start gap-1 sm:gap-1.5 text-[9px] sm:text-[10px] md:text-xs text-gray-600"
+                        >
+                          <Check className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-green-600 mt-0.5 flex-shrink-0" />
+                          <span className="leading-tight">{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
             </div>
 
             <div className="bg-blue-50 border border-blue-200 rounded p-3 sm:p-4">

@@ -18,7 +18,16 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { email, name, faculty, major, useCase, frequency, features } = body;
+    const {
+      email,
+      name,
+      faculty,
+      major,
+      useCase,
+      frequency,
+      features,
+      preferredPricing,
+    } = body;
 
     if (!useCase || !frequency || !features || features.length === 0) {
       return NextResponse.json(
@@ -39,6 +48,7 @@ export async function POST(request: NextRequest) {
           useCase,
           frequency,
           features,
+          preferredPricing,
         },
       });
     } else {
@@ -52,6 +62,7 @@ export async function POST(request: NextRequest) {
           useCase,
           frequency,
           features,
+          preferredPricing,
         },
       });
     }
@@ -95,4 +106,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-
