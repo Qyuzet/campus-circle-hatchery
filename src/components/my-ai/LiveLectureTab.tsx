@@ -48,7 +48,7 @@ export function LiveLectureTab({
   const [useCase, setUseCase] = useState("");
   const [frequency, setFrequency] = useState("");
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
-  const [selectedPricing, setSelectedPricing] = useState<string>("");
+  const [selectedPricing, setSelectedPricing] = useState<string>("student");
 
   const features = [
     "Real-time transcription",

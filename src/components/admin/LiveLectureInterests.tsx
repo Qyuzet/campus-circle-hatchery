@@ -88,6 +88,27 @@ export default function LiveLectureInterests() {
     loadInterests();
   }, [page]);
 
+  const getPricingLabel = (pricing: string | null) => {
+    if (!pricing) return "Not selected";
+    const labels: Record<string, string> = {
+      free: "Free",
+      starter: "Starter (50k)",
+      student: "Student (200k)",
+      premium: "Premium (500k)",
+    };
+    return labels[pricing] || pricing;
+  };
+
+  const getFrequencyLabel = (frequency: string) => {
+    const labels: Record<string, string> = {
+      daily: "Daily",
+      weekly: "2-3 times/week",
+      occasionally: "Occasionally",
+      rarely: "Rarely",
+    };
+    return labels[frequency] || frequency;
+  };
+
   const filteredInterests = useMemo(
     () =>
       interests.filter(
@@ -115,27 +136,6 @@ export default function LiveLectureInterests() {
     );
     return getFrequencyLabel(sorted[0]?.frequency);
   }, [frequencyStats]);
-
-  const getPricingLabel = (pricing: string | null) => {
-    if (!pricing) return "Not selected";
-    const labels: Record<string, string> = {
-      free: "Free",
-      starter: "Starter (50k)",
-      student: "Student (200k)",
-      premium: "Premium (500k)",
-    };
-    return labels[pricing] || pricing;
-  };
-
-  const getFrequencyLabel = (frequency: string) => {
-    const labels: Record<string, string> = {
-      daily: "Daily",
-      weekly: "2-3 times/week",
-      occasionally: "Occasionally",
-      rarely: "Rarely",
-    };
-    return labels[frequency] || frequency;
-  };
 
   return (
     <div className="space-y-6">
