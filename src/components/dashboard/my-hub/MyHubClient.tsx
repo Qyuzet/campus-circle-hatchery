@@ -12,6 +12,7 @@ import { LibraryEmptyState } from "./LibraryEmptyState";
 import { ListingsEmptyState } from "./ListingsEmptyState";
 import { EventsEmptyState } from "./EventsEmptyState";
 import { WishlistTabClient } from "./WishlistTabClient";
+import { MyOrganizedEvents } from "./MyOrganizedEvents";
 import { BookOpen, FileText, Book } from "lucide-react";
 
 interface MyHubClientProps {
@@ -21,6 +22,7 @@ interface MyHubClientProps {
   library: any[];
   listings: any[];
   eventRegistrations: any[];
+  organizedEvents: any[];
   wishlistItems: any[];
   currentUserId?: string;
 }
@@ -32,6 +34,7 @@ export function MyHubClient({
   library,
   listings,
   eventRegistrations,
+  organizedEvents,
   wishlistItems,
   currentUserId,
 }: MyHubClientProps) {
@@ -103,10 +106,25 @@ export function MyHubClient({
         </Card>
       </TabsContent>
 
-      <TabsContent value="events">
+      <TabsContent value="events" className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>My Organized Events</CardTitle>
+            <p className="text-sm text-muted-foreground mt-1">
+              Events you created and their registrants
+            </p>
+          </CardHeader>
+          <CardContent>
+            <MyOrganizedEvents events={organizedEvents} />
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader>
             <CardTitle>My Event Registrations</CardTitle>
+            <p className="text-sm text-muted-foreground mt-1">
+              Events you registered for
+            </p>
           </CardHeader>
           <CardContent>
             {eventRegistrations.length === 0 ? (

@@ -39,6 +39,7 @@ export default async function MyHubPage({
     library,
     listings,
     eventRegistrations,
+    organizedEvents,
     wishlistItems,
     notifications,
   ] = await Promise.all([
@@ -101,6 +102,30 @@ export default async function MyHubPage({
       },
       orderBy: { registeredAt: "desc" },
     }),
+    prisma.event.findMany({
+      where: {
+        organizerId: userId,
+      },
+      include: {
+        participants: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                studentId: true,
+                avatarUrl: true,
+              },
+            },
+          },
+          orderBy: {
+            registeredAt: "desc",
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    }),
     prisma.wishlistItem.findMany({
       where: { userId },
       include: {
@@ -140,6 +165,7 @@ export default async function MyHubPage({
             library={library}
             listings={listings}
             eventRegistrations={eventRegistrations}
+            organizedEvents={organizedEvents}
             wishlistItems={wishlistItems}
             currentUserId={userId}
           />
