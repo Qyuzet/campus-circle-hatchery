@@ -106,36 +106,38 @@ export function LiveLectureTab({
 
   if (hasSubmitted) {
     return (
-      <Card className="max-w-2xl mx-auto border-gray-200 m-3 sm:m-4">
-        <CardContent className="pt-8 sm:pt-12 pb-8 sm:pb-12 text-center px-4">
-          <div className="flex justify-center mb-4 sm:mb-6">
-            <div className="p-3 sm:p-4 bg-green-100 rounded">
-              <CheckCircle2 className="h-10 w-10 sm:h-12 sm:w-12 text-green-600" />
+      <div className="pb-24 sm:pb-6">
+        <Card className="max-w-2xl mx-auto border-gray-200 m-3 sm:m-4">
+          <CardContent className="pt-8 sm:pt-12 pb-8 sm:pb-12 text-center px-4">
+            <div className="flex justify-center mb-4 sm:mb-6">
+              <div className="p-3 sm:p-4 bg-green-100 rounded">
+                <CheckCircle2 className="h-10 w-10 sm:h-12 sm:w-12 text-green-600" />
+              </div>
             </div>
-          </div>
-          <h3 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-2 sm:mb-3">
-            Thank You for Your Interest
-          </h3>
-          <p className="text-xs sm:text-sm text-gray-600 mb-4 sm:mb-6 max-w-md mx-auto">
-            We have received your request for the Live Lecture Recording
-            feature. You will be among the first to know when it launches.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Button
-              variant="outline"
-              onClick={() => setHasSubmitted(false)}
-              className="gap-2 border-gray-300 text-sm"
-            >
-              Update My Response
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+            <h3 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-2 sm:mb-3">
+              Thank You for Your Interest
+            </h3>
+            <p className="text-xs sm:text-sm text-gray-600 mb-4 sm:mb-6 max-w-md mx-auto">
+              We have received your request for the Live Lecture Recording
+              feature. You will be among the first to know when it launches.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Button
+                variant="outline"
+                onClick={() => setHasSubmitted(false)}
+                className="gap-2 border-gray-300 text-sm"
+              >
+                Update My Response
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6 md:space-y-8 p-3 sm:p-4 md:p-0">
+    <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6 md:space-y-8 p-3 sm:p-4 md:p-0 pb-24 sm:pb-6">
       <Card className="bg-blue-50 border-blue-200">
         <CardHeader className="p-4 sm:p-6">
           <div className="flex items-center gap-3 sm:gap-4 mb-3 sm:mb-4">
@@ -152,38 +154,38 @@ export function LiveLectureTab({
             </div>
           </div>
         </CardHeader>
-        <CardContent className="p-4 sm:p-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
-            <div className="flex items-start gap-2 sm:gap-3 p-3 sm:p-4 bg-white rounded border border-gray-200">
-              <FileAudio className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 mt-1 flex-shrink-0" />
-              <div>
-                <h4 className="font-semibold text-gray-900 mb-1 text-sm sm:text-base">
+        <CardContent className="p-3 sm:p-4 md:p-6">
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4">
+            <div className="flex flex-col items-center gap-1.5 sm:gap-2 md:gap-3 p-2 sm:p-3 md:p-4 bg-white rounded border border-gray-200">
+              <FileAudio className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10 text-blue-600 flex-shrink-0" />
+              <div className="text-center">
+                <h4 className="font-semibold text-gray-900 mb-0.5 sm:mb-1 text-[10px] sm:text-xs md:text-sm lg:text-base">
                   Record Lectures
                 </h4>
-                <p className="text-xs sm:text-sm text-gray-600">
-                  Capture audio from your device microphone during class
+                <p className="text-[8px] sm:text-[10px] md:text-xs lg:text-sm text-gray-600 leading-tight">
+                  Capture audio during class
                 </p>
               </div>
             </div>
-            <div className="flex items-start gap-2 sm:gap-3 p-3 sm:p-4 bg-white rounded border border-gray-200">
-              <Brain className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 mt-1 flex-shrink-0" />
-              <div>
-                <h4 className="font-semibold text-gray-900 mb-1 text-sm sm:text-base">
+            <div className="flex flex-col items-center gap-1.5 sm:gap-2 md:gap-3 p-2 sm:p-3 md:p-4 bg-white rounded border border-gray-200">
+              <Brain className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10 text-blue-600 flex-shrink-0" />
+              <div className="text-center">
+                <h4 className="font-semibold text-gray-900 mb-0.5 sm:mb-1 text-[10px] sm:text-xs md:text-sm lg:text-base">
                   AI Transcription
                 </h4>
-                <p className="text-xs sm:text-sm text-gray-600">
-                  Automatic speech-to-text with high accuracy
+                <p className="text-[8px] sm:text-[10px] md:text-xs lg:text-sm text-gray-600 leading-tight">
+                  Speech-to-text accuracy
                 </p>
               </div>
             </div>
-            <div className="flex items-start gap-2 sm:gap-3 p-3 sm:p-4 bg-white rounded border border-gray-200">
-              <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 mt-1 flex-shrink-0" />
-              <div>
-                <h4 className="font-semibold text-gray-900 mb-1 text-sm sm:text-base">
+            <div className="flex flex-col items-center gap-1.5 sm:gap-2 md:gap-3 p-2 sm:p-3 md:p-4 bg-white rounded border border-gray-200">
+              <Sparkles className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10 text-blue-600 flex-shrink-0" />
+              <div className="text-center">
+                <h4 className="font-semibold text-gray-900 mb-0.5 sm:mb-1 text-[10px] sm:text-xs md:text-sm lg:text-base">
                   Smart Notes
                 </h4>
-                <p className="text-xs sm:text-sm text-gray-600">
-                  Get summaries, key points, and organized notes
+                <p className="text-[8px] sm:text-[10px] md:text-xs lg:text-sm text-gray-600 leading-tight">
+                  Summaries & key points
                 </p>
               </div>
             </div>
@@ -243,7 +245,7 @@ export function LiveLectureTab({
                 Which features are most important to you?
                 <span className="text-red-500 ml-1">*</span>
               </Label>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3">
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
                 {features.map((feature) => (
                   <div
                     key={feature}
