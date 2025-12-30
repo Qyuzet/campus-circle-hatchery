@@ -111,7 +111,7 @@ export function BlockEditor({
   };
 
   return (
-    <div className="max-w-3xl mx-auto px-16 py-8">
+    <div className="w-full">
       {blocks.map((block, index) => (
         <BlockItem
           key={block.id}

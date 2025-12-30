@@ -269,7 +269,7 @@ export function BlockItem({
       onDrop={handleDrop}
     >
       {(isHovered || isFocused || showAddMenu || showActionMenu) && (
-        <div className="absolute left-0 top-0 -ml-12 flex items-center gap-1">
+        <div className="absolute left-0 top-1/2 -translate-y-1/2 -ml-12 flex items-center gap-1">
           <button
             onClick={() => setShowAddMenu(!showAddMenu)}
             className="p-1 hover:bg-gray-100 rounded"
