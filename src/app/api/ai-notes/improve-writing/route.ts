@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import OpenAI from "openai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
 export async function POST(req: NextRequest) {
   try {
@@ -19,34 +17,27 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Text is required" }, { status: 400 });
     }
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4",
-      messages: [
-        {
-          role: "system",
-          content: `You are a writing assistant that improves text clarity, grammar, and style while maintaining the original meaning and tone. 
-          
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+    const prompt = `You are a writing assistant that improves text clarity, grammar, and style while maintaining the original meaning and tone.
+
 Rules:
 - Fix grammar and spelling errors
 - Improve sentence structure and flow
 - Make the text more concise and clear
 - Maintain the original tone and meaning
 - Keep the same language as the input
-- Return ONLY the improved text, no explanations`,
-        },
-        {
-          role: "user",
-          content: text,
-        },
-      ],
-      temperature: 0.7,
-      max_tokens: 2000,
-    });
+- Return ONLY the improved text, no explanations
 
-    const improvedText = completion.choices[0]?.message?.content || text;
+Text to improve:
+${text}`;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const improvedText = response.text().trim();
 
     return NextResponse.json({
-      improvedText: improvedText.trim(),
+      improvedText: improvedText || text,
       original: text,
     });
   } catch (error) {
