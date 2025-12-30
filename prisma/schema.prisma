@@ -51,6 +51,8 @@ model User {
   withdrawals          Withdrawal[]
   clubMemberships      ClubMember[]
   clubJoinRequests     ClubJoinRequest[] @relation("UserClubRequests")
+  aiNotes              AINote[]
+  liveLectureInterests LiveLectureInterest[]
 
   @@index([studentId])
   @@index([email])
@@ -539,4 +541,46 @@ model ClubJoinRequest {
   @@index([clubId])
   @@index([userId])
   @@index([status])
+}
+
+model AINote {
+  id          String   @id @default(cuid())
+  userId      String
+  title       String
+  content     String   @db.Text
+  rawContent  String?  @db.Text
+  subject     String?
+  course      String?
+  tags        String[]
+  aiSummary   String?  @db.Text
+  aiKeyPoints Json?
+  aiMetadata  Json?
+  noteType    String   @default("MANUAL")
+  isPublic    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([subject])
+  @@index([course])
+  @@index([createdAt])
+  @@index([noteType])
+}
+
+model LiveLectureInterest {
+  id          String   @id @default(cuid())
+  userId      String
+  email       String
+  name        String
+  faculty     String
+  major       String
+  useCase     String   @db.Text
+  frequency   String
+  features    String[]
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
 }

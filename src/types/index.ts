@@ -121,3 +121,43 @@ export interface UserStats {
   messagesCount: number;
   [key: string]: number; // Allow dynamic stat names
 }
+
+export interface AINote {
+  id: string;
+  userId: string;
+  title: string;
+  content: string;
+  rawContent?: string;
+  subject?: string;
+  course?: string;
+  tags: string[];
+  aiSummary?: string;
+  aiKeyPoints?: {
+    points: string[];
+    concepts: string[];
+    definitions: Record<string, string>;
+  };
+  aiMetadata?: {
+    wordCount: number;
+    readingTime: number;
+    difficulty: string;
+    topics: string[];
+  };
+  noteType: "MANUAL" | "LIVE_LECTURE" | "IMPORTED";
+  isPublic: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface LiveLectureInterest {
+  id: string;
+  userId: string;
+  email: string;
+  name: string;
+  faculty: string;
+  major: string;
+  useCase: string;
+  frequency: string;
+  features: string[];
+  createdAt: string;
+}

@@ -60,7 +60,7 @@ export function MyOrganizedEvents({ events }: MyOrganizedEventsProps) {
         <Calendar className="h-12 w-12 text-muted-foreground mb-4" />
         <h3 className="text-lg font-semibold mb-2">No Organized Events</h3>
         <p className="text-sm text-muted-foreground">
-          You haven't created any events yet
+          You haven&apos;t created any events yet
         </p>
       </div>
     );

@@ -23,6 +23,7 @@ import {
   LogOut,
   GraduationCap,
   Star,
+  Brain,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -53,7 +54,7 @@ interface Notification {
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
-  activeTab?: "discovery" | "clubs" | "my-hub" | "wallet";
+  activeTab?: "discovery" | "clubs" | "my-hub" | "wallet" | "my-ai";
   wishlistCount?: number;
   unreadMessagesCount?: number;
   notifications?: Notification[];
@@ -650,6 +651,18 @@ export function DashboardLayout({
                       <Folders className="h-6 w-6" />
                       <span className="text-xs font-medium">My Hub</span>
                     </Link>
+                    <Link
+                      href="/dashboard?tab=my-ai"
+                      className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all ${
+                        activeTab === "my-ai"
+                          ? "text-dark-blue bg-blue-50"
+                          : "text-medium-gray hover:text-dark-blue"
+                      }`}
+                      title="My AI"
+                    >
+                      <Brain className="h-6 w-6" />
+                      <span className="text-xs font-medium">My AI</span>
+                    </Link>
                   </>
                 )}
                 {isSSRComponentsEnabled() && (
@@ -695,6 +708,20 @@ export function DashboardLayout({
                     >
                       <Folders className="h-6 w-6" />
                       <span className="text-xs font-medium">My Hub</span>
+                    </Link>
+                    <Link
+                      href="/dashboard/my-ai"
+                      prefetch={true}
+                      onClick={() => setIsNavigating(true)}
+                      className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all ${
+                        activeTab === "my-ai"
+                          ? "text-dark-blue bg-blue-50"
+                          : "text-medium-gray hover:text-dark-blue"
+                      }`}
+                      title="My AI"
+                    >
+                      <Brain className="h-6 w-6" />
+                      <span className="text-xs font-medium">My AI</span>
                     </Link>
                   </>
                 )}
@@ -743,6 +770,18 @@ export function DashboardLayout({
                       <Folders className="mr-3 h-5 w-5" />
                       My Hub
                     </Link>
+
+                    <Link
+                      href="/dashboard?tab=my-ai"
+                      className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                        activeTab === "my-ai"
+                          ? "bg-primary-100 text-dark-blue"
+                          : "text-medium-gray hover:bg-secondary-100"
+                      }`}
+                    >
+                      <Brain className="mr-3 h-5 w-5" />
+                      My AI
+                    </Link>
                   </>
                 )}
 
@@ -788,6 +827,20 @@ export function DashboardLayout({
                     >
                       <Folders className="mr-3 h-5 w-5" />
                       My Hub
+                    </Link>
+
+                    <Link
+                      href="/dashboard/my-ai"
+                      prefetch={true}
+                      onClick={() => setIsNavigating(true)}
+                      className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                        activeTab === "my-ai"
+                          ? "bg-primary-100 text-dark-blue"
+                          : "text-medium-gray hover:bg-secondary-100"
+                      }`}
+                    >
+                      <Brain className="mr-3 h-5 w-5" />
+                      My AI
                     </Link>
                   </>
                 )}

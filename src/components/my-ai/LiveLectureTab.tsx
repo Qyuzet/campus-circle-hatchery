@@ -1,0 +1,313 @@
+"use client";
+
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Mic,
+  Sparkles,
+  CheckCircle2,
+  Loader2,
+  Clock,
+  Zap,
+  FileAudio,
+  Brain,
+} from "lucide-react";
+import { toast } from "sonner";
+
+interface LiveLectureTabProps {
+  hasSubmittedInterest: boolean;
+  user: {
+    id: string;
+    email: string;
+    name: string;
+    faculty: string;
+    major: string;
+  };
+}
+
+export function LiveLectureTab({
+  hasSubmittedInterest: initialHasSubmitted,
+  user,
+}: LiveLectureTabProps) {
+  const [hasSubmitted, setHasSubmitted] = useState(initialHasSubmitted);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [useCase, setUseCase] = useState("");
+  const [frequency, setFrequency] = useState("");
+  const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
+
+  const features = [
+    "Real-time transcription",
+    "AI-powered summarization",
+    "Key points extraction",
+    "Automatic topic detection",
+    "Speaker identification",
+    "Searchable transcripts",
+    "Export to multiple formats",
+    "Integration with note-taking",
+  ];
+
+  const handleFeatureToggle = (feature: string) => {
+    setSelectedFeatures((prev) =>
+      prev.includes(feature)
+        ? prev.filter((f) => f !== feature)
+        : [...prev, feature]
+    );
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!useCase.trim() || !frequency || selectedFeatures.length === 0) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const response = await fetch("/api/live-lecture-interest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: user.email,
+          name: user.name,
+          faculty: user.faculty,
+          major: user.major,
+          useCase,
+          frequency,
+          features: selectedFeatures,
+        }),
+      });
+
+      if (!response.ok) throw new Error("Failed to submit interest");
+
+      toast.success(
+        "Thank you for your interest! We'll notify you when this feature launches."
+      );
+      setHasSubmitted(true);
+    } catch (error) {
+      console.error("Error submitting interest:", error);
+      toast.error("Failed to submit interest. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (hasSubmitted) {
+    return (
+      <Card className="max-w-2xl mx-auto border-gray-200">
+        <CardContent className="pt-12 pb-12 text-center">
+          <div className="flex justify-center mb-6">
+            <div className="p-4 bg-green-100 rounded">
+              <CheckCircle2 className="h-12 w-12 text-green-600" />
+            </div>
+          </div>
+          <h3 className="text-2xl font-semibold text-gray-900 mb-3">
+            Thank You for Your Interest
+          </h3>
+          <p className="text-sm text-gray-600 mb-6 max-w-md mx-auto">
+            We have received your request for the Live Lecture Recording
+            feature. You will be among the first to know when it launches.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Button
+              variant="outline"
+              onClick={() => setHasSubmitted(false)}
+              className="gap-2 border-gray-300"
+            >
+              Update My Response
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto space-y-8">
+      <Card className="bg-blue-50 border-blue-200">
+        <CardHeader>
+          <div className="flex items-center gap-4 mb-4">
+            <div className="p-4 bg-blue-600 rounded">
+              <Mic className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <CardTitle className="text-2xl font-semibold text-gray-900">
+                Live Lecture Recording
+              </CardTitle>
+              <p className="text-sm text-gray-600 mt-1">
+                Coming Soon: AI-powered lecture transcription and note-taking
+              </p>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="flex items-start gap-3 p-4 bg-white rounded border border-gray-200">
+              <FileAudio className="h-5 w-5 text-blue-600 mt-1 flex-shrink-0" />
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-1">
+                  Record Lectures
+                </h4>
+                <p className="text-sm text-gray-600">
+                  Capture audio from your device microphone during class
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-4 bg-white rounded border border-gray-200">
+              <Brain className="h-5 w-5 text-blue-600 mt-1 flex-shrink-0" />
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-1">
+                  AI Transcription
+                </h4>
+                <p className="text-sm text-gray-600">
+                  Automatic speech-to-text with high accuracy
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-4 bg-white rounded border border-gray-200">
+              <Sparkles className="h-5 w-5 text-blue-600 mt-1 flex-shrink-0" />
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-1">
+                  Smart Notes
+                </h4>
+                <p className="text-sm text-gray-600">
+                  Get summaries, key points, and organized notes
+                </p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="border-gray-200">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-gray-900">
+            <Clock className="h-5 w-5 text-blue-600" />
+            Express Your Interest
+          </CardTitle>
+          <p className="text-sm text-gray-600 mt-2">
+            Help us build the perfect lecture recording feature by sharing your
+            needs
+          </p>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <Label htmlFor="useCase">
+                How would you use this feature?
+                <span className="text-red-500 ml-1">*</span>
+              </Label>
+              <Textarea
+                id="useCase"
+                value={useCase}
+                onChange={(e) => setUseCase(e.target.value)}
+                placeholder="e.g., I want to record my programming lectures to review complex algorithms later..."
+                rows={4}
+                required
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="frequency">
+                How often would you use this?
+                <span className="text-red-500 ml-1">*</span>
+              </Label>
+              <Select value={frequency} onValueChange={setFrequency} required>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select frequency" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="daily">Daily</SelectItem>
+                  <SelectItem value="weekly">2-3 times per week</SelectItem>
+                  <SelectItem value="occasionally">Occasionally</SelectItem>
+                  <SelectItem value="rarely">Rarely</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label className="mb-3 block">
+                Which features are most important to you?
+                <span className="text-red-500 ml-1">*</span>
+              </Label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {features.map((feature) => (
+                  <div
+                    key={feature}
+                    className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer"
+                    onClick={() => handleFeatureToggle(feature)}
+                  >
+                    <Checkbox
+                      id={feature}
+                      checked={selectedFeatures.includes(feature)}
+                      onCheckedChange={() => handleFeatureToggle(feature)}
+                    />
+                    <label
+                      htmlFor={feature}
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex-1"
+                    >
+                      {feature}
+                    </label>
+                  </div>
+                ))}
+              </div>
+              {selectedFeatures.length === 0 && (
+                <p className="text-xs text-red-500 mt-2">
+                  Please select at least one feature
+                </p>
+              )}
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 rounded p-4">
+              <div className="flex items-start gap-3">
+                <Zap className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                <div className="text-sm">
+                  <p className="font-semibold text-gray-900 mb-1">
+                    Early Access Opportunity
+                  </p>
+                  <p className="text-gray-600">
+                    By expressing your interest, you will be among the first to
+                    access this feature when it launches. We will also consider
+                    your feedback in our development process.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Submitting...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    Submit Interest
+                  </>
+                )}
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

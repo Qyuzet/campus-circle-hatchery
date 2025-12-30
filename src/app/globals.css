@@ -258,3 +258,15 @@
     box-shadow: var(--shadow-02);
   }
 }
+
+/* Block Editor Placeholder */
+[contenteditable][data-placeholder]:empty:before {
+  content: attr(data-placeholder);
+  color: #9ca3af;
+  pointer-events: none;
+  position: absolute;
+}
+
+[contenteditable]:focus {
+  outline: none;
+}

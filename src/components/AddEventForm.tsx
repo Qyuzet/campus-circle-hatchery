@@ -111,14 +111,19 @@ export function AddEventForm({ onSubmit, onCancel }: AddEventFormProps) {
           eventType: aiData.eventType || prev.eventType,
           location: aiData.location || prev.location,
           venue: aiData.venue || prev.venue,
-          startDate: aiData.startDate || prev.startDate,
-          endDate: aiData.endDate || prev.endDate,
           organizer: aiData.organizer || prev.organizer,
           contactEmail: aiData.contactEmail || prev.contactEmail,
           contactPhone: aiData.contactPhone || prev.contactPhone,
           tags: aiData.tags || prev.tags,
           requirements: aiData.requirements || prev.requirements,
         }));
+
+        if (aiData.startDate) {
+          setStartDate(new Date(aiData.startDate));
+        }
+        if (aiData.endDate) {
+          setEndDate(new Date(aiData.endDate));
+        }
 
         const metadata = {
           analyzedAt: new Date().toISOString(),
