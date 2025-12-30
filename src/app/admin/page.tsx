@@ -18,6 +18,7 @@ import {
   Wallet,
   FileImage,
   Brain,
+  Mic,
 } from "lucide-react";
 
 import DashboardOverview from "@/components/admin/DashboardOverview";
@@ -29,6 +30,7 @@ import WithdrawalManagement from "@/components/admin/WithdrawalManagement";
 import DocumentThumbnails from "@/components/admin/DocumentThumbnails";
 import ClubsManagement from "@/components/admin/ClubsManagement";
 import AIMetadataGenerator from "@/components/admin/AIMetadataGenerator";
+import LiveLectureInterests from "@/components/admin/LiveLectureInterests";
 
 type Section =
   | "dashboard"
@@ -39,7 +41,8 @@ type Section =
   | "withdrawals"
   | "thumbnails"
   | "ai-metadata"
-  | "clubs";
+  | "clubs"
+  | "live-lecture";
 
 export default function AdminPage() {
   const { data: session, status } = useSession();
@@ -102,6 +105,7 @@ export default function AdminPage() {
     { id: "withdrawals" as const, name: "Withdrawals", icon: Wallet },
     { id: "thumbnails" as const, name: "Thumbnails", icon: FileImage },
     { id: "ai-metadata" as const, name: "AI Metadata", icon: Brain },
+    { id: "live-lecture" as const, name: "Live Lecture", icon: Mic },
   ];
 
   return (
@@ -214,6 +218,7 @@ export default function AdminPage() {
           {activeSection === "withdrawals" && <WithdrawalManagement />}
           {activeSection === "thumbnails" && <DocumentThumbnails />}
           {activeSection === "ai-metadata" && <AIMetadataGenerator />}
+          {activeSection === "live-lecture" && <LiveLectureInterests />}
         </main>
       </div>
     </div>

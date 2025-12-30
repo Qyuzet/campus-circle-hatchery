@@ -300,8 +300,7 @@ export function LiveLectureTab({
                 {features.map((feature) => (
                   <div
                     key={feature}
-                    className="flex items-center space-x-2 p-2.5 sm:p-3 border rounded-lg hover:bg-gray-50 cursor-pointer"
-                    onClick={() => handleFeatureToggle(feature)}
+                    className="flex items-center space-x-2 p-2.5 sm:p-3 border rounded-lg hover:bg-gray-50"
                   >
                     <Checkbox
                       id={feature}
@@ -311,6 +310,7 @@ export function LiveLectureTab({
                     <label
                       htmlFor={feature}
                       className="text-xs sm:text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex-1"
+                      onClick={() => handleFeatureToggle(feature)}
                     >
                       {feature}
                     </label>
