@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { SimpleDateTimePicker } from "@/components/ui/simple-date-time-picker";
 
 interface AddEventFormProps {
   onSubmit: (data: any) => void;
@@ -34,9 +35,6 @@ export function AddEventForm({ onSubmit, onCancel }: AddEventFormProps) {
     venue: "",
     isOnline: false,
     meetingLink: "",
-    startDate: "",
-    endDate: "",
-    registrationDeadline: "",
     maxParticipants: "",
     tags: "",
     requirements: "",
@@ -45,6 +43,12 @@ export function AddEventForm({ onSubmit, onCancel }: AddEventFormProps) {
     contactPhone: "",
     isPublished: true,
   });
+
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  const [registrationDeadline, setRegistrationDeadline] = useState<
+    Date | undefined
+  >(undefined);
 
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [bannerPreview, setBannerPreview] = useState<string>("");
@@ -180,6 +184,11 @@ export function AddEventForm({ onSubmit, onCancel }: AddEventFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!startDate || !endDate) {
+      toast.error("Please select start and end dates");
+      return;
+    }
+
     let bannerUrl = formData.bannerUrl;
 
     if (bannerFile) {
@@ -200,6 +209,9 @@ export function AddEventForm({ onSubmit, onCancel }: AddEventFormProps) {
       ...formData,
       bannerUrl,
       tags: tagsArray,
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString(),
+      registrationDeadline: registrationDeadline?.toISOString() || null,
       maxParticipants: formData.maxParticipants
         ? parseInt(formData.maxParticipants)
         : null,
@@ -208,10 +220,7 @@ export function AddEventForm({ onSubmit, onCancel }: AddEventFormProps) {
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="space-y-2.5 max-h-[75vh] overflow-y-auto px-1"
-    >
+    <form onSubmit={handleSubmit} className="space-y-2.5 px-1">
       <div>
         <Label className="text-sm">Event Banner</Label>
         <div className="mt-1.5">
@@ -371,50 +380,33 @@ export function AddEventForm({ onSubmit, onCancel }: AddEventFormProps) {
         )}
       </div>
 
-      <div className="grid grid-cols-3 gap-2.5">
+      <div className="grid grid-cols-1 gap-2.5">
         <div>
-          <Label htmlFor="startDate" className="text-sm">
-            Start Date *
-          </Label>
-          <Input
-            id="startDate"
-            type="datetime-local"
-            value={formData.startDate}
-            onChange={(e) =>
-              setFormData({ ...formData, startDate: e.target.value })
-            }
-            required
+          <Label className="text-sm">Start Date *</Label>
+          <SimpleDateTimePicker
+            date={startDate}
+            setDate={setStartDate}
+            placeholder="Select start date and time"
             className="h-9 text-sm"
           />
         </div>
 
         <div>
-          <Label htmlFor="endDate" className="text-sm">
-            End Date *
-          </Label>
-          <Input
-            id="endDate"
-            type="datetime-local"
-            value={formData.endDate}
-            onChange={(e) =>
-              setFormData({ ...formData, endDate: e.target.value })
-            }
-            required
+          <Label className="text-sm">End Date *</Label>
+          <SimpleDateTimePicker
+            date={endDate}
+            setDate={setEndDate}
+            placeholder="Select end date and time"
             className="h-9 text-sm"
           />
         </div>
 
         <div>
-          <Label htmlFor="registrationDeadline" className="text-sm">
-            Reg. Deadline
-          </Label>
-          <Input
-            id="registrationDeadline"
-            type="datetime-local"
-            value={formData.registrationDeadline}
-            onChange={(e) =>
-              setFormData({ ...formData, registrationDeadline: e.target.value })
-            }
+          <Label className="text-sm">Registration Deadline</Label>
+          <SimpleDateTimePicker
+            date={registrationDeadline}
+            setDate={setRegistrationDeadline}
+            placeholder="Select registration deadline (optional)"
             className="h-9 text-sm"
           />
         </div>

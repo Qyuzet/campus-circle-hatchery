@@ -1664,7 +1664,7 @@ function DashboardContent() {
 
       // Redirect to My Hub Events tab
       setTimeout(() => {
-        window.location.href = "/dashboard?tab=my-hub&subTab=events";
+        window.location.href = "/dashboard/my-hub?tab=events";
       }, 1000);
     } catch (error: any) {
       console.error("Error registering for event:", error);
@@ -4350,7 +4350,7 @@ function DashboardContent() {
                                                                       setTimeout(
                                                                         () => {
                                                                           window.location.href =
-                                                                            "/dashboard?tab=my-hub&subTab=purchases";
+                                                                            "/dashboard/my-hub?tab=purchases";
                                                                         },
                                                                         1000
                                                                       );

@@ -1905,8 +1905,8 @@ export function MarketplaceClient({
       {/* Add Event Modal */}
       {showAddEventModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[70] p-4">
-          <div className="bg-white rounded-lg p-3 sm:p-4 w-full max-w-md max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-2.5">
+          <div className="bg-white rounded-lg w-full max-w-md max-h-[90vh] flex flex-col relative z-[71]">
+            <div className="flex justify-between items-center p-3 sm:p-4 pb-2.5 border-b">
               <h2 className="text-base sm:text-lg font-bold text-dark-gray">
                 Create New Event
               </h2>
@@ -1917,10 +1917,12 @@ export function MarketplaceClient({
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <AddEventForm
-              onSubmit={handleAddEvent}
-              onCancel={() => setShowAddEventModal(false)}
-            />
+            <div className="overflow-y-auto p-3 sm:p-4 pt-2.5">
+              <AddEventForm
+                onSubmit={handleAddEvent}
+                onCancel={() => setShowAddEventModal(false)}
+              />
+            </div>
           </div>
         </div>
       )}

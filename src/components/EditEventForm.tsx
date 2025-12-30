@@ -9,6 +9,14 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Upload, X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Event } from "@/lib/api";
+import { SimpleDateTimePicker } from "@/components/ui/simple-date-time-picker";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface EditEventFormProps {
   event: Event;
@@ -23,16 +31,6 @@ export function EditEventForm({
   onCancel,
   isSaving,
 }: EditEventFormProps) {
-  const formatDateForInput = (date: Date | string) => {
-    const d = new Date(date);
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, "0");
-    const day = String(d.getDate()).padStart(2, "0");
-    const hours = String(d.getHours()).padStart(2, "0");
-    const minutes = String(d.getMinutes()).padStart(2, "0");
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
-  };
-
   const [formData, setFormData] = useState({
     title: event.title,
     description: event.description,
@@ -45,11 +43,6 @@ export function EditEventForm({
     venue: event.venue || "",
     isOnline: event.isOnline,
     meetingLink: event.meetingLink || "",
-    startDate: formatDateForInput(event.startDate),
-    endDate: formatDateForInput(event.endDate),
-    registrationDeadline: event.registrationDeadline
-      ? formatDateForInput(event.registrationDeadline)
-      : "",
     maxParticipants: event.maxParticipants?.toString() || "",
     tags: event.tags.join(", "),
     requirements: event.requirements || "",
@@ -57,6 +50,20 @@ export function EditEventForm({
     contactEmail: event.contactEmail || "",
     contactPhone: event.contactPhone || "",
   });
+
+  const [startDate, setStartDate] = useState<Date | undefined>(
+    new Date(event.startDate)
+  );
+  const [endDate, setEndDate] = useState<Date | undefined>(
+    new Date(event.endDate)
+  );
+  const [registrationDeadline, setRegistrationDeadline] = useState<
+    Date | undefined
+  >(
+    event.registrationDeadline
+      ? new Date(event.registrationDeadline)
+      : undefined
+  );
 
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [bannerPreview, setBannerPreview] = useState<string>(
@@ -116,6 +123,11 @@ export function EditEventForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!startDate || !endDate) {
+      toast.error("Please select start and end dates");
+      return;
+    }
+
     let bannerUrl = formData.bannerUrl;
 
     if (bannerFile) {
@@ -138,6 +150,9 @@ export function EditEventForm({
       bannerUrl,
       imageUrl: bannerUrl,
       tags: tagsArray,
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString(),
+      registrationDeadline: registrationDeadline?.toISOString() || null,
       price: parseInt(formData.price),
       maxParticipants: formData.maxParticipants
         ? parseInt(formData.maxParticipants)
@@ -279,30 +294,31 @@ export function EditEventForm({
         )}
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 gap-3">
         <div>
-          <Label htmlFor="startDate">Start Date *</Label>
-          <Input
-            id="startDate"
-            type="datetime-local"
-            value={formData.startDate}
-            onChange={(e) =>
-              setFormData({ ...formData, startDate: e.target.value })
-            }
-            required
+          <Label>Start Date *</Label>
+          <SimpleDateTimePicker
+            date={startDate}
+            setDate={setStartDate}
+            placeholder="Select start date and time"
           />
         </div>
 
         <div>
-          <Label htmlFor="endDate">End Date *</Label>
-          <Input
-            id="endDate"
-            type="datetime-local"
-            value={formData.endDate}
-            onChange={(e) =>
-              setFormData({ ...formData, endDate: e.target.value })
-            }
-            required
+          <Label>End Date *</Label>
+          <SimpleDateTimePicker
+            date={endDate}
+            setDate={setEndDate}
+            placeholder="Select end date and time"
+          />
+        </div>
+
+        <div>
+          <Label>Registration Deadline</Label>
+          <SimpleDateTimePicker
+            date={registrationDeadline}
+            setDate={setRegistrationDeadline}
+            placeholder="Select registration deadline (optional)"
           />
         </div>
 
