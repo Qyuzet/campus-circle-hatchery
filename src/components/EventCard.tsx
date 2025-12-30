@@ -104,6 +104,11 @@ const EventCardComponent = ({
             My Event
           </Badge>
         )}
+        {isRegistered && !isOwner && (
+          <Badge className="absolute bottom-1 left-1 bg-green-600 text-white text-[8px] px-1 py-0 font-normal">
+            Registered
+          </Badge>
+        )}
       </div>
 
       <CardContent className="p-1 space-y-0.5">

@@ -3,18 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EventsGrid } from "./EventsGrid";
 import { EventsEmptyState } from "./EventsEmptyState";
 
-interface Event {
-  id: string;
-  title: string;
-  category: string;
-  eventType: string;
-  startDate: Date;
-  location: string;
-  price: number;
-  isOnline: boolean;
-  meetingLink: string | null;
-}
-
 export async function EventsTab({ userId }: { userId: string }) {
   const registrations = await prisma.eventParticipant.findMany({
     where: {
@@ -22,6 +10,15 @@ export async function EventsTab({ userId }: { userId: string }) {
     },
     include: {
       event: true,
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          studentId: true,
+          avatarUrl: true,
+        },
+      },
     },
     orderBy: {
       registeredAt: "desc",

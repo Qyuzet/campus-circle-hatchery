@@ -7644,9 +7644,16 @@ function DashboardContent() {
                         ) : myEventRegistrations.some(
                             (reg) => reg.eventId === selectedEvent.id
                           ) ? (
-                          <div className="flex-1 bg-green-100 text-green-700 px-4 py-2 rounded-md text-center font-medium">
-                            Already Registered
-                          </div>
+                          <button
+                            onClick={() => {
+                              router.push(
+                                "/dashboard?tab=my-hub&subTab=events"
+                              );
+                            }}
+                            className="flex-1 bg-green-100 text-green-700 px-4 py-2 rounded-md text-center font-medium hover:bg-green-200 transition-colors cursor-pointer"
+                          >
+                            Already Registered - View in My Hub
+                          </button>
                         ) : selectedEvent.maxParticipants &&
                           selectedEvent.currentParticipants >=
                             selectedEvent.maxParticipants ? (

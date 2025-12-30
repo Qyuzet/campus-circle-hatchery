@@ -23,6 +23,7 @@ import {
   Clock,
   Calendar,
   Users,
+  Loader2,
 } from "lucide-react";
 import { FoodItemCard } from "@/components/FoodItemCard";
 import { EventCard } from "@/components/EventCard";
@@ -117,6 +118,7 @@ export function MarketplaceClient({
     itemType: string;
     itemTitle: string;
   } | null>(null);
+  const [isRegistering, setIsRegistering] = useState(false);
 
   useEffect(() => {
     const search = searchParams.get("search");
@@ -396,11 +398,10 @@ export function MarketplaceClient({
   };
 
   const registerForFreeEvent = async (eventId: string) => {
+    setIsRegistering(true);
     try {
-      const response = await fetch("/api/events/register", {
+      const response = await fetch(`/api/events/${eventId}/register`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ eventId }),
       });
 
       if (!response.ok) {
@@ -414,6 +415,8 @@ export function MarketplaceClient({
     } catch (error: any) {
       console.error("Error registering for event:", error);
       toast.error(error.message || "Failed to register for event.");
+    } finally {
+      setIsRegistering(false);
     }
   };
 
@@ -1693,9 +1696,14 @@ export function MarketplaceClient({
                         </Button>
                       </>
                     ) : myEventRegistrations.includes(selectedEvent.id) ? (
-                      <div className="flex-1 bg-green-100 text-green-700 px-4 py-2 rounded-md text-center font-medium">
-                        Already Registered
-                      </div>
+                      <button
+                        onClick={() => {
+                          router.push("/dashboard/my-hub?tab=events");
+                        }}
+                        className="flex-1 bg-green-100 text-green-700 px-4 py-2 rounded-md text-center font-medium hover:bg-green-200 transition-colors cursor-pointer"
+                      >
+                        Already Registered - View in My Hub
+                      </button>
                     ) : selectedEvent.maxParticipants &&
                       selectedEvent.currentParticipants >=
                         selectedEvent.maxParticipants ? (
@@ -1721,9 +1729,19 @@ export function MarketplaceClient({
                             handleRegisterEvent(selectedEvent);
                           }}
                           className="flex-1"
+                          disabled={isRegistering}
                         >
-                          <Calendar className="h-4 w-4 mr-2" />
-                          Register
+                          {isRegistering ? (
+                            <>
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              Registering...
+                            </>
+                          ) : (
+                            <>
+                              <Calendar className="h-4 w-4 mr-2" />
+                              Register
+                            </>
+                          )}
                         </Button>
                       </>
                     )}

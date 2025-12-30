@@ -89,6 +89,15 @@ export default async function MyHubPage({
       },
       include: {
         event: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            studentId: true,
+            avatarUrl: true,
+          },
+        },
       },
       orderBy: { registeredAt: "desc" },
     }),
