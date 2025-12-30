@@ -138,38 +138,38 @@ export function CreateNoteDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl h-[85vh] overflow-hidden flex flex-col p-0">
+      <DialogContent className="max-w-5xl h-[85vh] sm:h-[85vh] overflow-hidden flex flex-col p-0">
         <form onSubmit={handleSubmit} className="flex flex-col h-full">
-          <div className="flex-1 overflow-y-auto px-12 py-8">
+          <div className="flex-1 overflow-y-auto px-4 sm:px-8 md:px-12 py-4 sm:py-6 md:py-8">
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Halaman Saya"
-              className="w-full text-5xl font-bold text-dark-blue placeholder:text-gray-300 border-none outline-none focus:ring-0 bg-transparent mb-1 p-0"
+              className="w-full text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-dark-blue placeholder:text-gray-300 border-none outline-none focus:ring-0 bg-transparent mb-1 p-0"
               autoFocus
             />
 
-            <div className="text-sm text-gray-400 mb-6">
+            <div className="text-xs sm:text-sm text-gray-400 mb-4 sm:mb-6">
               Press &apos;/&apos; for commands
             </div>
 
             <BlockEditor initialBlocks={blocks} onChange={setBlocks} />
           </div>
 
-          <div className="border-t border-gray-200 bg-white px-6 py-3 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2 flex-1 text-sm">
+          <div className="border-t border-gray-200 bg-white px-3 sm:px-4 md:px-6 py-2 sm:py-3 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 sm:gap-4">
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 flex-1 text-xs sm:text-sm">
               <Input
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
                 placeholder="Subject"
-                className="h-8 text-sm max-w-[140px]"
+                className="h-7 sm:h-8 text-xs sm:text-sm w-[100px] sm:max-w-[140px]"
               />
               <Input
                 value={course}
                 onChange={(e) => setCourse(e.target.value)}
                 placeholder="Course"
-                className="h-8 text-sm max-w-[120px]"
+                className="h-7 sm:h-8 text-xs sm:text-sm w-[90px] sm:max-w-[120px]"
               />
               <div className="flex items-center gap-1">
                 <Input
@@ -182,29 +182,29 @@ export function CreateNoteDialog({
                     }
                   }}
                   placeholder="Add tag"
-                  className="h-8 text-sm max-w-[120px]"
+                  className="h-7 sm:h-8 text-xs sm:text-sm w-[80px] sm:max-w-[120px]"
                 />
                 <Button
                   type="button"
                   onClick={handleAddTag}
                   variant="ghost"
                   size="sm"
-                  className="h-8 px-2"
+                  className="h-7 sm:h-8 px-2 text-xs sm:text-sm"
                 >
                   Add
                 </Button>
               </div>
               {tags.length > 0 && (
-                <div className="flex gap-1">
+                <div className="flex gap-1 flex-wrap">
                   {tags.map((tag) => (
                     <Badge
                       key={tag}
                       variant="secondary"
-                      className="h-6 text-xs flex items-center gap-1"
+                      className="h-5 sm:h-6 text-[10px] sm:text-xs flex items-center gap-1"
                     >
                       {tag}
                       <X
-                        className="h-3 w-3 cursor-pointer"
+                        className="h-2.5 w-2.5 sm:h-3 sm:w-3 cursor-pointer"
                         onClick={() => handleRemoveTag(tag)}
                       />
                     </Badge>
@@ -213,13 +213,14 @@ export function CreateNoteDialog({
               )}
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex gap-2 justify-end">
               <Button
                 type="button"
                 variant="ghost"
                 onClick={() => onOpenChange(false)}
                 disabled={isSubmitting}
                 size="sm"
+                className="h-7 sm:h-8 px-2 sm:px-3 text-xs sm:text-sm"
               >
                 Cancel
               </Button>
@@ -227,12 +228,12 @@ export function CreateNoteDialog({
                 type="submit"
                 disabled={isSubmitting || isGeneratingAI}
                 size="sm"
-                className="bg-blue-600 hover:bg-blue-700"
+                className="bg-blue-600 hover:bg-blue-700 h-7 sm:h-8 px-2 sm:px-3 text-xs sm:text-sm"
               >
                 {isSubmitting ? (
                   <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Saving...
+                    <Loader2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2 animate-spin" />
+                    <span className="hidden xs:inline">Saving...</span>
                   </>
                 ) : (
                   "Save"

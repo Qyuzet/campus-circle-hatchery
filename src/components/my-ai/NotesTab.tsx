@@ -88,52 +88,56 @@ export function NotesTab({
   return (
     <div className="h-full flex flex-col">
       {!isCreating && !editingNote && (
-        <div className="border-b border-gray-200 px-4 py-3 flex items-center gap-3 bg-white">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              type="text"
-              placeholder="Search notes..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 h-9 border-gray-300"
-            />
+        <div className="border-b border-gray-200 px-2 sm:px-4 py-2 sm:py-3 bg-white">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
+            <div className="relative flex-1 max-w-full sm:max-w-md">
+              <Search className="absolute left-2.5 sm:left-3 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400" />
+              <Input
+                type="text"
+                placeholder="Search notes..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-8 sm:pl-10 h-8 sm:h-9 border-gray-300 text-sm"
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Select value={filterSubject} onValueChange={setFilterSubject}>
+                <SelectTrigger className="flex-1 sm:w-[140px] h-8 sm:h-9 border-gray-300 text-xs sm:text-sm">
+                  <Filter className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                  <SelectValue placeholder="Subject" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Subjects</SelectItem>
+                  {subjects.map((subject) => (
+                    <SelectItem key={subject} value={subject}>
+                      {subject}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="flex-1 sm:w-[130px] h-8 sm:h-9 border-gray-300 text-xs sm:text-sm">
+                  <SelectValue placeholder="Sort" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="recent">Most Recent</SelectItem>
+                  <SelectItem value="oldest">Oldest First</SelectItem>
+                  <SelectItem value="title">Title A-Z</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Button
+                onClick={() => setIsCreating(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white h-8 sm:h-9 px-2 sm:px-4"
+                size="sm"
+              >
+                <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-2" />
+                <span className="hidden sm:inline">New Note</span>
+              </Button>
+            </div>
           </div>
-
-          <Select value={filterSubject} onValueChange={setFilterSubject}>
-            <SelectTrigger className="w-[140px] h-9 border-gray-300">
-              <Filter className="h-4 w-4 mr-2" />
-              <SelectValue placeholder="Subject" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Subjects</SelectItem>
-              {subjects.map((subject) => (
-                <SelectItem key={subject} value={subject}>
-                  {subject}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-[130px] h-9 border-gray-300">
-              <SelectValue placeholder="Sort" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="recent">Most Recent</SelectItem>
-              <SelectItem value="oldest">Oldest First</SelectItem>
-              <SelectItem value="title">Title A-Z</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Button
-            onClick={() => setIsCreating(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white h-9"
-            size="sm"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            New Note
-          </Button>
         </div>
       )}
 
@@ -157,15 +161,15 @@ export function NotesTab({
       {!isCreating && !editingNote && (
         <div className="flex-1 overflow-auto">
           {filteredNotes.length === 0 ? (
-            <div className="flex items-center justify-center h-full">
+            <div className="flex items-center justify-center h-full px-4">
               <div className="text-center">
-                <BookOpen className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                <h3 className="text-lg font-medium text-gray-900 mb-1">
+                <BookOpen className="h-10 w-10 sm:h-12 sm:w-12 text-gray-300 mx-auto mb-2 sm:mb-3" />
+                <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-1">
                   {searchQuery || filterSubject !== "all"
                     ? "No notes found"
                     : "No notes yet"}
                 </h3>
-                <p className="text-sm text-gray-500 mb-4">
+                <p className="text-xs sm:text-sm text-gray-500 mb-3 sm:mb-4">
                   {searchQuery || filterSubject !== "all"
                     ? "Try adjusting your search or filters"
                     : "Create your first note to get started"}
@@ -183,7 +187,7 @@ export function NotesTab({
               </div>
             </div>
           ) : (
-            <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <div className="p-2 sm:p-3 md:p-4 grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3 md:gap-4">
               {filteredNotes.map((note) => (
                 <NoteCard
                   key={note.id}

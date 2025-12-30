@@ -197,25 +197,25 @@ export function BlockItem({
         onDragOver={handleDragOver}
         onDrop={handleDrop}
       >
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 -ml-12 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="absolute left-0 top-1/2 -translate-y-1/2 -ml-8 sm:-ml-12 flex items-center gap-0.5 sm:gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
           <button
             onClick={() => setShowAddMenu(true)}
-            className="p-1 hover:bg-gray-100 rounded"
+            className="p-0.5 sm:p-1 hover:bg-gray-100 rounded"
             title="Add block"
           >
-            <Plus className="h-4 w-4 text-gray-400" />
+            <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400" />
           </button>
           <button
             onClick={() => setShowActionMenu(true)}
-            className="p-1 hover:bg-gray-100 rounded cursor-grab active:cursor-grabbing"
+            className="p-0.5 sm:p-1 hover:bg-gray-100 rounded cursor-grab active:cursor-grabbing"
             title="Drag to move"
           >
-            <GripVertical className="h-4 w-4 text-gray-400" />
+            <GripVertical className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400" />
           </button>
         </div>
 
         {showAddMenu && (
-          <div className="absolute left-0 top-8 z-50">
+          <div className="absolute left-0 top-6 sm:top-8 z-50">
             <BlockTypeMenu
               onSelect={(type) => {
                 onAddAfter(type);
@@ -227,7 +227,7 @@ export function BlockItem({
         )}
 
         {showActionMenu && (
-          <div className="absolute left-0 top-8 z-50">
+          <div className="absolute left-0 top-6 sm:top-8 z-50">
             <BlockActionMenu
               block={block}
               onConvert={handleConvert}
@@ -269,26 +269,26 @@ export function BlockItem({
       onDrop={handleDrop}
     >
       {(isHovered || isFocused || showAddMenu || showActionMenu) && (
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 -ml-12 flex items-center gap-1">
+        <div className="absolute left-0 sm:left-0 top-1/2 -translate-y-1/2 -ml-8 sm:-ml-12 flex items-center gap-0.5 sm:gap-1">
           <button
             onClick={() => setShowAddMenu(!showAddMenu)}
-            className="p-1 hover:bg-gray-100 rounded"
+            className="p-0.5 sm:p-1 hover:bg-gray-100 rounded"
             title="Add block"
           >
-            <Plus className="h-4 w-4 text-gray-400" />
+            <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400" />
           </button>
           <button
             onClick={() => setShowActionMenu(!showActionMenu)}
-            className="p-1 hover:bg-gray-100 rounded cursor-grab active:cursor-grabbing"
+            className="p-0.5 sm:p-1 hover:bg-gray-100 rounded cursor-grab active:cursor-grabbing"
             title="Drag to move"
           >
-            <GripVertical className="h-4 w-4 text-gray-400" />
+            <GripVertical className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400" />
           </button>
         </div>
       )}
 
       {showAddMenu && (
-        <div className="absolute left-0 top-8 z-50">
+        <div className="absolute left-0 sm:left-0 top-6 sm:top-8 z-50">
           <BlockTypeMenu
             onSelect={(type) => {
               onAddAfter(type);
@@ -300,7 +300,7 @@ export function BlockItem({
       )}
 
       {showActionMenu && (
-        <div className="absolute left-0 top-8 z-50">
+        <div className="absolute left-0 sm:left-0 top-6 sm:top-8 z-50">
           <BlockActionMenu
             block={block}
             onConvert={handleConvert}

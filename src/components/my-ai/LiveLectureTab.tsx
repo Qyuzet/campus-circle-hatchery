@@ -106,17 +106,17 @@ export function LiveLectureTab({
 
   if (hasSubmitted) {
     return (
-      <Card className="max-w-2xl mx-auto border-gray-200">
-        <CardContent className="pt-12 pb-12 text-center">
-          <div className="flex justify-center mb-6">
-            <div className="p-4 bg-green-100 rounded">
-              <CheckCircle2 className="h-12 w-12 text-green-600" />
+      <Card className="max-w-2xl mx-auto border-gray-200 m-3 sm:m-4">
+        <CardContent className="pt-8 sm:pt-12 pb-8 sm:pb-12 text-center px-4">
+          <div className="flex justify-center mb-4 sm:mb-6">
+            <div className="p-3 sm:p-4 bg-green-100 rounded">
+              <CheckCircle2 className="h-10 w-10 sm:h-12 sm:w-12 text-green-600" />
             </div>
           </div>
-          <h3 className="text-2xl font-semibold text-gray-900 mb-3">
+          <h3 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-2 sm:mb-3">
             Thank You for Your Interest
           </h3>
-          <p className="text-sm text-gray-600 mb-6 max-w-md mx-auto">
+          <p className="text-xs sm:text-sm text-gray-600 mb-4 sm:mb-6 max-w-md mx-auto">
             We have received your request for the Live Lecture Recording
             feature. You will be among the first to know when it launches.
           </p>
@@ -124,7 +124,7 @@ export function LiveLectureTab({
             <Button
               variant="outline"
               onClick={() => setHasSubmitted(false)}
-              className="gap-2 border-gray-300"
+              className="gap-2 border-gray-300 text-sm"
             >
               Update My Response
             </Button>
@@ -135,54 +135,54 @@ export function LiveLectureTab({
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
+    <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6 md:space-y-8 p-3 sm:p-4 md:p-0">
       <Card className="bg-blue-50 border-blue-200">
-        <CardHeader>
-          <div className="flex items-center gap-4 mb-4">
-            <div className="p-4 bg-blue-600 rounded">
-              <Mic className="h-6 w-6 text-white" />
+        <CardHeader className="p-4 sm:p-6">
+          <div className="flex items-center gap-3 sm:gap-4 mb-3 sm:mb-4">
+            <div className="p-3 sm:p-4 bg-blue-600 rounded">
+              <Mic className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
             </div>
             <div>
-              <CardTitle className="text-2xl font-semibold text-gray-900">
+              <CardTitle className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-900">
                 Live Lecture Recording
               </CardTitle>
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="text-xs sm:text-sm text-gray-600 mt-1">
                 Coming Soon: AI-powered lecture transcription and note-taking
               </p>
             </div>
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="flex items-start gap-3 p-4 bg-white rounded border border-gray-200">
-              <FileAudio className="h-5 w-5 text-blue-600 mt-1 flex-shrink-0" />
+        <CardContent className="p-4 sm:p-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
+            <div className="flex items-start gap-2 sm:gap-3 p-3 sm:p-4 bg-white rounded border border-gray-200">
+              <FileAudio className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 mt-1 flex-shrink-0" />
               <div>
-                <h4 className="font-semibold text-gray-900 mb-1">
+                <h4 className="font-semibold text-gray-900 mb-1 text-sm sm:text-base">
                   Record Lectures
                 </h4>
-                <p className="text-sm text-gray-600">
+                <p className="text-xs sm:text-sm text-gray-600">
                   Capture audio from your device microphone during class
                 </p>
               </div>
             </div>
-            <div className="flex items-start gap-3 p-4 bg-white rounded border border-gray-200">
-              <Brain className="h-5 w-5 text-blue-600 mt-1 flex-shrink-0" />
+            <div className="flex items-start gap-2 sm:gap-3 p-3 sm:p-4 bg-white rounded border border-gray-200">
+              <Brain className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 mt-1 flex-shrink-0" />
               <div>
-                <h4 className="font-semibold text-gray-900 mb-1">
+                <h4 className="font-semibold text-gray-900 mb-1 text-sm sm:text-base">
                   AI Transcription
                 </h4>
-                <p className="text-sm text-gray-600">
+                <p className="text-xs sm:text-sm text-gray-600">
                   Automatic speech-to-text with high accuracy
                 </p>
               </div>
             </div>
-            <div className="flex items-start gap-3 p-4 bg-white rounded border border-gray-200">
-              <Sparkles className="h-5 w-5 text-blue-600 mt-1 flex-shrink-0" />
+            <div className="flex items-start gap-2 sm:gap-3 p-3 sm:p-4 bg-white rounded border border-gray-200">
+              <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 mt-1 flex-shrink-0" />
               <div>
-                <h4 className="font-semibold text-gray-900 mb-1">
+                <h4 className="font-semibold text-gray-900 mb-1 text-sm sm:text-base">
                   Smart Notes
                 </h4>
-                <p className="text-sm text-gray-600">
+                <p className="text-xs sm:text-sm text-gray-600">
                   Get summaries, key points, and organized notes
                 </p>
               </div>
@@ -192,20 +192,20 @@ export function LiveLectureTab({
       </Card>
 
       <Card className="border-gray-200">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-gray-900">
-            <Clock className="h-5 w-5 text-blue-600" />
+        <CardHeader className="p-4 sm:p-6">
+          <CardTitle className="flex items-center gap-2 text-gray-900 text-base sm:text-lg">
+            <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
             Express Your Interest
           </CardTitle>
-          <p className="text-sm text-gray-600 mt-2">
+          <p className="text-xs sm:text-sm text-gray-600 mt-2">
             Help us build the perfect lecture recording feature by sharing your
             needs
           </p>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
+        <CardContent className="p-4 sm:p-6">
+          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
             <div>
-              <Label htmlFor="useCase">
+              <Label htmlFor="useCase" className="text-sm">
                 How would you use this feature?
                 <span className="text-red-500 ml-1">*</span>
               </Label>
@@ -216,16 +216,17 @@ export function LiveLectureTab({
                 placeholder="e.g., I want to record my programming lectures to review complex algorithms later..."
                 rows={4}
                 required
+                className="text-sm"
               />
             </div>
 
             <div>
-              <Label htmlFor="frequency">
+              <Label htmlFor="frequency" className="text-sm">
                 How often would you use this?
                 <span className="text-red-500 ml-1">*</span>
               </Label>
               <Select value={frequency} onValueChange={setFrequency} required>
-                <SelectTrigger>
+                <SelectTrigger className="text-sm">
                   <SelectValue placeholder="Select frequency" />
                 </SelectTrigger>
                 <SelectContent>
@@ -238,15 +239,15 @@ export function LiveLectureTab({
             </div>
 
             <div>
-              <Label className="mb-3 block">
+              <Label className="mb-2 sm:mb-3 block text-sm">
                 Which features are most important to you?
                 <span className="text-red-500 ml-1">*</span>
               </Label>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3">
                 {features.map((feature) => (
                   <div
                     key={feature}
-                    className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer"
+                    className="flex items-center space-x-2 p-2.5 sm:p-3 border rounded-lg hover:bg-gray-50 cursor-pointer"
                     onClick={() => handleFeatureToggle(feature)}
                   >
                     <Checkbox
@@ -256,7 +257,7 @@ export function LiveLectureTab({
                     />
                     <label
                       htmlFor={feature}
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex-1"
+                      className="text-xs sm:text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex-1"
                     >
                       {feature}
                     </label>
@@ -270,10 +271,10 @@ export function LiveLectureTab({
               )}
             </div>
 
-            <div className="bg-blue-50 border border-blue-200 rounded p-4">
-              <div className="flex items-start gap-3">
-                <Zap className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                <div className="text-sm">
+            <div className="bg-blue-50 border border-blue-200 rounded p-3 sm:p-4">
+              <div className="flex items-start gap-2 sm:gap-3">
+                <Zap className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                <div className="text-xs sm:text-sm">
                   <p className="font-semibold text-gray-900 mb-1">
                     Early Access Opportunity
                   </p>
@@ -286,11 +287,11 @@ export function LiveLectureTab({
               </div>
             </div>
 
-            <div className="flex justify-end gap-3">
+            <div className="flex justify-end gap-2 sm:gap-3">
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
+                className="bg-blue-600 hover:bg-blue-700 text-white text-sm w-full sm:w-auto"
               >
                 {isSubmitting ? (
                   <>

@@ -55,25 +55,27 @@ export function MyAIClient({
         <div className="flex">
           <button
             onClick={() => setActiveTab("notes")}
-            className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
+            className={`px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium border-b-2 transition-colors flex items-center gap-1.5 sm:gap-2 ${
               activeTab === "notes"
                 ? "border-blue-600 text-blue-600"
                 : "border-transparent text-gray-600 hover:text-gray-900"
             }`}
           >
-            <FileText className="h-4 w-4" />
-            AI Notes
+            <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <span className="hidden xs:inline">AI Notes</span>
+            <span className="xs:hidden">Notes</span>
           </button>
           <button
             onClick={() => setActiveTab("live-lecture")}
-            className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
+            className={`px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium border-b-2 transition-colors flex items-center gap-1.5 sm:gap-2 ${
               activeTab === "live-lecture"
                 ? "border-blue-600 text-blue-600"
                 : "border-transparent text-gray-600 hover:text-gray-900"
             }`}
           >
-            <Mic className="h-4 w-4" />
-            Live Lecture
+            <Mic className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <span className="hidden xs:inline">Live Lecture</span>
+            <span className="xs:hidden">Live</span>
           </button>
         </div>
       </div>
