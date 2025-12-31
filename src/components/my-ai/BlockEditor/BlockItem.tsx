@@ -1,10 +1,11 @@
 "use client";
 
 import { Block, BlockType } from "@/types/block";
-import { Plus, GripVertical } from "lucide-react";
+import { Plus, GripVertical, Sparkles } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { BlockTypeMenu } from "./BlockTypeMenu";
 import { BlockActionMenu } from "./BlockActionMenu";
+import { AIAssistantModal } from "./AIAssistantModal";
 import { toast } from "sonner";
 
 interface BlockItemProps {
@@ -37,21 +38,143 @@ export function BlockItem({
   const [showAddMenu, setShowAddMenu] = useState(false);
   const [showActionMenu, setShowActionMenu] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [showAIAssistant, setShowAIAssistant] = useState(false);
+  const [selectedText, setSelectedText] = useState("");
+  const [aiModalPosition, setAIModalPosition] = useState({ top: 0, left: 0 });
+  const [isTyping, setIsTyping] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const blockRef = useRef<HTMLDivElement>(null);
+  const typingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (
       contentRef.current &&
-      contentRef.current.textContent !== block.content
+      contentRef.current.textContent !== block.content &&
+      !isTyping
     ) {
       contentRef.current.textContent = block.content;
     }
-  }, [block.content]);
+  }, [block.content, isTyping]);
+
+  useEffect(() => {
+    return () => {
+      if (typingIntervalRef.current) {
+        clearInterval(typingIntervalRef.current);
+      }
+    };
+  }, []);
 
   const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
     const newContent = e.currentTarget.textContent || "";
     onUpdate({ ...block, content: newContent });
+  };
+
+  const handleTextSelection = () => {
+    setTimeout(() => {
+      const selection = window.getSelection();
+      const text = selection?.toString().trim();
+
+      if (text && text.length > 0) {
+        const range = selection?.getRangeAt(0);
+        const rect = range?.getBoundingClientRect();
+
+        if (rect) {
+          setSelectedText(text);
+          setAIModalPosition({
+            top: rect.top + window.scrollY - 48,
+            left: rect.left + window.scrollX + rect.width / 2 - 60,
+          });
+        }
+      } else {
+        setSelectedText("");
+      }
+    }, 10);
+  };
+
+  const typeText = (
+    text: string,
+    targetElement: HTMLElement,
+    callback?: () => void
+  ) => {
+    if (typingIntervalRef.current) {
+      clearInterval(typingIntervalRef.current);
+    }
+
+    let currentIndex = 0;
+    targetElement.textContent = "";
+    setIsTyping(true);
+
+    const speed = 20;
+    const cursorSpan = document.createElement("span");
+    cursorSpan.className =
+      "inline-block w-0.5 h-4 bg-blue-600 animate-pulse ml-0.5";
+    cursorSpan.setAttribute("data-typing-cursor", "true");
+
+    typingIntervalRef.current = setInterval(() => {
+      if (currentIndex < text.length) {
+        const existingCursor = targetElement.querySelector(
+          '[data-typing-cursor="true"]'
+        );
+        if (existingCursor) {
+          existingCursor.remove();
+        }
+
+        targetElement.textContent += text[currentIndex];
+        targetElement.appendChild(cursorSpan);
+        currentIndex++;
+      } else {
+        const existingCursor = targetElement.querySelector(
+          '[data-typing-cursor="true"]'
+        );
+        if (existingCursor) {
+          existingCursor.remove();
+        }
+
+        if (typingIntervalRef.current) {
+          clearInterval(typingIntervalRef.current);
+          typingIntervalRef.current = null;
+        }
+        setIsTyping(false);
+        if (callback) callback();
+      }
+    }, speed);
+  };
+
+  const handleAIApply = (newText: string) => {
+    if (contentRef.current) {
+      const selection = window.getSelection();
+
+      if (selectedText === block.content) {
+        typeText(newText, contentRef.current, () => {
+          onUpdate({ ...block, content: newText });
+        });
+      } else if (selection && selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        const startOffset = range.startOffset;
+        const endOffset = range.endOffset;
+        const textNode = range.startContainer;
+
+        if (textNode.nodeType === Node.TEXT_NODE && textNode.textContent) {
+          const beforeText = textNode.textContent.substring(0, startOffset);
+          const afterText = textNode.textContent.substring(endOffset);
+          const fullNewText = beforeText + newText + afterText;
+
+          typeText(fullNewText, contentRef.current, () => {
+            onUpdate({ ...block, content: fullNewText });
+          });
+        } else {
+          typeText(newText, contentRef.current, () => {
+            onUpdate({ ...block, content: newText });
+          });
+        }
+      } else {
+        typeText(newText, contentRef.current, () => {
+          onUpdate({ ...block, content: newText });
+        });
+      }
+    }
+    setShowAIAssistant(false);
+    setSelectedText("");
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -240,7 +363,21 @@ export function BlockItem({
               }}
               onCopyLink={handleCopyLink}
               onAIAction={(action) => {
-                toast.info(`AI action: ${action} (coming soon)`);
+                const blockContent = block.content || "";
+                if (blockContent.trim()) {
+                  setSelectedText(blockContent);
+                  const blockElement = blockRef.current;
+                  if (blockElement) {
+                    const rect = blockElement.getBoundingClientRect();
+                    setAIModalPosition({
+                      top: rect.top + window.scrollY - 48,
+                      left: rect.left + window.scrollX + rect.width / 2 - 60,
+                    });
+                    setShowAIAssistant(true);
+                  }
+                } else {
+                  toast.error("No content to process");
+                }
                 setShowActionMenu(false);
               }}
               onClose={() => setShowActionMenu(false)}
@@ -315,7 +452,21 @@ export function BlockItem({
             }}
             onCopyLink={handleCopyLink}
             onAIAction={(action) => {
-              toast.info(`AI action: ${action} (coming soon)`);
+              const blockContent = block.content || "";
+              if (blockContent.trim()) {
+                setSelectedText(blockContent);
+                const blockElement = blockRef.current;
+                if (blockElement) {
+                  const rect = blockElement.getBoundingClientRect();
+                  setAIModalPosition({
+                    top: rect.top + window.scrollY - 48,
+                    left: rect.left + window.scrollX + rect.width / 2 - 60,
+                  });
+                  setShowAIAssistant(true);
+                }
+              } else {
+                toast.error("No content to process");
+              }
               setShowActionMenu(false);
             }}
             onClose={() => setShowActionMenu(false)}
@@ -328,13 +479,16 @@ export function BlockItem({
           <span className="mt-2 text-gray-600">•</span>
           <div
             ref={contentRef}
-            contentEditable
+            contentEditable={!isTyping}
             suppressContentEditableWarning
             onInput={handleInput}
             onKeyDown={handleKeyDown}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
-            className={`flex-1 min-h-[28px] ${getBlockClasses()}`}
+            onMouseUp={handleTextSelection}
+            className={`flex-1 min-h-[28px] ${getBlockClasses()} ${
+              isTyping ? "pointer-events-none" : ""
+            }`}
             data-placeholder={getPlaceholder()}
           />
         </div>
@@ -343,27 +497,62 @@ export function BlockItem({
           <span className="mt-0 text-gray-600">1.</span>
           <div
             ref={contentRef}
-            contentEditable
+            contentEditable={!isTyping}
             suppressContentEditableWarning
             onInput={handleInput}
             onKeyDown={handleKeyDown}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
-            className={`flex-1 min-h-[28px] ${getBlockClasses()}`}
+            onMouseUp={handleTextSelection}
+            className={`flex-1 min-h-[28px] ${getBlockClasses()} ${
+              isTyping ? "pointer-events-none" : ""
+            }`}
             data-placeholder={getPlaceholder()}
           />
         </div>
       ) : (
         <div
           ref={contentRef}
-          contentEditable
+          contentEditable={!isTyping}
           suppressContentEditableWarning
           onInput={handleInput}
           onKeyDown={handleKeyDown}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          className={`min-h-[28px] ${getBlockClasses()}`}
+          onMouseUp={handleTextSelection}
+          className={`min-h-[28px] ${getBlockClasses()} ${
+            isTyping ? "pointer-events-none" : ""
+          }`}
           data-placeholder={getPlaceholder()}
+        />
+      )}
+
+      {selectedText && !showAIAssistant && (
+        <button
+          onClick={() => setShowAIAssistant(true)}
+          className="fixed bg-gradient-to-r from-purple-600 to-blue-600 text-white px-3 py-1.5 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2 z-50 animate-in fade-in slide-in-from-bottom-2"
+          style={{
+            top: aiModalPosition.top,
+            left: aiModalPosition.left,
+          }}
+        >
+          <Sparkles className="h-4 w-4" />
+          <span className="text-sm font-medium">Ask AI</span>
+        </button>
+      )}
+
+      {showAIAssistant && selectedText && (
+        <AIAssistantModal
+          selectedText={selectedText}
+          onClose={() => {
+            setShowAIAssistant(false);
+            setSelectedText("");
+          }}
+          onApply={handleAIApply}
+          position={{
+            top: aiModalPosition.top + 40,
+            left: aiModalPosition.left,
+          }}
         />
       )}
     </div>
