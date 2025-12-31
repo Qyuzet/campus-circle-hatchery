@@ -75,12 +75,6 @@ export function BlockItem({
       onDelete();
     }
 
-    // Slash command - open block type menu
-    if (e.key === "/" && content === "") {
-      e.preventDefault();
-      setShowAddMenu(true);
-    }
-
     // Markdown shortcuts
     if (e.key === " " && content.length > 0) {
       if (content === "#") {
@@ -106,6 +100,10 @@ export function BlockItem({
       } else if (content === "---") {
         e.preventDefault();
         onConvertTo("divider");
+        if (contentRef.current) contentRef.current.textContent = "";
+      } else if (content === "/") {
+        e.preventDefault();
+        setShowAddMenu(true);
         if (contentRef.current) contentRef.current.textContent = "";
       }
     }
@@ -188,7 +186,7 @@ export function BlockItem({
       <div
         ref={blockRef}
         id={`block-${block.id}`}
-        className="group relative py-2"
+        className="group relative py-2 pl-10 sm:pl-16"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         draggable
@@ -197,25 +195,25 @@ export function BlockItem({
         onDragOver={handleDragOver}
         onDrop={handleDrop}
       >
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 -ml-8 sm:-ml-12 flex items-center gap-0.5 sm:gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="absolute left-0 top-1/2 -translate-y-1/2 flex items-center gap-0 sm:gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity z-10">
           <button
             onClick={() => setShowAddMenu(true)}
-            className="p-0.5 sm:p-1 hover:bg-gray-100 rounded"
+            className="p-0.5 sm:p-1 hover:bg-gray-100 rounded transition-colors"
             title="Add block"
           >
-            <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400" />
+            <Plus className="h-4 w-4 text-gray-400" />
           </button>
           <button
             onClick={() => setShowActionMenu(true)}
-            className="p-0.5 sm:p-1 hover:bg-gray-100 rounded cursor-grab active:cursor-grabbing"
+            className="p-0.5 sm:p-1 hover:bg-gray-100 rounded cursor-grab active:cursor-grabbing transition-colors"
             title="Drag to move"
           >
-            <GripVertical className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400" />
+            <GripVertical className="h-4 w-4 text-gray-400" />
           </button>
         </div>
 
         {showAddMenu && (
-          <div className="absolute left-0 top-6 sm:top-8 z-50">
+          <div className="fixed sm:absolute left-2 sm:left-0 top-auto sm:top-6 bottom-2 sm:bottom-auto z-50">
             <BlockTypeMenu
               onSelect={(type) => {
                 onAddAfter(type);
@@ -227,7 +225,7 @@ export function BlockItem({
         )}
 
         {showActionMenu && (
-          <div className="absolute left-0 top-6 sm:top-8 z-50">
+          <div className="fixed sm:absolute left-2 sm:left-0 top-auto sm:top-6 bottom-2 sm:bottom-auto z-50">
             <BlockActionMenu
               block={block}
               onConvert={handleConvert}
@@ -259,7 +257,9 @@ export function BlockItem({
     <div
       ref={blockRef}
       id={`block-${block.id}`}
-      className={`group relative py-1 ${isDragging ? "opacity-50" : ""}`}
+      className={`group relative py-1 pl-10 sm:pl-16 ${
+        isDragging ? "opacity-50" : ""
+      }`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       draggable
@@ -269,26 +269,26 @@ export function BlockItem({
       onDrop={handleDrop}
     >
       {(isHovered || isFocused || showAddMenu || showActionMenu) && (
-        <div className="absolute left-0 sm:left-0 top-1/2 -translate-y-1/2 -ml-8 sm:-ml-12 flex items-center gap-0.5 sm:gap-1">
+        <div className="absolute left-0 top-1/2 -translate-y-1/2 flex items-center gap-0 sm:gap-0.5 z-10">
           <button
             onClick={() => setShowAddMenu(!showAddMenu)}
-            className="p-0.5 sm:p-1 hover:bg-gray-100 rounded"
+            className="p-0.5 sm:p-1 hover:bg-gray-100 rounded transition-colors"
             title="Add block"
           >
-            <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400" />
+            <Plus className="h-4 w-4 text-gray-400" />
           </button>
           <button
             onClick={() => setShowActionMenu(!showActionMenu)}
-            className="p-0.5 sm:p-1 hover:bg-gray-100 rounded cursor-grab active:cursor-grabbing"
+            className="p-0.5 sm:p-1 hover:bg-gray-100 rounded cursor-grab active:cursor-grabbing transition-colors"
             title="Drag to move"
           >
-            <GripVertical className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400" />
+            <GripVertical className="h-4 w-4 text-gray-400" />
           </button>
         </div>
       )}
 
       {showAddMenu && (
-        <div className="absolute left-0 sm:left-0 top-6 sm:top-8 z-50">
+        <div className="fixed sm:absolute left-2 sm:left-0 top-auto sm:top-6 bottom-2 sm:bottom-auto z-50">
           <BlockTypeMenu
             onSelect={(type) => {
               onAddAfter(type);
@@ -300,7 +300,7 @@ export function BlockItem({
       )}
 
       {showActionMenu && (
-        <div className="absolute left-0 sm:left-0 top-6 sm:top-8 z-50">
+        <div className="fixed sm:absolute left-2 sm:left-0 top-auto sm:top-6 bottom-2 sm:bottom-auto z-50">
           <BlockActionMenu
             block={block}
             onConvert={handleConvert}

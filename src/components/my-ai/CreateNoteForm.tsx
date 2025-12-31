@@ -138,7 +138,7 @@ export function CreateNoteForm({
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Halaman Saya"
-            className="w-full text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 placeholder-gray-300 border-none outline-none focus:ring-0 mb-2 bg-transparent"
+            className="w-full text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 placeholder-gray-300 border-none outline-none focus:ring-0 mb-2 bg-transparent pl-10 sm:pl-16"
           />
 
           {tags.length > 0 && (

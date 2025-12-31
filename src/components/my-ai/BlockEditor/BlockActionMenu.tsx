@@ -18,7 +18,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
 interface BlockActionMenuProps {
   block: Block;
@@ -45,6 +45,20 @@ export function BlockActionMenu({
 }: BlockActionMenuProps) {
   const [search, setSearch] = useState("");
   const [view, setView] = useState<MenuView>("main");
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        onClose();
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [onClose]);
 
   const blockTypes = [
     { type: "text" as BlockType, label: "Teks", icon: Type },
@@ -138,29 +152,34 @@ export function BlockActionMenu({
 
   if (view === "convert") {
     return (
-      <div className="w-80 bg-white rounded-lg shadow-lg border border-gray-200 p-2">
-        <div className="flex items-center gap-2 mb-2 px-2 py-1">
+      <div
+        ref={menuRef}
+        className="w-64 sm:w-80 bg-white rounded-lg shadow-lg border border-gray-200 p-1.5 sm:p-2"
+      >
+        <div className="flex items-center gap-2 mb-1.5 sm:mb-2 px-1.5 sm:px-2 py-0.5 sm:py-1">
           <button
             onClick={() => setView("main")}
-            className="text-gray-600 hover:text-gray-900"
+            className="text-gray-600 hover:text-gray-900 text-sm sm:text-base"
           >
             ←
           </button>
-          <span className="text-sm font-medium">Ubah menjadi</span>
+          <span className="text-xs sm:text-sm font-medium">Ubah menjadi</span>
         </div>
-        <div className="max-h-96 overflow-y-auto">
+        <div className="max-h-64 sm:max-h-96 overflow-y-auto">
           {blockTypes.map((type) => (
             <button
               key={type.type}
               onClick={() => {
                 onConvert(type.type);
               }}
-              className="w-full flex items-center gap-3 px-2 py-2 hover:bg-gray-100 rounded text-sm text-left"
+              className="w-full flex items-center gap-2 sm:gap-3 px-1.5 sm:px-2 py-1.5 sm:py-2 hover:bg-gray-100 rounded text-xs sm:text-sm text-left"
             >
-              <type.icon className="h-4 w-4 text-gray-600" />
-              <span className="flex-1 text-gray-900">{type.label}</span>
+              <type.icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-600 flex-shrink-0" />
+              <span className="flex-1 text-gray-900 truncate">
+                {type.label}
+              </span>
               {block.type === type.type && (
-                <span className="text-xs text-blue-600">✓</span>
+                <span className="text-xs text-blue-600 flex-shrink-0">✓</span>
               )}
             </button>
           ))}
@@ -171,33 +190,38 @@ export function BlockActionMenu({
 
   if (view === "color") {
     return (
-      <div className="w-80 bg-white rounded-lg shadow-lg border border-gray-200 p-2">
-        <div className="flex items-center gap-2 mb-2 px-2 py-1">
+      <div
+        ref={menuRef}
+        className="w-64 sm:w-80 bg-white rounded-lg shadow-lg border border-gray-200 p-1.5 sm:p-2"
+      >
+        <div className="flex items-center gap-2 mb-1.5 sm:mb-2 px-1.5 sm:px-2 py-0.5 sm:py-1">
           <button
             onClick={() => setView("main")}
-            className="text-gray-600 hover:text-gray-900"
+            className="text-gray-600 hover:text-gray-900 text-sm sm:text-base"
           >
             ←
           </button>
-          <span className="text-sm font-medium">Warna</span>
+          <span className="text-xs sm:text-sm font-medium">Warna</span>
         </div>
-        <div className="max-h-96 overflow-y-auto">
+        <div className="max-h-64 sm:max-h-96 overflow-y-auto">
           {colors.map((color) => (
             <button
               key={color.value}
               onClick={() => {
                 onColor(color.value);
               }}
-              className="w-full flex items-center gap-3 px-2 py-2 hover:bg-gray-100 rounded text-sm text-left"
+              className="w-full flex items-center gap-2 sm:gap-3 px-1.5 sm:px-2 py-1.5 sm:py-2 hover:bg-gray-100 rounded text-xs sm:text-sm text-left"
             >
               <div
-                className={`h-4 w-4 rounded border ${
+                className={`h-3.5 w-3.5 sm:h-4 sm:w-4 rounded border flex-shrink-0 ${
                   color.value ? `bg-${color.value}-500` : "bg-gray-200"
                 }`}
               />
-              <span className="flex-1 text-gray-900">{color.label}</span>
+              <span className="flex-1 text-gray-900 truncate">
+                {color.label}
+              </span>
               {block.color === color.value && (
-                <span className="text-xs text-blue-600">✓</span>
+                <span className="text-xs text-blue-600 flex-shrink-0">✓</span>
               )}
             </button>
           ))}
@@ -207,20 +231,23 @@ export function BlockActionMenu({
   }
 
   return (
-    <div className="w-80 bg-white rounded-lg shadow-lg border border-gray-200 p-2">
+    <div
+      ref={menuRef}
+      className="w-64 sm:w-80 bg-white rounded-lg shadow-lg border border-gray-200 p-1.5 sm:p-2"
+    >
       <Input
         type="text"
         placeholder="Cari tindakan..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        className="mb-2 h-9 border-gray-300"
+        className="mb-1.5 sm:mb-2 h-8 sm:h-9 border-gray-300 text-xs sm:text-sm"
         autoFocus
       />
 
-      <div className="max-h-96 overflow-y-auto">
+      <div className="max-h-64 sm:max-h-96 overflow-y-auto">
         {basicActions.length > 0 && (
-          <div className="mb-2">
-            <div className="px-2 py-1 text-xs font-medium text-gray-500">
+          <div className="mb-1.5 sm:mb-2">
+            <div className="px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs font-medium text-gray-500">
               Teks
             </div>
             {basicActions.map((action: any) => (
@@ -232,20 +259,22 @@ export function BlockActionMenu({
                       onClose();
                     }
                   }}
-                  className="w-full flex items-center gap-3 px-2 py-2 hover:bg-gray-100 rounded text-sm text-left"
+                  className="w-full flex items-center gap-2 sm:gap-3 px-1.5 sm:px-2 py-1.5 sm:py-2 hover:bg-gray-100 rounded text-xs sm:text-sm text-left"
                 >
-                  <action.icon className="h-4 w-4 text-gray-600" />
-                  <span className="flex-1 text-gray-900">{action.label}</span>
+                  <action.icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-600 flex-shrink-0" />
+                  <span className="flex-1 text-gray-900 truncate">
+                    {action.label}
+                  </span>
                   {action.hasSubmenu ? (
-                    <ChevronRight className="h-4 w-4 text-gray-400" />
+                    <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400 flex-shrink-0" />
                   ) : action.shortcut ? (
-                    <span className="text-xs text-gray-400">
+                    <span className="text-[10px] sm:text-xs text-gray-400 flex-shrink-0 hidden sm:inline">
                       {action.shortcut}
                     </span>
                   ) : null}
                 </button>
                 {action.divider && (
-                  <div className="my-1 border-t border-gray-200" />
+                  <div className="my-0.5 sm:my-1 border-t border-gray-200" />
                 )}
               </div>
             ))}
@@ -254,7 +283,7 @@ export function BlockActionMenu({
 
         {aiActions.length > 0 && (
           <div>
-            <div className="px-2 py-1 text-xs font-medium text-gray-500">
+            <div className="px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs font-medium text-gray-500">
               AI
             </div>
             {aiActions.map((action: any) => (
@@ -264,12 +293,14 @@ export function BlockActionMenu({
                   action.action();
                   onClose();
                 }}
-                className="w-full flex items-center gap-3 px-2 py-2 hover:bg-gray-100 rounded text-sm text-left"
+                className="w-full flex items-center gap-2 sm:gap-3 px-1.5 sm:px-2 py-1.5 sm:py-2 hover:bg-gray-100 rounded text-xs sm:text-sm text-left"
               >
-                <action.icon className="h-4 w-4 text-blue-600" />
-                <span className="flex-1 text-gray-900">{action.label}</span>
+                <action.icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-600 flex-shrink-0" />
+                <span className="flex-1 text-gray-900 truncate">
+                  {action.label}
+                </span>
                 {action.shortcut && (
-                  <span className="text-xs text-gray-400">
+                  <span className="text-[10px] sm:text-xs text-gray-400 flex-shrink-0 hidden sm:inline">
                     {action.shortcut}
                   </span>
                 )}
@@ -279,13 +310,13 @@ export function BlockActionMenu({
         )}
 
         {filteredActions.length === 0 && (
-          <div className="px-2 py-4 text-sm text-gray-500 text-center">
+          <div className="px-1.5 sm:px-2 py-3 sm:py-4 text-xs sm:text-sm text-gray-500 text-center">
             Tidak ada hasil
           </div>
         )}
       </div>
 
-      <div className="mt-2 pt-2 border-t border-gray-200 px-2 py-1 text-xs text-gray-400">
+      <div className="mt-1.5 sm:mt-2 pt-1.5 sm:pt-2 border-t border-gray-200 px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs text-gray-400">
         Terakhir diedit oleh Riki A<br />
         Hari ini pukul{" "}
         {new Date().toLocaleTimeString("id-ID", {
