@@ -20,6 +20,8 @@ import {
   Send,
 } from "lucide-react";
 import { toast } from "sonner";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface Message {
   id: string;
@@ -55,6 +57,8 @@ export function AIChatModal({ onClose }: AIChatModalProps) {
   const [isLoadingMentions, setIsLoadingMentions] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isThinking, setIsThinking] = useState(false);
+  const [typingReasoning, setTypingReasoning] = useState("");
+  const [isTypingReasoning, setIsTypingReasoning] = useState(false);
   const [currentContext, setCurrentContext] = useState<string>("No context");
   const [contextDetails, setContextDetails] = useState<any>(null);
   const modalRef = useRef<HTMLDivElement>(null);
@@ -182,7 +186,14 @@ export function AIChatModal({ onClose }: AIChatModalProps) {
     inputRef.current?.focus();
   };
 
-  const handleSendMessage = () => {
+  const typeText = async (text: string, callback: (char: string) => void) => {
+    for (let i = 0; i < text.length; i++) {
+      callback(text.substring(0, i + 1));
+      await new Promise((resolve) => setTimeout(resolve, 20));
+    }
+  };
+
+  const handleSendMessage = async () => {
     if (!input.trim()) return;
 
     const userMessage: Message = {
@@ -197,59 +208,60 @@ export function AIChatModal({ onClose }: AIChatModalProps) {
     setInput("");
     setIsThinking(true);
 
-    setTimeout(() => {
-      let aiReasoning = "";
-      let aiContent = "";
+    try {
+      const response = await fetch("/api/ai/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messages: [...messages, userMessage],
+          context: currentContext,
+          contextDetails: contextDetails,
+        }),
+      });
 
-      if (contextDetails && contextDetails.title) {
-        const noteContent = contextDetails.content || "";
-        const contentPreview =
-          noteContent.length > 500
-            ? noteContent.substring(0, 500) + "..."
-            : noteContent;
-
-        aiReasoning = `The user said "${userInput}". They are currently viewing their note titled "${
-          contextDetails.title
-        }".
-
-Note Details:
-- Title: ${contextDetails.title}
-- Subject: ${contextDetails.subject || "Not specified"}
-- Course: ${contextDetails.course || "Not specified"}
-- Content: ${noteContent}
-
-I should respond in a helpful way and acknowledge their current context. I have access to the full note content and can help them with questions about it, suggest improvements, add examples, or help organize the information.`;
-
-        const noteInfo = contextDetails.subject
-          ? `your ${contextDetails.subject}${
-              contextDetails.course ? ` (${contextDetails.course})` : ""
-            } notes`
-          : "your notes";
-
-        const contentSummary = noteContent.trim()
-          ? `\n\nI can see your note contains information about: ${contentPreview}`
-          : "\n\nYour note is currently empty.";
-
-        aiContent = `Hi! I can see you're working on ${noteInfo} titled "${contextDetails.title}".${contentSummary}\n\nHow can I help you today? I can assist with:\n\n• Answering questions about your note content\n• Adding more content or examples\n• Organizing and structuring information\n• Creating study materials\n• Summarizing key points\n• Or anything else you need!`;
-      } else if (currentContext !== "No context") {
-        aiReasoning = `The user said "${userInput}". They are currently in the ${currentContext} section. I should respond helpfully based on this context.`;
-        aiContent = `Hi! I can see you're in the ${currentContext} section.\n\nHow can I help you today? I can assist with:\n\n• Answering questions\n• Providing information\n• Helping with tasks\n• Or anything else you need!`;
-      } else {
-        aiReasoning = `The user said "${userInput}". No specific context is available. I should respond in a general helpful way.`;
-        aiContent = `Hi! How can I help you today?\n\nI can assist with:\n\n• Answering questions\n• Providing information\n• Helping with various tasks\n• Or anything else you need!`;
+      if (!response.ok) {
+        throw new Error("Failed to get AI response");
       }
+
+      const data = await response.json();
+
+      setIsThinking(false);
+      setIsTypingReasoning(true);
+      setTypingReasoning("");
+
+      await typeText(data.reasoning, setTypingReasoning);
+
+      setIsTypingReasoning(false);
 
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
         type: "ai",
-        content: aiContent,
-        timestamp: new Date(),
-        reasoning: aiReasoning,
+        content: data.content,
+        timestamp: new Date(data.timestamp),
+        reasoning: data.reasoning,
       };
 
       setMessages((prev) => [...prev, aiMessage]);
+      setTypingReasoning("");
+    } catch (error) {
+      console.error("AI chat error:", error);
+      toast.error("Failed to get AI response. Please try again.");
+
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        type: "ai",
+        content:
+          "I apologize, but I'm having trouble responding right now. Please try again in a moment.",
+        timestamp: new Date(),
+      };
+
+      setMessages((prev) => [...prev, errorMessage]);
       setIsThinking(false);
-    }, 2000);
+      setIsTypingReasoning(false);
+      setTypingReasoning("");
+    }
   };
 
   const filteredNotes = notes.filter((note) =>
@@ -501,9 +513,11 @@ I should respond in a helpful way and acknowledge their current context. I have 
                             </div>
                           )}
                           <div className="bg-white border border-gray-200 rounded-lg p-3">
-                            <p className="text-sm text-gray-800 whitespace-pre-line leading-relaxed">
-                              {message.content}
-                            </p>
+                            <div className="text-sm text-gray-800 leading-relaxed prose prose-sm max-w-none">
+                              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                {message.content}
+                              </ReactMarkdown>
+                            </div>
                           </div>
                         </div>
                       )}
@@ -524,6 +538,20 @@ I should respond in a helpful way and acknowledge their current context. I have 
                           <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
                           <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-100" />
                           <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-200" />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {isTypingReasoning && typingReasoning && (
+                    <div className="flex justify-start">
+                      <div className="flex-1">
+                        <div className="mb-2 flex items-start gap-2">
+                          <ChevronRight className="h-3.5 w-3.5 text-gray-400 mt-0.5 flex-shrink-0" />
+                          <p className="text-xs text-gray-400 leading-relaxed">
+                            {typingReasoning}
+                            <span className="inline-block w-1 h-3 bg-gray-400 ml-0.5 animate-pulse" />
+                          </p>
                         </div>
                       </div>
                     </div>
