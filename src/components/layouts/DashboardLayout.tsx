@@ -39,6 +39,7 @@ import {
 import { toast, Toaster } from "sonner";
 import { AddItemButton } from "@/components/marketplace/AddItemButton";
 import { isSSRComponentsEnabled } from "@/lib/feature-flags";
+import { AIChatButton } from "@/components/my-ai/AIChatButton";
 import { pusherClient, getUserTransactionChannel } from "@/lib/pusher";
 import { playNotificationSound } from "@/lib/notification-sound";
 
@@ -856,6 +857,9 @@ export function DashboardLayout({
           <div className="flex-1">{children}</div>
         </div>
       </div>
+
+      {/* AI Chat Button */}
+      <AIChatButton />
     </div>
   );
 }

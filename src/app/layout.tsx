@@ -3,6 +3,7 @@ import "./globals.css";
 import SessionProvider from "@/components/SessionProvider";
 import { ThemeProvider } from "@/components/contexts/theme-provider";
 import { UnreadMessagesProvider } from "@/contexts/UnreadMessagesContext";
+import { AIProvider } from "@/contexts/AIContext";
 import { siteConfig } from "@/config/site";
 
 export const metadata: Metadata = {
@@ -98,7 +99,9 @@ export default function RootLayout({
       <body>
         <ThemeProvider>
           <SessionProvider>
-            <UnreadMessagesProvider>{children}</UnreadMessagesProvider>
+            <UnreadMessagesProvider>
+              <AIProvider>{children}</AIProvider>
+            </UnreadMessagesProvider>
           </SessionProvider>
         </ThemeProvider>
       </body>

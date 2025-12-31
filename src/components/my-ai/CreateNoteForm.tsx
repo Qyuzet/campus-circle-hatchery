@@ -9,6 +9,7 @@ import { X, Loader2, Save } from "lucide-react";
 import { toast } from "sonner";
 import { BlockEditor } from "./BlockEditor";
 import { contentToBlocks, blocksToContent } from "@/lib/blockUtils";
+import { useAIContext } from "@/contexts/AIContext";
 
 interface CreateNoteFormProps {
   userId: string;
@@ -23,6 +24,7 @@ export function CreateNoteForm({
   onCancel,
   initialNote,
 }: CreateNoteFormProps) {
+  const { setCurrentNote } = useAIContext();
   const [title, setTitle] = useState(initialNote?.title || "");
   const [blocks, setBlocks] = useState<Block[]>(() =>
     contentToBlocks(initialNote?.content || "")
@@ -38,6 +40,24 @@ export function CreateNoteForm({
       titleRef.current.select();
     }
   }, [initialNote]);
+
+  useEffect(() => {
+    if (initialNote) {
+      setCurrentNote(initialNote);
+    }
+    return () => {
+      setCurrentNote(null);
+    };
+  }, [initialNote, setCurrentNote]);
+
+  useEffect(() => {
+    if (initialNote) {
+      setCurrentNote({
+        ...initialNote,
+        title: title || "Untitled",
+      });
+    }
+  }, [title, initialNote, setCurrentNote]);
 
   const handleRemoveTag = (tagToRemove: string) => {
     setTags(tags.filter((tag) => tag !== tagToRemove));
