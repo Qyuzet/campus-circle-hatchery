@@ -1,7 +1,29 @@
 "use client";
 
 import { Block, BlockType } from "@/types/block";
-import { Plus, GripVertical, Sparkles } from "lucide-react";
+import {
+  Plus,
+  GripVertical,
+  Sparkles,
+  CheckSquare,
+  Square,
+  ChevronRight,
+  ChevronDown,
+  Info,
+  FileText,
+  Image as ImageIcon,
+  Video as VideoIcon,
+  Volume2,
+  Code as CodeIcon,
+  Paperclip,
+  Bookmark as BookmarkIcon,
+  Table as TableIcon,
+  Columns,
+  LayoutGrid,
+  LayoutList,
+  Calendar,
+  Rss,
+} from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { BlockTypeMenu } from "./BlockTypeMenu";
 import { BlockActionMenu } from "./BlockActionMenu";
@@ -41,6 +63,7 @@ export function BlockItem({
   const [showAIAssistant, setShowAIAssistant] = useState(false);
   const [selectedText, setSelectedText] = useState("");
   const [aiModalPosition, setAIModalPosition] = useState({ top: 0, left: 0 });
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
   const [isTyping, setIsTyping] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const blockRef = useRef<HTMLDivElement>(null);
@@ -64,8 +87,93 @@ export function BlockItem({
     };
   }, []);
 
+  useEffect(() => {
+    if (showAddMenu && block.content.startsWith("/")) {
+      calculateMenuPosition();
+    }
+  }, [block.content, showAddMenu]);
+
+  const calculateMenuPosition = () => {
+    if (!contentRef.current) return;
+
+    const textContent = contentRef.current.textContent || "";
+    if (!textContent.startsWith("/")) return;
+
+    const menuHeight = 500;
+    let rect: DOMRect;
+
+    // Try to get the exact position of the "/" character
+    const textNode = contentRef.current.firstChild;
+    if (
+      textNode &&
+      textNode.nodeType === Node.TEXT_NODE &&
+      textContent.length > 0
+    ) {
+      try {
+        const range = document.createRange();
+        range.setStart(textNode, 0);
+        range.setEnd(textNode, 1);
+        rect = range.getBoundingClientRect();
+      } catch (error) {
+        rect = contentRef.current.getBoundingClientRect();
+      }
+    } else {
+      rect = contentRef.current.getBoundingClientRect();
+    }
+
+    // Check if menu would go off-screen at the bottom
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const spaceAbove = rect.top;
+
+    let top: number;
+    if (spaceBelow < menuHeight && spaceAbove > spaceBelow) {
+      // Position above if not enough space below
+      top = rect.top + window.scrollY - menuHeight - 4;
+    } else {
+      // Position below (default)
+      top = rect.bottom + window.scrollY + 4;
+    }
+
+    // Get the left position - align with the "/" character
+    const left = rect.left + window.scrollX;
+
+    console.log("Menu position calculated:", {
+      slashRect: {
+        top: rect.top,
+        bottom: rect.bottom,
+        left: rect.left,
+        right: rect.right,
+      },
+      menuPosition: { top, left },
+      spaceBelow,
+      spaceAbove,
+      positionedAbove: spaceBelow < menuHeight && spaceAbove > spaceBelow,
+    });
+
+    setMenuPosition({
+      top,
+      left,
+    });
+  };
+
   const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
     const newContent = e.currentTarget.textContent || "";
+
+    // Show menu when "/" is typed
+    if (newContent.startsWith("/")) {
+      if (!showAddMenu) {
+        setShowAddMenu(true);
+      }
+      // Calculate position immediately and also after a short delay
+      calculateMenuPosition();
+      setTimeout(calculateMenuPosition, 0);
+    } else {
+      if (showAddMenu) {
+        setShowAddMenu(false);
+      }
+    }
+
+    // Update block content after menu state
     onUpdate({ ...block, content: newContent });
   };
 
@@ -198,6 +306,11 @@ export function BlockItem({
       onDelete();
     }
 
+    // Close menu on backspace if content becomes empty
+    if (e.key === "Backspace" && content === "/" && showAddMenu) {
+      setShowAddMenu(false);
+    }
+
     // Markdown shortcuts
     if (e.key === " " && content.length > 0) {
       if (content === "#") {
@@ -220,13 +333,25 @@ export function BlockItem({
         e.preventDefault();
         onConvertTo("numberedList");
         if (contentRef.current) contentRef.current.textContent = "";
+      } else if (content === "[]") {
+        e.preventDefault();
+        onConvertTo("todoList");
+        if (contentRef.current) contentRef.current.textContent = "";
+      } else if (content === ">") {
+        e.preventDefault();
+        onConvertTo("toggleList");
+        if (contentRef.current) contentRef.current.textContent = "";
+      } else if (content === '"') {
+        e.preventDefault();
+        onConvertTo("quote");
+        if (contentRef.current) contentRef.current.textContent = "";
+      } else if (content === "```") {
+        e.preventDefault();
+        onConvertTo("code");
+        if (contentRef.current) contentRef.current.textContent = "";
       } else if (content === "---") {
         e.preventDefault();
         onConvertTo("divider");
-        if (contentRef.current) contentRef.current.textContent = "";
-      } else if (content === "/") {
-        e.preventDefault();
-        setShowAddMenu(true);
         if (contentRef.current) contentRef.current.textContent = "";
       }
     }
@@ -294,13 +419,246 @@ export function BlockItem({
   const getPlaceholder = () => {
     switch (block.type) {
       case "heading1":
-        return "Judul 1";
+        return "Heading 1";
       case "heading2":
-        return "Judul 2";
+        return "Heading 2";
       case "heading3":
-        return "Judul 3";
+        return "Heading 3";
+      case "bulletList":
+        return "List";
+      case "numberedList":
+        return "List";
+      case "todoList":
+        return "To-do";
+      case "toggleList":
+        return "Toggle";
+      case "quote":
+        return "Empty quote";
+      case "callout":
+        return "Callout";
+      case "code":
+        return "Code";
+      case "page":
+        return "Untitled";
       default:
-        return "Ketik '/' untuk perintah";
+        return "Type '/' for commands";
+    }
+  };
+
+  const renderBlockContent = () => {
+    const baseEditableProps = {
+      ref: contentRef,
+      contentEditable: !isTyping,
+      suppressContentEditableWarning: true,
+      onInput: handleInput,
+      onKeyDown: handleKeyDown,
+      onFocus: () => setIsFocused(true),
+      onBlur: () => setIsFocused(false),
+      onMouseUp: handleTextSelection,
+      "data-placeholder": getPlaceholder(),
+    };
+
+    const baseClassName = `min-h-[28px] ${getBlockClasses()} ${
+      isTyping ? "pointer-events-none" : ""
+    }`;
+
+    switch (block.type) {
+      case "bulletList":
+        return (
+          <div className="flex items-start gap-2">
+            <span className="mt-2 text-gray-600">•</span>
+            <div {...baseEditableProps} className={`flex-1 ${baseClassName}`} />
+          </div>
+        );
+
+      case "numberedList":
+        return (
+          <div className="flex items-start gap-2">
+            <span className="mt-0 text-gray-600">1.</span>
+            <div {...baseEditableProps} className={`flex-1 ${baseClassName}`} />
+          </div>
+        );
+
+      case "todoList":
+        return (
+          <div className="flex items-start gap-2">
+            <button
+              onClick={() => {
+                onUpdate({ ...block, checked: !block.checked });
+              }}
+              className="mt-1 text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              {block.checked ? (
+                <CheckSquare className="h-4 w-4" />
+              ) : (
+                <Square className="h-4 w-4" />
+              )}
+            </button>
+            <div
+              {...baseEditableProps}
+              className={`flex-1 ${baseClassName} ${
+                block.checked ? "line-through text-gray-400" : ""
+              }`}
+            />
+          </div>
+        );
+
+      case "toggleList":
+        return (
+          <div className="flex items-start gap-2">
+            <button
+              onClick={() => {
+                onUpdate({ ...block, isOpen: !block.isOpen });
+              }}
+              className="mt-1 text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              {block.isOpen ? (
+                <ChevronDown className="h-4 w-4" />
+              ) : (
+                <ChevronRight className="h-4 w-4" />
+              )}
+            </button>
+            <div {...baseEditableProps} className={`flex-1 ${baseClassName}`} />
+          </div>
+        );
+
+      case "quote":
+        return (
+          <div className="border-l-4 border-gray-300 pl-4 italic text-gray-700">
+            <div {...baseEditableProps} className={baseClassName} />
+          </div>
+        );
+
+      case "callout":
+        return (
+          <div className="flex items-start gap-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+            <div {...baseEditableProps} className={`flex-1 ${baseClassName}`} />
+          </div>
+        );
+
+      case "code":
+        return (
+          <div className="bg-gray-900 text-gray-100 p-4 rounded-lg font-mono text-sm">
+            <div {...baseEditableProps} className={baseClassName} />
+          </div>
+        );
+
+      case "page":
+        return (
+          <div className="flex items-center gap-2 p-2 hover:bg-gray-50 rounded cursor-pointer">
+            <FileText className="h-4 w-4 text-gray-600" />
+            <div {...baseEditableProps} className={`flex-1 ${baseClassName}`} />
+          </div>
+        );
+
+      case "image":
+        return (
+          <div className="p-4 border-2 border-dashed border-gray-300 rounded-lg text-center">
+            <ImageIcon className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+            <p className="text-sm text-gray-500">Click to upload image</p>
+          </div>
+        );
+
+      case "video":
+        return (
+          <div className="p-4 border-2 border-dashed border-gray-300 rounded-lg text-center">
+            <VideoIcon className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+            <p className="text-sm text-gray-500">Click to upload video</p>
+          </div>
+        );
+
+      case "audio":
+        return (
+          <div className="p-4 border-2 border-dashed border-gray-300 rounded-lg text-center">
+            <Volume2 className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+            <p className="text-sm text-gray-500">Click to upload audio</p>
+          </div>
+        );
+
+      case "file":
+        return (
+          <div className="p-4 border-2 border-dashed border-gray-300 rounded-lg text-center">
+            <Paperclip className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+            <p className="text-sm text-gray-500">Click to upload file</p>
+          </div>
+        );
+
+      case "bookmark":
+        return (
+          <div className="flex items-center gap-2 p-3 border border-gray-300 rounded-lg hover:bg-gray-50">
+            <BookmarkIcon className="h-4 w-4 text-gray-600" />
+            <div {...baseEditableProps} className={`flex-1 ${baseClassName}`} />
+          </div>
+        );
+
+      case "table":
+      case "tableView":
+        return (
+          <div className="p-8 border border-gray-300 rounded-lg text-center">
+            <TableIcon className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+            <p className="text-sm text-gray-500">Table view</p>
+          </div>
+        );
+
+      case "boardView":
+        return (
+          <div className="p-8 border border-gray-300 rounded-lg text-center">
+            <Columns className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+            <p className="text-sm text-gray-500">Board view</p>
+          </div>
+        );
+
+      case "galleryView":
+        return (
+          <div className="p-8 border border-gray-300 rounded-lg text-center">
+            <LayoutGrid className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+            <p className="text-sm text-gray-500">Gallery view</p>
+          </div>
+        );
+
+      case "listView":
+        return (
+          <div className="p-8 border border-gray-300 rounded-lg text-center">
+            <LayoutList className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+            <p className="text-sm text-gray-500">List view</p>
+          </div>
+        );
+
+      case "feedView":
+        return (
+          <div className="p-8 border border-gray-300 rounded-lg text-center">
+            <Rss className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+            <p className="text-sm text-gray-500">Feed view</p>
+          </div>
+        );
+
+      case "calendarView":
+        return (
+          <div className="p-8 border border-gray-300 rounded-lg text-center">
+            <Calendar className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+            <p className="text-sm text-gray-500">Calendar view</p>
+          </div>
+        );
+
+      case "aiMeetingNotes":
+        return (
+          <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg">
+            <div className="flex items-center gap-2 mb-2">
+              <Sparkles className="h-4 w-4 text-purple-600" />
+              <span className="text-sm font-medium text-purple-900">
+                AI Meeting Notes
+              </span>
+              <span className="text-xs px-1.5 py-0.5 bg-purple-200 text-purple-700 rounded">
+                Beta
+              </span>
+            </div>
+            <div {...baseEditableProps} className={`flex-1 ${baseClassName}`} />
+          </div>
+        );
+
+      default:
+        return <div {...baseEditableProps} className={baseClassName} />;
     }
   };
 
@@ -336,15 +694,50 @@ export function BlockItem({
         </div>
 
         {showAddMenu && (
-          <div className="fixed sm:absolute left-2 sm:left-0 top-auto sm:top-6 bottom-2 sm:bottom-auto z-50">
-            <BlockTypeMenu
-              onSelect={(type) => {
-                onAddAfter(type);
-                setShowAddMenu(false);
-              }}
-              onClose={() => setShowAddMenu(false)}
-            />
-          </div>
+          <>
+            {block.content.startsWith("/") ? (
+              <div
+                className="fixed z-50"
+                style={{
+                  top: menuPosition.top > 0 ? `${menuPosition.top}px` : "50%",
+                  left:
+                    menuPosition.left > 0 ? `${menuPosition.left}px` : "50%",
+                  transform:
+                    menuPosition.top === 0 ? "translate(-50%, -50%)" : "none",
+                }}
+              >
+                <BlockTypeMenu
+                  initialSearch={block.content.substring(1)}
+                  onSelect={(type) => {
+                    if (contentRef.current) {
+                      contentRef.current.textContent = "";
+                    }
+                    onUpdate({ ...block, content: "" });
+                    onAddAfter(type);
+                    setShowAddMenu(false);
+                  }}
+                  onClose={() => {
+                    if (contentRef.current && block.content.startsWith("/")) {
+                      contentRef.current.textContent = "";
+                      onUpdate({ ...block, content: "" });
+                    }
+                    setShowAddMenu(false);
+                  }}
+                />
+              </div>
+            ) : (
+              <div className="fixed sm:absolute left-2 sm:left-0 top-auto sm:top-6 bottom-2 sm:bottom-auto z-50">
+                <BlockTypeMenu
+                  initialSearch=""
+                  onSelect={(type) => {
+                    onAddAfter(type);
+                    setShowAddMenu(false);
+                  }}
+                  onClose={() => setShowAddMenu(false)}
+                />
+              </div>
+            )}
+          </>
         )}
 
         {showActionMenu && (
@@ -425,15 +818,49 @@ export function BlockItem({
       )}
 
       {showAddMenu && (
-        <div className="fixed sm:absolute left-2 sm:left-0 top-auto sm:top-6 bottom-2 sm:bottom-auto z-50">
-          <BlockTypeMenu
-            onSelect={(type) => {
-              onAddAfter(type);
-              setShowAddMenu(false);
-            }}
-            onClose={() => setShowAddMenu(false)}
-          />
-        </div>
+        <>
+          {block.content.startsWith("/") ? (
+            <div
+              className="fixed z-50"
+              style={{
+                top: menuPosition.top > 0 ? `${menuPosition.top}px` : "50%",
+                left: menuPosition.left > 0 ? `${menuPosition.left}px` : "50%",
+                transform:
+                  menuPosition.top === 0 ? "translate(-50%, -50%)" : "none",
+              }}
+            >
+              <BlockTypeMenu
+                initialSearch={block.content.substring(1)}
+                onSelect={(type) => {
+                  if (contentRef.current) {
+                    contentRef.current.textContent = "";
+                  }
+                  onUpdate({ ...block, content: "" });
+                  onAddAfter(type);
+                  setShowAddMenu(false);
+                }}
+                onClose={() => {
+                  if (contentRef.current && block.content.startsWith("/")) {
+                    contentRef.current.textContent = "";
+                    onUpdate({ ...block, content: "" });
+                  }
+                  setShowAddMenu(false);
+                }}
+              />
+            </div>
+          ) : (
+            <div className="fixed sm:absolute left-2 sm:left-0 top-auto sm:top-6 bottom-2 sm:bottom-auto z-50">
+              <BlockTypeMenu
+                initialSearch=""
+                onSelect={(type) => {
+                  onAddAfter(type);
+                  setShowAddMenu(false);
+                }}
+                onClose={() => setShowAddMenu(false)}
+              />
+            </div>
+          )}
+        </>
       )}
 
       {showActionMenu && (
@@ -474,58 +901,7 @@ export function BlockItem({
         </div>
       )}
 
-      {block.type === "bulletList" ? (
-        <div className="flex items-start gap-2">
-          <span className="mt-2 text-gray-600">•</span>
-          <div
-            ref={contentRef}
-            contentEditable={!isTyping}
-            suppressContentEditableWarning
-            onInput={handleInput}
-            onKeyDown={handleKeyDown}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
-            onMouseUp={handleTextSelection}
-            className={`flex-1 min-h-[28px] ${getBlockClasses()} ${
-              isTyping ? "pointer-events-none" : ""
-            }`}
-            data-placeholder={getPlaceholder()}
-          />
-        </div>
-      ) : block.type === "numberedList" ? (
-        <div className="flex items-start gap-2">
-          <span className="mt-0 text-gray-600">1.</span>
-          <div
-            ref={contentRef}
-            contentEditable={!isTyping}
-            suppressContentEditableWarning
-            onInput={handleInput}
-            onKeyDown={handleKeyDown}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
-            onMouseUp={handleTextSelection}
-            className={`flex-1 min-h-[28px] ${getBlockClasses()} ${
-              isTyping ? "pointer-events-none" : ""
-            }`}
-            data-placeholder={getPlaceholder()}
-          />
-        </div>
-      ) : (
-        <div
-          ref={contentRef}
-          contentEditable={!isTyping}
-          suppressContentEditableWarning
-          onInput={handleInput}
-          onKeyDown={handleKeyDown}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
-          onMouseUp={handleTextSelection}
-          className={`min-h-[28px] ${getBlockClasses()} ${
-            isTyping ? "pointer-events-none" : ""
-          }`}
-          data-placeholder={getPlaceholder()}
-        />
-      )}
+      {renderBlockContent()}
 
       {selectedText && !showAIAssistant && (
         <button

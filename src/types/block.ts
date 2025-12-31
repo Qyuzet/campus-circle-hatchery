@@ -1,17 +1,40 @@
-export type BlockType = 
+export type BlockType =
   | "text"
   | "heading1"
   | "heading2"
   | "heading3"
   | "bulletList"
   | "numberedList"
-  | "divider";
+  | "todoList"
+  | "toggleList"
+  | "quote"
+  | "callout"
+  | "divider"
+  | "page"
+  | "table"
+  | "image"
+  | "video"
+  | "audio"
+  | "code"
+  | "file"
+  | "bookmark"
+  | "aiMeetingNotes"
+  | "tableView"
+  | "boardView"
+  | "galleryView"
+  | "listView"
+  | "feedView"
+  | "calendarView";
 
 export interface Block {
   id: string;
   type: BlockType;
   content: string;
   color?: string;
+  checked?: boolean;
+  isOpen?: boolean;
+  language?: string;
+  url?: string;
   metadata?: Record<string, any>;
 }
 
@@ -23,4 +46,3 @@ export interface BlockAction {
   action: (block: Block) => void;
   divider?: boolean;
 }
-
