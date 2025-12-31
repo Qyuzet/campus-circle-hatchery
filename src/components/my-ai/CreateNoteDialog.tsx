@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { AINote } from "@/types";
 import {
   Dialog,
@@ -51,6 +51,10 @@ export function CreateNoteDialog({
   const handleRemoveTag = (tagToRemove: string) => {
     setTags(tags.filter((tag) => tag !== tagToRemove));
   };
+
+  const handleBlocksChange = useCallback((newBlocks: Block[]) => {
+    setBlocks(newBlocks);
+  }, []);
 
   const handleGenerateAI = async (content: string) => {
     if (!content.trim()) {
@@ -154,7 +158,7 @@ export function CreateNoteDialog({
               Press &apos;/&apos; for commands
             </div>
 
-            <BlockEditor initialBlocks={blocks} onChange={setBlocks} />
+            <BlockEditor initialBlocks={blocks} onChange={handleBlocksChange} />
           </div>
 
           <div className="border-t border-gray-200 bg-white px-3 sm:px-4 md:px-6 py-2 sm:py-3 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 sm:gap-4">

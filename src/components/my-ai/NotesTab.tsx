@@ -86,9 +86,9 @@ export function NotesTab({
   };
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="flex flex-col min-h-screen">
       {!isCreating && !editingNote && (
-        <div className="border-b border-gray-200 px-2 sm:px-4 py-2 sm:py-3 bg-white">
+        <div className="border-b border-gray-200 px-2 sm:px-4 py-2 sm:py-3 bg-white sticky top-14 z-10">
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
             <div className="relative flex-1 max-w-full sm:max-w-md">
               <Search className="absolute left-2.5 sm:left-3 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400" />

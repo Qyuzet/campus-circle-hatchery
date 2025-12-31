@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { AINote } from "@/types";
 import { Block } from "@/types/block";
 import { Button } from "@/components/ui/button";
@@ -42,6 +42,10 @@ export function CreateNoteForm({
   const handleRemoveTag = (tagToRemove: string) => {
     setTags(tags.filter((tag) => tag !== tagToRemove));
   };
+
+  const handleBlocksChange = useCallback((newBlocks: Block[]) => {
+    setBlocks(newBlocks);
+  }, []);
 
   const handleSave = async () => {
     const content = blocksToContent(blocks);
@@ -94,8 +98,11 @@ export function CreateNoteForm({
   };
 
   return (
-    <div className="h-full flex flex-col bg-white" onKeyDown={handleKeyDown}>
-      <div className="border-b border-gray-200 px-2 sm:px-4 py-2 flex items-center justify-between">
+    <div
+      className="flex flex-col bg-white min-h-screen"
+      onKeyDown={handleKeyDown}
+    >
+      <div className="border-b border-gray-200 px-2 sm:px-4 py-2 flex items-center justify-between sticky top-14 z-10 bg-white">
         <div className="flex items-center gap-1 sm:gap-2">
           <Button
             variant="ghost"
@@ -161,10 +168,7 @@ export function CreateNoteForm({
             </div>
           )}
 
-          <BlockEditor
-            initialBlocks={blocks}
-            onChange={(newBlocks) => setBlocks(newBlocks)}
-          />
+          <BlockEditor initialBlocks={blocks} onChange={handleBlocksChange} />
         </div>
       </div>
     </div>

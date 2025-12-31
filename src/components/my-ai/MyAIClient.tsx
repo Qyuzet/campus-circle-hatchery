@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { AINote } from "@/types";
 import { NotesTab } from "./NotesTab";
 import { LiveLectureTab } from "./LiveLectureTab";
@@ -35,23 +35,23 @@ export function MyAIClient({
     }))
   );
 
-  const handleNoteCreated = (newNote: AINote) => {
-    setNotes([newNote, ...notes]);
-  };
+  const handleNoteCreated = useCallback((newNote: AINote) => {
+    setNotes((prevNotes) => [newNote, ...prevNotes]);
+  }, []);
 
-  const handleNoteUpdated = (updatedNote: AINote) => {
-    setNotes(
-      notes.map((note) => (note.id === updatedNote.id ? updatedNote : note))
+  const handleNoteUpdated = useCallback((updatedNote: AINote) => {
+    setNotes((prevNotes) =>
+      prevNotes.map((note) => (note.id === updatedNote.id ? updatedNote : note))
     );
-  };
+  }, []);
 
-  const handleNoteDeleted = (noteId: string) => {
-    setNotes(notes.filter((note) => note.id !== noteId));
-  };
+  const handleNoteDeleted = useCallback((noteId: string) => {
+    setNotes((prevNotes) => prevNotes.filter((note) => note.id !== noteId));
+  }, []);
 
   return (
-    <div className="h-screen flex flex-col">
-      <div className="border-b border-gray-200 bg-white">
+    <div className="space-y-0">
+      <div className="border-b border-gray-200 bg-white sticky top-0 z-10">
         <div className="flex">
           <button
             onClick={() => setActiveTab("notes")}

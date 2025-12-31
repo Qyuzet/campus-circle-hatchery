@@ -19,9 +19,16 @@ export function UnreadMessagesProvider({
 }) {
   const [unreadCount, setUnreadCount] = useState(0);
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const isPageVisibleRef = useRef(true);
+  const isFetchingRef = useRef(false);
 
   const refreshUnreadCount = async () => {
+    if (isFetchingRef.current) {
+      return;
+    }
+
     try {
+      isFetchingRef.current = true;
       const conversations = await conversationsAPI.getConversations();
       const total = conversations.reduce(
         (sum: number, conv: any) => sum + (conv.unreadCount || 0),
@@ -30,20 +37,35 @@ export function UnreadMessagesProvider({
       setUnreadCount(total);
     } catch (error) {
       console.error("Error fetching unread count:", error);
+    } finally {
+      isFetchingRef.current = false;
     }
   };
 
   useEffect(() => {
+    const handleVisibilityChange = () => {
+      isPageVisibleRef.current = !document.hidden;
+
+      if (isPageVisibleRef.current) {
+        refreshUnreadCount();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
     refreshUnreadCount();
 
     pollingIntervalRef.current = setInterval(() => {
-      refreshUnreadCount();
-    }, 3000);
+      if (isPageVisibleRef.current && !isFetchingRef.current) {
+        refreshUnreadCount();
+      }
+    }, 10000);
 
     return () => {
       if (pollingIntervalRef.current) {
         clearInterval(pollingIntervalRef.current);
       }
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, []);
 
@@ -63,4 +85,3 @@ export function useUnreadMessages() {
   }
   return context;
 }
-

@@ -9,6 +9,9 @@ export const metadata = {
   description: "AI-powered note-taking and lecture transcription",
 };
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function MyAIPage({
   searchParams,
 }: {
@@ -28,21 +31,37 @@ export default async function MyAIPage({
     redirect("/auth/signin");
   }
 
-  const [aiNotes, liveLectureInterest] = await Promise.all([
-    prisma.aINote.findMany({
-      where: { userId: user.id },
-      orderBy: { createdAt: "desc" },
-    }),
-    prisma.liveLectureInterest.findFirst({
-      where: { userId: user.id },
-      orderBy: { createdAt: "desc" },
-    }),
-  ]);
+  const [aiNotes, liveLectureInterest, wishlistItems, notifications] =
+    await Promise.all([
+      prisma.aINote.findMany({
+        where: { userId: user.id },
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.liveLectureInterest.findFirst({
+        where: { userId: user.id },
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.wishlistItem.findMany({
+        where: { userId: user.id },
+        select: {
+          itemId: true,
+        },
+      }),
+      prisma.notification.findMany({
+        where: { userId: user.id },
+        orderBy: { createdAt: "desc" },
+        take: 20,
+      }),
+    ]);
 
   const tab = searchParams.tab || "notes";
 
   return (
-    <DashboardLayout activeTab="my-ai">
+    <DashboardLayout
+      activeTab="my-ai"
+      wishlistCount={wishlistItems.length}
+      notifications={notifications}
+    >
       <MyAIClient
         initialNotes={aiNotes}
         hasSubmittedInterest={!!liveLectureInterest}
@@ -58,4 +77,3 @@ export default async function MyAIPage({
     </DashboardLayout>
   );
 }
-

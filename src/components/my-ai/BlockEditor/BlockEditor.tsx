@@ -1,7 +1,7 @@
 "use client";
 
 import { Block, BlockType } from "@/types/block";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { BlockItem } from "./BlockItem";
 
 const generateId = () => Math.random().toString(36).substring(2, 15);
@@ -20,10 +20,35 @@ export function BlockEditor({
       ? initialBlocks
       : [{ id: generateId(), type: "text", content: "" }]
   );
+  const isFirstRender = useRef(true);
+  const debounceTimer = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    onChange(blocks);
-  }, [blocks, onChange]);
+    // Skip calling onChange on first render to prevent infinite loop
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+
+    // Debounce onChange to prevent excessive re-renders
+    // Clear previous timer
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
+
+    // Set new timer - only call onChange after 100ms of no changes
+    debounceTimer.current = setTimeout(() => {
+      onChange(blocks);
+    }, 100);
+
+    // Cleanup timer on unmount
+    return () => {
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [blocks]);
 
   const updateBlock = (index: number, updatedBlock: Block) => {
     const newBlocks = [...blocks];
