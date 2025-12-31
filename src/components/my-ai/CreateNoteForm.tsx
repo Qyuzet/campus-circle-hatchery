@@ -16,6 +16,7 @@ interface CreateNoteFormProps {
   onNoteCreated: (note: AINote) => void;
   onCancel: () => void;
   initialNote?: AINote;
+  onAutoSave?: (note: AINote) => void;
 }
 
 export function CreateNoteForm({
@@ -23,6 +24,7 @@ export function CreateNoteForm({
   onNoteCreated,
   onCancel,
   initialNote,
+  onAutoSave,
 }: CreateNoteFormProps) {
   const { setCurrentNote } = useAIContext();
   const [title, setTitle] = useState(initialNote?.title || "");
@@ -31,8 +33,11 @@ export function CreateNoteForm({
   );
   const [tags, setTags] = useState<string[]>(initialNote?.tags || []);
   const [isSaving, setIsSaving] = useState(false);
+  const [isAutoSaving, setIsAutoSaving] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
   const titleRef = useRef<HTMLInputElement>(null);
+  const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (titleRef.current && !initialNote) {
@@ -67,6 +72,64 @@ export function CreateNoteForm({
     setBlocks(newBlocks);
   }, []);
 
+  useEffect(() => {
+    if (!initialNote) return;
+
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+    }
+
+    autoSaveTimeoutRef.current = setTimeout(async () => {
+      const content = blocksToContent(blocks);
+
+      if (!title.trim()) {
+        console.log("Autosave skipped: empty title");
+        return;
+      }
+
+      console.log("Autosaving note...", {
+        title,
+        contentLength: content.length,
+        hasContent: !!content.trim(),
+      });
+      setIsAutoSaving(true);
+
+      try {
+        const response = await fetch(`/api/ai-notes/${initialNote.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title,
+            content,
+            tags,
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error("Autosave failed:", errorData);
+        } else {
+          const updatedNote = await response.json();
+          console.log("Autosave successful");
+          setLastSaved(new Date());
+          if (onAutoSave) {
+            onAutoSave(updatedNote);
+          }
+        }
+      } catch (error) {
+        console.error("Autosave error:", error);
+      } finally {
+        setIsAutoSaving(false);
+      }
+    }, 2000);
+
+    return () => {
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+      }
+    };
+  }, [title, blocks, tags, initialNote]);
+
   const handleSave = async () => {
     const content = blocksToContent(blocks);
 
@@ -80,7 +143,7 @@ export function CreateNoteForm({
       const url = initialNote
         ? `/api/ai-notes/${initialNote.id}`
         : "/api/ai-notes";
-      const method = initialNote ? "PUT" : "POST";
+      const method = initialNote ? "PATCH" : "POST";
 
       const response = await fetch(url, {
         method,
@@ -136,6 +199,20 @@ export function CreateNoteForm({
         </div>
 
         <div className="flex items-center gap-1 sm:gap-2">
+          {initialNote && (
+            <div className="flex items-center gap-2 mr-2">
+              {isAutoSaving ? (
+                <span className="text-xs text-blue-600 flex items-center gap-1">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  <span className="hidden sm:inline">Saving...</span>
+                </span>
+              ) : lastSaved ? (
+                <span className="text-xs text-green-600 hidden sm:inline">
+                  Saved at {lastSaved.toLocaleTimeString()}
+                </span>
+              ) : null}
+            </div>
+          )}
           <Button
             onClick={handleSave}
             disabled={isSaving}

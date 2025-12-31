@@ -80,6 +80,10 @@ export function NotesTab({
     setEditingNote(null);
   };
 
+  const handleAutoSave = (note: AINote) => {
+    onNoteUpdated(note);
+  };
+
   const handleEditNote = (note: AINote) => {
     setEditingNote(note);
     setIsCreating(false);
@@ -153,6 +157,7 @@ export function NotesTab({
         <CreateNoteForm
           userId={userId}
           onNoteCreated={handleNoteUpdated}
+          onAutoSave={handleAutoSave}
           onCancel={() => setEditingNote(null)}
           initialNote={editingNote}
         />

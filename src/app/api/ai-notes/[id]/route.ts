@@ -78,11 +78,11 @@ export async function PATCH(
     const updatedNote = await prisma.aINote.update({
       where: { id: params.id },
       data: {
-        title: title || note.title,
-        content: content || note.content,
-        subject,
-        course,
-        tags: tags || note.tags,
+        title: title !== undefined ? title : note.title,
+        content: content !== undefined ? content : note.content,
+        subject: subject !== undefined ? subject : note.subject,
+        course: course !== undefined ? course : note.course,
+        tags: tags !== undefined ? tags : note.tags,
       },
     });
 
@@ -139,4 +139,3 @@ export async function DELETE(
     );
   }
 }
-
