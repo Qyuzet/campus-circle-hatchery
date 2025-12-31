@@ -122,21 +122,34 @@ export function AIAssistantModal({
         className="fixed bg-white rounded-lg shadow-2xl border border-gray-200 w-64 z-[100]"
         style={{ top: position.top, left: position.left }}
       >
-        {isProcessing && (
-          <div className="absolute inset-0 bg-white/95 backdrop-blur-sm rounded-lg flex flex-col items-center justify-center z-10 pointer-events-none">
-            <Loader2 className="h-8 w-8 text-blue-600 animate-spin mb-2" />
-            <p className="text-sm font-medium text-gray-700">Translating...</p>
-            <p className="text-xs text-gray-500 mt-1">Please wait</p>
-          </div>
-        )}
-        <div className={`p-1.5 ${isProcessing ? "pointer-events-none" : ""}`}>
+        <div className="p-1.5">
           <button
             onClick={() => setView("main")}
             className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 px-2.5 py-1.5 hover:bg-gray-50 rounded transition-colors mb-1"
+            disabled={isProcessing}
           >
             <ArrowLeft className="h-4 w-4" />
             <span>Back</span>
           </button>
+          {isProcessing && (
+            <div className="px-2.5 py-2 text-sm text-gray-600 flex items-center gap-2">
+              <span className="inline-block">Thinking</span>
+              <span className="inline-flex gap-0.5">
+                <span
+                  className="inline-block w-1 h-1 bg-gray-600 rounded-full animate-bounce"
+                  style={{ animationDelay: "0ms" }}
+                ></span>
+                <span
+                  className="inline-block w-1 h-1 bg-gray-600 rounded-full animate-bounce"
+                  style={{ animationDelay: "150ms" }}
+                ></span>
+                <span
+                  className="inline-block w-1 h-1 bg-gray-600 rounded-full animate-bounce"
+                  style={{ animationDelay: "300ms" }}
+                ></span>
+              </span>
+            </div>
+          )}
           <div className="border-t border-gray-100 pt-1.5 space-y-0.5">
             {[
               "English",
@@ -169,23 +182,34 @@ export function AIAssistantModal({
         className="fixed bg-white rounded-lg shadow-2xl border border-gray-200 w-64 z-[100]"
         style={{ top: position.top, left: position.left }}
       >
-        {isProcessing && (
-          <div className="absolute inset-0 bg-white/95 backdrop-blur-sm rounded-lg flex flex-col items-center justify-center z-10 pointer-events-none">
-            <Loader2 className="h-8 w-8 text-blue-600 animate-spin mb-2" />
-            <p className="text-sm font-medium text-gray-700">
-              Changing tone...
-            </p>
-            <p className="text-xs text-gray-500 mt-1">Please wait</p>
-          </div>
-        )}
-        <div className={`p-1.5 ${isProcessing ? "pointer-events-none" : ""}`}>
+        <div className="p-1.5">
           <button
             onClick={() => setView("main")}
             className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 px-2.5 py-1.5 hover:bg-gray-50 rounded transition-colors mb-1"
+            disabled={isProcessing}
           >
             <ArrowLeft className="h-4 w-4" />
             <span>Back</span>
           </button>
+          {isProcessing && (
+            <div className="px-2.5 py-2 text-sm text-gray-600 flex items-center gap-2">
+              <span className="inline-block">Thinking</span>
+              <span className="inline-flex gap-0.5">
+                <span
+                  className="inline-block w-1 h-1 bg-gray-600 rounded-full animate-bounce"
+                  style={{ animationDelay: "0ms" }}
+                ></span>
+                <span
+                  className="inline-block w-1 h-1 bg-gray-600 rounded-full animate-bounce"
+                  style={{ animationDelay: "150ms" }}
+                ></span>
+                <span
+                  className="inline-block w-1 h-1 bg-gray-600 rounded-full animate-bounce"
+                  style={{ animationDelay: "300ms" }}
+                ></span>
+              </span>
+            </div>
+          )}
           <div className="border-t border-gray-100 pt-1.5 space-y-0.5">
             {(
               [
@@ -218,21 +242,34 @@ export function AIAssistantModal({
         className="fixed bg-white rounded-lg shadow-2xl border border-gray-200 w-96 z-[100]"
         style={{ top: position.top, left: position.left }}
       >
-        {isProcessing && (
-          <div className="absolute inset-0 bg-white/95 backdrop-blur-sm rounded-lg flex flex-col items-center justify-center z-10 pointer-events-none">
-            <Loader2 className="h-8 w-8 text-blue-600 animate-spin mb-2" />
-            <p className="text-sm font-medium text-gray-700">Processing...</p>
-            <p className="text-xs text-gray-500 mt-1">AI is working on it</p>
-          </div>
-        )}
-        <div className={`p-2 ${isProcessing ? "pointer-events-none" : ""}`}>
+        <div className="p-2">
           <button
             onClick={() => setView("main")}
             className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 px-2 py-1.5 hover:bg-gray-50 rounded-md transition-colors mb-1"
+            disabled={isProcessing}
           >
             <ArrowLeft className="h-4 w-4" />
             <span>Back</span>
           </button>
+          {isProcessing && (
+            <div className="px-2.5 py-2 text-sm text-gray-600 flex items-center gap-2">
+              <span className="inline-block">Thinking</span>
+              <span className="inline-flex gap-0.5">
+                <span
+                  className="inline-block w-1 h-1 bg-gray-600 rounded-full animate-bounce"
+                  style={{ animationDelay: "0ms" }}
+                ></span>
+                <span
+                  className="inline-block w-1 h-1 bg-gray-600 rounded-full animate-bounce"
+                  style={{ animationDelay: "150ms" }}
+                ></span>
+                <span
+                  className="inline-block w-1 h-1 bg-gray-600 rounded-full animate-bounce"
+                  style={{ animationDelay: "300ms" }}
+                ></span>
+              </span>
+            </div>
+          )}
           <div className="border-t border-gray-100 pt-2 mt-1">
             <input
               type="text"
@@ -249,24 +286,14 @@ export function AIAssistantModal({
               autoFocus
               disabled={isProcessing}
             />
-            {customPrompt.trim() && (
+            {customPrompt.trim() && !isProcessing && (
               <div className="px-2 pb-2 pt-1">
                 <button
                   onClick={handleCustomPrompt}
-                  disabled={isProcessing}
-                  className="w-full px-3 py-1.5 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full px-3 py-1.5 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors flex items-center justify-center gap-2"
                 >
-                  {isProcessing ? (
-                    <>
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      <span>Processing...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="h-3.5 w-3.5" />
-                      <span>Generate</span>
-                    </>
-                  )}
+                  <Sparkles className="h-3.5 w-3.5" />
+                  <span>Generate</span>
                 </button>
               </div>
             )}
@@ -282,23 +309,37 @@ export function AIAssistantModal({
       className="fixed bg-white rounded-lg shadow-2xl border border-gray-200 w-64 z-[100]"
       style={{ top: position.top, left: position.left }}
     >
-      {isProcessing && (
-        <div className="absolute inset-0 bg-white/95 backdrop-blur-sm rounded-lg flex flex-col items-center justify-center z-10 pointer-events-none">
-          <Loader2 className="h-8 w-8 text-blue-600 animate-spin mb-2" />
-          <p className="text-sm font-medium text-gray-700">AI is thinking...</p>
-          <p className="text-xs text-gray-500 mt-1">This may take a moment</p>
-        </div>
-      )}
-      <div className={`p-1.5 ${isProcessing ? "pointer-events-none" : ""}`}>
+      <div className="p-1.5">
         <div className="mb-1">
           <button
             onClick={() => setView("custom")}
             className="w-full text-left px-2.5 py-1.5 text-sm text-gray-500 hover:bg-gray-50 rounded transition-colors flex items-center gap-2"
+            disabled={isProcessing}
           >
             <Sparkles className="h-4 w-4" />
             <span>Ask AI anything...</span>
           </button>
         </div>
+
+        {isProcessing && (
+          <div className="px-2.5 py-2 text-sm text-gray-600 flex items-center gap-2 border-t border-gray-100">
+            <span className="inline-block">Thinking</span>
+            <span className="inline-flex gap-0.5">
+              <span
+                className="inline-block w-1 h-1 bg-gray-600 rounded-full animate-bounce"
+                style={{ animationDelay: "0ms" }}
+              ></span>
+              <span
+                className="inline-block w-1 h-1 bg-gray-600 rounded-full animate-bounce"
+                style={{ animationDelay: "150ms" }}
+              ></span>
+              <span
+                className="inline-block w-1 h-1 bg-gray-600 rounded-full animate-bounce"
+                style={{ animationDelay: "300ms" }}
+              ></span>
+            </span>
+          </div>
+        )}
 
         <div className="border-t border-gray-100 pt-1.5 mb-1.5">
           <div className="text-xs font-medium text-gray-400 px-2.5 py-1">

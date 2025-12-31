@@ -312,9 +312,6 @@ export function BlockItem({
         className="group relative py-2 pl-10 sm:pl-16"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        draggable
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
         onDragOver={handleDragOver}
         onDrop={handleDrop}
       >
@@ -327,6 +324,9 @@ export function BlockItem({
             <Plus className="h-4 w-4 text-gray-400" />
           </button>
           <button
+            draggable
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
             onClick={() => setShowActionMenu(true)}
             className="p-0.5 sm:p-1 hover:bg-gray-100 rounded cursor-grab active:cursor-grabbing transition-colors"
             title="Drag to move"
@@ -399,9 +399,6 @@ export function BlockItem({
       }`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      draggable
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
       onDragOver={handleDragOver}
       onDrop={handleDrop}
     >
@@ -415,6 +412,9 @@ export function BlockItem({
             <Plus className="h-4 w-4 text-gray-400" />
           </button>
           <button
+            draggable
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
             onClick={() => setShowActionMenu(!showActionMenu)}
             className="p-0.5 sm:p-1 hover:bg-gray-100 rounded cursor-grab active:cursor-grabbing transition-colors"
             title="Drag to move"
