@@ -87,9 +87,17 @@ export function BlockEditor({
     setBlocks(newBlocks);
   };
 
-  const convertBlock = (index: number, newType: BlockType) => {
+  const convertBlock = (
+    index: number,
+    newType: BlockType,
+    clearContent = false
+  ) => {
     const newBlocks = [...blocks];
-    newBlocks[index] = { ...newBlocks[index], type: newType };
+    newBlocks[index] = {
+      ...newBlocks[index],
+      type: newType,
+      ...(clearContent && { content: "" }),
+    };
     setBlocks(newBlocks);
   };
 
@@ -135,6 +143,20 @@ export function BlockEditor({
     setBlocks(newBlocks);
   };
 
+  const getListNumber = (index: number): number => {
+    if (blocks[index].type !== "numberedList") return 1;
+
+    let number = 1;
+    for (let i = index - 1; i >= 0; i--) {
+      if (blocks[i].type === "numberedList") {
+        number++;
+      } else {
+        break;
+      }
+    }
+    return number;
+  };
+
   return (
     <div className="w-full">
       {blocks.map((block, index) => (
@@ -142,6 +164,7 @@ export function BlockEditor({
           key={block.id}
           block={block}
           isFirst={index === 0}
+          listNumber={getListNumber(index)}
           onUpdate={(updatedBlock) => updateBlock(index, updatedBlock)}
           onDelete={() => deleteBlock(index)}
           onDuplicate={() => duplicateBlock(index)}
@@ -149,7 +172,9 @@ export function BlockEditor({
           onAddAfter={(type) => addBlockAfter(index, type)}
           onMoveUp={() => moveBlockUp(index)}
           onMoveDown={() => moveBlockDown(index)}
-          onConvertTo={(type) => convertBlock(index, type)}
+          onConvertTo={(type, clearContent) =>
+            convertBlock(index, type, clearContent)
+          }
         />
       ))}
     </div>

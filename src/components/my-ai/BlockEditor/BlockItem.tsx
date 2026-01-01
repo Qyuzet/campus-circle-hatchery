@@ -27,12 +27,16 @@ import {
 import { useState, useRef, useEffect } from "react";
 import { BlockTypeMenu } from "./BlockTypeMenu";
 import { BlockActionMenu } from "./BlockActionMenu";
+import { MediaUpload } from "./MediaUpload";
+import { CodeBlock } from "./CodeBlock";
+import { TableBlock } from "./TableBlock";
 import { AIAssistantModal } from "./AIAssistantModal";
 import { toast } from "sonner";
 
 interface BlockItemProps {
   block: Block;
   isFirst: boolean;
+  listNumber?: number;
   onUpdate: (block: Block) => void;
   onDelete: () => void;
   onDuplicate: () => void;
@@ -40,12 +44,13 @@ interface BlockItemProps {
   onAddAfter: (type: BlockType) => void;
   onMoveUp: () => void;
   onMoveDown: () => void;
-  onConvertTo: (type: BlockType) => void;
+  onConvertTo: (type: BlockType, clearContent?: boolean) => void;
 }
 
 export function BlockItem({
   block,
   isFirst,
+  listNumber = 1,
   onUpdate,
   onDelete,
   onDuplicate,
@@ -158,6 +163,35 @@ export function BlockItem({
 
   const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
     const newContent = e.currentTarget.textContent || "";
+
+    // Check for markdown shortcuts
+    const shortcuts: Record<
+      string,
+      { type: BlockType; removePrefix: boolean }
+    > = {
+      "# ": { type: "heading1", removePrefix: true },
+      "## ": { type: "heading2", removePrefix: true },
+      "### ": { type: "heading3", removePrefix: true },
+      "- ": { type: "bulletList", removePrefix: true },
+      "* ": { type: "bulletList", removePrefix: true },
+      "1. ": { type: "numberedList", removePrefix: true },
+      "[] ": { type: "todoList", removePrefix: true },
+      "> ": { type: "toggleList", removePrefix: true },
+      '" ': { type: "quote", removePrefix: true },
+      "--- ": { type: "divider", removePrefix: true },
+      "``` ": { type: "code", removePrefix: true },
+    };
+
+    for (const [shortcut, config] of Object.entries(shortcuts)) {
+      if (newContent === shortcut) {
+        const contentToSet = config.removePrefix ? "" : newContent;
+        if (contentRef.current) {
+          contentRef.current.textContent = contentToSet;
+        }
+        onUpdate({ ...block, type: config.type, content: contentToSet });
+        return;
+      }
+    }
 
     // Show menu when "/" is typed
     if (newContent.startsWith("/")) {
@@ -291,7 +325,23 @@ export function BlockItem({
     // Enter key - create new block
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      onAddAfter("text");
+
+      // For list types, create same type of block
+      const listTypes: BlockType[] = [
+        "bulletList",
+        "numberedList",
+        "todoList",
+        "toggleList",
+      ];
+      const newBlockType = listTypes.includes(block.type) ? block.type : "text";
+
+      // If current block is empty and it's a list, convert to text instead
+      if (content === "" && listTypes.includes(block.type)) {
+        onUpdate({ ...block, type: "text" });
+        return;
+      }
+
+      onAddAfter(newBlockType);
       setTimeout(() => {
         const nextBlock = blockRef.current?.nextElementSibling?.querySelector(
           "[contenteditable]"
@@ -300,10 +350,22 @@ export function BlockItem({
       }, 10);
     }
 
-    // Backspace on empty block - delete block
+    // Backspace on empty block - delete block or convert list to text
     if (e.key === "Backspace" && content === "") {
       e.preventDefault();
-      onDelete();
+      const listTypes: BlockType[] = [
+        "bulletList",
+        "numberedList",
+        "todoList",
+        "toggleList",
+      ];
+
+      // If it's a list type, convert to text first
+      if (listTypes.includes(block.type)) {
+        onUpdate({ ...block, type: "text" });
+      } else {
+        onDelete();
+      }
     }
 
     // Close menu on backspace if content becomes empty
@@ -466,7 +528,7 @@ export function BlockItem({
       case "bulletList":
         return (
           <div className="flex items-start gap-2">
-            <span className="mt-2 text-gray-600">•</span>
+            <span className="text-gray-600 leading-none mt-[6px]">•</span>
             <div {...baseEditableProps} className={`flex-1 ${baseClassName}`} />
           </div>
         );
@@ -474,7 +536,9 @@ export function BlockItem({
       case "numberedList":
         return (
           <div className="flex items-start gap-2">
-            <span className="mt-0 text-gray-600">1.</span>
+            <span className="text-gray-600 min-w-[24px] leading-none mt-[6px]">
+              {listNumber}.
+            </span>
             <div {...baseEditableProps} className={`flex-1 ${baseClassName}`} />
           </div>
         );
@@ -486,7 +550,7 @@ export function BlockItem({
               onClick={() => {
                 onUpdate({ ...block, checked: !block.checked });
               }}
-              className="mt-1 text-gray-600 hover:text-gray-900 transition-colors"
+              className="text-gray-600 hover:text-gray-900 transition-colors flex-shrink-0 mt-[4px]"
             >
               {block.checked ? (
                 <CheckSquare className="h-4 w-4" />
@@ -505,20 +569,46 @@ export function BlockItem({
 
       case "toggleList":
         return (
-          <div className="flex items-start gap-2">
-            <button
-              onClick={() => {
-                onUpdate({ ...block, isOpen: !block.isOpen });
-              }}
-              className="mt-1 text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              {block.isOpen ? (
-                <ChevronDown className="h-4 w-4" />
-              ) : (
-                <ChevronRight className="h-4 w-4" />
-              )}
-            </button>
-            <div {...baseEditableProps} className={`flex-1 ${baseClassName}`} />
+          <div>
+            <div className="flex items-start gap-2">
+              <button
+                onClick={() => {
+                  onUpdate({ ...block, isOpen: !block.isOpen });
+                }}
+                className="text-gray-600 hover:text-gray-900 transition-colors flex-shrink-0 mt-[4px]"
+              >
+                {block.isOpen ? (
+                  <ChevronDown className="h-4 w-4" />
+                ) : (
+                  <ChevronRight className="h-4 w-4" />
+                )}
+              </button>
+              <div
+                {...baseEditableProps}
+                className={`flex-1 ${baseClassName} font-medium`}
+              />
+            </div>
+            {block.isOpen && (
+              <div className="ml-6 mt-2 pl-4 border-l-2 border-gray-200">
+                <div
+                  contentEditable
+                  suppressContentEditableWarning
+                  onInput={(e) => {
+                    onUpdate({
+                      ...block,
+                      metadata: {
+                        ...block.metadata,
+                        nestedContent: e.currentTarget.textContent || "",
+                      },
+                    });
+                  }}
+                  className="text-sm text-gray-600 outline-none"
+                  placeholder="Add nested content..."
+                >
+                  {block.metadata?.nestedContent || ""}
+                </div>
+              </div>
+            )}
           </div>
         );
 
@@ -539,9 +629,13 @@ export function BlockItem({
 
       case "code":
         return (
-          <div className="bg-gray-900 text-gray-100 p-4 rounded-lg font-mono text-sm">
-            <div {...baseEditableProps} className={baseClassName} />
-          </div>
+          <CodeBlock
+            content={block.content}
+            language={block.language}
+            onUpdate={(content, language) => {
+              onUpdate({ ...block, content, language });
+            }}
+          />
         );
 
       case "page":
@@ -554,45 +648,163 @@ export function BlockItem({
 
       case "image":
         return (
-          <div className="p-4 border-2 border-dashed border-gray-300 rounded-lg text-center">
-            <ImageIcon className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-            <p className="text-sm text-gray-500">Click to upload image</p>
-          </div>
+          <MediaUpload
+            type="image"
+            currentUrl={block.url}
+            onUpload={(url, file) => {
+              onUpdate({
+                ...block,
+                url,
+                metadata: { ...block.metadata, fileName: file.name },
+              });
+            }}
+            onRemove={() => {
+              onUpdate({ ...block, url: undefined });
+            }}
+            icon={ImageIcon}
+            label="image"
+          />
         );
 
       case "video":
         return (
-          <div className="p-4 border-2 border-dashed border-gray-300 rounded-lg text-center">
-            <VideoIcon className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-            <p className="text-sm text-gray-500">Click to upload video</p>
-          </div>
+          <MediaUpload
+            type="video"
+            currentUrl={block.url}
+            onUpload={(url, file) => {
+              onUpdate({
+                ...block,
+                url,
+                metadata: { ...block.metadata, fileName: file.name },
+              });
+            }}
+            onRemove={() => {
+              onUpdate({ ...block, url: undefined });
+            }}
+            icon={VideoIcon}
+            label="video"
+          />
         );
 
       case "audio":
         return (
-          <div className="p-4 border-2 border-dashed border-gray-300 rounded-lg text-center">
-            <Volume2 className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-            <p className="text-sm text-gray-500">Click to upload audio</p>
-          </div>
+          <MediaUpload
+            type="audio"
+            currentUrl={block.url}
+            onUpload={(url, file) => {
+              onUpdate({
+                ...block,
+                url,
+                metadata: { ...block.metadata, fileName: file.name },
+              });
+            }}
+            onRemove={() => {
+              onUpdate({ ...block, url: undefined });
+            }}
+            icon={Volume2}
+            label="audio"
+          />
         );
 
       case "file":
         return (
-          <div className="p-4 border-2 border-dashed border-gray-300 rounded-lg text-center">
-            <Paperclip className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-            <p className="text-sm text-gray-500">Click to upload file</p>
-          </div>
+          <MediaUpload
+            type="file"
+            currentUrl={block.url}
+            onUpload={(url, file) => {
+              onUpdate({
+                ...block,
+                url,
+                metadata: { ...block.metadata, fileName: file.name },
+              });
+            }}
+            onRemove={() => {
+              onUpdate({ ...block, url: undefined });
+            }}
+            icon={Paperclip}
+            label="file"
+          />
         );
 
       case "bookmark":
         return (
-          <div className="flex items-center gap-2 p-3 border border-gray-300 rounded-lg hover:bg-gray-50">
-            <BookmarkIcon className="h-4 w-4 text-gray-600" />
-            <div {...baseEditableProps} className={`flex-1 ${baseClassName}`} />
+          <div className="border border-gray-300 rounded-lg overflow-hidden">
+            {!block.url ? (
+              <div className="p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <BookmarkIcon className="h-4 w-4 text-gray-600" />
+                  <span className="text-sm font-medium text-gray-700">
+                    Add a link
+                  </span>
+                </div>
+                <input
+                  type="url"
+                  placeholder="Paste a link..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      const url = e.currentTarget.value;
+                      if (url) {
+                        onUpdate({ ...block, url });
+                      }
+                    }
+                  }}
+                  autoFocus
+                />
+              </div>
+            ) : (
+              <a
+                href={block.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-start gap-3 p-4 hover:bg-gray-50 transition-colors group"
+              >
+                <BookmarkIcon className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <div
+                    contentEditable
+                    suppressContentEditableWarning
+                    onInput={(e) => {
+                      onUpdate({
+                        ...block,
+                        content: e.currentTarget.textContent || "",
+                      });
+                    }}
+                    className="text-sm font-medium text-gray-900 mb-1 outline-none"
+                  >
+                    {block.content || "Untitled"}
+                  </div>
+                  <div className="text-xs text-gray-500 truncate">
+                    {block.url}
+                  </div>
+                </div>
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    onUpdate({ ...block, url: undefined });
+                  }}
+                  className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-600 transition-all"
+                >
+                  ×
+                </button>
+              </a>
+            )}
           </div>
         );
 
       case "table":
+        return (
+          <TableBlock
+            data={block.metadata?.tableData}
+            onUpdate={(tableData) => {
+              onUpdate({
+                ...block,
+                metadata: { ...block.metadata, tableData },
+              });
+            }}
+          />
+        );
+
       case "tableView":
         return (
           <div className="p-8 border border-gray-300 rounded-lg text-center">
@@ -832,18 +1044,16 @@ export function BlockItem({
               <BlockTypeMenu
                 initialSearch={block.content.substring(1)}
                 onSelect={(type) => {
+                  setShowAddMenu(false);
                   if (contentRef.current) {
                     contentRef.current.textContent = "";
                   }
-                  onUpdate({ ...block, content: "" });
-                  onAddAfter(type);
-                  setShowAddMenu(false);
+                  onConvertTo(type, true);
+                  setTimeout(() => {
+                    contentRef.current?.focus();
+                  }, 10);
                 }}
                 onClose={() => {
-                  if (contentRef.current && block.content.startsWith("/")) {
-                    contentRef.current.textContent = "";
-                    onUpdate({ ...block, content: "" });
-                  }
                   setShowAddMenu(false);
                 }}
               />

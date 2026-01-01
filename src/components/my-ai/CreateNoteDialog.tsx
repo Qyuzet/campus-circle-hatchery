@@ -112,7 +112,14 @@ export function CreateNoteDialog({
           tags,
           aiSummary: aiData?.summary,
           aiKeyPoints: aiData?.keyPoints,
-          aiMetadata: aiData?.metadata,
+          aiMetadata: {
+            ...aiData?.metadata,
+            blocks: blocks,
+            wordCount: content.split(/\s+/).filter(Boolean).length,
+            readingTime: Math.ceil(
+              content.split(/\s+/).filter(Boolean).length / 200
+            ),
+          },
         }),
       });
 

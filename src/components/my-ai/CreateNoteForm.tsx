@@ -28,9 +28,12 @@ export function CreateNoteForm({
 }: CreateNoteFormProps) {
   const { setCurrentNote } = useAIContext();
   const [title, setTitle] = useState(initialNote?.title || "");
-  const [blocks, setBlocks] = useState<Block[]>(() =>
-    contentToBlocks(initialNote?.content || "")
-  );
+  const [blocks, setBlocks] = useState<Block[]>(() => {
+    if (initialNote?.aiMetadata && (initialNote.aiMetadata as any).blocks) {
+      return (initialNote.aiMetadata as any).blocks as Block[];
+    }
+    return contentToBlocks(initialNote?.content || "");
+  });
   const [tags, setTags] = useState<string[]>(initialNote?.tags || []);
   const [isSaving, setIsSaving] = useState(false);
   const [isAutoSaving, setIsAutoSaving] = useState(false);
@@ -102,6 +105,13 @@ export function CreateNoteForm({
             title,
             content,
             tags,
+            aiMetadata: {
+              blocks: blocks,
+              wordCount: content.split(/\s+/).filter(Boolean).length,
+              readingTime: Math.ceil(
+                content.split(/\s+/).filter(Boolean).length / 200
+              ),
+            },
           }),
         });
 
@@ -152,6 +162,13 @@ export function CreateNoteForm({
           title,
           content,
           tags,
+          aiMetadata: {
+            blocks: blocks,
+            wordCount: content.split(/\s+/).filter(Boolean).length,
+            readingTime: Math.ceil(
+              content.split(/\s+/).filter(Boolean).length / 200
+            ),
+          },
         }),
       });
 

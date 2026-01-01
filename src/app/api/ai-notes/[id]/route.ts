@@ -73,7 +73,7 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const { title, content, subject, course, tags } = body;
+    const { title, content, subject, course, tags, aiMetadata } = body;
 
     const updatedNote = await prisma.aINote.update({
       where: { id: params.id },
@@ -83,6 +83,7 @@ export async function PATCH(
         subject: subject !== undefined ? subject : note.subject,
         course: course !== undefined ? course : note.course,
         tags: tags !== undefined ? tags : note.tags,
+        aiMetadata: aiMetadata !== undefined ? aiMetadata : note.aiMetadata,
       },
     });
 
