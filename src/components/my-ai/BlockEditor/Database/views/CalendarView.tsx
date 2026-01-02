@@ -1,8 +1,9 @@
 "use client";
 
-import { Database, DatabaseProperty } from "@/types/database";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Database, DatabaseProperty, DatabaseItem } from "@/types/database";
+import { ChevronLeft, ChevronRight, Plus, X, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useState } from "react";
 
 interface CalendarViewProps {
@@ -25,6 +26,8 @@ export function CalendarView({
   onDeleteProperty,
 }: CalendarViewProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [editingItem, setEditingItem] = useState<DatabaseItem | null>(null);
   const dateProperty = database.properties.find((p) => p.type === "date");
 
   const year = currentDate.getFullYear();
@@ -32,6 +35,17 @@ export function CalendarView({
 
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  const handleCreateDateProperty = () => {
+    if (onAddProperty) {
+      const newProperty: DatabaseProperty = {
+        id: Math.random().toString(36).substring(2, 15),
+        name: "Date",
+        type: "date",
+      };
+      onAddProperty(newProperty);
+    }
+  };
 
   const getItemsForDate = (day: number) => {
     if (!dateProperty) return [];
@@ -50,6 +64,28 @@ export function CalendarView({
   const nextMonth = () => {
     setCurrentDate(new Date(year, month + 1, 1));
   };
+
+  if (!dateProperty) {
+    return (
+      <div className="p-8 flex flex-col items-center justify-center text-center">
+        <div className="max-w-md">
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            Set up Calendar View
+          </h3>
+          <p className="text-sm text-gray-600 mb-4">
+            Calendar view requires a Date property to display events. Create one
+            to get started.
+          </p>
+          {onAddProperty && (
+            <Button onClick={handleCreateDateProperty} className="gap-2">
+              <Plus className="h-4 w-4" />
+              Create Date Property
+            </Button>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4">
@@ -100,20 +136,11 @@ export function CalendarView({
               } hover:border-blue-400 cursor-pointer`}
               onClick={() => {
                 if (dateProperty) {
-                  onAddItem();
-                  setTimeout(() => {
-                    const newItem = database.items[database.items.length - 1];
-                    if (newItem) {
-                      const dateStr = `${year}-${String(month + 1).padStart(
-                        2,
-                        "0"
-                      )}-${String(day).padStart(2, "0")}`;
-                      onUpdateItem(newItem.id, {
-                        ...newItem.properties,
-                        [dateProperty.id]: dateStr,
-                      });
-                    }
-                  }, 100);
+                  const dateStr = `${year}-${String(month + 1).padStart(
+                    2,
+                    "0"
+                  )}-${String(day).padStart(2, "0")}`;
+                  setSelectedDate(dateStr);
                 }
               }}
             >
@@ -129,6 +156,10 @@ export function CalendarView({
                       <div
                         key={item.id}
                         className="text-[10px] bg-blue-500 text-white px-1 rounded truncate"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingItem(item);
+                        }}
                       >
                         {title || "Event"}
                       </div>
@@ -145,6 +176,145 @@ export function CalendarView({
           );
         })}
       </div>
+
+      {selectedDate && dateProperty && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 max-h-[80vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">
+                Events on {new Date(selectedDate).toLocaleDateString()}
+              </h3>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSelectedDate(null)}
+                className="h-6 w-6 p-0"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <div className="space-y-2 mb-4">
+              {getItemsForDate(parseInt(selectedDate.split("-")[2])).map(
+                (item) => {
+                  const titleProp = database.properties[0];
+                  const title = titleProp ? item.properties[titleProp.id] : "";
+                  return (
+                    <div
+                      key={item.id}
+                      className="flex items-center justify-between p-2 bg-gray-50 rounded hover:bg-gray-100 cursor-pointer"
+                      onClick={() => {
+                        setEditingItem(item);
+                        setSelectedDate(null);
+                      }}
+                    >
+                      <span className="text-sm">
+                        {title || "Untitled Event"}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDeleteItem(item.id);
+                        }}
+                        className="h-6 w-6 p-0 text-red-600"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  );
+                }
+              )}
+            </div>
+
+            <Button
+              onClick={() => {
+                onAddItem();
+                setTimeout(() => {
+                  const newItem = database.items[database.items.length - 1];
+                  if (newItem && dateProperty) {
+                    onUpdateItem(newItem.id, {
+                      ...newItem.properties,
+                      [dateProperty.id]: selectedDate,
+                    });
+                    setEditingItem(newItem);
+                    setSelectedDate(null);
+                  }
+                }, 100);
+              }}
+              className="w-full gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Add Event
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {editingItem && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 max-h-[80vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">Edit Event</h3>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setEditingItem(null)}
+                className="h-6 w-6 p-0"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <div className="space-y-3">
+              {database.properties.map((prop) => (
+                <div key={prop.id}>
+                  <label className="text-xs font-medium text-gray-600 block mb-1">
+                    {prop.name}
+                  </label>
+                  <Input
+                    type={prop.type === "date" ? "date" : "text"}
+                    value={editingItem.properties[prop.id] || ""}
+                    onChange={(e) => {
+                      const updatedProperties = {
+                        ...editingItem.properties,
+                        [prop.id]: e.target.value,
+                      };
+                      onUpdateItem(editingItem.id, updatedProperties);
+                      setEditingItem({
+                        ...editingItem,
+                        properties: updatedProperties,
+                      });
+                    }}
+                    className="w-full"
+                  />
+                </div>
+              ))}
+            </div>
+
+            <div className="flex gap-2 mt-4">
+              <Button
+                variant="outline"
+                onClick={() => setEditingItem(null)}
+                className="flex-1"
+              >
+                Close
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  onDeleteItem(editingItem.id);
+                  setEditingItem(null);
+                }}
+                className="flex-1"
+              >
+                Delete Event
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

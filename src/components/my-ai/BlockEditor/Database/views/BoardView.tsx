@@ -145,7 +145,7 @@ export function BoardView({
     );
   };
 
-  if (statuses.length === 0) {
+  if (statuses.length === 0 && !isEditingColumns) {
     return (
       <div className="p-8 flex flex-col items-center justify-center text-center">
         <div className="max-w-md">
@@ -167,26 +167,28 @@ export function BoardView({
 
   return (
     <div className="p-4">
-      <div className="flex items-center justify-between mb-4">
-        <div className="text-sm text-gray-600">
-          {statusProperty ? (
-            <span>
-              Grouped by: <strong>{statusProperty.name}</strong>
-            </span>
-          ) : (
-            <span>Board View</span>
-          )}
+      {statuses.length > 0 && (
+        <div className="flex items-center justify-between mb-4">
+          <div className="text-sm text-gray-600">
+            {statusProperty ? (
+              <span>
+                Grouped by: <strong>{statusProperty.name}</strong>
+              </span>
+            ) : (
+              <span>Board View</span>
+            )}
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleStartEditingColumns}
+            className="gap-2"
+          >
+            <Settings2 className="h-4 w-4" />
+            Edit Columns
+          </Button>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleStartEditingColumns}
-          className="gap-2"
-        >
-          <Settings2 className="h-4 w-4" />
-          Edit Columns
-        </Button>
-      </div>
+      )}
 
       {isEditingColumns && (
         <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
