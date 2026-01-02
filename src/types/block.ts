@@ -19,6 +19,7 @@ export type BlockType =
   | "file"
   | "bookmark"
   | "aiMeetingNotes"
+  | "database"
   | "tableView"
   | "boardView"
   | "galleryView"

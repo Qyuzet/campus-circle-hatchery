@@ -16,6 +16,7 @@ import {
   ListOrdered,
   Minus,
   ChevronRight,
+  Languages,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect, useRef } from "react";
@@ -137,6 +138,13 @@ export function BlockActionMenu({
       icon: Sparkles,
       shortcut: "Ctrl+J",
       action: () => onAIAction("ask"),
+      category: "ai",
+    },
+    {
+      id: "translate",
+      label: "Terjemahkan",
+      icon: Languages,
+      action: () => onAIAction("translate"),
       category: "ai",
     },
   ];

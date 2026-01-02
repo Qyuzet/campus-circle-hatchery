@@ -31,6 +31,9 @@ import { MediaUpload } from "./MediaUpload";
 import { CodeBlock } from "./CodeBlock";
 import { TableBlock } from "./TableBlock";
 import { AIAssistantModal } from "./AIAssistantModal";
+import { TranslateDialog } from "./TranslateDialog";
+import { DatabaseBlock } from "./Database/DatabaseBlock";
+import { Database } from "@/types/database";
 import { toast } from "sonner";
 
 interface BlockItemProps {
@@ -66,6 +69,7 @@ export function BlockItem({
   const [showActionMenu, setShowActionMenu] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [showAIAssistant, setShowAIAssistant] = useState(false);
+  const [showTranslateDialog, setShowTranslateDialog] = useState(false);
   const [selectedText, setSelectedText] = useState("");
   const [aiModalPosition, setAIModalPosition] = useState({ top: 0, left: 0 });
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
@@ -591,6 +595,15 @@ export function BlockItem({
             {block.isOpen && (
               <div className="ml-6 mt-2 pl-4 border-l-2 border-gray-200">
                 <div
+                  ref={(el) => {
+                    if (
+                      el &&
+                      !el.textContent &&
+                      block.metadata?.nestedContent
+                    ) {
+                      el.textContent = block.metadata.nestedContent;
+                    }
+                  }}
                   contentEditable
                   suppressContentEditableWarning
                   onInput={(e) => {
@@ -603,10 +616,8 @@ export function BlockItem({
                     });
                   }}
                   className="text-sm text-gray-600 outline-none"
-                  placeholder="Add nested content..."
-                >
-                  {block.metadata?.nestedContent || ""}
-                </div>
+                  data-placeholder="Add nested content..."
+                />
               </div>
             )}
           </div>
@@ -805,51 +816,48 @@ export function BlockItem({
           />
         );
 
+      case "database":
       case "tableView":
-        return (
-          <div className="p-8 border border-gray-300 rounded-lg text-center">
-            <TableIcon className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-            <p className="text-sm text-gray-500">Table view</p>
-          </div>
-        );
-
       case "boardView":
-        return (
-          <div className="p-8 border border-gray-300 rounded-lg text-center">
-            <Columns className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-            <p className="text-sm text-gray-500">Board view</p>
-          </div>
-        );
-
       case "galleryView":
-        return (
-          <div className="p-8 border border-gray-300 rounded-lg text-center">
-            <LayoutGrid className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-            <p className="text-sm text-gray-500">Gallery view</p>
-          </div>
-        );
-
       case "listView":
-        return (
-          <div className="p-8 border border-gray-300 rounded-lg text-center">
-            <LayoutList className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-            <p className="text-sm text-gray-500">List view</p>
-          </div>
-        );
-
       case "feedView":
-        return (
-          <div className="p-8 border border-gray-300 rounded-lg text-center">
-            <Rss className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-            <p className="text-sm text-gray-500">Feed view</p>
-          </div>
-        );
-
       case "calendarView":
+        const database: Database = block.metadata?.database || {
+          id: block.id,
+          name: "Untitled Database",
+          properties: [
+            { id: "prop1", name: "Name", type: "text" },
+            { id: "prop2", name: "Status", type: "select" },
+            { id: "prop3", name: "Date", type: "date" },
+          ],
+          items: [],
+          views: [
+            { id: "view1", type: "table", name: "Table" },
+            { id: "view2", type: "board", name: "Board" },
+            { id: "view3", type: "gallery", name: "Gallery" },
+            { id: "view4", type: "list", name: "List" },
+            { id: "view5", type: "feed", name: "Feed" },
+            { id: "view6", type: "calendar", name: "Calendar" },
+          ],
+          currentViewId: "view1",
+        };
+
         return (
-          <div className="p-8 border border-gray-300 rounded-lg text-center">
-            <Calendar className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-            <p className="text-sm text-gray-500">Calendar view</p>
+          <div className="relative z-50" style={{ pointerEvents: "auto" }}>
+            <DatabaseBlock
+              database={database}
+              onChange={(updatedDatabase) => {
+                onUpdate({
+                  ...block,
+                  type: "database",
+                  metadata: {
+                    ...block.metadata,
+                    database: updatedDatabase,
+                  },
+                });
+              }}
+            />
           </div>
         );
 
@@ -971,14 +979,18 @@ export function BlockItem({
                 const blockContent = block.content || "";
                 if (blockContent.trim()) {
                   setSelectedText(blockContent);
-                  const blockElement = blockRef.current;
-                  if (blockElement) {
-                    const rect = blockElement.getBoundingClientRect();
-                    setAIModalPosition({
-                      top: rect.top + window.scrollY - 48,
-                      left: rect.left + window.scrollX + rect.width / 2 - 60,
-                    });
-                    setShowAIAssistant(true);
+                  if (action === "translate") {
+                    setShowTranslateDialog(true);
+                  } else {
+                    const blockElement = blockRef.current;
+                    if (blockElement) {
+                      const rect = blockElement.getBoundingClientRect();
+                      setAIModalPosition({
+                        top: rect.top + window.scrollY - 48,
+                        left: rect.left + window.scrollX + rect.width / 2 - 60,
+                      });
+                      setShowAIAssistant(true);
+                    }
                   }
                 } else {
                   toast.error("No content to process");
@@ -1092,14 +1104,18 @@ export function BlockItem({
               const blockContent = block.content || "";
               if (blockContent.trim()) {
                 setSelectedText(blockContent);
-                const blockElement = blockRef.current;
-                if (blockElement) {
-                  const rect = blockElement.getBoundingClientRect();
-                  setAIModalPosition({
-                    top: rect.top + window.scrollY - 48,
-                    left: rect.left + window.scrollX + rect.width / 2 - 60,
-                  });
-                  setShowAIAssistant(true);
+                if (action === "translate") {
+                  setShowTranslateDialog(true);
+                } else {
+                  const blockElement = blockRef.current;
+                  if (blockElement) {
+                    const rect = blockElement.getBoundingClientRect();
+                    setAIModalPosition({
+                      top: rect.top + window.scrollY - 48,
+                      left: rect.left + window.scrollX + rect.width / 2 - 60,
+                    });
+                    setShowAIAssistant(true);
+                  }
                 }
               } else {
                 toast.error("No content to process");
@@ -1141,6 +1157,16 @@ export function BlockItem({
           }}
         />
       )}
+
+      <TranslateDialog
+        open={showTranslateDialog}
+        onOpenChange={setShowTranslateDialog}
+        text={selectedText}
+        onTranslated={(translatedText) => {
+          onUpdate({ ...block, content: translatedText });
+          setSelectedText("");
+        }}
+      />
     </div>
   );
 }

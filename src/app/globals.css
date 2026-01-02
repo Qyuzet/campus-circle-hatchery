@@ -83,6 +83,12 @@
     margin: 0.75rem 0 0.5rem 0;
     color: #1f2937;
   }
+
+  [contenteditable][data-placeholder]:empty:before {
+    content: attr(data-placeholder);
+    color: #9ca3af;
+    pointer-events: none;
+  }
 }
 
 @layer base {

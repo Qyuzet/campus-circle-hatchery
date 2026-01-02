@@ -139,32 +139,7 @@ const blockTypes: BlockTypeOption[] = [
     category: "media",
   },
   { type: "file", label: "File", icon: Paperclip, category: "media" },
-  { type: "tableView", label: "Table view", icon: Table, category: "database" },
-  {
-    type: "boardView",
-    label: "Board view",
-    icon: Columns,
-    category: "database",
-  },
-  {
-    type: "galleryView",
-    label: "Gallery view",
-    icon: LayoutGrid,
-    category: "database",
-  },
-  {
-    type: "listView",
-    label: "List view",
-    icon: LayoutList,
-    category: "database",
-  },
-  { type: "feedView", label: "Feed view", icon: Rss, category: "database" },
-  {
-    type: "calendarView",
-    label: "Calendar view",
-    icon: Calendar,
-    category: "database",
-  },
+  { type: "database", label: "Database", icon: Table, category: "database" },
   {
     type: "translate",
     label: "Translate to",
