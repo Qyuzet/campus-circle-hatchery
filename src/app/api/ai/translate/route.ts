@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import Groq from "groq-sdk";
 
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY,
-});
+function getGroqClient() {
+  if (!process.env.GROQ_API_KEY) {
+    throw new Error("GROQ_API_KEY is not configured");
+  }
+  return new Groq({
+    apiKey: process.env.GROQ_API_KEY,
+  });
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,6 +20,8 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    const groq = getGroqClient();
 
     const languageNames: Record<string, string> = {
       id: "Indonesian",
@@ -58,4 +65,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
