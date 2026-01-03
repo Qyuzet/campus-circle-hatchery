@@ -917,7 +917,7 @@ export function BlockItem({
           <>
             {block.content.startsWith("/") ? (
               <div
-                className="fixed z-50"
+                className="fixed z-[9999]"
                 style={{
                   top: menuPosition.top > 0 ? `${menuPosition.top}px` : "50%",
                   left:
@@ -946,7 +946,7 @@ export function BlockItem({
                 />
               </div>
             ) : (
-              <div className="fixed sm:absolute left-2 sm:left-0 top-auto sm:top-6 bottom-2 sm:bottom-auto z-50">
+              <div className="fixed sm:absolute left-2 sm:left-0 top-auto sm:top-6 bottom-2 sm:bottom-auto z-[9999]">
                 <BlockTypeMenu
                   initialSearch=""
                   onSelect={(type) => {
@@ -961,7 +961,7 @@ export function BlockItem({
         )}
 
         {showActionMenu && (
-          <div className="fixed sm:absolute left-2 sm:left-0 top-auto sm:top-6 bottom-2 sm:bottom-auto z-50">
+          <div className="fixed sm:absolute left-2 sm:left-0 top-auto sm:top-6 bottom-2 sm:bottom-auto z-[9999]">
             <BlockActionMenu
               block={block}
               onConvert={handleConvert}
@@ -1045,7 +1045,7 @@ export function BlockItem({
         <>
           {block.content.startsWith("/") ? (
             <div
-              className="fixed z-50"
+              className="fixed z-[9999]"
               style={{
                 top: menuPosition.top > 0 ? `${menuPosition.top}px` : "50%",
                 left: menuPosition.left > 0 ? `${menuPosition.left}px` : "50%",
@@ -1071,7 +1071,7 @@ export function BlockItem({
               />
             </div>
           ) : (
-            <div className="fixed sm:absolute left-2 sm:left-0 top-auto sm:top-6 bottom-2 sm:bottom-auto z-50">
+            <div className="fixed sm:absolute left-2 sm:left-0 top-auto sm:top-6 bottom-2 sm:bottom-auto z-[9999]">
               <BlockTypeMenu
                 initialSearch=""
                 onSelect={(type) => {
@@ -1086,7 +1086,7 @@ export function BlockItem({
       )}
 
       {showActionMenu && (
-        <div className="fixed sm:absolute left-2 sm:left-0 top-auto sm:top-6 bottom-2 sm:bottom-auto z-50">
+        <div className="fixed sm:absolute left-2 sm:left-0 top-auto sm:top-6 bottom-2 sm:bottom-auto z-[9999]">
           <BlockActionMenu
             block={block}
             onConvert={handleConvert}

@@ -158,7 +158,7 @@ export function DatabaseBlock({ database, onChange }: DatabaseBlockProps) {
   };
 
   return (
-    <div className="border border-gray-300 rounded-lg overflow-hidden">
+    <div className="border border-gray-300 rounded-lg overflow-visible relative">
       <DatabaseToolbar
         database={database}
         currentView={currentView}
@@ -171,7 +171,9 @@ export function DatabaseBlock({ database, onChange }: DatabaseBlockProps) {
         onDeleteProperty={handleDeleteProperty}
         onUpdateDatabase={handleUpdateDatabase}
       />
-      <div className="bg-white">{renderView()}</div>
+      <div className="bg-white overflow-hidden rounded-b-lg relative z-0">
+        {renderView()}
+      </div>
     </div>
   );
 }

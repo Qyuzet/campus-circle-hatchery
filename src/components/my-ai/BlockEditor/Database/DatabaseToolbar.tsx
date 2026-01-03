@@ -107,7 +107,7 @@ export function DatabaseToolbar({
   };
 
   return (
-    <div className="bg-gray-50 px-4 py-2 border-b border-gray-300 flex items-center justify-between">
+    <div className="bg-gray-50 px-4 py-2 border-b border-gray-300 flex items-center justify-between relative">
       <div className="flex items-center gap-2">
         <input
           type="text"
@@ -122,11 +122,13 @@ export function DatabaseToolbar({
 
       <div className="flex items-center gap-2">
         <DropdownMenu modal={false}>
-          <DropdownMenuTrigger className="flex items-center gap-2 h-8 px-3 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md transition-colors cursor-pointer">
-            <ViewIcon className="h-4 w-4" />
-            <span className="text-sm">{currentView?.name || "View"}</span>
+          <DropdownMenuTrigger asChild>
+            <button className="flex items-center gap-2 h-8 px-3 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md transition-colors cursor-pointer">
+              <ViewIcon className="h-4 w-4" />
+              <span className="text-sm">{currentView?.name || "View"}</span>
+            </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="z-[99999]" sideOffset={5}>
+          <DropdownMenuContent align="end" sideOffset={5}>
             {database.views.map((view) => {
               const Icon = viewIcons[view.type];
               return (
