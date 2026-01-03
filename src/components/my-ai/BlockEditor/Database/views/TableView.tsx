@@ -234,7 +234,7 @@ export function TableView({
                   <label className="text-xs font-medium text-gray-600">
                     {prop.name}
                   </label>
-                  {renderCell(item, prop)}
+                  {renderCell(item, prop.id)}
                 </div>
               );
             })}
