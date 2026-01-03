@@ -216,24 +216,14 @@ export function CreateNoteForm({
         </div>
 
         <div className="flex items-center gap-1 sm:gap-2">
-          {initialNote && (
-            <div className="flex items-center gap-2 mr-2">
-              {isAutoSaving ? (
-                <span className="text-xs text-blue-600 flex items-center gap-1">
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                  <span className="hidden sm:inline">Saving...</span>
-                </span>
-              ) : lastSaved ? (
-                <span className="text-xs text-green-600 hidden sm:inline">
-                  Saved at {lastSaved.toLocaleTimeString()}
-                </span>
-              ) : null}
-            </div>
+          {initialNote && isAutoSaving && (
+            <Loader2 className="h-4 w-4 text-blue-600 animate-spin" />
           )}
           <Button
             onClick={handleSave}
             disabled={isSaving}
-            className="bg-blue-600 hover:bg-blue-700 text-white h-7 sm:h-8 px-2 sm:px-3 text-xs sm:text-sm"
+            variant="outline"
+            className="h-7 sm:h-8 px-2 sm:px-3 text-xs sm:text-sm"
             size="sm"
           >
             {isSaving ? (

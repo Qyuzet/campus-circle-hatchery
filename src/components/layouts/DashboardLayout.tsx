@@ -848,7 +848,7 @@ export function DashboardLayout({
               </nav>
 
               <div className="mt-6 pt-6 border-t border-gray-200">
-                <AddItemButton fullWidth size="sm" />
+                <AddItemButton fullWidth size="sm" variant="outline" />
               </div>
             </div>
           </div>

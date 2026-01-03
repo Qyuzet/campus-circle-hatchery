@@ -122,7 +122,7 @@ export function NotesTab({
     <div className="flex flex-col min-h-screen">
       {!isCreating && !editingNote && (
         <div className="border-b border-gray-200 px-2 sm:px-4 py-2 sm:py-3 bg-white sticky top-14 z-10">
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center sm:justify-between gap-2 sm:gap-3">
             <div className="relative flex-1 max-w-full sm:max-w-md">
               <Search className="absolute left-2.5 sm:left-3 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400" />
               <Input
@@ -163,7 +163,8 @@ export function NotesTab({
 
               <Button
                 onClick={handleCreateNew}
-                className="bg-blue-600 hover:bg-blue-700 text-white h-8 sm:h-9 px-2 sm:px-4"
+                variant="outline"
+                className="h-8 sm:h-9 px-2 sm:px-4"
                 size="sm"
               >
                 <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-2" />
@@ -211,7 +212,7 @@ export function NotesTab({
                 {!searchQuery && filterSubject === "all" && (
                   <Button
                     onClick={() => setIsCreating(true)}
-                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                    variant="outline"
                     size="sm"
                   >
                     <Plus className="h-4 w-4 mr-2" />
