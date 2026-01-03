@@ -15,6 +15,26 @@ function sanitizeMermaidCode(code: string): string {
     .trim();
 }
 
+function sanitizeMarkdownFormatting(text: string): string {
+  return text
+    .replace(/\*\*([^*]+)\*\*/g, "$1")
+    .replace(/\*([^*]+)\*/g, "$1")
+    .replace(/__([^_]+)__/g, "$1")
+    .replace(/_([^_]+)_/g, "$1")
+    .replace(/~~([^~]+)~~/g, "$1")
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/^#{1,6}\s+/gm, "")
+    .replace(/^>\s+/gm, "")
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replace(/!\[([^\]]*)\]\([^)]+\)/g, "$1")
+    .replace(/^[-*+]\s+(?=\S)/gm, "- ")
+    .replace(/^\d+\.\s+/gm, (match) => match)
+    .replace(/```[\s\S]*?```/g, (match) => {
+      return match.replace(/```\w*\n?/g, "").replace(/```/g, "");
+    })
+    .trim();
+}
+
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
@@ -129,7 +149,9 @@ Write 2-3 sentences about the topic. ${
           context
             ? "Continue naturally from the existing text and match the tone and style."
             : "Start with engaging content."
-        }`;
+        }
+
+IMPORTANT: Do NOT use any markdown formatting like **bold**, *italic*, bullet points, or headers. Write in plain text only.`;
         break;
 
       case "summary":
@@ -138,7 +160,9 @@ Write 2-3 sentences about the topic. ${
 
 Text to summarize: ${context || prompt}
 
-Create a concise summary that captures the key points. Keep it brief and clear.`;
+Create a concise summary that captures the key points. Keep it brief and clear.
+
+IMPORTANT: Do NOT use any markdown formatting like **bold**, *italic*, bullet points, or headers. Write in plain text only.`;
         break;
 
       case "action-items":
@@ -147,12 +171,14 @@ Create a concise summary that captures the key points. Keep it brief and clear.`
 
 Text: ${context || prompt}
 
-Extract and list action items in this format:
-- [ ] Action item 1
-- [ ] Action item 2
-- [ ] Action item 3
+Extract and list action items using simple dashes:
+- Action item 1
+- Action item 2
+- Action item 3
 
-Be specific and actionable.`;
+Be specific and actionable.
+
+IMPORTANT: Do NOT use any markdown formatting like **bold**, *italic*, checkboxes [ ], or headers. Use plain dashes (-) for list items only.`;
         break;
 
       case "write-custom":
@@ -162,7 +188,9 @@ Be specific and actionable.`;
 User request: ${prompt}
 ${context ? `Context: ${context}` : ""}
 
-Write clear, engaging content based on the user's request. Be creative and helpful.`;
+Write clear, engaging content based on the user's request. Be creative and helpful.
+
+IMPORTANT: Do NOT use any markdown formatting like **bold**, *italic*, bullet points, or headers. Write in plain text only.`;
         break;
 
       case "brainstorm":
@@ -172,7 +200,9 @@ Write clear, engaging content based on the user's request. Be creative and helpf
 Topic: ${prompt}
 ${context ? `Context: ${context}` : ""}
 
-Generate 5-7 creative ideas related to the topic. Format as a bulleted list with brief explanations.`;
+Generate 5-7 creative ideas related to the topic. Use numbered format like "1. Idea" with brief explanations.
+
+IMPORTANT: Do NOT use any markdown formatting like **bold**, *italic*, or headers. Use simple numbers (1. 2. 3.) for list items only.`;
         break;
 
       case "code-help":
@@ -182,7 +212,9 @@ Generate 5-7 creative ideas related to the topic. Format as a bulleted list with
 Question: ${prompt}
 ${context ? `Context: ${context}` : ""}
 
-Provide clear code examples and explanations. Use proper formatting and best practices.`;
+Provide clear code examples and explanations. Use proper formatting and best practices.
+
+IMPORTANT: Do NOT use markdown code blocks with triple backticks. Write code inline or with clear indentation. Do NOT use **bold** or *italic* formatting.`;
         break;
 
       case "ask-question":
@@ -192,7 +224,9 @@ Provide clear code examples and explanations. Use proper formatting and best pra
 Question: ${prompt}
 ${context ? `Context: ${context}` : ""}
 
-Provide a clear, accurate, and helpful answer to the question.`;
+Provide a clear, accurate, and helpful answer to the question.
+
+IMPORTANT: Do NOT use any markdown formatting like **bold**, *italic*, bullet points, or headers. Write in plain text only.`;
         break;
 
       case "ask-page":
@@ -202,7 +236,9 @@ Provide a clear, accurate, and helpful answer to the question.`;
 Page content: ${context}
 Question: ${prompt}
 
-Answer the question based on the page content provided.`;
+Answer the question based on the page content provided.
+
+IMPORTANT: Do NOT use any markdown formatting like **bold**, *italic*, bullet points, or headers. Write in plain text only.`;
         break;
 
       case "draft-outline":
@@ -212,7 +248,9 @@ Answer the question based on the page content provided.`;
 Topic: ${prompt}
 ${context ? `Context: ${context}` : ""}
 
-Create a structured outline with main sections and subsections. Use hierarchical formatting.`;
+Create a structured outline with main sections and subsections. Use simple numbering like "1. Main Section" and "1.1. Subsection" format.
+
+IMPORTANT: Do NOT use markdown formatting like **bold**, *italic*, or # headers. Use simple numbering for hierarchy.`;
         break;
 
       case "draft-email":
@@ -222,7 +260,9 @@ Create a structured outline with main sections and subsections. Use hierarchical
 Email purpose: ${prompt}
 ${context ? `Context: ${context}` : ""}
 
-Draft a professional email with appropriate greeting, body, and closing.`;
+Draft a professional email with appropriate greeting, body, and closing.
+
+IMPORTANT: Do NOT use any markdown formatting like **bold**, *italic*, or headers. Write in plain text only.`;
         break;
 
       case "draft-agenda":
@@ -232,7 +272,9 @@ Draft a professional email with appropriate greeting, body, and closing.`;
 Meeting topic: ${prompt}
 ${context ? `Context: ${context}` : ""}
 
-Create a structured meeting agenda with time allocations, topics, and objectives.`;
+Create a structured meeting agenda with time allocations, topics, and objectives. Use simple format like "10:00-10:15: Topic" without markdown.
+
+IMPORTANT: Do NOT use any markdown formatting like **bold**, *italic*, or headers. Write in plain text only.`;
         break;
 
       case "draft-custom":
@@ -242,7 +284,9 @@ Create a structured meeting agenda with time allocations, topics, and objectives
 User request: ${prompt}
 ${context ? `Context: ${context}` : ""}
 
-Create a well-structured draft based on the user's request.`;
+Create a well-structured draft based on the user's request.
+
+IMPORTANT: Do NOT use any markdown formatting like **bold**, *italic*, bullet points, or headers. Write in plain text only.`;
         break;
 
       default:
@@ -252,7 +296,9 @@ Create a well-structured draft based on the user's request.`;
 User request: ${prompt}
 ${context ? `Context: ${context}` : ""}
 
-Provide a helpful, clear, and concise response.`;
+Provide a helpful, clear, and concise response.
+
+IMPORTANT: Do NOT use any markdown formatting like **bold**, *italic*, bullet points, or headers. Write in plain text only.`;
     }
 
     const result = await model.generateContent(systemPrompt);
@@ -281,6 +327,8 @@ Provide a helpful, clear, and concise response.`;
 
     if (action === "flowchart") {
       generatedContent = sanitizeMermaidCode(generatedContent);
+    } else if (blockType === "text") {
+      generatedContent = sanitizeMarkdownFormatting(generatedContent);
     }
 
     return NextResponse.json({
