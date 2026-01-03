@@ -24,12 +24,34 @@ export function BlockEditor({
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
   const editorRef = useRef<HTMLDivElement>(null);
 
+  const history = useRef<Block[][]>([]);
+  const historyIndex = useRef(-1);
+  const isUndoRedo = useRef(false);
+
   useEffect(() => {
     // Skip calling onChange on first render to prevent infinite loop
     if (isFirstRender.current) {
       isFirstRender.current = false;
+      history.current = [JSON.parse(JSON.stringify(blocks))];
+      historyIndex.current = 0;
       return;
     }
+
+    // Add to history if not from undo/redo
+    if (!isUndoRedo.current) {
+      const newHistory = history.current.slice(0, historyIndex.current + 1);
+      newHistory.push(JSON.parse(JSON.stringify(blocks)));
+
+      // Limit history to 50 states
+      if (newHistory.length > 50) {
+        newHistory.shift();
+      } else {
+        historyIndex.current++;
+      }
+
+      history.current = newHistory;
+    }
+    isUndoRedo.current = false;
 
     // Debounce onChange to prevent excessive re-renders
     // Clear previous timer
@@ -51,6 +73,26 @@ export function BlockEditor({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [blocks]);
 
+  const undo = useCallback(() => {
+    if (historyIndex.current > 0) {
+      historyIndex.current--;
+      isUndoRedo.current = true;
+      setBlocks(
+        JSON.parse(JSON.stringify(history.current[historyIndex.current]))
+      );
+    }
+  }, []);
+
+  const redo = useCallback(() => {
+    if (historyIndex.current < history.current.length - 1) {
+      historyIndex.current++;
+      isUndoRedo.current = true;
+      setBlocks(
+        JSON.parse(JSON.stringify(history.current[historyIndex.current]))
+      );
+    }
+  }, []);
+
   const clearAllBlocks = useCallback(() => {
     setBlocks([{ id: generateId(), type: "text", content: "" }]);
     setTimeout(() => {
@@ -61,61 +103,72 @@ export function BlockEditor({
     }, 10);
   }, []);
 
+  // Track if Ctrl+A was pressed
+  const selectAllPressedRef = useRef(false);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement;
-      const isInEditor =
-        target.isContentEditable ||
-        target.tagName === "INPUT" ||
-        target.tagName === "TEXTAREA";
-
-      if (!isInEditor) return;
-
-      if ((e.ctrlKey || e.metaKey) && e.key === "a") {
+      // Undo: Ctrl+Z or Cmd+Z
+      if ((e.ctrlKey || e.metaKey) && e.key === "z" && !e.shiftKey) {
         e.preventDefault();
-
-        if (editorRef.current) {
-          const range = document.createRange();
-          const selection = window.getSelection();
-
-          range.selectNodeContents(editorRef.current);
-          selection?.removeAllRanges();
-          selection?.addRange(range);
-        }
+        undo();
+        return;
       }
 
-      if (e.key === "Backspace" || e.key === "Delete") {
-        const selection = window.getSelection();
-        if (!selection || selection.rangeCount === 0) return;
+      // Redo: Ctrl+Y or Cmd+Shift+Z
+      if (
+        ((e.ctrlKey || e.metaKey) && e.key === "y") ||
+        ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "z")
+      ) {
+        e.preventDefault();
+        redo();
+        return;
+      }
 
-        const range = selection.getRangeAt(0);
+      // Ctrl+A: Select all content in editor
+      if ((e.ctrlKey || e.metaKey) && e.key === "a") {
+        if (editorRef.current) {
+          const target = e.target as HTMLElement;
 
-        if (
-          editorRef.current &&
-          editorRef.current.contains(range.commonAncestorContainer)
-        ) {
-          const selectedText = selection.toString();
+          // Only handle if target is inside editor
+          if (editorRef.current.contains(target)) {
+            e.preventDefault();
+            selectAllPressedRef.current = true;
 
-          if (selectedText.length > 0) {
-            const allText = editorRef.current.textContent || "";
+            const range = document.createRange();
+            const selection = window.getSelection();
 
-            if (
-              selectedText.length === allText.length ||
-              selectedText.length > 100
-            ) {
-              e.preventDefault();
-              clearAllBlocks();
-            }
+            range.selectNodeContents(editorRef.current);
+            selection?.removeAllRanges();
+            selection?.addRange(range);
           }
         }
+        return;
+      }
+
+      // Delete/Backspace after Ctrl+A: Clear all blocks
+      if (e.key === "Backspace" || e.key === "Delete") {
+        if (selectAllPressedRef.current && editorRef.current) {
+          e.preventDefault();
+          e.stopPropagation();
+          selectAllPressedRef.current = false;
+          clearAllBlocks();
+          return;
+        }
+      }
+
+      // Reset flag on any other key
+      if (!e.ctrlKey && !e.metaKey) {
+        selectAllPressedRef.current = false;
       }
     };
 
-    document.addEventListener("keydown", handleKeyDown);
+    // Use capture phase to intercept before React handlers
+    document.addEventListener("keydown", handleKeyDown, true);
     return () => {
-      document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("keydown", handleKeyDown, true);
     };
-  }, [clearAllBlocks]);
+  }, [clearAllBlocks, undo, redo]);
 
   const updateBlock = (index: number, updatedBlock: Block) => {
     const newBlocks = [...blocks];

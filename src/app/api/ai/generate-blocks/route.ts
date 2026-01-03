@@ -25,9 +25,16 @@ export async function POST(request: NextRequest) {
 
     const { action, prompt, context } = await request.json();
 
-    if (!action || !prompt) {
+    if (!action) {
       return NextResponse.json(
-        { error: "Action and prompt are required" },
+        { error: "Action is required" },
+        { status: 400 }
+      );
+    }
+
+    if (!prompt || prompt.trim() === "") {
+      return NextResponse.json(
+        { error: "Prompt is required for this action" },
         { status: 400 }
       );
     }
@@ -113,11 +120,16 @@ Generate a COMPACT flowchart for: ${prompt}`;
 
       case "continue":
         blockType = "text";
-        systemPrompt = `You are a writing assistant that continues text naturally.
+        systemPrompt = `You are a writing assistant that continues writing naturally.
 
-Current text: ${context || ""}
+Topic: ${prompt}
+${context ? `Current text: ${context}` : ""}
 
-Continue writing 2-3 more sentences that naturally follow from the text above. Match the tone and style.`;
+Write 2-3 sentences about the topic. ${
+          context
+            ? "Continue naturally from the existing text and match the tone and style."
+            : "Start with engaging content."
+        }`;
         break;
 
       case "summary":
@@ -141,6 +153,96 @@ Extract and list action items in this format:
 - [ ] Action item 3
 
 Be specific and actionable.`;
+        break;
+
+      case "write-custom":
+        blockType = "text";
+        systemPrompt = `You are a creative writing assistant.
+
+User request: ${prompt}
+${context ? `Context: ${context}` : ""}
+
+Write clear, engaging content based on the user's request. Be creative and helpful.`;
+        break;
+
+      case "brainstorm":
+        blockType = "text";
+        systemPrompt = `You are a brainstorming assistant.
+
+Topic: ${prompt}
+${context ? `Context: ${context}` : ""}
+
+Generate 5-7 creative ideas related to the topic. Format as a bulleted list with brief explanations.`;
+        break;
+
+      case "code-help":
+        blockType = "text";
+        systemPrompt = `You are a coding assistant.
+
+Question: ${prompt}
+${context ? `Context: ${context}` : ""}
+
+Provide clear code examples and explanations. Use proper formatting and best practices.`;
+        break;
+
+      case "ask-question":
+        blockType = "text";
+        systemPrompt = `You are a knowledgeable AI assistant.
+
+Question: ${prompt}
+${context ? `Context: ${context}` : ""}
+
+Provide a clear, accurate, and helpful answer to the question.`;
+        break;
+
+      case "ask-page":
+        blockType = "text";
+        systemPrompt = `You are an AI assistant analyzing page content.
+
+Page content: ${context}
+Question: ${prompt}
+
+Answer the question based on the page content provided.`;
+        break;
+
+      case "draft-outline":
+        blockType = "text";
+        systemPrompt = `You are an outline creation assistant.
+
+Topic: ${prompt}
+${context ? `Context: ${context}` : ""}
+
+Create a structured outline with main sections and subsections. Use hierarchical formatting.`;
+        break;
+
+      case "draft-email":
+        blockType = "text";
+        systemPrompt = `You are an email drafting assistant.
+
+Email purpose: ${prompt}
+${context ? `Context: ${context}` : ""}
+
+Draft a professional email with appropriate greeting, body, and closing.`;
+        break;
+
+      case "draft-agenda":
+        blockType = "text";
+        systemPrompt = `You are a meeting agenda assistant.
+
+Meeting topic: ${prompt}
+${context ? `Context: ${context}` : ""}
+
+Create a structured meeting agenda with time allocations, topics, and objectives.`;
+        break;
+
+      case "draft-custom":
+        blockType = "text";
+        systemPrompt = `You are a drafting assistant.
+
+User request: ${prompt}
+${context ? `Context: ${context}` : ""}
+
+Create a well-structured draft based on the user's request.`;
         break;
 
       default:

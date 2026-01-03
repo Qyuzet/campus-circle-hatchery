@@ -227,7 +227,7 @@ export function BlockItem({
       }
     }
 
-    // Update block content after menu state
+    // Update block content
     onUpdate({ ...block, content: newContent });
   };
 
@@ -341,6 +341,7 @@ export function BlockItem({
 
   const handleAISpaceAction = (action: string, prompt?: string) => {
     const actionsNeedingPrompt = [
+      "continue",
       "table",
       "flowchart",
       "write-custom",
@@ -352,6 +353,8 @@ export function BlockItem({
       "draft-email",
       "draft-agenda",
       "draft-custom",
+      "summary",
+      "action-items",
     ];
 
     if (actionsNeedingPrompt.includes(action) && !prompt) {
@@ -361,49 +364,63 @@ export function BlockItem({
         string,
         { title: string; placeholder: string }
       > = {
+        continue: {
+          title: "What would you like me to continue writing about?",
+          placeholder: "e.g., Continue writing about the benefits of exercise",
+        },
         table: {
           title: "What's the table about? I'll help you make it.",
-          placeholder: "Ask AI anything...",
+          placeholder:
+            "e.g., Create a comparison table of programming languages",
         },
         flowchart: {
           title: "What's the flowchart about? I'll help you make it.",
-          placeholder: "Ask AI anything...",
+          placeholder: "e.g., User authentication flow for a web app",
         },
         "write-custom": {
           title: "What would you like me to write?",
-          placeholder: "Ask AI anything...",
+          placeholder: "e.g., Write a paragraph about climate change",
         },
         brainstorm: {
           title: "What would you like to brainstorm about?",
-          placeholder: "Ask AI anything...",
+          placeholder: "e.g., Ideas for a mobile app startup",
         },
         "code-help": {
           title: "What code do you need help with?",
-          placeholder: "Ask AI anything...",
+          placeholder: "e.g., How to implement a binary search in Python",
         },
         "ask-question": {
           title: "What's your question?",
-          placeholder: "Ask AI anything...",
+          placeholder: "e.g., What is the difference between REST and GraphQL?",
         },
         "ask-page": {
           title: "What would you like to know about this page?",
-          placeholder: "Ask AI anything...",
+          placeholder: "e.g., Summarize the main points of this note",
         },
         "draft-outline": {
           title: "What's the outline about?",
-          placeholder: "Ask AI anything...",
+          placeholder: "e.g., Research paper on artificial intelligence",
         },
         "draft-email": {
           title: "What's the email about?",
-          placeholder: "Ask AI anything...",
+          placeholder: "e.g., Follow-up email to a client about project status",
         },
         "draft-agenda": {
           title: "What's the meeting about?",
-          placeholder: "Ask AI anything...",
+          placeholder: "e.g., Quarterly team planning meeting",
         },
         "draft-custom": {
           title: "What would you like me to draft?",
-          placeholder: "Ask AI anything...",
+          placeholder: "e.g., A proposal for a new feature",
+        },
+        summary: {
+          title: "What would you like me to summarize?",
+          placeholder: "e.g., Summarize the key points from the content above",
+        },
+        "action-items": {
+          title: "What context should I use for action items?",
+          placeholder:
+            "e.g., Extract action items from the meeting notes above",
         },
       };
 
@@ -469,9 +486,16 @@ export function BlockItem({
         });
         toast.success("Flowchart generated successfully");
       } else {
-        const newText = currentContent
-          ? `${currentContent}\n\n${data.content}`
-          : data.content;
+        let newText;
+        if (action === "continue") {
+          newText = currentContent
+            ? `${currentContent} ${data.content}`
+            : data.content;
+        } else {
+          newText = currentContent
+            ? `${currentContent}\n\n${data.content}`
+            : data.content;
+        }
 
         if (contentRef.current) {
           typeText(newText, contentRef.current, () => {
