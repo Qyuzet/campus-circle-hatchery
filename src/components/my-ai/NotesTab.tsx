@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { AINote } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,11 +31,32 @@ export function NotesTab({
   onNoteUpdated,
   onNoteDeleted,
 }: NotesTabProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [isCreating, setIsCreating] = useState(false);
   const [editingNote, setEditingNote] = useState<AINote | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterSubject, setFilterSubject] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("recent");
+
+  useEffect(() => {
+    const noteId = searchParams.get("noteId");
+    const create = searchParams.get("create");
+
+    if (create === "true") {
+      setIsCreating(true);
+      setEditingNote(null);
+    } else if (noteId) {
+      const note = notes.find((n) => n.id === noteId);
+      if (note) {
+        setEditingNote(note);
+        setIsCreating(false);
+      }
+    } else {
+      setEditingNote(null);
+      setIsCreating(false);
+    }
+  }, [searchParams, notes]);
 
   const subjects = Array.from(
     new Set(notes.map((note) => note.subject).filter(Boolean))
@@ -72,12 +94,12 @@ export function NotesTab({
 
   const handleNoteCreated = (note: AINote) => {
     onNoteCreated(note);
-    setIsCreating(false);
+    router.push("/dashboard/my-ai?tab=notes");
   };
 
   const handleNoteUpdated = (note: AINote) => {
     onNoteUpdated(note);
-    setEditingNote(null);
+    router.push("/dashboard/my-ai?tab=notes");
   };
 
   const handleAutoSave = (note: AINote) => {
@@ -85,8 +107,15 @@ export function NotesTab({
   };
 
   const handleEditNote = (note: AINote) => {
-    setEditingNote(note);
-    setIsCreating(false);
+    router.push(`/dashboard/my-ai?tab=notes&noteId=${note.id}`);
+  };
+
+  const handleCreateNew = () => {
+    router.push("/dashboard/my-ai?tab=notes&create=true");
+  };
+
+  const handleCancel = () => {
+    router.push("/dashboard/my-ai?tab=notes");
   };
 
   return (
@@ -133,7 +162,7 @@ export function NotesTab({
               </Select>
 
               <Button
-                onClick={() => setIsCreating(true)}
+                onClick={handleCreateNew}
                 className="bg-blue-600 hover:bg-blue-700 text-white h-8 sm:h-9 px-2 sm:px-4"
                 size="sm"
               >
@@ -149,7 +178,7 @@ export function NotesTab({
         <CreateNoteForm
           userId={userId}
           onNoteCreated={handleNoteCreated}
-          onCancel={() => setIsCreating(false)}
+          onCancel={handleCancel}
         />
       )}
 
@@ -158,7 +187,7 @@ export function NotesTab({
           userId={userId}
           onNoteCreated={handleNoteUpdated}
           onAutoSave={handleAutoSave}
-          onCancel={() => setEditingNote(null)}
+          onCancel={handleCancel}
           initialNote={editingNote}
         />
       )}
