@@ -1000,12 +1000,24 @@ export function BlockItem({
 
       case "mermaid":
         return (
-          <MermaidBlock
-            code={block.content}
-            onUpdate={(code) => {
-              onUpdate({ ...block, content: code });
-            }}
-          />
+          <div>
+            <div
+              className="h-4 cursor-text hover:bg-gray-50 transition-colors rounded"
+              onClick={() => onAddBefore("text")}
+              title="Click to add block above"
+            />
+            <MermaidBlock
+              code={block.content}
+              onUpdate={(code) => {
+                onUpdate({ ...block, content: code });
+              }}
+            />
+            <div
+              className="h-8 cursor-text hover:bg-gray-50 transition-colors rounded"
+              onClick={() => onAddAfter("text")}
+              title="Click to add block below"
+            />
+          </div>
         );
 
       case "database":

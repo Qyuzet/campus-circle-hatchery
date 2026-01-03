@@ -237,7 +237,7 @@ export function MermaidBlock({ code, onUpdate }: MermaidBlockProps) {
   return (
     <div
       ref={cardRef}
-      className="relative border border-gray-200 rounded-lg overflow-visible bg-white"
+      className="relative border border-gray-200 rounded-lg overflow-hidden bg-white group"
       style={{
         width: dimensions.width > 0 ? `${dimensions.width}px` : "100%",
         maxWidth: "100%",
@@ -329,27 +329,27 @@ export function MermaidBlock({ code, onUpdate }: MermaidBlockProps) {
       )}
 
       <div
-        className="absolute right-0 top-0 bottom-0 w-2 cursor-ew-resize hover:bg-blue-500 hover:bg-opacity-20 transition-colors z-10"
+        className="absolute right-0 top-0 bottom-0 w-2 cursor-ew-resize hover:bg-blue-500 hover:bg-opacity-20 transition-colors opacity-0 group-hover:opacity-100 pointer-events-auto"
         onMouseDown={(e) => handleMouseDown(e, "right")}
         title="Drag to resize width"
       />
 
       <div
-        className="absolute left-0 right-0 bottom-0 h-2 cursor-ns-resize hover:bg-blue-500 hover:bg-opacity-20 transition-colors z-10"
+        className="absolute left-0 right-0 bottom-0 h-2 cursor-ns-resize hover:bg-blue-500 hover:bg-opacity-20 transition-colors opacity-0 group-hover:opacity-100 pointer-events-auto"
         onMouseDown={(e) => handleMouseDown(e, "bottom")}
         title="Drag to resize height"
       />
 
       <div
-        className="absolute right-0 bottom-0 w-4 h-4 cursor-nwse-resize hover:bg-blue-500 hover:bg-opacity-30 transition-colors z-10"
+        className="absolute right-0 bottom-0 w-4 h-4 cursor-nwse-resize hover:bg-blue-500 hover:bg-opacity-30 transition-colors opacity-0 group-hover:opacity-100 pointer-events-auto"
         onMouseDown={(e) => handleMouseDown(e, "right-bottom")}
         title="Drag to resize"
       >
-        <div className="absolute right-1 bottom-1 w-2 h-2 border-r-2 border-b-2 border-gray-400" />
+        <div className="absolute right-1 bottom-1 w-2 h-2 border-r-2 border-b-2 border-gray-400 opacity-50" />
       </div>
 
       {isResizing && (
-        <div className="absolute inset-0 bg-blue-500 bg-opacity-5 pointer-events-none z-10" />
+        <div className="absolute inset-0 bg-blue-500 bg-opacity-5 pointer-events-none" />
       )}
     </div>
   );
