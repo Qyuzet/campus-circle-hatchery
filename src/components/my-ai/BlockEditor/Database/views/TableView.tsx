@@ -218,7 +218,66 @@ export function TableView({
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full">
+      {/* Mobile Card View */}
+      <div className="md:hidden space-y-3">
+        {database.items.map((item) => (
+          <div
+            key={item.id}
+            className="bg-white border border-gray-200 rounded-lg p-3 space-y-2"
+          >
+            {database.properties.map((prop) => {
+              const value = item.properties[prop.id];
+              if (!value && prop.type !== "checkbox") return null;
+
+              return (
+                <div key={prop.id} className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-gray-600">
+                    {prop.name}
+                  </label>
+                  {renderCell(item, prop)}
+                </div>
+              );
+            })}
+            <div className="flex justify-end pt-2 border-t border-gray-100">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onDeleteItem(item.id)}
+                className="h-7 px-2 text-red-600 hover:text-red-700 hover:bg-red-50"
+              >
+                <Trash2 className="h-3 w-3 mr-1" />
+                Delete
+              </Button>
+            </div>
+          </div>
+        ))}
+
+        {onAddProperty && (
+          <div className="flex gap-2 pt-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsAddingProperty(true)}
+              className="flex-1"
+            >
+              <Plus className="h-4 w-4 mr-1" />
+              Add Property
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onAddItem}
+              className="flex-1"
+            >
+              <Plus className="h-4 w-4 mr-1" />
+              Add Row
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {/* Desktop Table View */}
+      <table className="w-full hidden md:table">
         <thead className="bg-gray-50 border-b border-gray-200">
           <tr>
             {database.properties.map((prop) => (
@@ -341,21 +400,7 @@ export function TableView({
                   </Button>
                 </div>
               </th>
-            ) : (
-              <th className="px-4 py-2 w-12">
-                {onAddProperty && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setIsAddingProperty(true)}
-                    className="h-6 w-6 p-0 text-gray-400 hover:text-gray-700"
-                    title="Add property"
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                )}
-              </th>
-            )}
+            ) : null}
             <th className="w-12"></th>
           </tr>
         </thead>
@@ -388,11 +433,88 @@ export function TableView({
         variant="ghost"
         size="sm"
         onClick={onAddItem}
-        className="w-full justify-start gap-2 text-gray-500 hover:text-gray-700 py-2"
+        className="w-full justify-start gap-2 text-gray-500 hover:text-gray-700 py-2 hidden md:flex"
       >
         <Plus className="h-4 w-4" />
         New
       </Button>
+
+      {/* Mobile Property Modal */}
+      {isAddingProperty && (
+        <div className="md:hidden fixed inset-0 bg-black/50 flex items-end justify-center z-50">
+          <div className="bg-white rounded-t-2xl p-6 w-full max-h-[80vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">Add Property</h3>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setIsAddingProperty(false);
+                  setNewPropertyName("");
+                }}
+                className="h-8 w-8 p-0"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium text-gray-700 block mb-2">
+                  Property Name
+                </label>
+                <Input
+                  value={newPropertyName}
+                  onChange={(e) => setNewPropertyName(e.target.value)}
+                  placeholder="Enter property name"
+                  className="w-full"
+                  autoFocus
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700 block mb-2">
+                  Property Type
+                </label>
+                <Select
+                  value={newPropertyType}
+                  onValueChange={setNewPropertyType}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="text">Text</SelectItem>
+                    <SelectItem value="number">Number</SelectItem>
+                    <SelectItem value="select">Select</SelectItem>
+                    <SelectItem value="date">Date</SelectItem>
+                    <SelectItem value="checkbox">Checkbox</SelectItem>
+                    <SelectItem value="email">Email</SelectItem>
+                    <SelectItem value="url">URL</SelectItem>
+                    <SelectItem value="phone">Phone</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex gap-2 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setIsAddingProperty(false);
+                    setNewPropertyName("");
+                  }}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button onClick={handleAddProperty} className="flex-1">
+                  Add Property
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

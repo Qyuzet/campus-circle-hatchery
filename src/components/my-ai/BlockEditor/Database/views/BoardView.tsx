@@ -166,45 +166,52 @@ export function BoardView({
   }
 
   return (
-    <div className="p-4">
+    <div className="p-2 md:p-4">
       {statuses.length > 0 && (
-        <div className="flex items-center justify-between mb-4">
-          <div className="text-sm text-gray-600">
+        <div className="flex items-center justify-between mb-3 md:mb-4">
+          <div className="text-xs md:text-sm text-gray-600">
             {statusProperty ? (
-              <span>
+              <span className="hidden md:inline">
                 Grouped by: <strong>{statusProperty.name}</strong>
               </span>
             ) : (
-              <span>Board View</span>
+              <span className="hidden md:inline">Board View</span>
             )}
+            <span className="md:hidden font-medium">Board</span>
           </div>
           <Button
             variant="outline"
             size="sm"
             onClick={handleStartEditingColumns}
-            className="gap-2"
+            className="gap-1 md:gap-2 h-8 text-xs md:text-sm"
           >
-            <Settings2 className="h-4 w-4" />
-            Edit Columns
+            <Settings2 className="h-3 w-3 md:h-4 md:w-4" />
+            <span className="hidden sm:inline">Edit Columns</span>
+            <span className="sm:hidden">Edit</span>
           </Button>
         </div>
       )}
 
       {isEditingColumns && (
-        <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+        <div className="mb-3 md:mb-4 p-3 md:p-4 bg-blue-50 border border-blue-200 rounded-lg">
           <div className="flex items-center justify-between mb-3">
-            <h4 className="font-semibold text-sm text-gray-900">
+            <h4 className="font-semibold text-sm md:text-base text-gray-900">
               Edit Board Columns
             </h4>
-            <div className="flex gap-2">
+            <div className="flex gap-1 md:gap-2">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setIsEditingColumns(false)}
+                className="h-8 text-xs md:text-sm"
               >
                 Cancel
               </Button>
-              <Button size="sm" onClick={handleSaveColumns}>
+              <Button
+                size="sm"
+                onClick={handleSaveColumns}
+                className="h-8 text-xs md:text-sm"
+              >
                 Save
               </Button>
             </div>
@@ -244,7 +251,44 @@ export function BoardView({
         </div>
       )}
 
-      <div className="flex gap-4 overflow-x-auto pb-4">
+      {/* Mobile: Vertical Stack */}
+      <div className="md:hidden space-y-3">
+        {statuses.map((status) => (
+          <div key={status} className="bg-gray-50 rounded-lg p-3">
+            <h4 className="font-medium text-sm text-gray-700 mb-2 flex items-center justify-between">
+              <span>{status}</span>
+              <span className="text-xs text-gray-500">
+                {getItemsByStatus(status).length}
+              </span>
+            </h4>
+            <div className="space-y-2">
+              {getItemsByStatus(status).map((item) => renderCard(item))}
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                onAddItem();
+                if (statusProperty) {
+                  setTimeout(() => {
+                    const newItem = database.items[database.items.length - 1];
+                    if (newItem) {
+                      handleStatusChange(newItem.id, status);
+                    }
+                  }, 100);
+                }
+              }}
+              className="w-full justify-start gap-2 text-gray-500 hover:text-gray-700 mt-2 h-8 text-xs"
+            >
+              <Plus className="h-3 w-3" />
+              New
+            </Button>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop: Horizontal Scroll */}
+      <div className="hidden md:flex gap-4 overflow-x-auto pb-4">
         {statuses.map((status) => (
           <div
             key={status}

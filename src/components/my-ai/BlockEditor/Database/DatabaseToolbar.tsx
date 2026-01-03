@@ -174,48 +174,6 @@ export function DatabaseToolbar({
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <DropdownMenu modal={false}>
-          <DropdownMenuTrigger className="flex items-center justify-center h-8 w-8 text-gray-700 hover:bg-gray-100 rounded-md transition-colors cursor-pointer">
-            <Plus className="h-4 w-4" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="z-[99999]" sideOffset={5}>
-            <DropdownMenuItem
-              onClick={handleAddProperty}
-              className="cursor-pointer"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Property
-            </DropdownMenuItem>
-            {database.properties.length > 0 && (
-              <>
-                <DropdownMenuSeparator />
-                {database.properties.map((property) => (
-                  <div
-                    key={property.id}
-                    className="flex items-center justify-between px-2 py-1.5 hover:bg-gray-100 rounded-sm"
-                  >
-                    <span className="text-sm flex-1">{property.name}</span>
-                    <div className="flex items-center gap-1">
-                      <button
-                        onClick={() => handleEditProperty(property)}
-                        className="p-1 hover:bg-gray-200 rounded"
-                      >
-                        <Edit className="h-3 w-3 text-gray-600" />
-                      </button>
-                      <button
-                        onClick={() => onDeleteProperty(property.id)}
-                        className="p-1 hover:bg-red-100 rounded"
-                      >
-                        <Trash2 className="h-3 w-3 text-red-600" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
-
         <button
           className="flex items-center justify-center h-8 w-8 text-gray-700 hover:bg-gray-100 rounded-md transition-colors cursor-pointer"
           onClick={() => setSettingsOpen(true)}

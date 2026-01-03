@@ -88,36 +88,47 @@ export function CalendarView({
   }
 
   return (
-    <div className="p-4">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold">
+    <div className="p-2 md:p-4">
+      <div className="flex items-center justify-between mb-3 md:mb-4">
+        <h3 className="text-base md:text-lg font-semibold">
           {currentDate.toLocaleDateString("en-US", {
             month: "long",
             year: "numeric",
           })}
         </h3>
-        <div className="flex gap-2">
-          <Button variant="ghost" size="sm" onClick={prevMonth}>
+        <div className="flex gap-1 md:gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={prevMonth}
+            className="h-8 w-8 p-0"
+          >
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="sm" onClick={nextMonth}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={nextMonth}
+            className="h-8 w-8 p-0"
+          >
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-7 gap-2 mb-2">
-        {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+      <div className="grid grid-cols-7 gap-1 md:gap-2 mb-1 md:mb-2">
+        {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day, idx) => (
           <div
             key={day}
-            className="text-center text-xs font-medium text-gray-600 py-2"
+            className="text-center text-[10px] md:text-xs font-medium text-gray-600 py-1 md:py-2"
           >
-            {day}
+            <span className="hidden sm:inline">{day}</span>
+            <span className="sm:hidden">{day.charAt(0)}</span>
           </div>
         ))}
       </div>
 
-      <div className="grid grid-cols-7 gap-2">
+      <div className="grid grid-cols-7 gap-1 md:gap-2">
         {Array.from({ length: firstDay }, (_, i) => (
           <div key={`empty-${i}`} className="aspect-square" />
         ))}
@@ -129,7 +140,7 @@ export function CalendarView({
           return (
             <div
               key={day}
-              className={`aspect-square border rounded p-1 text-sm ${
+              className={`aspect-square border rounded p-0.5 md:p-1 text-xs md:text-sm ${
                 hasItems
                   ? "bg-blue-50 border-blue-200"
                   : "bg-white border-gray-200"
@@ -144,10 +155,12 @@ export function CalendarView({
                 }
               }}
             >
-              <div className="font-medium text-gray-700">{day}</div>
+              <div className="font-medium text-gray-700 text-[10px] md:text-sm">
+                {day}
+              </div>
               {hasItems && (
-                <div className="mt-1 space-y-0.5">
-                  {items.slice(0, 2).map((item) => {
+                <div className="mt-0.5 md:mt-1 space-y-0.5">
+                  {items.slice(0, 1).map((item) => {
                     const titleProp = database.properties[0];
                     const title = titleProp
                       ? item.properties[titleProp.id]
@@ -155,19 +168,25 @@ export function CalendarView({
                     return (
                       <div
                         key={item.id}
-                        className="text-[10px] bg-blue-500 text-white px-1 rounded truncate"
+                        className="text-[8px] md:text-[10px] bg-blue-500 text-white px-0.5 md:px-1 rounded truncate"
                         onClick={(e) => {
                           e.stopPropagation();
                           setEditingItem(item);
                         }}
                       >
-                        {title || "Event"}
+                        <span className="hidden md:inline">
+                          {title || "Event"}
+                        </span>
+                        <span className="md:hidden">•</span>
                       </div>
                     );
                   })}
-                  {items.length > 2 && (
-                    <div className="text-[10px] text-blue-600">
-                      +{items.length - 2} more
+                  {items.length > 1 && (
+                    <div className="text-[8px] md:text-[10px] text-blue-600">
+                      <span className="hidden md:inline">
+                        +{items.length - 1} more
+                      </span>
+                      <span className="md:hidden">+{items.length - 1}</span>
                     </div>
                   )}
                 </div>
@@ -178,23 +197,23 @@ export function CalendarView({
       </div>
 
       {selectedDate && dateProperty && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 max-h-[80vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">
+        <div className="fixed inset-0 bg-black/50 flex items-end md:items-center justify-center z-50">
+          <div className="bg-white rounded-t-2xl md:rounded-lg p-4 md:p-6 max-w-md w-full md:mx-4 max-h-[85vh] md:max-h-[80vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-3 md:mb-4">
+              <h3 className="text-base md:text-lg font-semibold">
                 Events on {new Date(selectedDate).toLocaleDateString()}
               </h3>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setSelectedDate(null)}
-                className="h-6 w-6 p-0"
+                className="h-7 w-7 md:h-6 md:w-6 p-0"
               >
                 <X className="h-4 w-4" />
               </Button>
             </div>
 
-            <div className="space-y-2 mb-4">
+            <div className="space-y-2 mb-3 md:mb-4">
               {getItemsForDate(parseInt(selectedDate.split("-")[2])).map(
                 (item) => {
                   const titleProp = database.properties[0];
@@ -253,15 +272,15 @@ export function CalendarView({
       )}
 
       {editingItem && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 max-h-[80vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">Edit Event</h3>
+        <div className="fixed inset-0 bg-black/50 flex items-end md:items-center justify-center z-50">
+          <div className="bg-white rounded-t-2xl md:rounded-lg p-4 md:p-6 max-w-md w-full md:mx-4 max-h-[85vh] md:max-h-[80vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-3 md:mb-4">
+              <h3 className="text-base md:text-lg font-semibold">Edit Event</h3>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setEditingItem(null)}
-                className="h-6 w-6 p-0"
+                className="h-7 w-7 md:h-6 md:w-6 p-0"
               >
                 <X className="h-4 w-4" />
               </Button>
