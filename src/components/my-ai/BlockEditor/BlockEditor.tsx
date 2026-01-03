@@ -22,6 +22,7 @@ export function BlockEditor({
   );
   const isFirstRender = useRef(true);
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
+  const editorRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Skip calling onChange on first render to prevent infinite loop
@@ -49,6 +50,36 @@ export function BlockEditor({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [blocks]);
+
+  useEffect(() => {
+    const handleSelectAll = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "a") {
+        const target = e.target as HTMLElement;
+
+        if (
+          target.isContentEditable ||
+          target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA"
+        ) {
+          e.preventDefault();
+
+          if (editorRef.current) {
+            const range = document.createRange();
+            const selection = window.getSelection();
+
+            range.selectNodeContents(editorRef.current);
+            selection?.removeAllRanges();
+            selection?.addRange(range);
+          }
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleSelectAll);
+    return () => {
+      document.removeEventListener("keydown", handleSelectAll);
+    };
+  }, []);
 
   const updateBlock = (index: number, updatedBlock: Block) => {
     const newBlocks = [...blocks];
@@ -158,7 +189,7 @@ export function BlockEditor({
   };
 
   return (
-    <div className="w-full">
+    <div ref={editorRef} className="w-full">
       {blocks.map((block, index) => (
         <BlockItem
           key={block.id}
