@@ -203,41 +203,28 @@ export function CreateNoteForm({
       onKeyDown={handleKeyDown}
     >
       <div className="border-b border-gray-200 px-2 sm:px-4 py-2 flex items-center justify-between sticky top-14 z-10 bg-white">
-        <div className="flex items-center gap-1 sm:gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onCancel}
-            className="text-gray-600 hover:text-gray-900 h-7 sm:h-8 px-2 sm:px-3"
-          >
-            <X className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-1" />
-            <span className="hidden sm:inline">Cancel</span>
-          </Button>
-        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onCancel}
+          className="text-gray-600 hover:text-gray-900 h-7 sm:h-8 px-2 sm:px-3"
+        >
+          <X className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-1" />
+          <span className="hidden sm:inline">Cancel</span>
+        </Button>
 
-        <div className="flex items-center gap-1 sm:gap-2">
+        <div className="flex items-center gap-2">
           {initialNote && isAutoSaving && (
-            <Loader2 className="h-4 w-4 text-blue-600 animate-spin" />
+            <Loader2 className="h-5 w-5 text-blue-600 animate-spin" />
           )}
-          <Button
-            onClick={handleSave}
-            disabled={isSaving}
-            variant="outline"
-            className="h-7 sm:h-8 px-2 sm:px-3 text-xs sm:text-sm"
-            size="sm"
-          >
-            {isSaving ? (
-              <>
-                <Loader2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2 animate-spin" />
-                <span className="hidden xs:inline">Saving...</span>
-              </>
-            ) : (
-              <>
-                <Save className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-2" />
-                <span className="hidden xs:inline">Save</span>
-              </>
-            )}
-          </Button>
+          {isSaving ? (
+            <Loader2 className="h-5 w-5 text-blue-600 animate-spin" />
+          ) : (
+            <Save
+              className="h-5 w-5 text-gray-700 cursor-pointer hover:text-blue-600 transition-colors"
+              onClick={handleSave}
+            />
+          )}
         </div>
       </div>
 
