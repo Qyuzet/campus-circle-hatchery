@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { Sparkles, Loader2 } from "lucide-react";
 
 interface AIPromptModalProps {
@@ -56,13 +57,13 @@ export function AIPromptModal({
     }
   };
 
-  return (
+  const modalContent = (
     <div
       ref={modalRef}
-      className="fixed bg-white rounded-lg shadow-2xl border border-gray-200 w-[600px] flex flex-col z-[9999]"
+      className="absolute bg-white rounded-lg shadow-2xl border border-gray-200 w-[600px] flex flex-col z-[9999]"
       style={{
-        top: position.top,
-        left: position.left,
+        top: `${position.top}px`,
+        left: `${position.left}px`,
       }}
       onKeyDown={handleKeyDown}
     >
@@ -98,9 +99,11 @@ export function AIPromptModal({
 
       <div className="p-4 flex items-center justify-between">
         <div className="text-xs text-gray-500">
-          Press <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-xs">Enter</kbd> to
-          generate or <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-xs">Esc</kbd> to
-          cancel
+          Press{" "}
+          <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-xs">Enter</kbd>{" "}
+          to generate or{" "}
+          <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-xs">Esc</kbd>{" "}
+          to cancel
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -128,5 +131,7 @@ export function AIPromptModal({
       </div>
     </div>
   );
-}
 
+  if (typeof window === "undefined") return null;
+  return createPortal(modalContent, document.body);
+}

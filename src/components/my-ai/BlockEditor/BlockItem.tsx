@@ -153,14 +153,14 @@ export function BlockItem({
     let top: number;
     if (spaceBelow < menuHeight && spaceAbove > spaceBelow) {
       // Position above if not enough space below
-      top = rect.top + window.scrollY - menuHeight - 4;
+      top = rect.top - menuHeight - 4;
     } else {
       // Position below (default)
-      top = rect.bottom + window.scrollY + 4;
+      top = rect.bottom + 4;
     }
 
     // Get the left position - align with the "/" character
-    const left = rect.left + window.scrollX;
+    const left = rect.left;
 
     console.log("Menu position calculated:", {
       slashRect: {
@@ -243,8 +243,8 @@ export function BlockItem({
         if (rect) {
           setSelectedText(text);
           setAIModalPosition({
-            top: rect.top + window.scrollY - 48,
-            left: rect.left + window.scrollX + rect.width / 2 - 60,
+            top: rect.top - 48,
+            left: rect.left + rect.width / 2 - 60,
           });
         }
       } else {
@@ -419,8 +419,8 @@ export function BlockItem({
       if (blockElement) {
         const rect = blockElement.getBoundingClientRect();
         setAIPromptModalPosition({
-          top: rect.bottom + window.scrollY + 4,
-          left: rect.left + window.scrollX,
+          top: rect.bottom + 4,
+          left: rect.left,
         });
       }
 
@@ -1190,8 +1190,8 @@ export function BlockItem({
                     if (blockElement) {
                       const rect = blockElement.getBoundingClientRect();
                       setAIModalPosition({
-                        top: rect.top + window.scrollY - 48,
-                        left: rect.left + window.scrollX + rect.width / 2 - 60,
+                        top: rect.top - 48,
+                        left: rect.left + rect.width / 2 - 60,
                       });
                       setShowAIAssistant(true);
                     }
@@ -1315,8 +1315,8 @@ export function BlockItem({
                   if (blockElement) {
                     const rect = blockElement.getBoundingClientRect();
                     setAIModalPosition({
-                      top: rect.top + window.scrollY - 48,
-                      left: rect.left + window.scrollX + rect.width / 2 - 60,
+                      top: rect.top - 48,
+                      left: rect.left + rect.width / 2 - 60,
                     });
                     setShowAIAssistant(true);
                   }

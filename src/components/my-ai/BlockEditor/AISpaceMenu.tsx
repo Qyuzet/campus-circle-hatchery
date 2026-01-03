@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import {
   Sparkles,
   Pencil,
@@ -185,13 +186,13 @@ export function AISpaceMenu({ onClose, onSelect, position }: AISpaceMenuProps) {
     onClose();
   };
 
-  return (
+  const modalContent = (
     <div
       ref={menuRef}
-      className="fixed bg-white rounded-lg shadow-2xl border border-gray-200 w-[440px] max-h-[500px] flex flex-col z-[9999]"
+      className="absolute bg-white rounded-lg shadow-2xl border border-gray-200 w-[440px] max-h-[500px] flex flex-col z-[9999]"
       style={{
-        top: position.top,
-        left: position.left,
+        top: `${position.top}px`,
+        left: `${position.left}px`,
       }}
       onKeyDown={handleKeyDown}
     >
@@ -274,4 +275,7 @@ export function AISpaceMenu({ onClose, onSelect, position }: AISpaceMenuProps) {
       </div>
     </div>
   );
+
+  if (typeof window === "undefined") return null;
+  return createPortal(modalContent, document.body);
 }
