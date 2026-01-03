@@ -30,9 +30,12 @@ import { BlockActionMenu } from "./BlockActionMenu";
 import { MediaUpload } from "./MediaUpload";
 import { CodeBlock } from "./CodeBlock";
 import { TableBlock } from "./TableBlock";
+import { MermaidBlock } from "./MermaidBlock";
 import { AIAssistantModal } from "./AIAssistantModal";
 import { TranslateDialog } from "./TranslateDialog";
 import { DatabaseBlock } from "./Database/DatabaseBlock";
+import { AISpaceMenu } from "./AISpaceMenu";
+import { AIPromptModal } from "./AIPromptModal";
 import { Database } from "@/types/database";
 import { toast } from "sonner";
 
@@ -70,8 +73,21 @@ export function BlockItem({
   const [isDragging, setIsDragging] = useState(false);
   const [showAIAssistant, setShowAIAssistant] = useState(false);
   const [showTranslateDialog, setShowTranslateDialog] = useState(false);
+  const [showAISpaceMenu, setShowAISpaceMenu] = useState(false);
+  const [showAIPromptModal, setShowAIPromptModal] = useState(false);
+  const [currentAIAction, setCurrentAIAction] = useState("");
+  const [aiPromptTitle, setAIPromptTitle] = useState("");
+  const [aiPromptPlaceholder, setAIPromptPlaceholder] = useState("");
   const [selectedText, setSelectedText] = useState("");
   const [aiModalPosition, setAIModalPosition] = useState({ top: 0, left: 0 });
+  const [aiSpaceMenuPosition, setAISpaceMenuPosition] = useState({
+    top: 0,
+    left: 0,
+  });
+  const [aiPromptModalPosition, setAIPromptModalPosition] = useState({
+    top: 0,
+    left: 0,
+  });
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
   const [isTyping, setIsTyping] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -323,8 +339,170 @@ export function BlockItem({
     setSelectedText("");
   };
 
+  const handleAISpaceAction = (action: string, prompt?: string) => {
+    const actionsNeedingPrompt = [
+      "table",
+      "flowchart",
+      "write-custom",
+      "brainstorm",
+      "code-help",
+      "ask-question",
+      "ask-page",
+      "draft-outline",
+      "draft-email",
+      "draft-agenda",
+      "draft-custom",
+    ];
+
+    if (actionsNeedingPrompt.includes(action) && !prompt) {
+      setCurrentAIAction(action);
+
+      const promptConfig: Record<
+        string,
+        { title: string; placeholder: string }
+      > = {
+        table: {
+          title: "What's the table about? I'll help you make it.",
+          placeholder: "Ask AI anything...",
+        },
+        flowchart: {
+          title: "What's the flowchart about? I'll help you make it.",
+          placeholder: "Ask AI anything...",
+        },
+        "write-custom": {
+          title: "What would you like me to write?",
+          placeholder: "Ask AI anything...",
+        },
+        brainstorm: {
+          title: "What would you like to brainstorm about?",
+          placeholder: "Ask AI anything...",
+        },
+        "code-help": {
+          title: "What code do you need help with?",
+          placeholder: "Ask AI anything...",
+        },
+        "ask-question": {
+          title: "What's your question?",
+          placeholder: "Ask AI anything...",
+        },
+        "ask-page": {
+          title: "What would you like to know about this page?",
+          placeholder: "Ask AI anything...",
+        },
+        "draft-outline": {
+          title: "What's the outline about?",
+          placeholder: "Ask AI anything...",
+        },
+        "draft-email": {
+          title: "What's the email about?",
+          placeholder: "Ask AI anything...",
+        },
+        "draft-agenda": {
+          title: "What's the meeting about?",
+          placeholder: "Ask AI anything...",
+        },
+        "draft-custom": {
+          title: "What would you like me to draft?",
+          placeholder: "Ask AI anything...",
+        },
+      };
+
+      const config = promptConfig[action] || {
+        title: "What would you like me to do?",
+        placeholder: "Ask AI anything...",
+      };
+
+      setAIPromptTitle(config.title);
+      setAIPromptPlaceholder(config.placeholder);
+
+      const blockElement = blockRef.current;
+      if (blockElement) {
+        const rect = blockElement.getBoundingClientRect();
+        setAIPromptModalPosition({
+          top: rect.bottom + window.scrollY + 4,
+          left: rect.left + window.scrollX,
+        });
+      }
+
+      setShowAIPromptModal(true);
+      return;
+    }
+
+    executeAIAction(action, prompt);
+  };
+
+  const executeAIAction = async (action: string, prompt?: string) => {
+    setIsTyping(true);
+    const currentContent = contentRef.current?.textContent || "";
+
+    try {
+      const response = await fetch("/api/ai/generate-blocks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action,
+          prompt: prompt || "",
+          context: currentContent,
+        }),
+      });
+
+      if (!response.ok) throw new Error("AI processing failed");
+
+      const data = await response.json();
+
+      if (data.blockType === "table" && data.content) {
+        onUpdate({
+          ...block,
+          type: "table",
+          content: "",
+          metadata: {
+            ...block.metadata,
+            tableData: data.content,
+          },
+        });
+        toast.success("Table generated successfully");
+      } else if (data.blockType === "mermaid" && data.content) {
+        onUpdate({
+          ...block,
+          type: "mermaid",
+          content: data.content,
+        });
+        toast.success("Flowchart generated successfully");
+      } else {
+        const newText = currentContent
+          ? `${currentContent}\n\n${data.content}`
+          : data.content;
+
+        if (contentRef.current) {
+          typeText(newText, contentRef.current, () => {
+            onUpdate({ ...block, content: newText });
+          });
+        }
+        toast.success("Content generated successfully");
+      }
+    } catch (error) {
+      console.error("AI action error:", error);
+      toast.error("Failed to generate content");
+      setIsTyping(false);
+    }
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     const content = contentRef.current?.textContent || "";
+
+    if (e.key === " " && content === "" && !showAISpaceMenu) {
+      e.preventDefault();
+      const blockElement = blockRef.current;
+      if (blockElement) {
+        const rect = blockElement.getBoundingClientRect();
+        setAISpaceMenuPosition({
+          top: rect.bottom + window.scrollY + 4,
+          left: rect.left + window.scrollX,
+        });
+        setShowAISpaceMenu(true);
+      }
+      return;
+    }
 
     // Enter key - create new block
     if (e.key === "Enter" && !e.shiftKey) {
@@ -483,6 +661,10 @@ export function BlockItem({
   };
 
   const getPlaceholder = () => {
+    if (!isHovered && !isFocused) {
+      return "";
+    }
+
     switch (block.type) {
       case "heading1":
         return "Heading 1";
@@ -812,6 +994,16 @@ export function BlockItem({
                 ...block,
                 metadata: { ...block.metadata, tableData },
               });
+            }}
+          />
+        );
+
+      case "mermaid":
+        return (
+          <MermaidBlock
+            code={block.content}
+            onUpdate={(code) => {
+              onUpdate({ ...block, content: code });
             }}
           />
         );
@@ -1155,6 +1347,35 @@ export function BlockItem({
             top: aiModalPosition.top + 40,
             left: aiModalPosition.left,
           }}
+        />
+      )}
+
+      {showAISpaceMenu && (
+        <AISpaceMenu
+          onClose={() => setShowAISpaceMenu(false)}
+          onSelect={(action, prompt) => {
+            handleAISpaceAction(action, prompt);
+            setShowAISpaceMenu(false);
+          }}
+          position={aiSpaceMenuPosition}
+        />
+      )}
+
+      {showAIPromptModal && (
+        <AIPromptModal
+          action={currentAIAction}
+          title={aiPromptTitle}
+          placeholder={aiPromptPlaceholder}
+          onClose={() => {
+            setShowAIPromptModal(false);
+            setCurrentAIAction("");
+          }}
+          onSubmit={(prompt) => {
+            setShowAIPromptModal(false);
+            executeAIAction(currentAIAction, prompt);
+            setCurrentAIAction("");
+          }}
+          position={aiPromptModalPosition}
         />
       )}
 

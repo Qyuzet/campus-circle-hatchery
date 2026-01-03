@@ -14,9 +14,9 @@ export async function POST(request: NextRequest) {
 
     const { text, action, language, tone, prompt } = await request.json();
 
-    if (!text || !action) {
+    if (!action) {
       return NextResponse.json(
-        { error: "Text and action are required" },
+        { error: "Action is required" },
         { status: 400 }
       );
     }
@@ -76,7 +76,8 @@ ${text}`;
         break;
 
       case "custom":
-        systemPrompt = `You are a helpful AI assistant. The user has selected the following text and wants you to help with it.
+        if (text && text.trim()) {
+          systemPrompt = `You are a helpful AI assistant. The user has selected the following text and wants you to help with it.
 
 Selected text:
 ${text}
@@ -85,13 +86,17 @@ User request:
 ${prompt}
 
 Please provide a helpful response. If the user is asking you to modify the text, return only the modified text. If the user is asking a question about the text, provide a clear and concise answer.`;
+        } else {
+          systemPrompt = `You are a helpful AI assistant. The user wants you to help with the following request:
+
+${prompt}
+
+Please provide a helpful, clear, and concise response. Generate the content they are asking for.`;
+        }
         break;
 
       default:
-        return NextResponse.json(
-          { error: "Invalid action" },
-          { status: 400 }
-        );
+        return NextResponse.json({ error: "Invalid action" }, { status: 400 });
     }
 
     const result = await model.generateContent(systemPrompt);
@@ -110,4 +115,3 @@ Please provide a helpful response. If the user is asking you to modify the text,
     );
   }
 }
-

@@ -1,7 +1,7 @@
 "use client";
 
 import { Block, BlockType } from "@/types/block";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { BlockItem } from "./BlockItem";
 
 const generateId = () => Math.random().toString(36).substring(2, 15);
@@ -51,35 +51,71 @@ export function BlockEditor({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [blocks]);
 
+  const clearAllBlocks = useCallback(() => {
+    setBlocks([{ id: generateId(), type: "text", content: "" }]);
+    setTimeout(() => {
+      const firstBlock = editorRef.current?.querySelector(
+        "[contenteditable]"
+      ) as HTMLElement;
+      firstBlock?.focus();
+    }, 10);
+  }, []);
+
   useEffect(() => {
-    const handleSelectAll = (e: KeyboardEvent) => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      const isInEditor =
+        target.isContentEditable ||
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA";
+
+      if (!isInEditor) return;
+
       if ((e.ctrlKey || e.metaKey) && e.key === "a") {
-        const target = e.target as HTMLElement;
+        e.preventDefault();
+
+        if (editorRef.current) {
+          const range = document.createRange();
+          const selection = window.getSelection();
+
+          range.selectNodeContents(editorRef.current);
+          selection?.removeAllRanges();
+          selection?.addRange(range);
+        }
+      }
+
+      if (e.key === "Backspace" || e.key === "Delete") {
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) return;
+
+        const range = selection.getRangeAt(0);
 
         if (
-          target.isContentEditable ||
-          target.tagName === "INPUT" ||
-          target.tagName === "TEXTAREA"
+          editorRef.current &&
+          editorRef.current.contains(range.commonAncestorContainer)
         ) {
-          e.preventDefault();
+          const selectedText = selection.toString();
 
-          if (editorRef.current) {
-            const range = document.createRange();
-            const selection = window.getSelection();
+          if (selectedText.length > 0) {
+            const allText = editorRef.current.textContent || "";
 
-            range.selectNodeContents(editorRef.current);
-            selection?.removeAllRanges();
-            selection?.addRange(range);
+            if (
+              selectedText.length === allText.length ||
+              selectedText.length > 100
+            ) {
+              e.preventDefault();
+              clearAllBlocks();
+            }
           }
         }
       }
     };
 
-    document.addEventListener("keydown", handleSelectAll);
+    document.addEventListener("keydown", handleKeyDown);
     return () => {
-      document.removeEventListener("keydown", handleSelectAll);
+      document.removeEventListener("keydown", handleKeyDown);
     };
-  }, []);
+  }, [clearAllBlocks]);
 
   const updateBlock = (index: number, updatedBlock: Block) => {
     const newBlocks = [...blocks];

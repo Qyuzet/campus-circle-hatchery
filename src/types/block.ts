@@ -12,6 +12,7 @@ export type BlockType =
   | "divider"
   | "page"
   | "table"
+  | "mermaid"
   | "image"
   | "video"
   | "audio"
