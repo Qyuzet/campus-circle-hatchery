@@ -21,38 +21,58 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Build system instruction with page context
+    let systemInstruction = `You are Campus AI, a helpful assistant for Campus Circle - a student platform for study materials, food, events, and clubs.
+
+CRITICAL INSTRUCTIONS:
+1. You have FULL ACCESS to the data visible on the user's current page (provided below)
+2. When users ask about items, prices, or details - SEARCH through the provided data and give SPECIFIC answers
+3. Always cite exact titles, prices, and details from the data
+4. If an item is mentioned or referenced with "this", "that", or pronouns - use conversation context to identify it
+5. For follow-up questions, refer to the previously discussed items
+6. Be helpful, concise, and accurate`;
+
+    // Check if we have full page context from PageContextProvider
+    if (contextDetails && contextDetails.pageContextSummary) {
+      systemInstruction += `\n\n========== PAGE DATA START ==========\n${contextDetails.pageContextSummary}\n========== PAGE DATA END ==========`;
+      systemInstruction += `\n\nYou have access to ALL the data listed above. When the user asks about any item, event, food, or club - find it in the data and provide the exact information. For follow-up questions like "what does this talk about" or "tell me more", refer to the item just discussed in the conversation.`;
+    }
+    // Legacy note context support
+    else if (
+      contextDetails &&
+      contextDetails.title &&
+      contextDetails.content !== undefined
+    ) {
+      const noteContent = contextDetails.content || "";
+      systemInstruction += `\n\nThe user is currently viewing their note titled "${contextDetails.title}".`;
+
+      if (contextDetails.subject) {
+        systemInstruction += `\nSubject: ${contextDetails.subject}`;
+      }
+
+      if (contextDetails.course) {
+        systemInstruction += `\nCourse: ${contextDetails.course}`;
+      }
+
+      if (noteContent) {
+        systemInstruction += `\n\nNote content:\n${noteContent}`;
+      }
+
+      systemInstruction += `\n\nYou can help the user with questions about this note, suggest improvements, add examples, or help organize the information.`;
+    } else if (context && context !== "No context") {
+      systemInstruction += `\n\nThe user is currently in the ${context} section of the platform.`;
+    }
+
     const model = genAI.getGenerativeModel({
       model: "gemini-2.0-flash-exp",
+      systemInstruction: systemInstruction,
       generationConfig: {
-        temperature: 0.9,
+        temperature: 0.7,
         topP: 0.95,
         topK: 40,
         maxOutputTokens: 2048,
       },
     });
-
-    let systemContext = `You are a helpful AI assistant for Campus Circle, a student platform. You help students with their studies, notes, and academic questions.`;
-
-    if (contextDetails && contextDetails.title) {
-      const noteContent = contextDetails.content || "";
-      systemContext += `\n\nThe user is currently viewing their note titled "${contextDetails.title}".`;
-
-      if (contextDetails.subject) {
-        systemContext += `\nSubject: ${contextDetails.subject}`;
-      }
-
-      if (contextDetails.course) {
-        systemContext += `\nCourse: ${contextDetails.course}`;
-      }
-
-      if (noteContent) {
-        systemContext += `\n\nNote content:\n${noteContent}`;
-      }
-
-      systemContext += `\n\nYou can help the user with questions about this note, suggest improvements, add examples, or help organize the information.`;
-    } else if (context && context !== "No context") {
-      systemContext += `\n\nThe user is currently in the ${context} section of the platform.`;
-    }
 
     const conversationHistory = messages.map((msg: any) => ({
       role: msg.type === "user" ? "user" : "model",
@@ -70,7 +90,16 @@ export async function POST(request: NextRequest) {
     });
 
     let contextInfo = "";
-    if (contextDetails && contextDetails.title) {
+    let detailedContext = "";
+
+    if (contextDetails && contextDetails.pageContextSummary) {
+      contextInfo = `on the ${contextDetails.pageName} page`;
+      detailedContext = contextDetails.pageContextSummary;
+    } else if (
+      contextDetails &&
+      contextDetails.title &&
+      contextDetails.content !== undefined
+    ) {
       contextInfo = `viewing their note titled "${contextDetails.title}"${
         contextDetails.subject ? ` in ${contextDetails.subject}` : ""
       }`;
@@ -80,20 +109,40 @@ export async function POST(request: NextRequest) {
       contextInfo = "asking a general question";
     }
 
-    const reasoningPrompt = `You are analyzing a user's question to provide context. The user is ${contextInfo}.
+    // Build conversation context for reasoning - include recent messages to understand "this", "that" references
+    let conversationContext = "";
+    if (messages.length > 1) {
+      const recentMessages = messages.slice(-5); // Last 5 messages for context
+      conversationContext = "\n\nRecent conversation:\n";
+      recentMessages.forEach((msg: any) => {
+        const role = msg.type === "user" ? "User" : "AI";
+        conversationContext += `${role}: ${msg.content.substring(0, 200)}${
+          msg.content.length > 200 ? "..." : ""
+        }\n`;
+      });
+    }
 
-User's question: "${lastMessage.content}"
+    let reasoningPrompt = `You are analyzing a user's question to provide context. The user is ${contextInfo}.`;
 
-Provide a brief 1-2 sentence reasoning about what the user is asking and how you plan to help them. Be specific and contextual. Start with "The user" and explain your understanding.`;
+    if (detailedContext) {
+      reasoningPrompt += `\n\nAvailable Page Data:\n${detailedContext}`;
+    }
+
+    if (conversationContext) {
+      reasoningPrompt += conversationContext;
+    }
+
+    reasoningPrompt += `\n\nCurrent question: "${lastMessage.content}"
+
+Provide a brief 1-2 sentence reasoning about what the user is asking. If they use words like "this", "that", or "it", identify what they're referring to from the conversation. Start with "The user" and explain your understanding.`;
 
     const reasoningResult = await reasoningModel.generateContent(
       reasoningPrompt
     );
     const reasoning = reasoningResult.response.text();
 
-    const result = await chat.sendMessage(
-      `${systemContext}\n\nUser: ${lastMessage.content}\n\nProvide a helpful response. Use markdown formatting for better readability:\n- Use **bold** for important terms\n- Use bullet points with - for lists\n- Use ## for section headers if needed\n- Use \`code\` for technical terms or code snippets`
-    );
+    // Send just the user message - system instruction already contains page data
+    const result = await chat.sendMessage(lastMessage.content);
 
     const response = result.response;
     const aiResponse = response.text();

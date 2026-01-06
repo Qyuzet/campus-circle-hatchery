@@ -53,6 +53,20 @@ export interface MarketplaceItem {
   status: "available" | "sold" | "pending";
   createdAt: string;
   updatedAt?: string;
+  aiMetadata?: {
+    contentSummary?: string;
+    keywords?: string[];
+    topics?: string[];
+    subject?: string;
+    extractedData?: {
+      metadata?: {
+        contentSummary?: string;
+        keywords?: string[];
+        topics?: string[];
+        subject?: string;
+      };
+    };
+  };
 }
 
 export interface Message {

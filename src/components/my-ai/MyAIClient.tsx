@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { AINote } from "@/types";
 import { NotesTab } from "./NotesTab";
 import { LiveLectureTab } from "./LiveLectureTab";
 import { FileText, Mic } from "lucide-react";
+import { usePageContext, NoteContext } from "@/contexts/PageContext";
 
 interface MyAIClientProps {
   initialNotes: any[];
@@ -26,6 +27,7 @@ export function MyAIClient({
   initialTab = "notes",
 }: MyAIClientProps) {
   const [activeTab, setActiveTab] = useState(initialTab);
+  const { setPageContext } = usePageContext();
   const [notes, setNotes] = useState<AINote[]>(
     initialNotes.map((note) => ({
       ...note,
@@ -48,6 +50,46 @@ export function MyAIClient({
   const handleNoteDeleted = useCallback((noteId: string) => {
     setNotes((prevNotes) => prevNotes.filter((note) => note.id !== noteId));
   }, []);
+
+  // Set page context for AI chatbot
+  useEffect(() => {
+    const notesContext: NoteContext[] = notes.slice(0, 20).map((note) => ({
+      id: note.id,
+      title: note.title,
+      content: note.content?.substring(0, 200),
+      subject: note.subject,
+      course: note.course,
+      tags: note.tags,
+    }));
+
+    const subjects = [...new Set(notes.map((n) => n.subject).filter(Boolean))];
+    const allTags = [
+      ...new Set(notes.flatMap((n) => n.tags || []).filter(Boolean)),
+    ];
+
+    setPageContext({
+      pageName: activeTab === "notes" ? "My AI Notes" : "Live Lecture",
+      pageDescription:
+        activeTab === "notes"
+          ? "AI-powered note-taking and organization for your studies"
+          : "Live lecture transcription and note-taking",
+      currentSection: activeTab,
+      notes: notesContext,
+      stats: {
+        totalNotes: notes.length,
+        subjects: subjects.join(", ") || "None",
+        tags: allTags.slice(0, 10).join(", ") || "None",
+        recentNotes: notes
+          .slice(0, 5)
+          .map((n) => n.title)
+          .join(", "),
+      },
+      customData: {
+        userFaculty: user.faculty,
+        userMajor: user.major,
+      },
+    });
+  }, [activeTab, notes, user.faculty, user.major, setPageContext]);
 
   return (
     <div className="space-y-0">

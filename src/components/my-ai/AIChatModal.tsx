@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { useAIContext } from "@/contexts/AIContext";
+import { usePageContext } from "@/contexts/PageContext";
 import {
   X,
   Maximize2,
@@ -40,6 +41,7 @@ type ChatView = "main" | "previous" | "sources";
 export function AIChatModal({ onClose }: AIChatModalProps) {
   const pathname = usePathname();
   const { currentNote } = useAIContext();
+  const { context: pageContext, getContextSummary } = usePageContext();
   const [isMaximized, setIsMaximized] = useState(false);
   const [chatView, setChatView] = useState<ChatView>("main");
   const [showMentions, setShowMentions] = useState(false);
@@ -92,16 +94,28 @@ export function AIChatModal({ onClose }: AIChatModalProps) {
 
   useEffect(() => {
     fetchCurrentContext();
-  }, [pathname, currentNote]);
+  }, [pathname, currentNote, pageContext]);
 
   const fetchCurrentContext = async () => {
     try {
+      // Priority 1: Current note being viewed/edited
       if (currentNote) {
         setCurrentContext(currentNote.title || "Untitled");
         setContextDetails(currentNote);
         return;
       }
 
+      // Priority 2: Page context from PageContextProvider
+      if (pageContext) {
+        setCurrentContext(pageContext.pageName);
+        setContextDetails({
+          ...pageContext,
+          pageContextSummary: getContextSummary(),
+        });
+        return;
+      }
+
+      // Priority 3: Fallback to pathname-based context
       if (!pathname) {
         setCurrentContext("No context");
         return;
@@ -113,7 +127,11 @@ export function AIChatModal({ onClose }: AIChatModalProps) {
         const params = new URLSearchParams(window.location.search);
         const mode = params.get("mode");
         setCurrentContext(
-          mode === "food" ? "Food Marketplace" : "Study Marketplace"
+          mode === "food"
+            ? "Food Marketplace"
+            : mode === "event"
+            ? "Events"
+            : "Study Marketplace"
         );
       } else if (pathname.includes("/dashboard/messages")) {
         setCurrentContext("Messages");

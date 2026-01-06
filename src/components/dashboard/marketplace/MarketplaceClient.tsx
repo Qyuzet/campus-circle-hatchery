@@ -48,6 +48,12 @@ import { EditEventForm } from "@/components/EditEventForm";
 import { MessageSellerModal } from "./MessageSellerModal";
 import { SupportContactModal } from "@/components/SupportContactModal";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { usePageContext } from "@/contexts/PageContext";
+import type {
+  MarketplaceItemContext,
+  FoodItemContext,
+  EventContext,
+} from "@/contexts/PageContext";
 
 interface MarketplaceClientProps {
   initialMarketplaceItems: any[];
@@ -74,6 +80,7 @@ export function MarketplaceClient({
 }: MarketplaceClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { setPageContext, updatePageContext } = usePageContext();
   const [contentMode, setContentMode] = useState<"study" | "food" | "event">(
     initialContentMode
   );
@@ -355,6 +362,210 @@ export function MarketplaceClient({
 
     return items;
   }, [initialEvents, searchQuery]);
+
+  // Set page context for AI chatbot
+  useEffect(() => {
+    const modeLabels = {
+      study: "Study Marketplace",
+      food: "Food Marketplace",
+      event: "Campus Events",
+    };
+
+    // Include ALL items (up to 50) with full aiMetadata for comprehensive AI understanding
+    const marketplaceItemsContext: MarketplaceItemContext[] =
+      filteredMarketplaceItems.slice(0, 50).map((item) => {
+        const aiMeta = item.aiMetadata as any;
+        return {
+          id: item.id,
+          title: item.title,
+          description: item.description,
+          price: item.price,
+          category: item.category,
+          course: item.course,
+          sellerName: item.seller?.name,
+          rating: item.rating,
+          status: item.status,
+          aiMetadata: aiMeta
+            ? {
+                contentSummary:
+                  aiMeta.contentSummary ||
+                  aiMeta.extractedData?.metadata?.contentSummary,
+                keywords:
+                  aiMeta.keywords || aiMeta.extractedData?.metadata?.keywords,
+                topics: aiMeta.topics || aiMeta.extractedData?.metadata?.topics,
+                academicLevel:
+                  aiMeta.academicLevel ||
+                  aiMeta.extractedData?.metadata?.academicLevel,
+                subject:
+                  aiMeta.subject || aiMeta.extractedData?.metadata?.subject,
+              }
+            : undefined,
+        };
+      });
+
+    const foodItemsContext: FoodItemContext[] = filteredFoodItems
+      .slice(0, 50)
+      .map((item) => {
+        const aiMeta = item.aiMetadata as any;
+        return {
+          id: item.id,
+          title: item.title,
+          description: item.description,
+          price: item.price,
+          location: item.pickupLocation,
+          sellerName: item.seller?.name,
+          status: item.status,
+          isHalal: item.isHalal,
+          isVegetarian: item.isVegetarian,
+          isVegan: item.isVegan,
+          category: item.category,
+          foodType: item.foodType,
+          aiMetadata: aiMeta
+            ? {
+                contentSummary:
+                  aiMeta.contentSummary ||
+                  aiMeta.extractedData?.metadata?.contentSummary,
+                keywords:
+                  aiMeta.keywords || aiMeta.extractedData?.metadata?.keywords,
+                cuisine:
+                  aiMeta.cuisine || aiMeta.extractedData?.metadata?.cuisine,
+              }
+            : undefined,
+        };
+      });
+
+    const eventsContext: EventContext[] = filteredEvents
+      .slice(0, 50)
+      .map((event) => {
+        const aiMeta = event.aiMetadata as any;
+        return {
+          id: event.id,
+          title: event.title,
+          description: event.description,
+          date: event.eventDate
+            ? format(new Date(event.eventDate), "PPP")
+            : undefined,
+          location: event.location,
+          organizerName: event.organizer?.name,
+          price: event.price,
+          capacity: event.capacity,
+          registeredCount: event._count?.registrations || 0,
+          category: event.category,
+          eventType: event.eventType,
+          isOnline: event.isOnline,
+          aiMetadata: aiMeta
+            ? {
+                contentSummary:
+                  aiMeta.contentSummary ||
+                  aiMeta.extractedData?.metadata?.contentSummary,
+                keywords:
+                  aiMeta.keywords || aiMeta.extractedData?.metadata?.keywords,
+              }
+            : undefined,
+        };
+      });
+
+    setPageContext({
+      pageName: modeLabels[contentMode],
+      pageDescription: `Browse and discover ${
+        contentMode === "study"
+          ? "study materials, notes, and academic resources"
+          : contentMode === "food"
+          ? "food items from campus vendors"
+          : "campus events and activities"
+      }`,
+      currentSection: contentMode,
+      marketplaceItems:
+        contentMode === "study" ? marketplaceItemsContext : undefined,
+      foodItems: contentMode === "food" ? foodItemsContext : undefined,
+      events: contentMode === "event" ? eventsContext : undefined,
+      searchQuery: searchQuery || undefined,
+      activeFilters: selectedCategory ? [selectedCategory] : undefined,
+      userWishlistCount: wishlist.size,
+      userPurchasedItemIds: myPurchasedItemIds,
+      stats: {
+        totalStudyMaterials: initialMarketplaceItems.length,
+        totalFoodItems: initialFoodItems.length,
+        totalEvents: initialEvents.length,
+      },
+    });
+  }, [
+    contentMode,
+    filteredMarketplaceItems,
+    filteredFoodItems,
+    filteredEvents,
+    searchQuery,
+    selectedCategory,
+    wishlist.size,
+    myPurchasedItemIds,
+    initialMarketplaceItems.length,
+    initialFoodItems.length,
+    initialEvents.length,
+    setPageContext,
+  ]);
+
+  // Update context when viewing a specific item
+  useEffect(() => {
+    if (selectedItem && showItemModal) {
+      updatePageContext({
+        selectedMarketplaceItem: {
+          id: selectedItem.id,
+          title: selectedItem.title,
+          description: selectedItem.description,
+          price: selectedItem.price,
+          category: selectedItem.category,
+          course: selectedItem.course,
+          sellerName: selectedItem.seller?.name,
+          rating: selectedItem.rating,
+          status: selectedItem.status,
+        },
+      });
+    } else {
+      updatePageContext({ selectedMarketplaceItem: undefined });
+    }
+  }, [selectedItem, showItemModal, updatePageContext]);
+
+  useEffect(() => {
+    if (selectedFood && showFoodModal) {
+      updatePageContext({
+        selectedFoodItem: {
+          id: selectedFood.id,
+          title: selectedFood.title,
+          description: selectedFood.description,
+          price: selectedFood.price,
+          location: selectedFood.pickupLocation,
+          sellerName: selectedFood.seller?.name,
+          status: selectedFood.status,
+          isHalal: selectedFood.isHalal,
+          isVegetarian: selectedFood.isVegetarian,
+        },
+      });
+    } else {
+      updatePageContext({ selectedFoodItem: undefined });
+    }
+  }, [selectedFood, showFoodModal, updatePageContext]);
+
+  useEffect(() => {
+    if (selectedEvent && showEventModal) {
+      updatePageContext({
+        selectedEvent: {
+          id: selectedEvent.id,
+          title: selectedEvent.title,
+          description: selectedEvent.description,
+          date: selectedEvent.eventDate
+            ? format(new Date(selectedEvent.eventDate), "PPP")
+            : undefined,
+          location: selectedEvent.location,
+          organizerName: selectedEvent.organizer?.name,
+          price: selectedEvent.price,
+          capacity: selectedEvent.capacity,
+          registeredCount: selectedEvent._count?.registrations || 0,
+        },
+      });
+    } else {
+      updatePageContext({ selectedEvent: undefined });
+    }
+  }, [selectedEvent, showEventModal, updatePageContext]);
 
   const handleCategoryFilter = (category: string) => {
     setSelectedCategory(category);

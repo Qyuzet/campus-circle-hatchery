@@ -128,6 +128,7 @@ import PaymentModal from "@/components/PaymentModal";
 import { WithdrawalForm } from "@/components/WithdrawalForm";
 import FilePreview from "@/components/FilePreview";
 import { SupportContactModal } from "@/components/SupportContactModal";
+import { usePageContext } from "@/contexts/PageContext";
 
 function DashboardContent() {
   const { data: session, status } = useSession();
@@ -135,6 +136,7 @@ function DashboardContent() {
   const searchParams = useSearchParams();
   const [isRedirecting, setIsRedirecting] = useState(false);
   const isHandlingAddItem = useRef(false);
+  const { setPageContext } = usePageContext();
 
   // Helper function to format price with K for thousands (memoized)
   const formatPrice = useCallback((price: number) => {
@@ -652,6 +654,213 @@ function DashboardContent() {
       };
     }
   }, [activeTab, myHubTab, status, router]);
+
+  // Update PageContext for My Hub tabs - ONLY include current tab's data
+  useEffect(() => {
+    if (activeTab !== "my-hub" || status !== "authenticated") {
+      return;
+    }
+
+    const tabDescriptions: Record<
+      string,
+      { name: string; description: string }
+    > = {
+      purchases: {
+        name: "My Hub - Purchases",
+        description:
+          "View and manage your purchase history, track orders, and check payment status",
+      },
+      sales: {
+        name: "My Hub - Sales",
+        description:
+          "Track your sales, view buyer information, and monitor revenue",
+      },
+      library: {
+        name: "My Hub - Library",
+        description:
+          "Access your purchased study materials, download files, and review content",
+      },
+      listings: {
+        name: "My Hub - My Listings",
+        description:
+          "Manage your listed items for sale, edit prices, and track views",
+      },
+      events: {
+        name: "My Hub - Events",
+        description:
+          "View your event registrations, upcoming events, and registration details",
+      },
+    };
+
+    const currentTabInfo = tabDescriptions[myHubTab] || {
+      name: "My Hub",
+      description: "Manage your campus activities",
+    };
+
+    // Build tab-specific context - ONLY include data for the current tab
+    const contextData: any = {
+      pageName: currentTabInfo.name,
+      pageDescription: currentTabInfo.description,
+      currentSection: myHubTab,
+    };
+
+    if (myHubTab === "purchases") {
+      const purchases = allTransactions.filter((t) => t.type === "purchase");
+      contextData.stats = {
+        totalOrders: purchases.length,
+        completedOrders: purchases.filter((t) => t.status === "COMPLETED")
+          .length,
+        pendingOrders: purchases.filter((t) => t.status === "PENDING").length,
+        totalSpent: purchases
+          .filter((t) => t.status === "COMPLETED")
+          .reduce((sum, t) => sum + t.amount, 0),
+      };
+      // Include purchase details
+      contextData.myListings = purchases.slice(0, 30).map((order) => ({
+        id: order.id,
+        title: order.itemTitle,
+        type:
+          order.itemType === "marketplace"
+            ? "Study Material"
+            : order.itemType === "food"
+            ? "Food"
+            : "Event",
+        status: order.status,
+        price: order.amount,
+        orderId: order.orderId,
+        date: order.createdAt,
+      }));
+    } else if (myHubTab === "sales") {
+      const sales = allTransactions.filter((t) => t.type === "sale");
+      contextData.stats = {
+        totalSales: sales.filter((t) => t.status === "COMPLETED").length,
+        pendingSales: sales.filter((t) => t.status === "PENDING").length,
+        totalRevenue: sales
+          .filter((t) => t.status === "COMPLETED")
+          .reduce((sum, t) => sum + t.amount, 0),
+      };
+      contextData.myListings = sales.slice(0, 30).map((sale) => ({
+        id: sale.id,
+        title: sale.itemTitle,
+        type:
+          sale.itemType === "marketplace"
+            ? "Study Material"
+            : sale.itemType === "food"
+            ? "Food"
+            : "Event",
+        status: sale.status,
+        price: sale.amount,
+        buyerName: sale.buyer?.name,
+        date: sale.createdAt,
+      }));
+    } else if (myHubTab === "library") {
+      const libraryItems = allTransactions.filter(
+        (t) =>
+          t.type === "purchase" &&
+          t.status === "COMPLETED" &&
+          t.itemType === "marketplace"
+      );
+      contextData.stats = {
+        totalItems: libraryItems.length,
+        notesCount: libraryItems.filter((t) => t.item?.category === "Notes")
+          .length,
+        booksCount: libraryItems.filter((t) => t.item?.category === "Book")
+          .length,
+      };
+      // Include full item details with aiMetadata for library items
+      contextData.marketplaceItems = libraryItems.slice(0, 30).map((item) => {
+        const aiMeta = item.item?.aiMetadata as any;
+        return {
+          id: item.item?.id || item.id,
+          title: item.item?.title || item.itemTitle,
+          description: item.item?.description || "",
+          price: item.amount,
+          category: item.item?.category || "Unknown",
+          course: item.item?.course,
+          fileUrl: item.item?.fileUrl,
+          fileName: item.item?.fileName,
+          aiMetadata: aiMeta
+            ? {
+                contentSummary:
+                  aiMeta.contentSummary ||
+                  aiMeta.extractedData?.metadata?.contentSummary,
+                keywords:
+                  aiMeta.keywords || aiMeta.extractedData?.metadata?.keywords,
+                topics: aiMeta.topics || aiMeta.extractedData?.metadata?.topics,
+                subject:
+                  aiMeta.subject || aiMeta.extractedData?.metadata?.subject,
+              }
+            : undefined,
+        };
+      });
+    } else if (myHubTab === "listings") {
+      // Get user's own listings from marketplaceItems
+      const myListingsData = marketplaceItems.filter(
+        (item) => item.sellerId === session?.user?.id
+      );
+      contextData.stats = {
+        totalListings: myListingsData.length,
+        activeListings: myListingsData.filter((i) => i.status === "available")
+          .length,
+        soldListings: myListingsData.filter((i) => i.status === "sold").length,
+      };
+      contextData.marketplaceItems = myListingsData.slice(0, 30).map((item) => {
+        const aiMeta = item.aiMetadata as any;
+        return {
+          id: item.id,
+          title: item.title,
+          description: item.description,
+          price: item.price,
+          category: item.category,
+          course: item.course,
+          status: item.status,
+          viewCount: item.viewCount,
+          rating: item.rating,
+          aiMetadata: aiMeta
+            ? {
+                contentSummary:
+                  aiMeta.contentSummary ||
+                  aiMeta.extractedData?.metadata?.contentSummary,
+                keywords:
+                  aiMeta.keywords || aiMeta.extractedData?.metadata?.keywords,
+                topics: aiMeta.topics || aiMeta.extractedData?.metadata?.topics,
+                subject:
+                  aiMeta.subject || aiMeta.extractedData?.metadata?.subject,
+              }
+            : undefined,
+        };
+      });
+    } else if (myHubTab === "events") {
+      contextData.stats = {
+        totalRegistrations: myEventRegistrations.length,
+        upcomingEvents: myEventRegistrations.filter(
+          (r) => new Date(r.event?.startDate) > new Date()
+        ).length,
+      };
+      contextData.events = myEventRegistrations.slice(0, 30).map((reg) => ({
+        id: reg.event?.id || reg.id,
+        title: reg.event?.title || "Unknown Event",
+        description: reg.event?.description || "",
+        date: reg.event?.startDate,
+        location: reg.event?.location,
+        organizerName: reg.event?.organizer,
+        price: reg.event?.price || 0,
+        registrationStatus: reg.status,
+        registeredAt: reg.createdAt,
+      }));
+    }
+
+    setPageContext(contextData);
+  }, [
+    activeTab,
+    myHubTab,
+    status,
+    allTransactions,
+    marketplaceItems,
+    myEventRegistrations,
+    session?.user?.id,
+    setPageContext,
+  ]);
 
   // Close notifications dropdown when clicking outside
   useEffect(() => {

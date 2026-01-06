@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ClubsList } from "./ClubsList";
 import { MyClubsList } from "./MyClubsList";
@@ -9,6 +9,7 @@ import { LeaveClubConfirmDialog } from "./LeaveClubConfirmDialog";
 import { ProfileCompleteModal } from "./ProfileCompleteModal";
 import { SupportContactModal } from "@/components/SupportContactModal";
 import { toast } from "sonner";
+import { usePageContext, ClubContext } from "@/contexts/PageContext";
 
 type Club = {
   id: string;
@@ -67,6 +68,7 @@ export function ClubsClient({
 }: ClubsClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { setPageContext } = usePageContext();
   const [clubsSubTab, setClubsSubTab] = useState<"browse" | "my-clubs">(
     initialSubTab
   );
@@ -106,6 +108,47 @@ export function ClubsClient({
     name: string;
   } | null>(null);
   const [showLeaveClubConfirm, setShowLeaveClubConfirm] = useState(false);
+
+  // Set page context for AI chatbot
+  useEffect(() => {
+    const clubsContext: ClubContext[] = allClubs.slice(0, 20).map((club) => ({
+      id: club.id,
+      name: club.name,
+      description: club.description,
+      category: club.category,
+      memberCount: club.memberCount,
+      isJoined: myClubs.some((c) => c.id === club.id),
+    }));
+
+    const myClubsContext: ClubContext[] = myClubs.map((club) => ({
+      id: club.id,
+      name: club.name,
+      description: club.description,
+      category: club.category,
+      memberCount: club.memberCount,
+      isJoined: true,
+    }));
+
+    const categories = [...new Set(allClubs.map((c) => c.category))];
+
+    setPageContext({
+      pageName: clubsSubTab === "browse" ? "Browse Clubs" : "My Clubs",
+      pageDescription:
+        clubsSubTab === "browse"
+          ? "Browse and join student organizations and clubs on campus"
+          : "View and manage your club memberships",
+      currentSection: clubsSubTab,
+      clubs: clubsContext,
+      myClubs: myClubsContext,
+      stats: {
+        totalClubs: allClubs.length,
+        joinedClubs: myClubs.length,
+        categories: categories.join(", "),
+        openForRegistration: allClubs.filter((c) => c.isOpenForRegistration)
+          .length,
+      },
+    });
+  }, [allClubs, myClubs, clubsSubTab, setPageContext]);
 
   const handleSubTabChange = (tab: "browse" | "my-clubs") => {
     setClubsSubTab(tab);

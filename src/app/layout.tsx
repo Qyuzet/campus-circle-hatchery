@@ -4,6 +4,7 @@ import SessionProvider from "@/components/SessionProvider";
 import { ThemeProvider } from "@/components/contexts/theme-provider";
 import { UnreadMessagesProvider } from "@/contexts/UnreadMessagesContext";
 import { AIProvider } from "@/contexts/AIContext";
+import { PageContextProvider } from "@/contexts/PageContext";
 import { siteConfig } from "@/config/site";
 
 export const metadata: Metadata = {
@@ -100,7 +101,9 @@ export default function RootLayout({
         <ThemeProvider>
           <SessionProvider>
             <UnreadMessagesProvider>
-              <AIProvider>{children}</AIProvider>
+              <AIProvider>
+                <PageContextProvider>{children}</PageContextProvider>
+              </AIProvider>
             </UnreadMessagesProvider>
           </SessionProvider>
         </ThemeProvider>
