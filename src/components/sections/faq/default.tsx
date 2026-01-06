@@ -36,7 +36,25 @@ export default function FAQ({
             @binus.edu) to access the platform.
           </p>
           <p className="text-muted-foreground mb-4 max-w-[640px] text-balance">
-            This ensures a trusted and safe community for all users.
+            This ensures a trusted and safe community where you can buy, sell,
+            and connect with verified fellow students.
+          </p>
+        </>
+      ),
+    },
+    {
+      question: "What is My AI Notes?",
+      answer: (
+        <>
+          <p className="text-muted-foreground mb-4 max-w-[600px]">
+            My AI Notes is our built-in AI-powered note-taking system. Create
+            and organize notes using a block-based editor with support for text,
+            tables, code blocks, and flowcharts (Mermaid diagrams).
+          </p>
+          <p className="text-muted-foreground mb-4 max-w-[600px]">
+            The AI assistant can help improve your writing, generate content,
+            create summaries, and even auto-fill notes from uploaded documents
+            like PDFs and Word files.
           </p>
         </>
       ),
@@ -47,61 +65,48 @@ export default function FAQ({
         <>
           <p className="text-muted-foreground mb-4 max-w-[600px]">
             We use Midtrans, a secure payment gateway, to process all
-            transactions. You can pay using various methods including credit
-            cards, bank transfers, and e-wallets.
+            transactions. You can pay using credit cards, bank transfers, GoPay,
+            and other e-wallets.
           </p>
           <p className="text-muted-foreground mb-4 max-w-[600px]">
             All payments are encrypted and secure. Sellers receive their funds
-            after successful delivery confirmation.
-          </p>
-          <p className="text-muted-foreground mb-4 max-w-[600px]">
-            We charge a small platform fee to maintain and improve the service.
-            CampusCircle is completely free to use for all Binus students.
+            in their wallet balance after successful transactions.
           </p>
         </>
       ),
     },
     {
-      question: "What can I buy and sell on CampusCircle?",
+      question: "What can I buy and sell?",
       answer: (
         <>
           <p className="text-muted-foreground mb-4 max-w-[580px]">
             You can buy and sell study materials (notes, textbooks,
-            assignments), order campus food from fellow students, register for
-            events and workshops, and book tutoring sessions.
+            assignments), order food from campus vendors, register for events
+            and workshops, and book tutoring sessions.
           </p>
           <p className="text-muted-foreground mb-4 max-w-[580px]">
-            All items must be related to academic or campus life purposes and
-            comply with university policies. Prohibited items will be removed.
+            All listings must comply with university policies. The platform
+            supports digital files with automatic thumbnail generation and
+            AI-powered metadata extraction.
           </p>
         </>
       ),
     },
     {
-      question: "Is CampusCircle free to use?",
+      question: "How do I join or create a club?",
       answer: (
         <>
           <p className="text-muted-foreground mb-4 max-w-[580px]">
-            Yes! CampusCircle is completely free for all Binus University
-            students. There are no subscription fees or hidden charges.
+            Browse available clubs in the Clubs section and click Join to send a
+            membership request. Club organizers will review and approve your
+            request.
           </p>
           <p className="text-muted-foreground mb-4 max-w-[580px]">
-            We only charge a small transaction fee when you make a purchase to
-            cover payment processing costs and platform maintenance.
+            To create a new club, use the Create Club feature. You can manage
+            members, post announcements, and organize club events from your
+            dashboard.
           </p>
         </>
-      ),
-    },
-    {
-      question: "How do I contact a seller or buyer?",
-      answer: (
-        <p className="text-muted-foreground mb-4 max-w-[580px]">
-          Once you find an item you&apos;re interested in, you can use our
-          built-in real-time messaging system to chat directly with the seller.
-          Simply click the &quot;Message Seller&quot; button on any listing to
-          start a conversation. You can also send order requests for food items
-          directly through chat.
-        </p>
       ),
     },
     {
@@ -109,14 +114,13 @@ export default function FAQ({
       answer: (
         <>
           <p className="text-muted-foreground mb-4 max-w-[580px]">
-            Go to the Wallet section in your dashboard to view your balance and
-            transaction history. Click &quot;Withdraw Funds&quot; to request a
-            withdrawal to your bank account. Withdrawals are processed within
-            1-3 business days.
+            Go to the Wallet section to view your balance and transaction
+            history. Click Withdraw to request a withdrawal to your bank
+            account. Withdrawals are processed within 1-3 business days.
           </p>
           <p className="text-muted-foreground mb-4 max-w-[580px]">
-            You can track all your sales, purchases, and withdrawal requests in
-            the Wallet tab.
+            You can track all your sales, purchases, and withdrawal requests
+            from the Wallet dashboard.
           </p>
         </>
       ),

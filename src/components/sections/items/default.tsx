@@ -5,8 +5,8 @@ import {
   MessageCircle,
   Wallet,
   GraduationCap,
-  Shield,
-  Zap,
+  Users,
+  Sparkles,
 } from "lucide-react";
 import { ReactNode } from "react";
 
@@ -31,50 +31,50 @@ export default function Items({
     {
       title: "Study Materials Marketplace",
       description:
-        "Buy and sell notes, books, assignments, and study resources with AI-powered metadata and instant PDF downloads",
+        "Buy and sell notes, textbooks, and study resources. AI-powered metadata extraction with instant PDF downloads and thumbnails",
       icon: <BookOpen className="size-5 stroke-1" />,
     },
     {
       title: "Campus Food Ordering",
       description:
-        "Order food from fellow students, schedule pickup times, and pay securely through the platform",
+        "Order food from campus vendors, schedule pickup times, and track your order status in real-time",
       icon: <ShoppingCart className="size-5 stroke-1" />,
     },
     {
-      title: "Events & Activities",
+      title: "Events & Workshops",
       description:
-        "Discover campus events, workshops, and activities. Register and pay for tickets all in one place",
+        "Discover and register for campus events, workshops, and activities. Pay for tickets and manage your registrations",
       icon: <Calendar className="size-5 stroke-1" />,
+    },
+    {
+      title: "Student Clubs",
+      description:
+        "Browse and join university clubs, participate in club events, and connect with like-minded students",
+      icon: <Users className="size-5 stroke-1" />,
     },
     {
       title: "Tutoring Services",
       description:
-        "Find expert tutors or offer your tutoring services. Schedule sessions and manage payments seamlessly",
+        "Find expert tutors for any subject or offer your own tutoring services. Schedule and manage sessions easily",
       icon: <GraduationCap className="size-5 stroke-1" />,
     },
     {
       title: "Real-time Messaging",
       description:
-        "Chat directly with buyers, sellers, and tutors. Send order requests and negotiate deals instantly",
+        "Chat directly with buyers, sellers, and tutors. Group messaging for clubs and study groups",
       icon: <MessageCircle className="size-5 stroke-1" />,
+    },
+    {
+      title: "My AI Notes",
+      description:
+        "Create notes with AI-powered writing assistance, auto-generate tables, flowcharts, and summaries from documents",
+      icon: <Sparkles className="size-5 stroke-1" />,
     },
     {
       title: "Digital Wallet",
       description:
-        "Track your earnings, manage transactions, and withdraw funds securely to your bank account",
+        "Track earnings, manage transactions, and withdraw funds. Secure payments via Midtrans with multiple payment methods",
       icon: <Wallet className="size-5 stroke-1" />,
-    },
-    {
-      title: "Secure Payments",
-      description:
-        "Integrated with Midtrans payment gateway supporting GoPay, bank transfers, and credit cards",
-      icon: <Shield className="size-5 stroke-1" />,
-    },
-    {
-      title: "Fast & Easy",
-      description:
-        "List items in seconds, find what you need instantly with smart search and AI autofill",
-      icon: <Zap className="size-5 stroke-1" />,
     },
   ],
   className,

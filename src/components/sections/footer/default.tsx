@@ -47,11 +47,11 @@ export default function FooterSection({
     {
       title: "Platform",
       links: [
-        { text: "Study Materials", href: "/dashboard" },
-        { text: "Campus Food", href: "/dashboard" },
-        { text: "Events", href: "/dashboard" },
-        { text: "Tutoring", href: "/dashboard" },
-        { text: "My Library", href: "/library" },
+        { text: "Marketplace", href: "/dashboard/marketplace" },
+        { text: "Food Orders", href: "/dashboard/marketplace" },
+        { text: "Events", href: "/dashboard/marketplace" },
+        { text: "Clubs", href: "/dashboard/clubs" },
+        { text: "My AI Notes", href: "/dashboard/my-ai" },
       ],
     },
     {
@@ -71,7 +71,7 @@ export default function FooterSection({
       ],
     },
   ],
-  copyright = "© 2025 CampusCircle. Built for Binus University students.",
+  copyright = "2025 CampusCircle. Built for Binus University students.",
   policies = [
     { text: "Privacy Policy", href: "/privacy" },
     { text: "Terms of Service", href: "/terms" },

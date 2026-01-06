@@ -25,7 +25,7 @@ interface CTAProps {
 }
 
 export default function CTA({
-  title = "Ready to join the community?",
+  title = "Ready to simplify your campus life?",
   buttons = false,
   className,
 }: CTAProps) {
@@ -36,7 +36,7 @@ export default function CTA({
           {title}
         </h2>
         <div className="flex justify-center gap-4">
-          <GoogleSignInButton text="Start Trading Now" variant="default" />
+          <GoogleSignInButton text="Get Started" variant="default" />
         </div>
       </div>
       <div className="absolute top-0 left-0 h-full w-full translate-y-[1rem] opacity-80 transition-all duration-500 ease-in-out group-hover:translate-y-[-2rem] group-hover:opacity-100">
