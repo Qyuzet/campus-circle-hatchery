@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { usePathname } from "next/navigation";
 import { useAIContext } from "@/contexts/AIContext";
 import { usePageContext } from "@/contexts/PageContext";
@@ -19,10 +19,13 @@ import {
   ChevronRight,
   Search,
   Send,
+  Plus,
 } from "lucide-react";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+
+const CHAT_HISTORY_KEY = "campusai_chat_history";
 
 interface Message {
   id: string;
@@ -32,11 +35,49 @@ interface Message {
   reasoning?: string;
 }
 
+interface StoredMessage {
+  id: string;
+  type: "user" | "ai";
+  content: string;
+  timestamp: string;
+  reasoning?: string;
+}
+
 interface AIChatModalProps {
   onClose: () => void;
 }
 
-type ChatView = "main" | "previous" | "sources";
+type ChatView = "main" | "sources";
+
+// Helper functions for localStorage persistence
+const loadMessagesFromStorage = (): Message[] => {
+  if (typeof window === "undefined") return [];
+  try {
+    const stored = localStorage.getItem(CHAT_HISTORY_KEY);
+    if (!stored) return [];
+    const parsed: StoredMessage[] = JSON.parse(stored);
+    return parsed.map((msg) => ({
+      ...msg,
+      timestamp: new Date(msg.timestamp),
+    }));
+  } catch (error) {
+    console.error("Failed to load chat history:", error);
+    return [];
+  }
+};
+
+const saveMessagesToStorage = (messages: Message[]) => {
+  if (typeof window === "undefined") return;
+  try {
+    const toStore: StoredMessage[] = messages.map((msg) => ({
+      ...msg,
+      timestamp: msg.timestamp.toISOString(),
+    }));
+    localStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(toStore));
+  } catch (error) {
+    console.error("Failed to save chat history:", error);
+  }
+};
 
 export function AIChatModal({ onClose }: AIChatModalProps) {
   const pathname = usePathname();
@@ -63,9 +104,34 @@ export function AIChatModal({ onClose }: AIChatModalProps) {
   const [isTypingReasoning, setIsTypingReasoning] = useState(false);
   const [currentContext, setCurrentContext] = useState<string>("No context");
   const [contextDetails, setContextDetails] = useState<any>(null);
+  const [hasLoadedHistory, setHasLoadedHistory] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Load chat history from localStorage on mount
+  useEffect(() => {
+    const savedMessages = loadMessagesFromStorage();
+    if (savedMessages.length > 0) {
+      setMessages(savedMessages);
+    }
+    setHasLoadedHistory(true);
+  }, []);
+
+  // Save messages to localStorage whenever they change
+  useEffect(() => {
+    if (hasLoadedHistory) {
+      saveMessagesToStorage(messages);
+    }
+  }, [messages, hasLoadedHistory]);
+
+  // Function to start a new chat
+  const handleNewChat = useCallback(() => {
+    setMessages([]);
+    localStorage.removeItem(CHAT_HISTORY_KEY);
+    setChatView("main");
+    toast.success("Started a new chat");
+  }, []);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -328,15 +394,21 @@ export function AIChatModal({ onClose }: AIChatModalProps) {
         className={`${modalClasses} bg-white rounded-xl md:rounded-2xl shadow-2xl z-50 flex flex-col transition-all duration-200`}
       >
         <div className="flex items-center justify-between p-3 md:p-4 border-b border-gray-200 flex-shrink-0">
-          <button
-            onClick={() =>
-              setChatView(chatView === "previous" ? "main" : "previous")
-            }
-            className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-gray-900 px-2 py-1 hover:bg-gray-100 rounded transition-colors"
-          >
-            <span>New AI chat</span>
-            <ChevronDown className="h-4 w-4" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleNewChat}
+              className="flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 px-2 py-1 hover:bg-blue-50 rounded transition-colors"
+              title="Start new chat"
+            >
+              <Plus className="h-4 w-4" />
+              <span className="hidden sm:inline">New Chat</span>
+            </button>
+            {messages.length > 0 && (
+              <span className="text-xs text-gray-400">
+                {messages.length} message{messages.length !== 1 ? "s" : ""}
+              </span>
+            )}
+          </div>
 
           <div className="flex items-center gap-1">
             <button
@@ -360,21 +432,7 @@ export function AIChatModal({ onClose }: AIChatModalProps) {
           </div>
         </div>
 
-        {chatView === "previous" ? (
-          <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 overflow-y-auto">
-            <div className="text-center">
-              <div className="w-10 h-10 md:w-12 md:h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-4">
-                <Sparkles className="h-5 w-5 md:h-6 md:w-6 text-gray-400" />
-              </div>
-              <h3 className="text-base md:text-lg font-medium text-gray-900 mb-1 md:mb-2">
-                Previous chats
-              </h3>
-              <p className="text-xs md:text-sm text-gray-500">
-                Your chat history will appear here
-              </p>
-            </div>
-          </div>
-        ) : chatView === "sources" ? (
+        {chatView === "sources" ? (
           <div className="flex-1 overflow-y-auto p-3 md:p-4">
             <div className="space-y-1">
               <button
