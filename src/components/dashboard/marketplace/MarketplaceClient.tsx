@@ -47,6 +47,7 @@ import { EditFoodForm } from "@/components/EditFoodForm";
 import { EditEventForm } from "@/components/EditEventForm";
 import { MessageSellerModal } from "./MessageSellerModal";
 import { SupportContactModal } from "@/components/SupportContactModal";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 
 interface MarketplaceClientProps {
   initialMarketplaceItems: any[];
@@ -119,6 +120,13 @@ export function MarketplaceClient({
     itemTitle: string;
   } | null>(null);
   const [isRegistering, setIsRegistering] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{
+    id: string;
+    type: "item" | "food" | "event";
+    title: string;
+  } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     const search = searchParams.get("search");
@@ -246,6 +254,53 @@ export function MarketplaceClient({
       toast.error("Failed to update event. Please try again.");
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleDeleteItem = (itemId: string, itemTitle: string) => {
+    setDeleteTarget({ id: itemId, type: "item", title: itemTitle });
+    setShowDeleteConfirm(true);
+  };
+
+  const handleDeleteFood = (foodId: string, foodTitle: string) => {
+    setDeleteTarget({ id: foodId, type: "food", title: foodTitle });
+    setShowDeleteConfirm(true);
+  };
+
+  const handleDeleteEvent = (eventId: string, eventTitle: string) => {
+    setDeleteTarget({ id: eventId, type: "event", title: eventTitle });
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+
+    setIsDeleting(true);
+    try {
+      if (deleteTarget.type === "item") {
+        await marketplaceAPI.deleteItem(deleteTarget.id);
+        toast.success("Item deleted successfully!");
+        setShowItemModal(false);
+        setSelectedItem(null);
+      } else if (deleteTarget.type === "food") {
+        await foodAPI.deleteFoodItem(deleteTarget.id);
+        toast.success("Food item deleted successfully!");
+        setShowFoodModal(false);
+        setSelectedFood(null);
+      } else if (deleteTarget.type === "event") {
+        await eventAPI.deleteEvent(deleteTarget.id);
+        toast.success("Event deleted successfully!");
+        setShowEventModal(false);
+        setSelectedEvent(null);
+      }
+      router.refresh();
+    } catch (error) {
+      console.error("Error deleting:", error);
+      toast.error("Failed to delete. Please try again.");
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
+      setDeleteTarget(null);
     }
   };
 
@@ -680,9 +735,7 @@ export function MarketplaceClient({
                           className="flex-1 h-9 text-sm"
                           onClick={(e) => {
                             e.stopPropagation();
-                            alert(
-                              "Delete functionality not implemented in SSR"
-                            );
+                            handleDeleteItem(item.id, item.title);
                           }}
                         >
                           <Trash2 className="h-4 w-4 mr-1.5" />
@@ -801,9 +854,7 @@ export function MarketplaceClient({
                           className="w-full text-[10px] md:text-xs px-2 py-1 h-6 md:h-7 font-normal"
                           onClick={(e) => {
                             e.stopPropagation();
-                            alert(
-                              "Delete functionality not implemented in SSR"
-                            );
+                            handleDeleteItem(item.id, item.title);
                           }}
                         >
                           <Trash2 className="h-3 w-3 md:h-3.5 md:w-3.5 md:mr-1" />
@@ -1012,12 +1063,12 @@ export function MarketplaceClient({
                         <Button
                           variant="destructive"
                           className="flex-1"
-                          onClick={() => {
-                            alert(
-                              "Delete functionality not implemented in SSR"
-                            );
-                            setShowItemModal(false);
-                          }}
+                          onClick={() =>
+                            handleDeleteItem(
+                              selectedItem.id,
+                              selectedItem.title
+                            )
+                          }
                         >
                           <Trash2 className="h-4 w-4 mr-1" />
                           Delete
@@ -1286,12 +1337,12 @@ export function MarketplaceClient({
                         <Button
                           variant="destructive"
                           className="flex-1 text-sm"
-                          onClick={() => {
-                            alert(
-                              "Delete functionality not implemented in SSR"
-                            );
-                            setShowItemModal(false);
-                          }}
+                          onClick={() =>
+                            handleDeleteItem(
+                              selectedItem.id,
+                              selectedItem.title
+                            )
+                          }
                         >
                           <Trash2 className="h-4 w-4 mr-1" />
                           Delete
@@ -1481,12 +1532,12 @@ export function MarketplaceClient({
                         </Button>
                         <Button
                           variant="destructive"
-                          onClick={() => {
-                            alert(
-                              "Delete functionality not implemented in SSR"
-                            );
-                            setShowFoodModal(false);
-                          }}
+                          onClick={() =>
+                            handleDeleteFood(
+                              selectedFood.id,
+                              selectedFood.title
+                            )
+                          }
                           className="flex-1"
                         >
                           <Trash2 className="h-4 w-4 mr-2" />
@@ -1683,12 +1734,12 @@ export function MarketplaceClient({
                         </Button>
                         <Button
                           variant="destructive"
-                          onClick={() => {
-                            alert(
-                              "Delete functionality not implemented in SSR"
-                            );
-                            setShowEventModal(false);
-                          }}
+                          onClick={() =>
+                            handleDeleteEvent(
+                              selectedEvent.id,
+                              selectedEvent.title
+                            )
+                          }
                           className="flex-1"
                         >
                           <Trash2 className="h-4 w-4 mr-2" />
@@ -2057,6 +2108,28 @@ export function MarketplaceClient({
         relatedItemId={supportContext?.itemId || ""}
         relatedItemType={supportContext?.itemType || ""}
         relatedItemTitle={supportContext?.itemTitle || ""}
+      />
+
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        onClose={() => {
+          setShowDeleteConfirm(false);
+          setDeleteTarget(null);
+        }}
+        onConfirm={confirmDelete}
+        title={`Delete ${
+          deleteTarget?.type === "item"
+            ? "Study Material"
+            : deleteTarget?.type === "food"
+            ? "Food Item"
+            : "Event"
+        }`}
+        description={`Are you sure you want to delete "${deleteTarget?.title}"? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+        icon="trash"
+        isLoading={isDeleting}
       />
     </div>
   );
