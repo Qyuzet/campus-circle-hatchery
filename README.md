@@ -1,49 +1,113 @@
-# CampusCircle - Binus University Student Marketplace
+# CampusCircle
 
-CampusCircle is an exclusive platform designed for Binus University students to exchange study materials, offer tutoring services, and connect with fellow students. Think of it as a combination of StudoCu and an internal marketplace, but specifically tailored for the Binus University community.
+CampusCircle is an all-in-one campus platform designed for Binus University students. It combines a marketplace for study materials, food ordering, event management, student clubs, tutoring services, and an AI-powered notes system into a single trusted platform.
 
 ## Features
 
-### 🎓 Student-Only Platform
+### Student Marketplace
 
-- Exclusive access for Binus University students
-- Login using Student ID (NIM)
-- Verified university community
+- Buy and sell study materials including notes, assignments, and guides
+- Support for digital files (PDF, Word, etc.) with automatic thumbnail generation
+- AI-powered metadata extraction for uploaded documents
+- Wishlist functionality for tracking items
+- Rating and review system for sellers
 
-### 📚 Study Materials Exchange
+### Food Ordering
 
-- Share and sell course notes
-- Upload assignments and study guides
-- Access materials from various faculties and courses
-- Digital and physical material support
+- Order food from campus vendors
+- Real-time order status tracking
+- Pickup time scheduling
+- Vendor dashboard for managing orders
 
-### 👨‍🏫 Tutoring Services
+### Student Clubs
 
-- Offer tutoring sessions in your expertise areas
-- Find tutors for challenging subjects
-- Schedule and manage tutoring sessions
+- Browse and join university clubs
+- Club management dashboard for organizers
+- Member management with join requests
+- Club events and announcements
+
+### Events
+
+- Discover campus events
+- Event registration and participation tracking
+- Event reviews and ratings
+- Organizer dashboard for managing events
+
+### Tutoring Services
+
+- Find tutors for specific subjects
+- Schedule tutoring sessions
 - Rate and review tutoring experiences
+- Tutor profiles with expertise areas
 
-### 💬 Direct Communication
+### Real-time Messaging
 
-- Chat directly with other students
-- Negotiate prices and terms
-- Ask questions about materials
-- Build study groups and connections
+- Direct messaging between students
+- Group chat for study groups and clubs
+- Real-time notifications via Pusher
+- Message read receipts
 
-### 🛒 Secure Marketplace
+### My AI (AI Notes)
 
-- Safe buying and selling within the university community
-- Rating and review system
-- Secure payment processing
-- Item categorization and search.
+- Create and organize notes with a block-based editor
+- AI-powered content generation and writing assistance
+- Support for tables, flowcharts (Mermaid), code blocks, and more
+- AI autofill from uploaded documents
+- Automatic summaries and key point extraction
+
+### Wallet System
+
+- In-app balance management
+- Transaction history
+- Withdrawal requests
+- Secure payment processing via Midtrans
+
+### Notifications
+
+- Real-time push notifications
+- Email notifications via Resend
+- Notification preferences management
 
 ## Technology Stack
 
-- **Frontend**: Next.js 14 with TypeScript
-- **Styling**: Tailwind CSS
-- **Icons**: Lucide React
-- **Authentication**: Student ID based (to be integrated with Google OAuth)
+### Frontend
+
+- Next.js 14 with App Router
+- TypeScript
+- Tailwind CSS
+- Radix UI components
+- Lucide React icons
+
+### Backend
+
+- Next.js API Routes
+- Prisma ORM
+- PostgreSQL (Supabase)
+
+### Authentication
+
+- NextAuth.js v5
+- Google OAuth integration
+
+### Real-time
+
+- Pusher for WebSocket connections
+
+### AI
+
+- Google Gemini API for AI features
+
+### Payments
+
+- Midtrans payment gateway
+
+### Storage
+
+- Supabase Storage for file uploads
+
+### Email
+
+- Resend for transactional emails
 
 ## Getting Started
 
@@ -51,13 +115,14 @@ CampusCircle is an exclusive platform designed for Binus University students to 
 
 - Node.js 18+
 - npm or yarn
+- PostgreSQL database (or Supabase account)
 
 ### Installation
 
 1. Clone the repository:
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/Qyuzet/campus-circle-hatchery.git
 cd campusCircle
 ```
 
@@ -67,101 +132,63 @@ cd campusCircle
 npm install
 ```
 
-3. Run the development server:
+3. Set up environment variables:
+
+```bash
+cp .env.example .env
+```
+
+Configure the following environment variables:
+
+- DATABASE_URL - PostgreSQL connection string
+- NEXTAUTH_SECRET - Secret for NextAuth.js
+- GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET - Google OAuth credentials
+- PUSHER_APP_ID, PUSHER_SECRET, NEXT_PUBLIC_PUSHER_APP_KEY - Pusher credentials
+- GEMINI_API_KEY - Google Gemini API key
+- MIDTRANS_SERVER_KEY, MIDTRANS_CLIENT_KEY - Midtrans credentials
+- RESEND_API_KEY - Resend API key
+- SUPABASE_URL, SUPABASE_SERVICE_KEY - Supabase credentials
+
+4. Set up the database:
+
+```bash
+npx prisma generate
+npx prisma db push
+npm run seed
+```
+
+5. Run the development server:
 
 ```bash
 npm run dev
 ```
 
-4. Open [http://localhost:3000](http://localhost:3000) in your browser.
+6. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## Project Structure
 
 ```
 src/
-├── app/                    # Next.js app directory
-│   ├── dashboard/         # Dashboard pages
-│   ├── globals.css        # Global styles
-│   ├── layout.tsx         # Root layout
-│   └── page.tsx          # Landing page
-├── components/            # Reusable components
-│   └── Header.tsx        # Header component
+├── app/                    # Next.js App Router pages
+│   ├── api/               # API routes
+│   ├── dashboard/         # Dashboard pages (marketplace, clubs, my-hub, etc.)
+│   ├── admin/             # Admin panel
+│   └── ...
+├── components/            # React components
+│   ├── my-ai/            # AI Notes block editor components
+│   ├── ui/               # Reusable UI components
+│   └── ...
+├── lib/                  # Utility functions and configurations
+├── hooks/                # Custom React hooks
 ├── types/                # TypeScript type definitions
-│   └── index.ts          # Main types
-└── lib/                  # Utility functions
+└── contexts/             # React context providers
 ```
-
-## Current Status
-
-### ✅ Completed
-
-- Landing page with student login
-- Dashboard with marketplace view
-- Basic navigation and layout
-- Responsive design
-- TypeScript setup
-- Tailwind CSS styling
-
-### 🚧 In Progress
-
-- Authentication system integration
-- Database setup
-- API endpoints
-- Chat functionality
-- Payment integration
-
-### 📋 Planned Features
-
-- Google OAuth integration
-- Real-time messaging
-- File upload system
-- Advanced search and filtering
-- Rating and review system
-- Notification system
-- Mobile app (React Native)
-
-## Usage
-
-### For Students Selling Materials:
-
-1. Login with your Student ID
-2. Navigate to "My Items"
-3. Click "Add New Item"
-4. Fill in material details, price, and upload files
-5. Publish to marketplace
-
-### For Students Buying Materials:
-
-1. Browse the marketplace
-2. Use search and filters to find specific materials
-3. View item details and seller ratings
-4. Contact seller through chat
-5. Complete purchase
-
-### For Tutoring:
-
-1. Go to "Tutoring" section
-2. Either offer your tutoring services or find a tutor
-3. Schedule sessions and manage bookings
-4. Rate your experience
-
-## Contributing
-
-This project is specifically designed for Binus University. If you're a Binus student interested in contributing:
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
 
 ## License
 
 This project is intended for educational purposes within Binus University.
 
-## Contact
+## Links
 
-For questions or suggestions, please contact the development team through the university channels.
-
----
-
-**Note**: This is currently a prototype. Authentication is simplified for development purposes. In production, proper student verification and security measures will be implemented.
+- Website: https://campuscircle.vercel.app
+- Repository: https://github.com/Qyuzet/campus-circle-hatchery
