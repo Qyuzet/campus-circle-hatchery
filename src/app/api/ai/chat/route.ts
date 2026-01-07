@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import pdfParse from "pdf-parse";
+import { GoogleGenerativeAI, Part } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
@@ -11,7 +10,6 @@ interface Attachment {
   type: string;
   size: number;
   content?: string;
-  extractedText?: string; // For PDFs after parsing
 }
 
 interface MentionItem {
@@ -23,18 +21,16 @@ interface MentionItem {
   aiMetadata?: any;
 }
 
-// Helper function to extract text from PDF base64
-async function extractPdfText(base64Content: string): Promise<string> {
-  try {
-    // Remove data URL prefix if present
-    const base64Data = base64Content.replace(/^data:[^;]+;base64,/, "");
-    const buffer = Buffer.from(base64Data, "base64");
-    const data = await pdfParse(buffer);
-    return data.text || "";
-  } catch (error) {
-    console.error("PDF parsing error:", error);
-    return "[Error extracting PDF content]";
-  }
+// Helper to convert data URL to inline data format for Gemini
+function dataUrlToInlineData(
+  dataUrl: string
+): { mimeType: string; data: string } | null {
+  const match = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
+  if (!match) return null;
+  return {
+    mimeType: match[1],
+    data: match[2],
+  };
 }
 
 export async function POST(request: NextRequest) {
@@ -109,79 +105,39 @@ CRITICAL INSTRUCTIONS:
       systemInstruction += `\n\nThe user has specifically mentioned the items above using @. Focus your response on these items.`;
     }
 
-    // Process attachments - extract PDF text content
+    // Process attachments for system instruction context
     const typedAttachments = attachments as Attachment[] | undefined;
-    if (typedAttachments && typedAttachments.length > 0) {
-      // First, extract text from PDFs
-      for (const attachment of typedAttachments) {
-        if (attachment.type === "application/pdf" && attachment.content) {
-          console.log(`[AI Chat] Extracting text from PDF: ${attachment.name}`);
-          attachment.extractedText = await extractPdfText(attachment.content);
-          console.log(
-            `[AI Chat] Extracted ${attachment.extractedText.length} chars from PDF`
-          );
-        }
-      }
+    const hasAttachments = typedAttachments && typedAttachments.length > 0;
 
-      systemInstruction += `\n\n========== ATTACHED FILES START ==========`;
-      const imageCount = typedAttachments.filter((a) =>
-        a.type.startsWith("image/")
-      ).length;
-      const textCount = typedAttachments.filter(
-        (a) => a.type === "text/plain" || a.type === "text/markdown"
-      ).length;
-      const pdfCount = typedAttachments.filter(
-        (a) => a.type === "application/pdf"
-      ).length;
+    if (hasAttachments) {
+      systemInstruction += `\n\n========== ATTACHED FILES ==========`;
+      const fileDescriptions: string[] = [];
 
-      for (const attachment of typedAttachments) {
-        systemInstruction += `\n\n--- File: ${attachment.name} (${attachment.type}) ---`;
+      for (const attachment of typedAttachments!) {
         if (
-          attachment.content &&
-          (attachment.type === "text/plain" ||
-            attachment.type === "text/markdown")
+          attachment.type === "text/plain" ||
+          attachment.type === "text/markdown"
         ) {
-          // Include text content directly
-          systemInstruction += `\nContent:\n${attachment.content.substring(
-            0,
-            5000
-          )}`;
+          // Include text content directly in system instruction
+          systemInstruction += `\n\n--- File: ${attachment.name} ---`;
+          systemInstruction += `\nContent:\n${
+            attachment.content?.substring(0, 5000) || "[No content]"
+          }`;
+          fileDescriptions.push(`text file "${attachment.name}"`);
         } else if (attachment.type.startsWith("image/")) {
-          systemInstruction += `\n[Image will be provided inline - analyze it carefully]`;
-        } else if (
-          attachment.type === "application/pdf" &&
-          attachment.extractedText
-        ) {
-          // Include extracted PDF text
-          systemInstruction += `\nExtracted PDF Content:\n${attachment.extractedText.substring(
-            0,
-            8000
-          )}`;
-        } else if (
-          attachment.type === "application/msword" ||
-          attachment.type ===
-            "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-        ) {
-          systemInstruction += `\n[Word document - ${Math.round(
-            attachment.size / 1024
-          )}KB - Word parsing not yet supported]`;
+          fileDescriptions.push(`image "${attachment.name}"`);
+        } else if (attachment.type === "application/pdf") {
+          fileDescriptions.push(`PDF document "${attachment.name}"`);
         } else {
-          systemInstruction += `\n[File attached - ${Math.round(
-            attachment.size / 1024
-          )}KB]`;
+          fileDescriptions.push(`file "${attachment.name}"`);
         }
       }
-      systemInstruction += `\n========== ATTACHED FILES END ==========`;
 
-      if (imageCount > 0) {
-        systemInstruction += `\n\nThe user has attached ${imageCount} image(s) that will be provided inline. Analyze the image(s) carefully and respond to their questions about them.`;
-      }
-      if (textCount > 0) {
-        systemInstruction += `\n\nThe user has attached ${textCount} text file(s). The content is provided above.`;
-      }
-      if (pdfCount > 0) {
-        systemInstruction += `\n\nThe user has attached ${pdfCount} PDF file(s). The extracted text content is provided above. Answer questions based on this content.`;
-      }
+      systemInstruction += `\n\nThe user has attached: ${fileDescriptions.join(
+        ", "
+      )}. `;
+      systemInstruction += `Images and PDFs are provided inline for you to analyze directly. `;
+      systemInstruction += `Carefully examine all attached files and answer the user's questions about them.`;
     }
 
     // Check if we have full page context from PageContextProvider
@@ -293,42 +249,55 @@ Provide a brief 1-2 sentence reasoning about what the user is asking. If they us
     );
     const reasoning = reasoningResult.response.text();
 
-    // Build message parts - include images if attached
-    const messageParts: any[] = [];
+    // Build message parts for multimodal input (text + images + PDFs)
+    const messageParts: Part[] = [];
 
-    // Add text content
+    // Add text content first
     if (lastMessage.content) {
       messageParts.push({ text: lastMessage.content });
     }
 
-    // Add image attachments as inline data for Gemini vision
-    if (typedAttachments && typedAttachments.length > 0) {
-      for (const attachment of typedAttachments) {
-        if (attachment.content && attachment.type.startsWith("image/")) {
-          // Extract base64 data from data URL
-          const base64Match = attachment.content.match(
-            /^data:([^;]+);base64,(.+)$/
-          );
-          if (base64Match) {
-            const mimeType = base64Match[1];
-            const base64Data = base64Match[2];
-            messageParts.push({
-              inlineData: {
-                mimeType: mimeType,
-                data: base64Data,
-              },
-            });
+    // Add file attachments as inline data for Gemini multimodal
+    if (hasAttachments) {
+      for (const attachment of typedAttachments!) {
+        if (attachment.content) {
+          const inlineData = dataUrlToInlineData(attachment.content);
+          if (inlineData) {
+            // Gemini supports: images, PDFs, and other documents
+            const supportedTypes = [
+              "image/jpeg",
+              "image/png",
+              "image/gif",
+              "image/webp",
+              "application/pdf",
+            ];
+
+            if (supportedTypes.includes(inlineData.mimeType)) {
+              console.log(
+                `[AI Chat] Adding ${inlineData.mimeType} file to message: ${attachment.name}`
+              );
+              messageParts.push({
+                inlineData: {
+                  mimeType: inlineData.mimeType,
+                  data: inlineData.data,
+                },
+              });
+            }
           }
         }
       }
     }
 
-    // If no parts, add empty text
+    // If no parts, add a default text
     if (messageParts.length === 0) {
       messageParts.push({ text: "Hello" });
     }
 
-    // Send message with all parts (text + images)
+    console.log(
+      `[AI Chat] Sending message with ${messageParts.length} parts (text + files)`
+    );
+
+    // Send message with all parts (text + images + PDFs)
     const result = await chat.sendMessage(messageParts);
 
     const response = result.response;
