@@ -16,6 +16,7 @@ import {
   Paperclip,
   Globe,
   ChevronRight,
+  ChevronLeft,
   Search,
   Send,
   Plus,
@@ -62,6 +63,11 @@ interface MentionItem {
   aiMetadata?: any;
 }
 
+interface SearchSource {
+  uri: string;
+  title: string;
+}
+
 interface Message {
   id: string;
   type: "user" | "ai";
@@ -70,6 +76,8 @@ interface Message {
   reasoning?: string;
   attachments?: Attachment[];
   mentions?: MentionItem[];
+  webSearchUsed?: boolean;
+  searchSources?: SearchSource[];
 }
 
 interface StoredMessage {
@@ -135,8 +143,9 @@ export function AIChatModal({ onClose }: AIChatModalProps) {
   const [showMentions, setShowMentions] = useState(false);
   const [showSources, setShowSources] = useState(false);
   const [input, setInput] = useState("");
+  // Web search OFF by default - AI should prioritize local context
   const [selectedSources, setSelectedSources] = useState({
-    webSearch: true,
+    webSearch: false,
     appsIntegrations: true,
     allSources: true,
   });
@@ -154,6 +163,15 @@ export function AIChatModal({ onClose }: AIChatModalProps) {
   const [isThinking, setIsThinking] = useState(false);
   const [typingReasoning, setTypingReasoning] = useState("");
   const [isTypingReasoning, setIsTypingReasoning] = useState(false);
+
+  // Multi-stage loading states
+  type LoadingStage =
+    | "idle"
+    | "context"
+    | "web-search"
+    | "reasoning"
+    | "generating";
+  const [loadingStage, setLoadingStage] = useState<LoadingStage>("idle");
   const [currentContext, setCurrentContext] = useState<string>("No context");
   const [contextDetails, setContextDetails] = useState<any>(null);
   const [hasLoadedHistory, setHasLoadedHistory] = useState(false);
@@ -446,9 +464,12 @@ export function AIChatModal({ onClose }: AIChatModalProps) {
   };
 
   const typeText = async (text: string, callback: (char: string) => void) => {
-    for (let i = 0; i < text.length; i++) {
-      callback(text.substring(0, i + 1));
-      await new Promise((resolve) => setTimeout(resolve, 20));
+    // Much faster typing - 5ms per character (was 20ms)
+    // Also type multiple characters at once for longer texts
+    const charsPerStep = text.length > 100 ? 3 : text.length > 50 ? 2 : 1;
+    for (let i = 0; i < text.length; i += charsPerStep) {
+      callback(text.substring(0, Math.min(i + charsPerStep, text.length)));
+      await new Promise((resolve) => setTimeout(resolve, 5));
     }
   };
 
@@ -476,6 +497,50 @@ export function AIChatModal({ onClose }: AIChatModalProps) {
     setSelectedMentions([]);
     setIsThinking(true);
 
+    // ALWAYS get fresh context summary to ensure follow-up questions have up-to-date data
+    // This is critical because the pageContext might have been updated since the modal opened
+    let freshContextDetails = contextDetails;
+    if (pageContext) {
+      const freshSummary = getContextSummary();
+      freshContextDetails = {
+        ...pageContext,
+        pageContextSummary: freshSummary,
+      };
+    } else if (currentNote) {
+      freshContextDetails = currentNote;
+    }
+
+    // Determine what sources are available/needed
+    const hasNewMentions = currentMentions.length > 0;
+    const hasNewAttachments = currentAttachments.length > 0;
+    const isFirstMessage = messages.length === 0;
+    const hasPageContext = !!freshContextDetails?.pageContextSummary;
+    const hasLocalContext =
+      hasNewMentions || hasPageContext || hasNewAttachments;
+
+    // Web search: Always pass the user's setting to the backend
+    // The AI will dynamically decide whether to use web search based on the question
+    // This allows the AI to intelligently choose between local context and web search
+    const shouldUseWebSearch = selectedSources.webSearch;
+
+    // Only show "Reading AI context" if:
+    // 1. This is the first message (need to load initial context), OR
+    // 2. User added NEW mentions or attachments
+    const needsToReadContext =
+      (isFirstMessage && hasPageContext) || hasNewMentions || hasNewAttachments;
+
+    // Show appropriate loading stage based on what we're actually doing
+    if (needsToReadContext) {
+      setLoadingStage("context");
+      await new Promise((r) => setTimeout(r, 400));
+    } else if (shouldUseWebSearch) {
+      // Only show web search when no local context available
+      setLoadingStage("web-search");
+    } else {
+      // For follow-up questions with existing context, go straight to thinking
+      setLoadingStage("reasoning");
+    }
+
     try {
       const response = await fetch("/api/ai/chat", {
         method: "POST",
@@ -485,9 +550,14 @@ export function AIChatModal({ onClose }: AIChatModalProps) {
         body: JSON.stringify({
           messages: [...messages, userMessage],
           context: currentContext,
-          contextDetails: contextDetails,
+          contextDetails: freshContextDetails,
           attachments: currentAttachments,
           mentions: currentMentions,
+          sourceSettings: {
+            ...selectedSources,
+            // Override: disable web search when user has specific mentions
+            webSearch: shouldUseWebSearch,
+          },
         }),
       });
 
@@ -497,12 +567,15 @@ export function AIChatModal({ onClose }: AIChatModalProps) {
 
       const data = await response.json();
 
+      // Hide the loading bubble - reasoning text will show instead
+      setLoadingStage("idle");
       setIsThinking(false);
       setIsTypingReasoning(true);
       setTypingReasoning("");
 
       await typeText(data.reasoning, setTypingReasoning);
 
+      // Done with reasoning, hide it
       setIsTypingReasoning(false);
 
       const aiMessage: Message = {
@@ -511,10 +584,13 @@ export function AIChatModal({ onClose }: AIChatModalProps) {
         content: data.content,
         timestamp: new Date(data.timestamp),
         reasoning: data.reasoning,
+        webSearchUsed: data.webSearchUsed,
+        searchSources: data.searchSources,
       };
 
       setMessages((prev) => [...prev, aiMessage]);
       setTypingReasoning("");
+      setLoadingStage("idle");
     } catch (error) {
       console.error("AI chat error:", error);
       toast.error("Failed to get AI response. Please try again.");
@@ -531,6 +607,7 @@ export function AIChatModal({ onClose }: AIChatModalProps) {
       setIsThinking(false);
       setIsTypingReasoning(false);
       setTypingReasoning("");
+      setLoadingStage("idle");
     }
   };
 
@@ -675,8 +752,22 @@ export function AIChatModal({ onClose }: AIChatModalProps) {
         </div>
 
         {chatView === "sources" ? (
-          <div className="flex-1 overflow-y-auto p-3 md:p-4">
-            <div className="space-y-1">
+          <div className="flex-1 overflow-y-auto">
+            {/* Sources panel header with back button */}
+            <div className="flex items-center gap-2 px-3 py-2 border-b border-gray-100">
+              <button
+                onClick={() => setChatView("main")}
+                className="p-1.5 hover:bg-gray-100 rounded-full transition-colors"
+                title="Back to chat"
+              >
+                <ChevronLeft className="h-5 w-5 text-gray-600" />
+              </button>
+              <span className="text-sm font-medium text-gray-800">
+                Search Settings
+              </span>
+            </div>
+
+            <div className="p-3 md:p-4 space-y-1">
               <button
                 onClick={() => {
                   setSelectedSources((prev) => ({
@@ -916,13 +1007,115 @@ export function AIChatModal({ onClose }: AIChatModalProps) {
                     </div>
                   ))}
 
-                  {isThinking && (
+                  {/* Single dynamic loading status */}
+                  {(isThinking || loadingStage !== "idle") && (
                     <div className="flex justify-start">
-                      <div className="bg-white border border-gray-200 rounded-lg p-3">
-                        <div className="flex gap-1">
-                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
-                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-100" />
-                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-200" />
+                      <div className="bg-white border border-gray-200 rounded-lg px-4 py-2.5">
+                        <div className="flex items-center gap-2">
+                          {/* Context Stage */}
+                          {loadingStage === "context" && (
+                            <>
+                              <BookOpen className="w-4 h-4 text-purple-500 animate-pulse" />
+                              <span className="text-sm text-purple-600">
+                                Reading AI context...
+                              </span>
+                              <div className="flex gap-1 ml-1">
+                                <div className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce" />
+                                <div
+                                  className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce"
+                                  style={{ animationDelay: "0.1s" }}
+                                />
+                                <div
+                                  className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce"
+                                  style={{ animationDelay: "0.2s" }}
+                                />
+                              </div>
+                            </>
+                          )}
+
+                          {/* Web Search Stage */}
+                          {loadingStage === "web-search" && (
+                            <>
+                              <Globe className="w-4 h-4 text-blue-500 animate-spin" />
+                              <span className="text-sm text-blue-600">
+                                Fetching from web...
+                              </span>
+                              <div className="flex gap-1 ml-1">
+                                <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce" />
+                                <div
+                                  className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce"
+                                  style={{ animationDelay: "0.1s" }}
+                                />
+                                <div
+                                  className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce"
+                                  style={{ animationDelay: "0.2s" }}
+                                />
+                              </div>
+                            </>
+                          )}
+
+                          {/* Reasoning Stage */}
+                          {loadingStage === "reasoning" && (
+                            <>
+                              <Sparkles className="w-4 h-4 text-amber-500 animate-pulse" />
+                              <span className="text-sm text-amber-600">
+                                Thinking...
+                              </span>
+                              <div className="flex gap-1 ml-1">
+                                <div className="w-1.5 h-1.5 bg-amber-400 rounded-full animate-bounce" />
+                                <div
+                                  className="w-1.5 h-1.5 bg-amber-400 rounded-full animate-bounce"
+                                  style={{ animationDelay: "0.1s" }}
+                                />
+                                <div
+                                  className="w-1.5 h-1.5 bg-amber-400 rounded-full animate-bounce"
+                                  style={{ animationDelay: "0.2s" }}
+                                />
+                              </div>
+                            </>
+                          )}
+
+                          {/* Generating Stage */}
+                          {loadingStage === "generating" && (
+                            <>
+                              <Send className="w-4 h-4 text-green-500 animate-pulse" />
+                              <span className="text-sm text-green-600">
+                                Generating response...
+                              </span>
+                              <div className="flex gap-1 ml-1">
+                                <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-bounce" />
+                                <div
+                                  className="w-1.5 h-1.5 bg-green-400 rounded-full animate-bounce"
+                                  style={{ animationDelay: "0.1s" }}
+                                />
+                                <div
+                                  className="w-1.5 h-1.5 bg-green-400 rounded-full animate-bounce"
+                                  style={{ animationDelay: "0.2s" }}
+                                />
+                              </div>
+                            </>
+                          )}
+
+                          {/* Default thinking (no specific stage) */}
+                          {loadingStage === "idle" && isThinking && (
+                            <>
+                              <Sparkles className="w-4 h-4 text-gray-500 animate-pulse" />
+                              <span className="text-sm text-gray-600">
+                                Thinking...
+                              </span>
+                              <div className="flex gap-1 ml-1">
+                                <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" />
+                                <div
+                                  className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"
+                                  style={{ animationDelay: "0.1s" }}
+                                />
+                                <div
+                                  className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"
+                                  style={{ animationDelay: "0.2s" }}
+                                />
+                              </div>
+                            </>
+                          )}
                         </div>
                       </div>
                     </div>

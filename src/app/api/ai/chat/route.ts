@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { GoogleGenerativeAI, Part } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+// Initialize the new Google GenAI client
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 
 interface Attachment {
   id: string;
@@ -41,8 +42,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { messages, context, contextDetails, attachments, mentions } =
-      await request.json();
+    const {
+      messages,
+      context,
+      contextDetails,
+      attachments,
+      mentions,
+      sourceSettings,
+    } = await request.json();
+
+    // Extract source settings with defaults
+    const hasMentions = mentions && mentions.length > 0;
+    const hasRichContext = !!contextDetails?.pageContextSummary;
+    const hasAttachments = attachments && attachments.length > 0;
+    const hasLocalContext = hasMentions || hasRichContext || hasAttachments;
+
+    // Web search: Pass through the user's setting
+    // The AI will dynamically decide whether to use web search based on the question context
+    // This allows intelligent tool selection rather than deterministic keyword matching
+    const webSearchEnabled = sourceSettings?.webSearch ?? false;
+    const appsIntegrationsEnabled = sourceSettings?.appsIntegrations ?? true;
 
     // Debug logging
     console.log("[AI Chat] Request received:", {
@@ -50,6 +69,11 @@ export async function POST(request: NextRequest) {
       attachmentCount: attachments?.length || 0,
       mentionCount: mentions?.length || 0,
       attachmentTypes: attachments?.map((a: any) => a.type) || [],
+      webSearchEnabled,
+      appsIntegrationsEnabled,
+      hasLocalContext,
+      hasMentions,
+      hasRichContext,
     });
 
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
@@ -62,54 +86,79 @@ export async function POST(request: NextRequest) {
     // Build system instruction with page context
     let systemInstruction = `You are Campus AI, a helpful assistant for Campus Circle - a student platform for study materials, food, events, and clubs.
 
-CRITICAL INSTRUCTIONS:
-1. You have FULL ACCESS to the data visible on the user's current page (provided below)
-2. When users ask about items, prices, or details - SEARCH through the provided data and give SPECIFIC answers
-3. Always cite exact titles, prices, and details from the data
-4. If an item is mentioned or referenced with "this", "that", or pronouns - use conversation context to identify it
-5. For follow-up questions, refer to the previously discussed items
-6. Be helpful, concise, and accurate
-7. When users mention items with @, focus your response on those specific items`;
+CRITICAL INSTRUCTIONS - CHOOSING THE RIGHT SOURCE:
 
-    // Process mentioned items - these take priority
+You have TWO sources of information available:
+1. LOCAL PAGE DATA - Information about the user's current page (study materials, food, events, clubs)
+2. WEB SEARCH - Real-time internet search for external information
+
+DECISION RULES:
+- If the user asks about items ON THE PAGE (prices, titles, descriptions, comparisons) -> USE LOCAL DATA
+- If the user asks about EXTERNAL topics (news, world events, general knowledge, things not on the page) -> USE WEB SEARCH
+- If the user explicitly mentions "internet", "online", "search", "news", "latest" -> USE WEB SEARCH
+- For follow-up questions: determine if they're asking about page data or external info
+
+WHEN USING LOCAL DATA:
+- Find the EXACT item in the provided page data
+- Cite specific titles, prices, descriptions from the data
+- For comparisons (most expensive, cheapest, highest rated) - scan ALL items and compare
+
+WHEN USING WEB SEARCH:
+- Search for current, up-to-date information
+- Provide helpful answers with sources when available
+
+HANDLE REFERENCES:
+- "this", "that", "it" - refer to the item just discussed
+- "@mentions" - specifically about that mentioned item
+- Follow-up questions use context from previous messages
+
+RESPONSE GUIDELINES:
+- Be accurate and helpful
+- Be concise but complete
+- If you're not sure which source to use, consider what the user actually needs`;
+
+    // Process mentioned items - these take HIGHEST priority
     const typedMentions = mentions as MentionItem[] | undefined;
     if (typedMentions && typedMentions.length > 0) {
-      systemInstruction += `\n\n========== MENTIONED ITEMS START ==========`;
+      systemInstruction += `\n\n========== USER MENTIONED ITEMS (HIGHEST PRIORITY) ==========`;
+      systemInstruction += `\nThe user specifically referenced these items using @mentions. Your answer MUST be based on this data:`;
       for (const mention of typedMentions) {
-        systemInstruction += `\n\n--- ${mention.type.toUpperCase()}: ${
+        systemInstruction += `\n\n### ${mention.type.toUpperCase()}: "${
           mention.title
-        } ---`;
+        }"`;
         if (mention.content) {
-          systemInstruction += `\nContent: ${mention.content.substring(
+          systemInstruction += `\n**Full Content:**\n${mention.content.substring(
             0,
-            2000
+            3000
           )}`;
         }
         if (mention.description) {
-          systemInstruction += `\nDescription: ${mention.description}`;
+          systemInstruction += `\n**Description:** ${mention.description}`;
         }
         if (mention.aiMetadata) {
           const meta = mention.aiMetadata;
           if (meta.contentSummary) {
-            systemInstruction += `\nSummary: ${meta.contentSummary}`;
+            systemInstruction += `\n**Content Summary:** ${meta.contentSummary}`;
           }
           if (meta.keywords && meta.keywords.length > 0) {
-            systemInstruction += `\nKeywords: ${meta.keywords.join(", ")}`;
+            systemInstruction += `\n**Keywords:** ${meta.keywords.join(", ")}`;
           }
           if (meta.topics && meta.topics.length > 0) {
-            systemInstruction += `\nTopics: ${meta.topics.join(", ")}`;
+            systemInstruction += `\n**Topics Covered:** ${meta.topics.join(
+              ", "
+            )}`;
           }
         }
       }
-      systemInstruction += `\n========== MENTIONED ITEMS END ==========`;
-      systemInstruction += `\n\nThe user has specifically mentioned the items above using @. Focus your response on these items.`;
+      systemInstruction += `\n========== END MENTIONED ITEMS ==========`;
+      systemInstruction += `\n\nIMPORTANT: The user is asking about the @mentioned items above. Answer ONLY using the data provided for these items. Do NOT search the web or make up information.`;
     }
 
     // Process attachments for system instruction context
     const typedAttachments = attachments as Attachment[] | undefined;
-    const hasAttachments = typedAttachments && typedAttachments.length > 0;
+    const hasTypedAttachments = typedAttachments && typedAttachments.length > 0;
 
-    if (hasAttachments) {
+    if (hasTypedAttachments) {
       systemInstruction += `\n\n========== ATTACHED FILES ==========`;
       const fileDescriptions: string[] = [];
 
@@ -142,8 +191,13 @@ CRITICAL INSTRUCTIONS:
 
     // Check if we have full page context from PageContextProvider
     if (contextDetails && contextDetails.pageContextSummary) {
-      systemInstruction += `\n\n========== PAGE DATA START ==========\n${contextDetails.pageContextSummary}\n========== PAGE DATA END ==========`;
-      systemInstruction += `\n\nYou have access to ALL the data listed above. When the user asks about any item, event, food, or club - find it in the data and provide the exact information. For follow-up questions like "what does this talk about" or "tell me more", refer to the item just discussed in the conversation.`;
+      systemInstruction += `\n\n========== CURRENT PAGE DATA ==========\n${contextDetails.pageContextSummary}\n========== END PAGE DATA ==========`;
+      systemInstruction += `\n\nPAGE DATA INSTRUCTIONS:
+- For questions about items ON THIS PAGE (prices, titles, descriptions, comparisons) -> use the PAGE DATA above
+- For questions about EXTERNAL topics (news, world events, general knowledge) -> use Web Search
+- The page data contains ALL information about study materials, food, events, or clubs shown on the current page
+- For comparisons (most expensive, cheapest, best rated) - scan ALL items in the PAGE DATA
+- If user refers to "this page", "these items", "the listings" - they mean the PAGE DATA above`;
     }
     // Legacy note context support
     else if (
@@ -171,31 +225,13 @@ CRITICAL INSTRUCTIONS:
       systemInstruction += `\n\nThe user is currently in the ${context} section of the platform.`;
     }
 
-    const model = genAI.getGenerativeModel({
-      model: "gemini-2.0-flash-exp",
-      systemInstruction: systemInstruction,
-      generationConfig: {
-        temperature: 0.7,
-        topP: 0.95,
-        topK: 40,
-        maxOutputTokens: 2048,
-      },
-    });
-
-    const conversationHistory = messages.map((msg: any) => ({
+    // Build conversation history in new SDK format
+    const conversationHistory = messages.slice(0, -1).map((msg: any) => ({
       role: msg.type === "user" ? "user" : "model",
       parts: [{ text: msg.content }],
     }));
 
-    const chat = model.startChat({
-      history: conversationHistory.slice(0, -1),
-    });
-
     const lastMessage = messages[messages.length - 1];
-
-    const reasoningModel = genAI.getGenerativeModel({
-      model: "gemini-2.0-flash-exp",
-    });
 
     let contextInfo = "";
     let detailedContext = "";
@@ -242,15 +278,25 @@ CRITICAL INSTRUCTIONS:
 
     reasoningPrompt += `\n\nCurrent question: "${lastMessage.content}"
 
-Provide a brief 1-2 sentence reasoning about what the user is asking. If they use words like "this", "that", or "it", identify what they're referring to from the conversation. Start with "The user" and explain your understanding.`;
+Provide a brief 1-2 sentence reasoning about what the user is asking.
+- If they use words like "this", "that", or "it", identify what they're referring to from the conversation
+- If they ask about prices, ratings, or specific items - reference the Available Page Data above
+- For follow-up questions, the answer is ALWAYS in the Page Data - identify which data point answers the question
+Start with "The user" and explain your understanding.`;
 
-    const reasoningResult = await reasoningModel.generateContent(
-      reasoningPrompt
-    );
-    const reasoning = reasoningResult.response.text();
+    // Generate reasoning using the new SDK
+    const reasoningResult = await ai.models.generateContent({
+      model: "gemini-2.0-flash",
+      contents: reasoningPrompt,
+    });
+    const reasoning = reasoningResult.text || "";
 
     // Build message parts for multimodal input (text + images + PDFs)
-    const messageParts: Part[] = [];
+    interface MessagePart {
+      text?: string;
+      inlineData?: { mimeType: string; data: string };
+    }
+    const messageParts: MessagePart[] = [];
 
     // Add text content first
     if (lastMessage.content) {
@@ -297,16 +343,57 @@ Provide a brief 1-2 sentence reasoning about what the user is asking. If they us
       `[AI Chat] Sending message with ${messageParts.length} parts (text + files)`
     );
 
-    // Send message with all parts (text + images + PDFs)
-    const result = await chat.sendMessage(messageParts);
+    // Build tools array - add Google Search if enabled
+    const tools: any[] = [];
+    if (webSearchEnabled) {
+      tools.push({ googleSearch: {} });
+      console.log("[AI Chat] Web search grounding enabled");
+    }
 
-    const response = result.response;
-    const aiResponse = response.text();
+    // Build the full conversation with system instruction and history
+    const fullContents = [
+      ...conversationHistory,
+      {
+        role: "user" as const,
+        parts: messageParts,
+      },
+    ];
+
+    // Generate content with the new SDK - using chat-like approach with history
+    const result = await ai.models.generateContent({
+      model: "gemini-2.0-flash",
+      contents: fullContents,
+      config: {
+        systemInstruction: systemInstruction,
+        temperature: 0.7,
+        topP: 0.95,
+        topK: 40,
+        maxOutputTokens: 2048,
+        tools: tools.length > 0 ? tools : undefined,
+      },
+    });
+
+    const aiResponse = result.text || "";
+
+    // Extract grounding metadata if web search was used
+    let searchSources: any[] = [];
+    const groundingMetadata = result.candidates?.[0]?.groundingMetadata;
+    if (groundingMetadata) {
+      console.log("[AI Chat] Web search grounding was used");
+      if (groundingMetadata.groundingChunks) {
+        searchSources = groundingMetadata.groundingChunks.map((chunk: any) => ({
+          uri: chunk.web?.uri || "",
+          title: chunk.web?.title || "",
+        }));
+      }
+    }
 
     return NextResponse.json({
       content: aiResponse,
       reasoning: reasoning,
       timestamp: new Date().toISOString(),
+      webSearchUsed: webSearchEnabled && groundingMetadata !== undefined,
+      searchSources: searchSources.length > 0 ? searchSources : undefined,
     });
   } catch (error: any) {
     console.error("AI chat error:", error);
