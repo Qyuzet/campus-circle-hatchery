@@ -844,22 +844,55 @@ export function AIChatModal({ onClose }: AIChatModalProps) {
                           {/* Show attachments if any */}
                           {message.attachments &&
                             message.attachments.length > 0 && (
-                              <div className="flex flex-wrap gap-1.5 mb-2">
-                                {message.attachments.map((att) => (
-                                  <div
-                                    key={att.id}
-                                    className="flex items-center gap-1 bg-white rounded px-1.5 py-0.5 text-xs text-gray-600"
-                                  >
-                                    {att.type.startsWith("image/") ? (
-                                      <Image className="h-3 w-3" />
-                                    ) : (
-                                      <FileText className="h-3 w-3" />
-                                    )}
-                                    <span className="max-w-[80px] truncate">
-                                      {att.name}
-                                    </span>
+                              <div className="mb-2">
+                                {/* Image attachments - show thumbnails */}
+                                {message.attachments.filter((att) =>
+                                  att.type.startsWith("image/")
+                                ).length > 0 && (
+                                  <div className="flex flex-wrap gap-2 mb-2">
+                                    {message.attachments
+                                      .filter((att) =>
+                                        att.type.startsWith("image/")
+                                      )
+                                      .map((att) => (
+                                        <div
+                                          key={att.id}
+                                          className="relative group"
+                                        >
+                                          <img
+                                            src={att.content || att.url}
+                                            alt={att.name}
+                                            className="max-w-[200px] max-h-[150px] rounded-lg object-cover border border-gray-200"
+                                          />
+                                          <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-xs px-1.5 py-0.5 rounded-b-lg truncate opacity-0 group-hover:opacity-100 transition-opacity">
+                                            {att.name}
+                                          </div>
+                                        </div>
+                                      ))}
                                   </div>
-                                ))}
+                                )}
+                                {/* Non-image attachments - show as chips */}
+                                {message.attachments.filter(
+                                  (att) => !att.type.startsWith("image/")
+                                ).length > 0 && (
+                                  <div className="flex flex-wrap gap-1.5">
+                                    {message.attachments
+                                      .filter(
+                                        (att) => !att.type.startsWith("image/")
+                                      )
+                                      .map((att) => (
+                                        <div
+                                          key={att.id}
+                                          className="flex items-center gap-1 bg-white rounded px-1.5 py-0.5 text-xs text-gray-600"
+                                        >
+                                          <FileText className="h-3 w-3" />
+                                          <span className="max-w-[80px] truncate">
+                                            {att.name}
+                                          </span>
+                                        </div>
+                                      ))}
+                                  </div>
+                                )}
                               </div>
                             )}
                           {/* Show mentions if any */}
@@ -934,28 +967,55 @@ export function AIChatModal({ onClose }: AIChatModalProps) {
               <div className="relative">
                 {/* Attachments preview */}
                 {attachments.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mb-2">
-                    {attachments.map((file) => (
-                      <div
-                        key={file.id}
-                        className="flex items-center gap-1.5 bg-gray-100 rounded-lg px-2 py-1 text-xs"
-                      >
-                        {file.type.startsWith("image/") ? (
-                          <Image className="h-3.5 w-3.5 text-gray-500" />
-                        ) : (
-                          <FileText className="h-3.5 w-3.5 text-gray-500" />
-                        )}
-                        <span className="max-w-[100px] truncate text-gray-700">
-                          {file.name}
-                        </span>
-                        <button
-                          onClick={() => removeAttachment(file.id)}
-                          className="p-0.5 hover:bg-gray-200 rounded"
-                        >
-                          <X className="h-3 w-3 text-gray-500" />
-                        </button>
+                  <div className="mb-2">
+                    {/* Image attachments - show thumbnails */}
+                    {attachments.filter((f) => f.type.startsWith("image/"))
+                      .length > 0 && (
+                      <div className="flex flex-wrap gap-2 mb-2">
+                        {attachments
+                          .filter((f) => f.type.startsWith("image/"))
+                          .map((file) => (
+                            <div key={file.id} className="relative group">
+                              <img
+                                src={file.content}
+                                alt={file.name}
+                                className="h-16 w-16 rounded-lg object-cover border border-gray-200"
+                              />
+                              <button
+                                onClick={() => removeAttachment(file.id)}
+                                className="absolute -top-1 -right-1 p-0.5 bg-gray-800 hover:bg-gray-700 rounded-full shadow-sm"
+                              >
+                                <X className="h-3 w-3 text-white" />
+                              </button>
+                            </div>
+                          ))}
                       </div>
-                    ))}
+                    )}
+                    {/* Non-image attachments - show as chips */}
+                    {attachments.filter((f) => !f.type.startsWith("image/"))
+                      .length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {attachments
+                          .filter((f) => !f.type.startsWith("image/"))
+                          .map((file) => (
+                            <div
+                              key={file.id}
+                              className="flex items-center gap-1.5 bg-gray-100 rounded-lg px-2 py-1 text-xs"
+                            >
+                              <FileText className="h-3.5 w-3.5 text-gray-500" />
+                              <span className="max-w-[100px] truncate text-gray-700">
+                                {file.name}
+                              </span>
+                              <button
+                                onClick={() => removeAttachment(file.id)}
+                                className="p-0.5 hover:bg-gray-200 rounded"
+                              >
+                                <X className="h-3 w-3 text-gray-500" />
+                              </button>
+                            </div>
+                          ))}
+                      </div>
+                    )}
                   </div>
                 )}
 
