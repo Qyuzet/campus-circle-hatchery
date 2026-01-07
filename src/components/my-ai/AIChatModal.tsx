@@ -8,7 +8,6 @@ import {
   X,
   Maximize2,
   Minimize2,
-  ChevronDown,
   Sparkles,
   User,
   Languages,
@@ -20,12 +19,48 @@ import {
   Search,
   Send,
   Plus,
+  FileText,
+  Image,
+  Calendar,
+  ShoppingBag,
+  BookOpen,
+  Upload,
 } from "lucide-react";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 const CHAT_HISTORY_KEY = "campusai_chat_history";
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const ALLOWED_FILE_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+  "application/pdf",
+  "text/plain",
+  "text/markdown",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+];
+
+interface Attachment {
+  id: string;
+  name: string;
+  type: string;
+  size: number;
+  content?: string; // base64 for images, text content for documents
+  url?: string;
+}
+
+interface MentionItem {
+  id: string;
+  title: string;
+  type: "note" | "library" | "listing" | "event" | "user";
+  content?: string;
+  description?: string;
+  aiMetadata?: any;
+}
 
 interface Message {
   id: string;
@@ -33,6 +68,8 @@ interface Message {
   content: string;
   timestamp: Date;
   reasoning?: string;
+  attachments?: Attachment[];
+  mentions?: MentionItem[];
 }
 
 interface StoredMessage {
@@ -41,6 +78,16 @@ interface StoredMessage {
   content: string;
   timestamp: string;
   reasoning?: string;
+  attachments?: Attachment[];
+  mentions?: MentionItem[];
+}
+
+interface MentionsData {
+  notes: any[];
+  library: any[];
+  listings: any[];
+  events: any[];
+  users: any[];
 }
 
 interface AIChatModalProps {
@@ -94,8 +141,13 @@ export function AIChatModal({ onClose }: AIChatModalProps) {
     allSources: true,
   });
   const [autoMode, setAutoMode] = useState(true);
-  const [notes, setNotes] = useState<any[]>([]);
-  const [users, setUsers] = useState<any[]>([]);
+  const [mentionsData, setMentionsData] = useState<MentionsData>({
+    notes: [],
+    library: [],
+    listings: [],
+    events: [],
+    users: [],
+  });
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoadingMentions, setIsLoadingMentions] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -105,9 +157,16 @@ export function AIChatModal({ onClose }: AIChatModalProps) {
   const [currentContext, setCurrentContext] = useState<string>("No context");
   const [contextDetails, setContextDetails] = useState<any>(null);
   const [hasLoadedHistory, setHasLoadedHistory] = useState(false);
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [selectedMentions, setSelectedMentions] = useState<MentionItem[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
+  const [mentionCategory, setMentionCategory] = useState<
+    "all" | "notes" | "library" | "listings" | "events" | "users"
+  >("all");
   const modalRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Load chat history from localStorage on mount
   useEffect(() => {
@@ -218,28 +277,119 @@ export function AIChatModal({ onClose }: AIChatModalProps) {
     }
   };
 
-  const fetchMentionData = async () => {
+  const fetchMentionData = async (search?: string) => {
     setIsLoadingMentions(true);
     try {
-      const [notesRes, usersRes] = await Promise.all([
-        fetch("/api/ai-notes"),
-        fetch("/api/users"),
-      ]);
+      const url = search
+        ? `/api/ai/mentions?search=${encodeURIComponent(search)}`
+        : "/api/ai/mentions";
+      const res = await fetch(url);
 
-      if (notesRes.ok) {
-        const notesData = await notesRes.json();
-        setNotes(notesData);
-      }
-
-      if (usersRes.ok) {
-        const usersData = await usersRes.json();
-        setUsers(usersData);
+      if (res.ok) {
+        const data = await res.json();
+        setMentionsData(data);
       }
     } catch (error) {
       console.error("Error fetching mention data:", error);
     } finally {
       setIsLoadingMentions(false);
     }
+  };
+
+  // File handling functions
+  const handleFileSelect = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+
+    const newAttachments: Attachment[] = [];
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+
+      if (file.size > MAX_FILE_SIZE) {
+        toast.error(`File "${file.name}" is too large. Maximum size is 10MB.`);
+        continue;
+      }
+
+      if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+        toast.error(
+          `File type "${file.type}" is not supported. Allowed: images, PDF, text, Word documents.`
+        );
+        continue;
+      }
+
+      try {
+        let content: string | undefined;
+
+        if (file.type.startsWith("image/")) {
+          // Convert image to base64
+          content = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+          });
+        } else if (
+          file.type === "text/plain" ||
+          file.type === "text/markdown"
+        ) {
+          // Read text content
+          content = await file.text();
+        } else if (
+          file.type === "application/pdf" ||
+          file.type === "application/msword" ||
+          file.type ===
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        ) {
+          // Read PDF/Word as base64 for server-side processing
+          content = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+          });
+        }
+
+        newAttachments.push({
+          id: `${Date.now()}-${i}`,
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          content,
+        });
+      } catch (error) {
+        console.error("Error processing file:", error);
+        toast.error(`Failed to process "${file.name}"`);
+      }
+    }
+
+    if (newAttachments.length > 0) {
+      setAttachments((prev) => [...prev, ...newAttachments]);
+      toast.success(
+        `Added ${newAttachments.length} file${
+          newAttachments.length > 1 ? "s" : ""
+        }`
+      );
+    }
+  };
+
+  const removeAttachment = (id: string) => {
+    setAttachments((prev) => prev.filter((a) => a.id !== id));
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    handleFileSelect(e.dataTransfer.files);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -249,6 +399,7 @@ export function AIChatModal({ onClose }: AIChatModalProps) {
     if (value.endsWith("@")) {
       setShowMentions(true);
       setSearchTerm("");
+      fetchMentionData();
     } else if (!value.includes("@")) {
       setShowMentions(false);
       setSearchTerm("");
@@ -260,10 +411,34 @@ export function AIChatModal({ onClose }: AIChatModalProps) {
       e.preventDefault();
       handleSendMessage();
     }
+    if (e.key === "Escape" && showMentions) {
+      setShowMentions(false);
+    }
   };
 
-  const handleMentionSelect = (item: any, type: "note" | "user") => {
-    const mentionText = type === "note" ? `@${item.title}` : `@${item.name}`;
+  const handleMentionSelect = (
+    item: any,
+    type: "note" | "library" | "listing" | "event" | "user"
+  ) => {
+    const displayName =
+      type === "user" ? item.name : item.title || item.name || "Untitled";
+    const mentionText = `@${displayName}`;
+
+    // Add to selected mentions for context
+    const mentionItem: MentionItem = {
+      id: item.id,
+      title: displayName,
+      type,
+      content: item.content,
+      description: item.description,
+      aiMetadata: item.aiMetadata,
+    };
+
+    setSelectedMentions((prev) => {
+      const exists = prev.some((m) => m.id === item.id && m.type === type);
+      if (exists) return prev;
+      return [...prev, mentionItem];
+    });
     const newInput = input.replace(/@$/, mentionText + " ");
     setInput(newInput);
     setShowMentions(false);
@@ -277,19 +452,28 @@ export function AIChatModal({ onClose }: AIChatModalProps) {
     }
   };
 
+  const removeMention = (id: string) => {
+    setSelectedMentions((prev) => prev.filter((m) => m.id !== id));
+  };
+
   const handleSendMessage = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() && attachments.length === 0) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
       type: "user",
       content: input.trim(),
       timestamp: new Date(),
+      attachments: attachments.length > 0 ? [...attachments] : undefined,
+      mentions: selectedMentions.length > 0 ? [...selectedMentions] : undefined,
     };
 
     setMessages((prev) => [...prev, userMessage]);
-    const userInput = input.trim();
+    const currentAttachments = [...attachments];
+    const currentMentions = [...selectedMentions];
     setInput("");
+    setAttachments([]);
+    setSelectedMentions([]);
     setIsThinking(true);
 
     try {
@@ -302,6 +486,8 @@ export function AIChatModal({ onClose }: AIChatModalProps) {
           messages: [...messages, userMessage],
           context: currentContext,
           contextDetails: contextDetails,
+          attachments: currentAttachments,
+          mentions: currentMentions,
         }),
       });
 
@@ -348,13 +534,69 @@ export function AIChatModal({ onClose }: AIChatModalProps) {
     }
   };
 
-  const filteredNotes = notes.filter((note) =>
-    note.title.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Filter mentions based on search term and category
+  const getFilteredMentions = () => {
+    const term = searchTerm.toLowerCase();
+    const result: {
+      notes: any[];
+      library: any[];
+      listings: any[];
+      events: any[];
+      users: any[];
+    } = {
+      notes: [],
+      library: [],
+      listings: [],
+      events: [],
+      users: [],
+    };
 
-  const filteredUsers = users.filter((user) =>
-    user.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+    if (mentionCategory === "all" || mentionCategory === "notes") {
+      result.notes = mentionsData.notes.filter(
+        (n) =>
+          n.title?.toLowerCase().includes(term) ||
+          n.subject?.toLowerCase().includes(term)
+      );
+    }
+    if (mentionCategory === "all" || mentionCategory === "library") {
+      result.library = mentionsData.library.filter(
+        (l) =>
+          l.title?.toLowerCase().includes(term) ||
+          l.category?.toLowerCase().includes(term)
+      );
+    }
+    if (mentionCategory === "all" || mentionCategory === "listings") {
+      result.listings = mentionsData.listings.filter(
+        (l) =>
+          l.title?.toLowerCase().includes(term) ||
+          l.category?.toLowerCase().includes(term)
+      );
+    }
+    if (mentionCategory === "all" || mentionCategory === "events") {
+      result.events = mentionsData.events.filter(
+        (e) =>
+          e.title?.toLowerCase().includes(term) ||
+          e.location?.toLowerCase().includes(term)
+      );
+    }
+    if (mentionCategory === "all" || mentionCategory === "users") {
+      result.users = mentionsData.users.filter(
+        (u) =>
+          u.name?.toLowerCase().includes(term) ||
+          u.studentId?.toLowerCase().includes(term)
+      );
+    }
+
+    return result;
+  };
+
+  const filteredMentions = getFilteredMentions();
+  const hasAnyMentions =
+    filteredMentions.notes.length > 0 ||
+    filteredMentions.library.length > 0 ||
+    filteredMentions.listings.length > 0 ||
+    filteredMentions.events.length > 0 ||
+    filteredMentions.users.length > 0;
 
   const quickActions = [
     {
@@ -599,6 +841,40 @@ export function AIChatModal({ onClose }: AIChatModalProps) {
                       )}
                       {message.type === "user" && (
                         <div className="bg-gray-100 rounded-lg px-3 py-2 max-w-[80%]">
+                          {/* Show attachments if any */}
+                          {message.attachments &&
+                            message.attachments.length > 0 && (
+                              <div className="flex flex-wrap gap-1.5 mb-2">
+                                {message.attachments.map((att) => (
+                                  <div
+                                    key={att.id}
+                                    className="flex items-center gap-1 bg-white rounded px-1.5 py-0.5 text-xs text-gray-600"
+                                  >
+                                    {att.type.startsWith("image/") ? (
+                                      <Image className="h-3 w-3" />
+                                    ) : (
+                                      <FileText className="h-3 w-3" />
+                                    )}
+                                    <span className="max-w-[80px] truncate">
+                                      {att.name}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          {/* Show mentions if any */}
+                          {message.mentions && message.mentions.length > 0 && (
+                            <div className="flex flex-wrap gap-1.5 mb-2">
+                              {message.mentions.map((m) => (
+                                <span
+                                  key={`${m.type}-${m.id}`}
+                                  className="inline-flex items-center gap-1 bg-blue-100 text-blue-700 rounded px-1.5 py-0.5 text-xs"
+                                >
+                                  @{m.title}
+                                </span>
+                              ))}
+                            </div>
+                          )}
                           <p className="text-sm text-gray-800">
                             {message.content}
                           </p>
@@ -638,26 +914,110 @@ export function AIChatModal({ onClose }: AIChatModalProps) {
               )}
             </div>
 
-            <div className="border-t border-gray-200 p-3 md:p-4 flex-shrink-0">
+            <div
+              className={`border-t border-gray-200 p-3 md:p-4 flex-shrink-0 ${
+                isDragging ? "bg-blue-50 border-blue-300" : ""
+              }`}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+            >
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                accept={ALLOWED_FILE_TYPES.join(",")}
+                onChange={(e) => handleFileSelect(e.target.files)}
+                className="hidden"
+              />
+
               <div className="relative">
+                {/* Attachments preview */}
+                {attachments.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {attachments.map((file) => (
+                      <div
+                        key={file.id}
+                        className="flex items-center gap-1.5 bg-gray-100 rounded-lg px-2 py-1 text-xs"
+                      >
+                        {file.type.startsWith("image/") ? (
+                          <Image className="h-3.5 w-3.5 text-gray-500" />
+                        ) : (
+                          <FileText className="h-3.5 w-3.5 text-gray-500" />
+                        )}
+                        <span className="max-w-[100px] truncate text-gray-700">
+                          {file.name}
+                        </span>
+                        <button
+                          onClick={() => removeAttachment(file.id)}
+                          className="p-0.5 hover:bg-gray-200 rounded"
+                        >
+                          <X className="h-3 w-3 text-gray-500" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Selected mentions preview */}
+                {selectedMentions.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {selectedMentions.map((mention) => (
+                      <div
+                        key={`${mention.type}-${mention.id}`}
+                        className="flex items-center gap-1.5 bg-blue-50 border border-blue-200 rounded-lg px-2 py-1 text-xs"
+                      >
+                        {mention.type === "note" && (
+                          <FileText className="h-3.5 w-3.5 text-blue-500" />
+                        )}
+                        {mention.type === "library" && (
+                          <BookOpen className="h-3.5 w-3.5 text-blue-500" />
+                        )}
+                        {mention.type === "listing" && (
+                          <ShoppingBag className="h-3.5 w-3.5 text-blue-500" />
+                        )}
+                        {mention.type === "event" && (
+                          <Calendar className="h-3.5 w-3.5 text-blue-500" />
+                        )}
+                        {mention.type === "user" && (
+                          <User className="h-3.5 w-3.5 text-blue-500" />
+                        )}
+                        <span className="max-w-[120px] truncate text-blue-700">
+                          @{mention.title}
+                        </span>
+                        <button
+                          onClick={() => removeMention(mention.id)}
+                          className="p-0.5 hover:bg-blue-100 rounded"
+                        >
+                          <X className="h-3 w-3 text-blue-500" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
                 <div className="flex items-center gap-1.5 md:gap-2 mb-2">
                   <button
                     onClick={() => {
                       setShowMentions(!showMentions);
                       if (!showMentions) {
                         setInput(input + "@");
+                        fetchMentionData();
                       }
                     }}
-                    className="p-1 md:p-1.5 hover:bg-gray-100 rounded transition-colors"
-                    title="Mention pages or users"
+                    className={`p-1 md:p-1.5 rounded transition-colors ${
+                      showMentions
+                        ? "bg-blue-100 text-blue-600"
+                        : "hover:bg-gray-100 text-gray-500"
+                    }`}
+                    title="Mention notes, items, events, or users"
                   >
-                    <span className="text-gray-500 text-xs md:text-sm font-medium">
-                      @
-                    </span>
+                    <span className="text-xs md:text-sm font-medium">@</span>
                   </button>
                   <button
+                    onClick={() => fileInputRef.current?.click()}
                     className="p-1 md:p-1.5 hover:bg-gray-100 rounded transition-colors"
-                    title="Attach file"
+                    title="Attach file (images, PDF, text)"
                   >
                     <Paperclip className="h-3.5 w-3.5 md:h-4 md:w-4 text-gray-500" />
                   </button>
@@ -665,6 +1025,18 @@ export function AIChatModal({ onClose }: AIChatModalProps) {
                     {currentContext}
                   </div>
                 </div>
+
+                {/* Drag overlay */}
+                {isDragging && (
+                  <div className="absolute inset-0 bg-blue-50 border-2 border-dashed border-blue-300 rounded-lg flex items-center justify-center z-10">
+                    <div className="text-center">
+                      <Upload className="h-8 w-8 text-blue-500 mx-auto mb-2" />
+                      <p className="text-sm text-blue-600 font-medium">
+                        Drop files here
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 <div className="relative border border-gray-200 rounded-lg focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500">
                   <textarea
@@ -701,7 +1073,7 @@ export function AIChatModal({ onClose }: AIChatModalProps) {
 
                     <button
                       onClick={handleSendMessage}
-                      disabled={!input.trim()}
+                      disabled={!input.trim() && attachments.length === 0}
                       className="p-1.5 md:p-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed rounded-lg transition-colors"
                       title="Send message"
                     >
@@ -711,90 +1083,215 @@ export function AIChatModal({ onClose }: AIChatModalProps) {
                 </div>
 
                 {showMentions && (
-                  <div className="absolute bottom-full left-0 right-0 mb-2 bg-white border border-gray-200 rounded-lg shadow-lg p-2 max-h-64 overflow-y-auto">
-                    <div className="relative mb-2">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <input
-                        type="text"
-                        placeholder="Search..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
+                  <div className="absolute bottom-full left-0 right-0 mb-2 bg-white border border-gray-200 rounded-lg shadow-lg max-h-80 overflow-hidden z-20">
+                    {/* Category tabs */}
+                    <div className="flex border-b border-gray-100 px-2 pt-2 gap-1 overflow-x-auto">
+                      {(
+                        [
+                          "all",
+                          "notes",
+                          "library",
+                          "listings",
+                          "events",
+                          "users",
+                        ] as const
+                      ).map((cat) => (
+                        <button
+                          key={cat}
+                          onClick={() => setMentionCategory(cat)}
+                          className={`px-2 py-1 text-xs rounded-t whitespace-nowrap transition-colors ${
+                            mentionCategory === cat
+                              ? "bg-blue-100 text-blue-700 font-medium"
+                              : "text-gray-500 hover:bg-gray-100"
+                          }`}
+                        >
+                          {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                        </button>
+                      ))}
                     </div>
 
-                    {isLoadingMentions ? (
-                      <div className="flex items-center justify-center py-4">
-                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                    <div className="p-2">
+                      <div className="relative mb-2">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <input
+                          type="text"
+                          placeholder="Search..."
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          autoFocus
+                        />
                       </div>
-                    ) : (
-                      <div className="space-y-1">
-                        {filteredNotes.length > 0 && (
-                          <>
-                            <div className="text-xs font-medium text-gray-500 px-2 py-1">
-                              Pages
-                            </div>
-                            {filteredNotes.map((note) => (
-                              <button
-                                key={note.id}
-                                onClick={() =>
-                                  handleMentionSelect(note, "note")
-                                }
-                                className="w-full flex items-center gap-2 px-2 py-1.5 hover:bg-gray-100 rounded text-left"
-                              >
-                                <Paperclip className="h-4 w-4 text-gray-600" />
-                                <div className="flex-1 min-w-0">
-                                  <div className="text-sm text-gray-700 truncate">
-                                    {note.title}
-                                  </div>
-                                  {note.subject && (
-                                    <div className="text-xs text-gray-500 truncate">
-                                      {note.subject}
-                                    </div>
-                                  )}
-                                </div>
-                              </button>
-                            ))}
-                          </>
-                        )}
 
-                        {filteredUsers.length > 0 && (
-                          <>
-                            <div className="text-xs font-medium text-gray-500 px-2 py-1 mt-2">
-                              Users
-                            </div>
-                            {filteredUsers.slice(0, 5).map((user) => (
-                              <button
-                                key={user.id}
-                                onClick={() =>
-                                  handleMentionSelect(user, "user")
-                                }
-                                className="w-full flex items-center gap-2 px-2 py-1.5 hover:bg-gray-100 rounded text-left"
-                              >
-                                <User className="h-4 w-4 text-gray-600" />
-                                <div className="flex-1 min-w-0">
-                                  <div className="text-sm text-gray-700 truncate">
-                                    {user.name}
-                                  </div>
-                                  {user.studentId && (
-                                    <div className="text-xs text-gray-500 truncate">
-                                      {user.studentId}
-                                    </div>
-                                  )}
+                      <div className="max-h-52 overflow-y-auto">
+                        {isLoadingMentions ? (
+                          <div className="flex items-center justify-center py-4">
+                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                          </div>
+                        ) : !hasAnyMentions ? (
+                          <div className="text-center py-4 text-sm text-gray-500">
+                            No results found
+                          </div>
+                        ) : (
+                          <div className="space-y-1">
+                            {/* Notes */}
+                            {filteredMentions.notes.length > 0 && (
+                              <>
+                                <div className="text-xs font-medium text-gray-500 px-2 py-1 flex items-center gap-1">
+                                  <FileText className="h-3 w-3" />
+                                  My Notes
                                 </div>
-                              </button>
-                            ))}
-                          </>
-                        )}
+                                {filteredMentions.notes.map((note) => (
+                                  <button
+                                    key={note.id}
+                                    onClick={() =>
+                                      handleMentionSelect(note, "note")
+                                    }
+                                    className="w-full flex items-center gap-2 px-2 py-1.5 hover:bg-gray-100 rounded text-left"
+                                  >
+                                    <FileText className="h-4 w-4 text-purple-500" />
+                                    <div className="flex-1 min-w-0">
+                                      <div className="text-sm text-gray-700 truncate">
+                                        {note.title}
+                                      </div>
+                                      {note.subject && (
+                                        <div className="text-xs text-gray-500 truncate">
+                                          {note.subject}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </button>
+                                ))}
+                              </>
+                            )}
 
-                        {filteredNotes.length === 0 &&
-                          filteredUsers.length === 0 && (
-                            <div className="text-center py-4 text-sm text-gray-500">
-                              No results found
-                            </div>
-                          )}
+                            {/* Library items */}
+                            {filteredMentions.library.length > 0 && (
+                              <>
+                                <div className="text-xs font-medium text-gray-500 px-2 py-1 mt-2 flex items-center gap-1">
+                                  <BookOpen className="h-3 w-3" />
+                                  My Library
+                                </div>
+                                {filteredMentions.library.map((item) => (
+                                  <button
+                                    key={item.id}
+                                    onClick={() =>
+                                      handleMentionSelect(item, "library")
+                                    }
+                                    className="w-full flex items-center gap-2 px-2 py-1.5 hover:bg-gray-100 rounded text-left"
+                                  >
+                                    <BookOpen className="h-4 w-4 text-green-500" />
+                                    <div className="flex-1 min-w-0">
+                                      <div className="text-sm text-gray-700 truncate">
+                                        {item.title}
+                                      </div>
+                                      <div className="text-xs text-gray-500 truncate">
+                                        {item.category}
+                                      </div>
+                                    </div>
+                                  </button>
+                                ))}
+                              </>
+                            )}
+
+                            {/* My listings */}
+                            {filteredMentions.listings.length > 0 && (
+                              <>
+                                <div className="text-xs font-medium text-gray-500 px-2 py-1 mt-2 flex items-center gap-1">
+                                  <ShoppingBag className="h-3 w-3" />
+                                  My Listings
+                                </div>
+                                {filteredMentions.listings.map((item) => (
+                                  <button
+                                    key={item.id}
+                                    onClick={() =>
+                                      handleMentionSelect(item, "listing")
+                                    }
+                                    className="w-full flex items-center gap-2 px-2 py-1.5 hover:bg-gray-100 rounded text-left"
+                                  >
+                                    <ShoppingBag className="h-4 w-4 text-orange-500" />
+                                    <div className="flex-1 min-w-0">
+                                      <div className="text-sm text-gray-700 truncate">
+                                        {item.title}
+                                      </div>
+                                      <div className="text-xs text-gray-500 truncate">
+                                        {item.category} - Rp{" "}
+                                        {item.price?.toLocaleString()}
+                                      </div>
+                                    </div>
+                                  </button>
+                                ))}
+                              </>
+                            )}
+
+                            {/* Events */}
+                            {filteredMentions.events.length > 0 && (
+                              <>
+                                <div className="text-xs font-medium text-gray-500 px-2 py-1 mt-2 flex items-center gap-1">
+                                  <Calendar className="h-3 w-3" />
+                                  My Events
+                                </div>
+                                {filteredMentions.events.map((event) => (
+                                  <button
+                                    key={event.id}
+                                    onClick={() =>
+                                      handleMentionSelect(event, "event")
+                                    }
+                                    className="w-full flex items-center gap-2 px-2 py-1.5 hover:bg-gray-100 rounded text-left"
+                                  >
+                                    <Calendar className="h-4 w-4 text-blue-500" />
+                                    <div className="flex-1 min-w-0">
+                                      <div className="text-sm text-gray-700 truncate">
+                                        {event.title}
+                                      </div>
+                                      <div className="text-xs text-gray-500 truncate">
+                                        {event.location ||
+                                          new Date(
+                                            event.startDate
+                                          ).toLocaleDateString()}
+                                      </div>
+                                    </div>
+                                  </button>
+                                ))}
+                              </>
+                            )}
+
+                            {/* Users */}
+                            {filteredMentions.users.length > 0 && (
+                              <>
+                                <div className="text-xs font-medium text-gray-500 px-2 py-1 mt-2 flex items-center gap-1">
+                                  <User className="h-3 w-3" />
+                                  Users
+                                </div>
+                                {filteredMentions.users
+                                  .slice(0, 5)
+                                  .map((user) => (
+                                    <button
+                                      key={user.id}
+                                      onClick={() =>
+                                        handleMentionSelect(user, "user")
+                                      }
+                                      className="w-full flex items-center gap-2 px-2 py-1.5 hover:bg-gray-100 rounded text-left"
+                                    >
+                                      <User className="h-4 w-4 text-gray-600" />
+                                      <div className="flex-1 min-w-0">
+                                        <div className="text-sm text-gray-700 truncate">
+                                          {user.name}
+                                        </div>
+                                        {user.studentId && (
+                                          <div className="text-xs text-gray-500 truncate">
+                                            {user.studentId}
+                                          </div>
+                                        )}
+                                      </div>
+                                    </button>
+                                  ))}
+                              </>
+                            )}
+                          </div>
+                        )}
                       </div>
-                    )}
+                    </div>
                   </div>
                 )}
               </div>
