@@ -11,7 +11,8 @@ import Stats from "../components/sections/stats/default";
 import { LayoutLines } from "../components/ui/layout-lines";
 import { siteConfig } from "@/config/site";
 import { PWARedirect } from "@/components/PWARedirect";
-import { PWAInstaller } from "@/components/PWAInstaller";
+// PWA install prompt disabled
+// import { PWAInstaller } from "@/components/PWAInstaller";
 
 export const metadata: Metadata = {
   title: "CampusCircle - All-in-One Campus Platform for Binus University",
@@ -68,7 +69,7 @@ export default function Home() {
       <Suspense fallback={null}>
         <PWARedirect />
       </Suspense>
-      <PWAInstaller />
+      {/* PWAInstaller disabled - no install popup */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
